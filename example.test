@@ -1,0 +1,6 @@
+// some comment
+
+let x = 2
+let y = 8
+
+let main = print(x*y)

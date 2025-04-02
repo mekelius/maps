@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [[ $# -ne 2 ]]; then
+    echo "Usage: ./build_and_run input_file output_file"
+    exit
+fi
+
+./build_compiler && ./run_compiler $1 $2
