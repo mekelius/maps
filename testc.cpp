@@ -62,7 +62,78 @@ void mainloop() {
 
 // ----- IR Generation -----
 
+class IRGenerator {
+  public:
+    IRGenerator(const std::string& module_name = "module");
 
+    Function* function_definition(const std::string& name, FunctionType* type, Function::LinkageTypes linkage = Function::ExternalLinkage);
+    Function* function_declaration(const std::string& name, FunctionType* type, Function::LinkageTypes linkage = Function::ExternalLinkage);
+
+    IRBuilder<>* get_builder() {
+        return builder_.get();
+    }
+
+    Module* get_module() {
+        return module_.get();
+    }
+
+    LLVMContext* get_context() {
+        return context_.get();
+    }
+
+    Type* char_type;
+    Type* int_type;
+    Type* char_array_13_type;
+    Type* char_array_ptr_type;
+  private:
+    // do we just leak these? it crashed when I tried to delete them
+    std::unique_ptr<LLVMContext> context_;
+    std::unique_ptr<Module> module_;
+    std::unique_ptr<IRBuilder<>> builder_;
+};
+
+IRGenerator::IRGenerator(const std::string& module_name) {
+    context_ = std::make_unique<LLVMContext>();
+    module_ = std::make_unique<Module>(module_name, *context_);
+    builder_ = std::make_unique<IRBuilder<>>(*context_);
+
+    // get some types
+    char_type = Type::getInt8Ty(*context_);
+    char_array_13_type = ArrayType::get(char_type, 13);
+    char_array_ptr_type = PointerType::getUnqual(PointerType::getUnqual(char_type));
+    int_type = Type::getInt64Ty(*context_);
+}
+
+Function* IRGenerator::function_definition(const std::string& name, FunctionType* type, Function::LinkageTypes linkage) {
+    Function* function = Function::Create(type, linkage, name, module_.get());
+    BasicBlock* body = BasicBlock::Create(*context_, "entry", function);
+    builder_->SetInsertPoint(body);
+    return function;
+}
+
+Function* IRGenerator::function_declaration(const std::string& name, FunctionType* type, Function::LinkageTypes linkage) {
+    Function* function = Function::Create(type, linkage, name, module_.get());
+    return function;
+}
+
+bool generate_ir(IRGenerator& generator) {
+    IRBuilder<>* builder = generator.get_builder();
+
+    Function* puts = generator.function_declaration("puts", FunctionType::get(generator.int_type, {generator.char_array_ptr_type}, false));
+    
+    Function* hello = generator.function_definition("hello", FunctionType::get(generator.char_array_ptr_type, {}, false));
+    builder->CreateRet(builder->CreateGlobalString("Hello World!"));
+
+    Function* main_f = generator.function_definition("main", FunctionType::get(generator.int_type, {generator.int_type, generator.char_array_ptr_type}, false));
+    CallInst* hello_call = builder->CreateCall(hello, {}, "msg");
+    builder->CreateCall(puts, {hello_call});
+    builder->CreateRet(ConstantInt::get(generator.int_type, 0));
+    
+    verifyFunction(*hello);
+    verifyFunction(*main_f);
+
+    return true;
+}
 
 // -------------------------
 
@@ -160,55 +231,15 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    // create module
-    std::unique_ptr<LLVMContext> context = std::make_unique<LLVMContext>();
-    std::unique_ptr<Module> module_ = std::make_unique<Module>("Test module", *context);
-    std::unique_ptr<IRBuilder<>> builder = std::make_unique<IRBuilder<>>(*context);
+    // create module and IRGenerator helper object
+    IRGenerator generator{"Test module"};
+    Module* module_ = generator.get_module();
     
+    generate_ir(generator);
 
-    Type* char_type = Type::getInt8Ty(*context);
-    Type* char_array_13_type = ArrayType::get(char_type, 13);
-
-    FunctionType* puts_type = FunctionType::get(Type::getInt64Ty(*context), {char_array_13_type->getPointerTo()}, false);
-    Function* puts = Function::Create(puts_type, Function::ExternalLinkage, "puts", module_.get());
-    
-    
-    FunctionType* f_type1 = FunctionType::get(PointerType::getUnqual(char_array_13_type), {}, false);
-    Function* function1 = Function::Create(f_type1, Function::ExternalLinkage, "hello", module_.get());
-    BasicBlock* block1 = BasicBlock::Create(*context, "entry", function1);
-    builder->SetInsertPoint(block1);
-    builder->CreateRet(builder->CreateGlobalString("Hello World!"));
-    
-    Type* char_array_ptr_type = PointerType::getUnqual(PointerType::getUnqual(char_type));
-    FunctionType* f_type2 = FunctionType::get(Type::getInt64Ty(*context), {Type::getInt64Ty(*context), char_array_ptr_type}, false);
-    Function* function2 = Function::Create(f_type2, Function::ExternalLinkage, "main", module_.get());
-    BasicBlock* block2 = BasicBlock::Create(*context, "entry", function2);
-    builder->SetInsertPoint(block2);
-    CallInst* hello_call = builder->CreateCall(function1, {}, "msg");
-    builder->CreateCall(puts, {hello_call});
-    
-    builder->CreateRet(ConstantInt::get(Type::getInt64Ty(*context), 0));
-    
-    // FunctionType* f_type = FunctionType::get(char_type, {}, false);
-    // StringRef string_ref = StringRef::Create("Hello World!");
-    // builder->CreateCall(puts, {builder->CreateGlobalString("Hello World!")});
-    // Constant* test_const = ConstantInt::get(char_type, 'h');
-    // ArrayRef<char> my_string = "Hello World!";
-    // Constant* test_const = ConstantDataArray::get(*context, my_string);
-    
-    // GlobalVariable* global_string = new GlobalVariable(*module_, char_array_13_type, true, GlobalVariable::ExternalLinkage, test_const, "test_string");
-    
-    
-    // Value* return_value = ConstantPointer::get(cha);
-    // Value* return_value = ConstantInt::get(char_type, 'h');
-    
-    
-    verifyFunction(*function1);
-    verifyFunction(*function2);
-        
     // ----- produce output -----
-    print_ir(IR_FILE_NAME, module_.get());
-    generate_object_file(object_file_name, module_.get());
+    print_ir(IR_FILE_NAME, module_);
+    generate_object_file(object_file_name, module_);
 
     return EXIT_SUCCESS;
 }
