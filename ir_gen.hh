@@ -14,9 +14,9 @@
 #include "llvm/IR/Verifier.h"
 
 // Helper class that holds the module, context, etc. for IR generation
-class IRGenerator {
+class IRGenHelper {
 public:
-    IRGenerator(const std::string& module_name = "module");
+    IRGenHelper(const std::string& module_name = "module");
 
     llvm::Function* function_definition(const std::string& name, llvm::FunctionType* type, llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
     llvm::Function* function_declaration(const std::string& name, llvm::FunctionType* type, llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
@@ -44,6 +44,6 @@ private:
     std::unique_ptr<llvm::IRBuilder<>> builder_;
 };
 
-bool generate_ir(IRGenerator& generator);
+bool generate_ir(IRGenHelper& generator);
 
 #endif

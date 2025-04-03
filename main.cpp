@@ -19,9 +19,10 @@
 #include <optional>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include "ir_gen.hh"
-#include "lexer.hh"
+#include "parsing.hh"
 
 using namespace llvm;
 
@@ -116,22 +117,31 @@ int main(int argc, char** argv) {
     std::string source_filename = argv[1];
     std::string object_file_name = argv[2];
 
+    // ----- read the source into a buffer -----
     std::string source = "";
     if (!read_source_file(source_filename, source))
         return EXIT_FAILURE;
+    std::istringstream iss{source};
+    std::istream source_is{iss.rdbuf()};
 
+    // ----- initialize llvm -----
     if (!init_llvm()) {
-        std::cerr << "Couldn't initialize llvm stuff, exiting" << std::endl;
+        std::cerr << "Couldn't initialize llvm, exiting" << std::endl;
         return EXIT_FAILURE;
     }
 
-    // create module and IRGenerator helper object
-    IRGenerator generator{"Test module"};
-    Module* module_ = generator.get_module();
-    
-    generate_ir(generator);
+    // ----- parse the source -----
+    std::string module_name = "Test module";
 
+    
+    StreamingLexer lexer{&source_is};
+    IRGenHelper ir_gen_helper{module_name};
+    DirectParser parser{&lexer, &ir_gen_helper};
+    
+    parser.run();
+    
     // ----- produce output -----
+    Module* module_ = ir_gen_helper.get_module();
     print_ir(IR_FILE_NAME, module_);
     generate_object_file(object_file_name, module_);
 

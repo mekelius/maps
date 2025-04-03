@@ -2,5 +2,19 @@
 
 let x = 2
 let y = 8
+let z = 213214.2424
 
 let main = print(x*y)
+
+/* This shouldn't show up */
+
+let test_string = "Hello World!";
+
+
+
+/* not this either
+addhahf
+erhehe
+*/
+
+let success = "this should exist"

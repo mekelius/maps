@@ -4,7 +4,7 @@ using namespace llvm;
 
 // ----- IR Generation -----
 
-IRGenerator::IRGenerator(const std::string& module_name) {
+IRGenHelper::IRGenHelper(const std::string& module_name) {
     context_ = std::make_unique<LLVMContext>();
     module_ = std::make_unique<Module>(module_name, *context_);
     builder_ = std::make_unique<IRBuilder<>>(*context_);
@@ -16,19 +16,19 @@ IRGenerator::IRGenerator(const std::string& module_name) {
     int_type = Type::getInt64Ty(*context_);
 }
 
-Function* IRGenerator::function_definition(const std::string& name, FunctionType* type, Function::LinkageTypes linkage) {
+Function* IRGenHelper::function_definition(const std::string& name, FunctionType* type, Function::LinkageTypes linkage) {
     Function* function = Function::Create(type, linkage, name, module_.get());
     BasicBlock* body = BasicBlock::Create(*context_, "entry", function);
     builder_->SetInsertPoint(body);
     return function;
 }
 
-Function* IRGenerator::function_declaration(const std::string& name, FunctionType* type, Function::LinkageTypes linkage) {
+Function* IRGenHelper::function_declaration(const std::string& name, FunctionType* type, Function::LinkageTypes linkage) {
     Function* function = Function::Create(type, linkage, name, module_.get());
     return function;
 }
 
-bool generate_ir(IRGenerator& generator) {
+bool generate_ir(IRGenHelper& generator) {
     IRBuilder<>* builder = generator.get_builder();
 
     Function* puts = generator.function_declaration("puts", FunctionType::get(generator.int_type, {generator.char_array_ptr_type}, false));
