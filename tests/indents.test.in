@@ -1,0 +1,46 @@
+let main =
+    ;
+    ;
+
+
+// whitespace and comments ignored
+
+    ;
+    ;    ; // this shouldn't matter
+    ;
+        ;
+        ;
+        ;
+                ;
+                ;
+                // indented comments as well
+                
+                ;
+                        ; 
+                
+                        // this is an edge case
+                        let test = 67
+                                    / 87
+                        ; 
+        ;
+        ;
+        ;
+                    ;
+                    let x = 123
+                    ;
+        ;
+        ;
+        ;
+            ;
+            ;       
+                        ;
+            ;
+    ;
+
+let invalid =
+    ;
+    ;
+                        ;
+                ;
+        ;
+    ;

@@ -1,0 +1,26 @@
+let numeric_literal = 2
+let floating = 213214.2424
+let hex = 0x1f23f
+
+let test_string = "Hello World!";
+let numbers_in_strings = "asras89898ar"
+
+let names_can_contain_underscores
+
+let _name_can_start_with_underscores
+
+let names_can_end_with_underscores_
+
+let __multiple_underscores__
+
+let names_can_have_numbers2223
+
+let names_cannot_start_with_number = 213213asd // numeric literal
+
+let UpperCaseNames are_types
+
+let namesCanBeMixedCase
+
+ALL_CAPS_IS_CONST
+
+and_starting_with_a_reserved_word_is_ok

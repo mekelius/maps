@@ -1,0 +1,15 @@
+// some comment
+
+let visible = "visible"
+
+/* This shouldn't show up */
+
+let test_string = "Hello World!";
+
+
+/* not this either
+addhahf
+erhehe
+*/
+
+let success = "this should exist"

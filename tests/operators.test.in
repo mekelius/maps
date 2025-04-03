@@ -1,0 +1,4 @@
+let x = id1*2
+let y = id1 >> id2
+let z = (id3) >+> id4 ?| id5
+let testcase = id1|id2|id3 >> id5

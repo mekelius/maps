@@ -10,6 +10,19 @@ let main = print(x*y)
 
 let test_string = "Hello World!";
 
+let test_f = x -> y: {
+    let z = "asds"
+    
+    match x =
+        case Int -> {
+            z = "jotain"
+            return "maybe"
+        }
+
+        case Bool -> z = "ei"
+
+    return "huutist"        
+}
 
 
 /* not this either

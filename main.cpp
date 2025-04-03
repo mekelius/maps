@@ -22,7 +22,8 @@
 #include <sstream>
 
 #include "ir_gen.hh"
-#include "parsing.hh"
+#include "lexer.hh"
+#include "parser.hh"
 
 using namespace llvm;
 
