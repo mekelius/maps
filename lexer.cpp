@@ -172,6 +172,11 @@ Token StreamingLexer::read_linebreak_() {
     }
     
     // if the indent went down to a level that was not used before, the code is invalid
+    // TODO: be more permissive about this, allow gnu-style braces for example.
+    //       Maybe we should consider if the next character is a block-character 
+    //       and give a warning otherwise
+    // The problem is: which way do we default or should we start a new block?
+    // All options seem like possible causes for confusion
     if (next_line_indent != indent_stack_.back()) {
         return {
             TokenType::indent_error_fatal,

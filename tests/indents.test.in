@@ -37,7 +37,11 @@ let main =
             ;
     ;
 
-let invalid =
+let gnu_style = {
+        let y = 3
+    }
+
+let invalid_indents_roll_up =
     ;
     ;
                         ;

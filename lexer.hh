@@ -8,7 +8,7 @@
 #include <vector>
 
 // TODO: update the compiler and make these constexpr
-const std::string OPERATOR_GLYPHS = "+-*/=!?|<>.$&^€£@¬§¤\\";
+const std::string OPERATOR_GLYPHS = "+-*/^=!?:|<>.,$&€£@¬§¤\\";
 bool is_operator_glyph(char);
 bool is_parenthese(char);
 
@@ -31,17 +31,19 @@ enum class TokenType: int {
 };
 
 // OPT: roll these into a single enum
-const std::array<std::string, 30> RESERVED_WORDS = {
+const std::array<std::string, 36> RESERVED_WORDS = {
     "if", "else",
     "for", "while", "do",
     "return",
     "match", "case", "switch", "default",
     "from",
     "let", "const", "var", "type", "class",
-    "has", "in", "of",
+    "has", "in", "of",                          // has could be a builtin
     "with",
-    "not", "and", "or", "xor", "nor", "nand", 
-    "is", "typeof", "derives", "from"
+    "not", "and", "or", "xor", "nor", "nand",   // these could be builtins 
+    "is", "typeof", "derives", "from",
+    "extern",
+    "async", "await", "maybe", "value", "fail", // might be builtins
 };
 bool is_reserved_word(const std::string& word);
 
