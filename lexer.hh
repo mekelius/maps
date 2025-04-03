@@ -8,7 +8,7 @@
 #include <vector>
 
 // TODO: update the compiler and make these constexpr
-const std::string OPERATOR_GLYPHS = "+-*/^=!?:|<>.,$&€£@¬§¤\\";
+const std::string OPERATOR_GLYPHS = "+-*/^=!?:|<>.$&€£@¬§¤";
 bool is_operator_glyph(char);
 bool is_parenthese(char);
 

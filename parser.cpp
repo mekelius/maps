@@ -7,9 +7,9 @@ ir_gen_(ir_gen) {
 
 #include <iostream>
 void DirectParser::run() {
-    current_token_ = lexer_->get_token();
-    
     while (true) {
+        current_token_ = lexer_->get_token();
+
         switch (current_token_.type) {
             case TokenType::eof:
                 return;
@@ -62,12 +62,9 @@ void DirectParser::run() {
                 std::cerr << "syntax error at line " << current_token_.int_value << ": " << current_token_.value << std::endl;
                 break;
 
-
             default:
                 std::cerr << "unhandled token type" << std::endl;
                 break;
         }
-
-        current_token_ = lexer_->get_token();
     }
 }

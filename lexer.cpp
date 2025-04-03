@@ -15,6 +15,7 @@ bool is_operator_glyph(char glyph) {
     return OPERATOR_GLYPHS.find(glyph) != std::string::npos;
 }
 
+// TODO: this is kinda needless and slow
 bool is_reserved_word(const std::string& word) {
     return std::find(RESERVED_WORDS.begin(), RESERVED_WORDS.end(), word) != RESERVED_WORDS.end();
 }
@@ -198,6 +199,7 @@ Token StreamingLexer::collapsed_semicolon_token_() {
         case TokenType::indent_block_start:
         case TokenType::indent_block_end:
         case TokenType::semicolon:
+        case TokenType::bof:
             return get_token_();
         
         default:
@@ -256,6 +258,8 @@ Token StreamingLexer::get_token_() {
             return read_string_literal_();
 
         // handle whitespace
+        // TODO: rework whitespace into a "packed" token inserted between operators 
+        //       and identifiers not separated by whitespace
         case ' ':
             return read_whitespace_();
     
@@ -263,6 +267,7 @@ Token StreamingLexer::get_token_() {
             read_char();
 
             // handle operator case
+            // TODO: just use peek
             if (current_char_ != '/' && current_char_ != '*') {
                 buffer_.sputc('/');
                 return read_operator_();
@@ -282,6 +287,8 @@ Token StreamingLexer::get_token_() {
         case '{':
         case '}':
         case ':':
+        case ',':
+        case '\\':
             {
                 std::string value{1, current_char_};
                 read_char();
@@ -295,9 +302,9 @@ Token StreamingLexer::get_token_() {
             while(read_char() == ';' && !source_is_->eof());
             return collapsed_semicolon_token_();
 
-
         default:
             // handle identifiers
+            // TODO: handle suffixes
             if (std::isalpha(current_char_) || current_char_ == '_')
                 return read_identifier_();
 
@@ -308,6 +315,7 @@ Token StreamingLexer::get_token_() {
                 return read_numeric_literal_();
 
             // handle operators
+            // TODO: move into a case expression
             if (is_operator_glyph(current_char_))
                 return read_operator_();
 
