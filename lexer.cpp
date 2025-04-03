@@ -38,7 +38,6 @@ char StreamingLexer::read_char() {
 
 Token StreamingLexer::read_operator_() {
     // cannot reset the buffer, since there might be an initial '/' there
-
     while (is_operator_glyph(current_char_)) {
         buffer_.sputc(current_char_);
         read_char();
@@ -202,6 +201,7 @@ Token StreamingLexer::collapsed_semicolon_token_() {
 }
 
 // when calling this, the caller must eat the first '/' of the comment
+// the caller is also responsible for checking that current_char_ is either '/' or '*'
 void StreamingLexer::read_and_ignore_comment_() {
     // single-line comment
     if (current_char_ == '/') {
@@ -259,7 +259,7 @@ Token StreamingLexer::get_token_() {
 
             // handle operator case
             if (current_char_ != '/' && current_char_ != '*') {
-                buffer_.sputc(current_char_);
+                buffer_.sputc('/');
                 return read_operator_();
             }
 
