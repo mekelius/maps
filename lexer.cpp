@@ -21,13 +21,23 @@ bool is_reserved_word(const std::string& word) {
 }
 
 // ----- StreamingLexer -----
-StreamingLexer::StreamingLexer(std::istream* source_is): 
-source_is_(source_is) {
+StreamingLexer::StreamingLexer(std::istream* source_is, std::ostream* tokens_ostream): 
+source_is_(source_is),
+tokens_os_(tokens_ostream) {
     read_char();
+}
+
+void StreamingLexer::set_tokens_ostream(std::ostream* tokens_ostream) {
+    tokens_os_ = tokens_ostream;
 }
 
 Token StreamingLexer::get_token() {
     Token token = get_token_();
+
+    // if output stream was given, print the token there as well
+    if (tokens_os_)
+        (*tokens_os_) << token << '\n';
+
     prev_token_type_ = token.type;
     return token;
 }
@@ -323,4 +333,69 @@ Token StreamingLexer::get_token_() {
             read_char();
             return UNKNOWN_TOKEN;
     }
+}
+
+std::ostream& operator<<(std::ostream& os, Token token) {
+    switch (token.type) {
+        case TokenType::eof:
+            os << "token: EOF";
+            return os;
+            
+        case TokenType::unknown:
+            os << "token: unknown";
+            return os;
+
+        case TokenType::identifier:
+            os << "token: identifier " << token.value;
+            return os;
+
+        case TokenType::number:
+            os << "token: numeric literal " << token.value;
+            break;
+
+        case TokenType::operator_t:
+            os << "token: operator " << token.value;
+            break;
+
+        case TokenType::string_literal:
+            os << "token: string literal \"" << token.value << "\"";
+            break;
+
+        case TokenType::whitespace:
+            os << "token: whitespace ";
+            break;
+
+        case TokenType::char_token:
+            os << "token: " << token.value;
+            break;
+
+        case TokenType::reserved_word:
+            os << "token: reserved word " << token.value;
+            break;
+        
+        case TokenType::indent_block_start:
+            os << "token: indent block start";
+            break;
+        
+        case TokenType::indent_block_end:
+            os << "token: indent block end " << token.int_value;
+            break;
+        
+        case TokenType::semicolon:
+            os << "token: ;";
+            break;
+
+        case TokenType::indent_error_fatal:
+            os << "syntax error at line " << token.int_value << ": " << token.value;
+            break;
+
+        case TokenType::bof:
+            os << "token: BOF";
+            break;
+
+        default:
+            os << "unhandled token type";
+            break;
+    }
+    return os;
 }

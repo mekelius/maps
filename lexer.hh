@@ -7,6 +7,8 @@
 #include <sstream>
 #include <vector>
 
+#include "config.hh"
+
 // TODO: update the compiler and make these constexpr
 const std::string OPERATOR_GLYPHS = "+-*/^=!?:|<>.$&€£@¬§¤";
 bool is_operator_glyph(char);
@@ -55,8 +57,10 @@ struct Token {
 
 class StreamingLexer {
   public:
-    StreamingLexer(std::istream* source_is);
+    StreamingLexer(std::istream* source_is, std::ostream* tokens_ostream = nullptr);
 
+    void set_tokens_ostream(std::ostream* tokens_ostream);
+    
     // extracts the next token from the stream
     Token get_token();
 
@@ -80,7 +84,10 @@ class StreamingLexer {
     std::stringbuf buffer_ = {};
     TokenType prev_token_type_ = TokenType::bof;
     std::istream* source_is_;
+    std::ostream* tokens_os_;
     std::vector<unsigned int> indent_stack_ = {0};
 };
+
+std::ostream& operator<<(std::ostream& os, Token token);
 
 #endif
