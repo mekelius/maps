@@ -6,8 +6,7 @@
 #include <algorithm>
 #include <cassert>
 
-// at line 1000 the token stream is gonna shift right, but that's ok
-constexpr unsigned int TOKEN_FORMAT_PADDING = 7;
+#include "config.hh"
 
 bool is_operator_glyph(char glyph) {
     return OPERATOR_GLYPHS.find(glyph) != std::string::npos;
@@ -18,7 +17,11 @@ bool is_reserved_word(const std::string& word) {
     return std::find(RESERVED_WORDS.begin(), RESERVED_WORDS.end(), word) != RESERVED_WORDS.end();
 }
 
-std::string Token::get_str() {
+std::string Token::get_location() const {
+    return std::to_string(line) + ":" + std::to_string(col);
+}
+
+std::string Token::get_str() const {
     switch (type) {
         case TokenType::eof:
             return "EOF";
@@ -65,12 +68,11 @@ std::string Token::get_str() {
 }
 
 std::ostream& operator<<(std::ostream& os, Token token) {
-    std::string location = std::to_string(token.line) + ":" + std::to_string(token.col);
+    std::string location = token.get_location();
     return os 
-        << location 
-        << ( location.size() < TOKEN_FORMAT_PADDING ? 
-            std::string(TOKEN_FORMAT_PADDING - location.size(), ' ') : " ")
-        << " token: " 
+        << location
+        << line_col_padding(location.size())
+        << "token: " 
         << token.get_str();
 }
 

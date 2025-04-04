@@ -8,7 +8,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "syntax_error.hh"
 #include "lexer.hh"
 // #include "ir_gen.hh"
 
@@ -70,7 +69,8 @@ class Parser {
     // gets the next token from the lexer and stores it in current_token_
     Token get_token();
     // Token expect_token(predicate, error_message);
-    void syntax_error(const std::string& message);
+    void print_error(const std::string& message);
+    void print_error(const std::string& location, const std::string& message);
     bool identifier_exists(const std::string& identifier);
     void create_identifier(const std::string& identifier, AST::Expression* expression);
 

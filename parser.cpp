@@ -1,5 +1,7 @@
 #include "parser.hh"
 
+#include "config.hh"
+
 Parser::Parser(StreamingLexer* lexer, std::ostream* error_stream):
 lexer_(lexer),
 errs_(error_stream) 
@@ -69,8 +71,14 @@ Token Parser::get_token() {
     return current_token_ = lexer_->get_token();
 }
 
-void Parser::syntax_error(const std::string& message) {
-    *errs_ << ::syntax_error(lexer_->get_current_line(), message) << '\n';
+void Parser::print_error(const std::string& location, const std::string& message) {
+    *errs_ 
+        << location << line_col_padding(location.size()) 
+        << "error: " << message << '\n';
+}
+
+void Parser::print_error(const std::string& message) {
+    print_error(current_token_.get_location(), message);
 }
 
 bool Parser::identifier_exists(const std::string& identifier) {
@@ -109,7 +117,7 @@ AST::Expression* Parser::parse_expression() {
             }
 
         default:
-            syntax_error("unexpected !tokentype! in expression"); // !!!
+            print_error("unexpected !tokentype! in expression"); // !!!
     }
 
     expressions_.push_back(std::make_unique<AST::Expression>());
@@ -135,7 +143,7 @@ void Parser::parse_let_statement() {
                 
                 // check if name already exists
                 if (identifier_exists(name)) {
-                    syntax_error("attempting to redefine identifier " + name);
+                    print_error("attempting to redefine identifier " + name);
                     return;
                 }
 
@@ -155,7 +163,9 @@ void Parser::parse_let_statement() {
 
                     default:
                         // TODO: define toketype to string conversion for these messages
-                        syntax_error("unexpected !tokentype! in let-statement, expected an assignment operator");
+                        print_error(
+                            "unexpected " + current_token_.get_str() + 
+                            " in let-statement, expected an assignment operator");
                         return;
                 }
 
@@ -168,7 +178,7 @@ void Parser::parse_let_statement() {
             }
 
         default:
-            syntax_error("expected identifier in a let-statement");
+            print_error("expected identifier in a let-statement");
             return;
     }
 }
