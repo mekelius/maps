@@ -21,9 +21,6 @@
 using namespace llvm;
 
 bool init_llvm() {
-    // if (InitializeNativeTarget() != 0)
-    //     return false;
-    
     InitializeAllTargetInfos();
     InitializeAllTargets();
     InitializeAllTargetMCs();
@@ -96,7 +93,7 @@ int main(int argc, char** argv) {
 
     StreamingLexer lexer{&source_is, tokens_ostream};
     IRGenHelper ir_gen_helper{module_name};
-    DirectParser parser{&lexer, &ir_gen_helper};
+    Parser parser{&lexer, &std::cerr/*, &ir_gen_helper*/};
     
     parser.run();
     
@@ -109,9 +106,9 @@ int main(int argc, char** argv) {
     if (cl_options.output_ir_to == OutputSink::stderr)
         module_->dump();
 
-    if (cl_options.output_object_file_to == OutputSink::file) {
+    if (cl_options.output_object_file_to == OutputSink::file)
         generate_object_file(cl_options.object_file_path, module_);
-    }
+    
 
     return EXIT_SUCCESS;
 }

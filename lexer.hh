@@ -7,8 +7,6 @@
 #include <sstream>
 #include <vector>
 
-#include "config.hh"
-
 // TODO: update the compiler and make these constexpr
 const std::string OPERATOR_GLYPHS = "+-*/^=!?:|<>.$&€£@¬§¤";
 bool is_operator_glyph(char);
@@ -49,10 +47,17 @@ const std::array<std::string, 36> RESERVED_WORDS = {
 };
 bool is_reserved_word(const std::string& word);
 
-struct Token {
+class Token {
+  public:
     TokenType type = TokenType::unknown;
+
+    unsigned int line;
+    unsigned int col;
+
     std::string value = "";
     int int_value = 0;
+
+    std::string get_str();
 };
 
 class StreamingLexer {
@@ -60,13 +65,17 @@ class StreamingLexer {
     StreamingLexer(std::istream* source_is, std::ostream* tokens_ostream = nullptr);
 
     void set_tokens_ostream(std::ostream* tokens_ostream);
+    unsigned int get_current_line();
     
     // extracts the next token from the stream
     Token get_token();
 
   private:
+    // creates a token filled with the correct line and col info
+    Token create_token_(TokenType type);
+    Token create_token_(TokenType type, const std::string& value);
+    Token create_token_(TokenType type, int value);
     Token get_token_();
-
     char read_char();
 
     Token read_operator_();
@@ -81,6 +90,9 @@ class StreamingLexer {
 
     char current_char_;
     unsigned int current_line_ = 1;
+    unsigned int current_col_ = 0;
+    unsigned int current_token_start_line_ = 0;
+    unsigned int current_token_start_col_ = 0;
     std::stringbuf buffer_ = {};
     TokenType prev_token_type_ = TokenType::bof;
     std::istream* source_is_;

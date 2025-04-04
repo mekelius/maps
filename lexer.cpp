@@ -6,10 +6,8 @@
 #include <algorithm>
 #include <cassert>
 
-const Token EOF_TOKEN = { TokenType::eof };
-const Token UNKNOWN_TOKEN = { TokenType::unknown };
-const Token SEMICOLON_TOKEN = { TokenType::semicolon };
-const Token INDENT_START_TOKEN = { TokenType::indent_block_start };
+// at line 1000 the token stream is gonna shift right, but that's ok
+constexpr unsigned int TOKEN_FORMAT_PADDING = 7;
 
 bool is_operator_glyph(char glyph) {
     return OPERATOR_GLYPHS.find(glyph) != std::string::npos;
@@ -18,6 +16,62 @@ bool is_operator_glyph(char glyph) {
 // TODO: this is kinda needless and slow
 bool is_reserved_word(const std::string& word) {
     return std::find(RESERVED_WORDS.begin(), RESERVED_WORDS.end(), word) != RESERVED_WORDS.end();
+}
+
+std::string Token::get_str() {
+    switch (type) {
+        case TokenType::eof:
+            return "EOF";
+            
+        case TokenType::unknown:
+            return "unknown token";
+
+        case TokenType::identifier:
+            return "identifier: " + value;
+
+        case TokenType::number:
+            return "numeric literal: " + value;
+
+        case TokenType::operator_t:
+            return "operator: " + value;
+
+        case TokenType::string_literal:
+            return "string literal \"" + value + "\"";
+
+        case TokenType::whitespace:
+            return "whitespace";
+
+        case TokenType::char_token:
+            return "" + value;
+
+        case TokenType::reserved_word:
+            return "reserved word " + value;
+        
+        case TokenType::indent_block_start:
+            return "indent block start";
+        
+        case TokenType::indent_block_end:
+            return "indent block end";
+        
+        case TokenType::semicolon:
+            return ";";
+
+        case TokenType::bof:
+            return "BOF";
+
+        default:
+            return "unhandled token type";
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, Token token) {
+    std::string location = std::to_string(token.line) + ":" + std::to_string(token.col);
+    return os 
+        << location 
+        << ( location.size() < TOKEN_FORMAT_PADDING ? 
+            std::string(TOKEN_FORMAT_PADDING - location.size(), ' ') : " ")
+        << " token: " 
+        << token.get_str();
 }
 
 // ----- StreamingLexer -----
@@ -29,6 +83,10 @@ tokens_os_(tokens_ostream) {
 
 void StreamingLexer::set_tokens_ostream(std::ostream* tokens_ostream) {
     tokens_os_ = tokens_ostream;
+}
+
+unsigned int StreamingLexer::get_current_line() {
+    return current_line_;
 }
 
 Token StreamingLexer::get_token() {
@@ -43,8 +101,11 @@ Token StreamingLexer::get_token() {
 }
 
 char StreamingLexer::read_char() {
+    current_col_ = current_char_ != '\n' ? current_col_ + 1 : 1;
     source_is_->get(current_char_);
-    return current_char_;
+
+    // just pretend like CRLF doesn't exist
+    return current_char_ != '\r' ? current_char_ : read_char();
 }
 
 Token StreamingLexer::read_operator_() {
@@ -53,12 +114,12 @@ Token StreamingLexer::read_operator_() {
         buffer_.sputc(current_char_);
         read_char();
         if (source_is_->eof())
-            return EOF_TOKEN;
+            return create_token_(TokenType::eof);
     }
-    return {
+    return create_token_(
         TokenType::operator_t,
         buffer_.str()
-    };
+    );
 }
 
 Token StreamingLexer::read_identifier_() {
@@ -73,16 +134,16 @@ Token StreamingLexer::read_identifier_() {
 
     std::string value = buffer_.str();
     if (is_reserved_word(value)) {
-        return {
+        return create_token_(
             TokenType::reserved_word,
             value
-        };
+        );
     }
         
-    return {
+    return create_token_(
         TokenType::identifier,
         value
-    };
+    );
 }
 
 Token StreamingLexer::read_string_literal_() {
@@ -93,10 +154,10 @@ Token StreamingLexer::read_string_literal_() {
     }
 
     read_char(); // eat the closing "
-    return {
+    return create_token_(
         TokenType::string_literal,
         buffer_.str()
-    };
+    );
 }
 
 Token StreamingLexer::read_numeric_literal_() {
@@ -105,10 +166,10 @@ Token StreamingLexer::read_numeric_literal_() {
         read_char();
     } while ((std::iswdigit(current_char_) || current_char_ == '.') && !source_is_->eof());
 
-    return {
+    return create_token_(
         TokenType::number,
         buffer_.str()
-    };
+    );
 }
 
 // whitespace has to be read, since it's sometimes significant
@@ -117,7 +178,7 @@ Token StreamingLexer::read_whitespace_() {
     while (current_char_ == ' ') {
         read_char();
         if (source_is_->eof())
-            return EOF_TOKEN;
+            return create_token_(TokenType::eof);
     }
 
     // whitespace can only affect semantics if the previous token is an operator or an identifier
@@ -125,9 +186,9 @@ Token StreamingLexer::read_whitespace_() {
     switch (prev_token_type_) {
         case TokenType::operator_t:
         case TokenType::identifier:
-            return {
+            return create_token_(
                 TokenType::whitespace
-            };
+            );
         default:
             return get_token_();
     }
@@ -172,7 +233,7 @@ Token StreamingLexer::read_linebreak_() {
     // if the indent increased, start a new level
     if (next_line_indent > current_indent) {
         indent_stack_.push_back(next_line_indent);
-        return INDENT_START_TOKEN;
+        return create_token_(TokenType::indent_block_start);
     }
 
     // if the indent decreased, close the previous indents we passed
@@ -189,18 +250,16 @@ Token StreamingLexer::read_linebreak_() {
     // The problem is: which way do we default or should we start a new block?
     // All options seem like possible causes for confusion
     if (next_line_indent != indent_stack_.back()) {
-        return {
+        return create_token_(
             TokenType::indent_error_fatal,
-            "Mismatched indent",
-            static_cast<int>(current_line_)
-        };
+            "Mismatched indent"
+        );
     }
 
-    return {
+    return create_token_(
         TokenType::indent_block_end,
-        "",
-        static_cast<int>(levels_closed)
-    };    
+        ""
+    );    
 }
 
 // Reduce redundant semicolons
@@ -213,7 +272,7 @@ Token StreamingLexer::collapsed_semicolon_token_() {
             return get_token_();
         
         default:
-            return SEMICOLON_TOKEN;
+            return create_token_(TokenType::semicolon);
     }
 }
 
@@ -251,15 +310,30 @@ void StreamingLexer::read_and_ignore_comment_() {
     return;
 }
 
+Token StreamingLexer::create_token_(TokenType type) {
+    return Token{type, current_token_start_line_, current_token_start_col_};
+}
+
+Token StreamingLexer::create_token_(TokenType type, const std::string& value) {
+    return Token{type, current_token_start_line_, current_token_start_col_, value};
+}
+
+Token StreamingLexer::create_token_(TokenType type, int value) {
+    return Token{type, current_token_start_line_, current_token_start_col_, "", value};
+}
+
 Token StreamingLexer::get_token_() {
+    current_token_start_col_ = current_col_;
+    current_token_start_line_ = current_line_;
+
     buffer_ = {};
 
     if (source_is_->eof())
-        return EOF_TOKEN;
+        return create_token_(TokenType::eof);
 
     switch (current_char_) {
         case EOF:
-            return EOF_TOKEN;
+            return create_token_(TokenType::eof);
 
         // handle string literals
         // TODO: handle '
@@ -302,7 +376,7 @@ Token StreamingLexer::get_token_() {
             {
                 std::string value{1, current_char_};
                 read_char();
-                return { TokenType::char_token, value };
+                return create_token_(TokenType::char_token, value);
             }
         
         case '\n':
@@ -331,71 +405,6 @@ Token StreamingLexer::get_token_() {
 
             // unknown token
             read_char();
-            return UNKNOWN_TOKEN;
+            return create_token_(TokenType::unknown);
     }
-}
-
-std::ostream& operator<<(std::ostream& os, Token token) {
-    switch (token.type) {
-        case TokenType::eof:
-            os << "token: EOF";
-            return os;
-            
-        case TokenType::unknown:
-            os << "token: unknown";
-            return os;
-
-        case TokenType::identifier:
-            os << "token: identifier " << token.value;
-            return os;
-
-        case TokenType::number:
-            os << "token: numeric literal " << token.value;
-            break;
-
-        case TokenType::operator_t:
-            os << "token: operator " << token.value;
-            break;
-
-        case TokenType::string_literal:
-            os << "token: string literal \"" << token.value << "\"";
-            break;
-
-        case TokenType::whitespace:
-            os << "token: whitespace ";
-            break;
-
-        case TokenType::char_token:
-            os << "token: " << token.value;
-            break;
-
-        case TokenType::reserved_word:
-            os << "token: reserved word " << token.value;
-            break;
-        
-        case TokenType::indent_block_start:
-            os << "token: indent block start";
-            break;
-        
-        case TokenType::indent_block_end:
-            os << "token: indent block end " << token.int_value;
-            break;
-        
-        case TokenType::semicolon:
-            os << "token: ;";
-            break;
-
-        case TokenType::indent_error_fatal:
-            os << "syntax error at line " << token.int_value << ": " << token.value;
-            break;
-
-        case TokenType::bof:
-            os << "token: BOF";
-            break;
-
-        default:
-            os << "unhandled token type";
-            break;
-    }
-    return os;
 }
