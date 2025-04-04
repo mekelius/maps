@@ -103,8 +103,11 @@ int main(int argc, char** argv) {
     if (cl_options.output_ir_to == OutputSink::file)
         print_ir_to_file(cl_options.ir_file_path, module_);
 
-    if (cl_options.output_ir_to == OutputSink::stderr)
+    if (cl_options.output_ir_to == OutputSink::stderr) {
+        std::cerr << "--- GENERATED IR ----\n" << std::endl;
         module_->dump();
+        std::cerr << "\n------ IR ENDS ------\n" << std::endl;
+    }
 
     if (cl_options.output_object_file_to == OutputSink::file)
         generate_object_file(cl_options.object_file_path, module_);

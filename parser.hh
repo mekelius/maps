@@ -69,9 +69,13 @@ class Parser {
     // gets the next token from the lexer and stores it in current_token_
     Token get_token();
     // Token expect_token(predicate, error_message);
-    void print_error(const std::string& message);
-    void print_error(const std::string& location, const std::string& message);
-    bool identifier_exists(const std::string& identifier);
+    void print_error(const std::string& message) const;
+    void print_error(const std::string& location, const std::string& message) const;
+    void print_info(const std::string& message) const;
+    void print_info(const std::string& location, const std::string& message) const;
+    void print_parsing_complete() const;
+
+    bool identifier_exists(const std::string& identifier) const;
     void create_identifier(const std::string& identifier, AST::Expression* expression);
 
     AST::Expression* parse_expression();
