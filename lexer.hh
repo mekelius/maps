@@ -57,7 +57,8 @@ class Token {
     std::string value = "";
     int int_value = 0;
 
-    std::string get_str();
+    std::string get_location() const;
+    std::string get_str() const;
 };
 
 class StreamingLexer {
