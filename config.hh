@@ -29,6 +29,9 @@ struct CL_Options {
     bool bad_args = false;
     std::vector<std::string> input_file_paths = {};
 
+    // TODO: implement cl-arg for wall
+    bool wall = false; 
+
     OutputSink output_ir_to = OutputSink::none;
     OutputSink output_object_file_to = OutputSink::none; // NOTE: object file can't currectly be dumped to stderr
     OutputSink output_token_stream_to = OutputSink::none;

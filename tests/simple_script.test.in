@@ -1,0 +1,8 @@
+let x = 54
+let y = 89
+
+print( x*y )
+
+y = 978
+
+print ( y * x )

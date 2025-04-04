@@ -9,59 +9,46 @@ errs_(error_stream)
 
 #include <iostream>
 void Parser::run() {
+    *errs_ << "\n" << "--- START PARSING ---" << "\n\n";
+
     while (true) {
         get_token();
 
         switch (current_token_.type) {
             case TokenType::eof:
-                return;
+                return print_parsing_complete();
                 
-            case TokenType::unknown:
-                // syntax error
-                break;
-
-            case TokenType::identifier:
-                
-                break;
-
-            case TokenType::number:
-
-                break;
-
-            case TokenType::operator_t:
-                break;
-
-            case TokenType::string_literal:
-                break;
-
-            case TokenType::whitespace:
-                break;
-
-            case TokenType::char_token:
-                break;
-
             case TokenType::reserved_word:
                 if (current_token_.value == "let")
                     parse_let_statement();
+                break;
                 
-                break;
-            
-            case TokenType::indent_block_start:
-                break;
-            
-            case TokenType::indent_block_end:
-                break;
-            
-            case TokenType::semicolon:
-                break;
-
-            case TokenType::indent_error_fatal:
-                break;
-
-            case TokenType::bof:
-                break;
-
+            // TODO
             default:
+            case TokenType::identifier:
+            case TokenType::operator_t:
+            case TokenType::char_token:
+            case TokenType::indent_block_start:
+            case TokenType::indent_block_end:
+                print_info("parsing of " + current_token_.get_str() + " to be implemented");
+                break;
+            
+            // ---- errors -----
+            case TokenType::string_literal:
+            case TokenType::number:
+                print_error("unexpected " + current_token_.get_str() + " in global context");
+                break;
+            case TokenType::indent_error_fatal:
+                print_error("incorrect indentation");
+                break;
+            case TokenType::unknown:
+                print_error("unknown token type");
+                break;
+
+            // ----- types ignored in global context -----
+            case TokenType::whitespace:                
+            case TokenType::bof:
+            case TokenType::semicolon:
                 break;
         }
     }
@@ -71,17 +58,37 @@ Token Parser::get_token() {
     return current_token_ = lexer_->get_token();
 }
 
-void Parser::print_error(const std::string& location, const std::string& message) {
+
+// ----- OUTPUT HELPERS -----
+
+void Parser::print_error(const std::string& location, const std::string& message) const {
     *errs_ 
         << location << line_col_padding(location.size()) 
-        << "error: " << message << '\n';
+        << "error: " << message << "\n";
 }
 
-void Parser::print_error(const std::string& message) {
+void Parser::print_error(const std::string& message) const {
     print_error(current_token_.get_location(), message);
 }
 
-bool Parser::identifier_exists(const std::string& identifier) {
+void Parser::print_info(const std::string& location, const std::string& message) const {
+    *errs_
+        << location << line_col_padding(location.size()) 
+        << "info:  " << message << '\n';
+}
+
+void Parser::print_info(const std::string& message) const {
+    print_info(current_token_.get_location(), message);
+}
+
+void Parser::print_parsing_complete() const {
+    *errs_ << "\n" << "--- PARSING COMPLETE ---" << "\n" << std::endl;
+    return;
+}
+
+// ----- IDENTIFIERS -----
+
+bool Parser::identifier_exists(const std::string& identifier) const {
     return identifiers_.find(identifier) != identifiers_.end();
 }
 
@@ -89,6 +96,9 @@ void Parser::create_identifier(const std::string& identifier, AST::Expression* e
 
     identifiers_.insert({identifier, expression}); //!!!
 }
+
+
+// ----- PARSING -----
 
 // how to signal failure
 AST::Expression* Parser::parse_expression() {
@@ -162,7 +172,6 @@ void Parser::parse_let_statement() {
                         }
 
                     default:
-                        // TODO: define toketype to string conversion for these messages
                         print_error(
                             "unexpected " + current_token_.get_str() + 
                             " in let-statement, expected an assignment operator");
@@ -175,6 +184,7 @@ void Parser::parse_let_statement() {
                 AST::Expression* expression = parse_expression();
 
                 create_identifier(name, expression);
+                return;
             }
 
         default:
