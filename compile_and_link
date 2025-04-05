@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ $# -ne 2 ]]; then
+    echo "Usage: ./run_compiler input_file output_file"
+    exit
+fi
+
+./build/testc $1 -o ./build/out.o &&
+clang++ build/out.o -Wall -o $2
