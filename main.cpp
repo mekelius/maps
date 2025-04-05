@@ -89,17 +89,24 @@ int main(int argc, char** argv) {
     }
 
     // ----- parse the source -----
-    std::string module_name = "Test module";
-
+    
     StreamingLexer lexer{&source_is, tokens_ostream};
-    IRGenHelper ir_gen_helper{module_name};
     Parser parser{&lexer, &std::cerr/*, &ir_gen_helper*/};
     
-    parser.run();
+    std::unique_ptr<AST::AST> ast = parser.run();
+    
+    
+    // ----- CODE GEN -----
+
+    std::string module_name = "Test module";
+    IRGenHelper ir_gen_helper{module_name};
+    
+    ir_gen_helper.generate_ir(ast.get());
+
     
     // ----- produce output -----
+    
     Module* module_ = ir_gen_helper.get_module();
-
     if (cl_options.output_ir_to == OutputSink::file)
         print_ir_to_file(cl_options.ir_file_path, module_);
 

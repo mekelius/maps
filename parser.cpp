@@ -4,19 +4,29 @@
 
 Parser::Parser(StreamingLexer* lexer, std::ostream* error_stream):
 lexer_(lexer),
-errs_(error_stream) 
-{}
+errs_(error_stream) {
+    ast_ = std::make_unique<AST::AST>();
+}
 
-#include <iostream>
-void Parser::run() {
+std::unique_ptr<AST::AST> Parser::run() {
     *errs_ << "\n" << "--- START PARSING ---" << "\n\n";
 
-    while (true) {
+    // AST::Expression* hello_call = ast_->create_expression(AST::ExpressionType::call);
+    // AST::Expression* hello_string = ast_->create_expression(AST::ExpressionType::string_literal);
+
+    // hello_string->string_value = "Hellojaajaa";
+    // hello_call->call_expr = {"puts", { hello_string }};
+
+    // ast_->entry_point = hello_call;
+    // finished_ = true;
+
+    while (!finished_) {
         get_token();
 
         switch (current_token_.type) {
             case TokenType::eof:
-                return print_parsing_complete();
+                finished_ = true;
+                break;
                 
             case TokenType::reserved_word:
                 if (current_token_.value == "let")
@@ -52,10 +62,26 @@ void Parser::run() {
                 break;
         }
     }
+
+    print_parsing_complete();
+    return finalize_parsing();
 }
 
 Token Parser::get_token() {
     return current_token_ = lexer_->get_token();
+}
+
+void Parser::declare_invalid() {
+    program_valid_ = false;
+}
+
+std::unique_ptr<AST::AST> Parser::finalize_parsing() {
+    if (identifier_exists("main")) {
+            ast_->entry_point = identifiers_.find("main")->second;
+    }
+
+    ast_->valid = program_valid_;
+    return std::move(ast_);
 }
 
 
@@ -92,9 +118,9 @@ bool Parser::identifier_exists(const std::string& identifier) const {
     return identifiers_.find(identifier) != identifiers_.end();
 }
 
-void Parser::create_identifier(const std::string& identifier, AST::Expression* expression = nullptr) {
+void Parser::create_identifier(const std::string& identifier, AST::Expression* expression) {
 
-    identifiers_.insert({identifier, expression}); //!!!
+    identifiers_.insert({identifier, expression});
 }
 
 
@@ -105,6 +131,9 @@ AST::Expression* Parser::parse_expression() {
 
     switch (current_token_.type) {
         case TokenType::identifier:
+            if (current_token_.value == "print") {
+                return parse_call_expression();
+            }
             // check if exists
                 // if does, check if has a value
                 // if does, copy over
@@ -113,6 +142,12 @@ AST::Expression* Parser::parse_expression() {
         case TokenType::number:
             // create number value
             return {};
+        
+        case TokenType::string_literal: {
+                auto expr = ast_->create_expression(AST::ExpressionType::string_literal);
+                expr->string_value = current_token_.value;
+                return expr;
+            }
             
         case TokenType::char_token:
             switch (current_token_.value.at(0)) {
@@ -130,8 +165,27 @@ AST::Expression* Parser::parse_expression() {
             print_error("unexpected !tokentype! in expression"); // !!!
     }
 
-    expressions_.push_back(std::make_unique<AST::Expression>());
-    return expressions_.back().get();
+    return ast_->create_expression(AST::ExpressionType::string_literal);
+}
+
+AST::Expression* Parser::parse_call_expression() {
+    std::string callee = current_token_.value;
+
+    switch (get_token().type) {
+        case TokenType::whitespace:
+            break;
+        default:
+            print_error("bad call syntax");
+            return nullptr; //!!! crash
+    }
+    get_token();
+
+    AST::Expression* arg = parse_expression();
+
+    auto expr = ast_->create_expression(AST::ExpressionType::call);
+    expr->call_expr = {callee, {arg}};
+    return expr;
+
 }
 
 // parse_parentheses()
@@ -164,7 +218,8 @@ void Parser::parse_let_statement() {
 
                 switch (current_token_.type) {
                     case TokenType::semicolon:
-                        create_identifier(name);
+                        // !!! now creating string literals like dumb
+                        // create_identifier(name, ast_->create_expression(AST::ExpressionType::string_literal));
                         return;
                     case TokenType::operator_t:
                         if (current_token_.value == "=") {
