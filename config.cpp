@@ -2,13 +2,12 @@
 
 #include <iostream>
 
-CL_Options parse_cl_args(int argc, char** argv) {
-    CL_Options failed = { true };
+std::optional<CL_Options> parse_cl_args(int argc, char** argv) {
     if (argc < 2)
-        return failed;
+        return std::nullopt;
 
     std::vector<std::string> args{ argv + 1, argv + argc };
-    CL_Options options = { false };
+    CL_Options options = {};
 
     for (auto it = args.begin(); it < args.end(); it++) {
         std::string arg = *it;
@@ -17,11 +16,11 @@ CL_Options parse_cl_args(int argc, char** argv) {
             it++;
 
             if (it >= args.end())
-                return failed;
+                return std::nullopt;
 
             if (options.output_object_file_to != OutputSink::none) {
                 std::cerr << "Conflicting command line arguments" << std::endl;
-                return failed;
+                return std::nullopt;
             }
 
             if (arg == "-o") {
@@ -43,7 +42,7 @@ CL_Options parse_cl_args(int argc, char** argv) {
 
             it++;
             if (it >= args.end())
-                return failed;
+                return std::nullopt;
             
             if (*it == "ir") {
                 options.output_ir_to = sink;
@@ -52,7 +51,7 @@ CL_Options parse_cl_args(int argc, char** argv) {
                 options.output_token_stream_to = sink;
 
             } else {
-                return failed;
+                return std::nullopt;
             }
 
             continue;
@@ -61,7 +60,7 @@ CL_Options parse_cl_args(int argc, char** argv) {
         // args without '-' are input files
         if (options.input_file_paths.size() >= 1) {
             std::cerr << "Multiple input files not yet supported" << std::endl;
-            return failed;
+            return std::nullopt;
         }
 
         options.input_file_paths.push_back(arg);

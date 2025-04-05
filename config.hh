@@ -2,6 +2,7 @@
 #define __CONFIG_HH
 
 #include <string>
+#include <optional>
 #include <vector>
 
 // TODO: handle multiple inputfiles
@@ -26,7 +27,6 @@ enum class OutputSink {
 };
 
 struct CL_Options {
-    bool bad_args = false;
     std::vector<std::string> input_file_paths = {};
 
     // TODO: implement cl-arg for wall
@@ -41,6 +41,6 @@ struct CL_Options {
     std::string tokens_file_path = DEFAULT_TOKENS_FILE_PATH;
 };
 
-CL_Options parse_cl_args(int argc, char** argv);
+std::optional<CL_Options> parse_cl_args(int argc, char** argv);
 
 #endif
