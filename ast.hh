@@ -9,9 +9,20 @@
 
 namespace AST {
 
-// struct Type {
+struct Type {
+    bool is_native = false;
+    std::string name;
+    bool is_numeric = false;
+    bool is_integral = false;
+};
 
-// };
+// TODO: should be constexpr
+const Type Int {
+    false,
+    "Int",
+    true,
+    true
+};
 
 // struct Mapping: public Type {
     // Type* domain;
@@ -79,6 +90,12 @@ struct Expression {
 
 };
 
+struct Callable {
+    std::string name;
+    unsigned int arity = 0;
+    Expression* expression;
+};
+
 
 class AST {
   public:
@@ -87,11 +104,12 @@ class AST {
     Expression* root;
     Expression* entry_point;
     std::unordered_map<std::string, Expression*> identifiers;
-
+    
     Expression* create_expression(ExpressionType type);
+    std::vector<Callable*> callables_;
     // Callable callables;
     // std::unordered_map<> call_sites_
-
+    
   private:
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
 };

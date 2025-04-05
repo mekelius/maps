@@ -18,6 +18,10 @@
 #include "lexer.hh"
 #include "parser.hh"
 
+#if __cplusplus < 201703L
+    #error(need c++17)
+#endif
+
 using namespace llvm;
 
 bool init_llvm() {
@@ -45,14 +49,14 @@ bool read_source_file(const std::string& filename, std::string& source) {
 }
 
 int main(int argc, char** argv) {
-    CL_Options cl_options = parse_cl_args(argc, argv);
+    std::optional<CL_Options> cl_options = parse_cl_args(argc, argv);
 
-    if (cl_options.bad_args) {
+    if (!cl_options) {
         std::cout << USAGE << std::endl;
         return EXIT_FAILURE;
     }
 
-    if (cl_options.input_file_paths.size() == 0) {
+    if (cl_options->input_file_paths.size() == 0) {
         std::cout << "no input file" << std::endl;
         return EXIT_FAILURE;
     }
@@ -60,7 +64,7 @@ int main(int argc, char** argv) {
     // ----- read the source into a buffer -----
     // TODO: replace with a proper buffer
     std::string source = "";
-    if (!read_source_file(cl_options.input_file_paths.front(), source))
+    if (!read_source_file(cl_options->input_file_paths.front(), source))
         return EXIT_FAILURE;
     std::istringstream iss{source};
     std::istream source_is{iss.rdbuf()};
@@ -75,9 +79,9 @@ int main(int argc, char** argv) {
     std::unique_ptr<std::ofstream> tokens_file;
     std::ostream* tokens_ostream;
     
-    switch (cl_options.output_token_stream_to) {
+    switch (cl_options->output_token_stream_to) {
         case OutputSink::file:
-            tokens_file = std::make_unique<std::ofstream>(cl_options.tokens_file_path);
+            tokens_file = std::make_unique<std::ofstream>(cl_options->tokens_file_path);
             tokens_ostream = tokens_file.get();
             break;
         case OutputSink::stderr:
@@ -107,17 +111,17 @@ int main(int argc, char** argv) {
     // ----- produce output -----
     
     Module* module_ = ir_gen_helper.get_module();
-    if (cl_options.output_ir_to == OutputSink::file)
-        print_ir_to_file(cl_options.ir_file_path, module_);
+    if (cl_options->output_ir_to == OutputSink::file)
+        print_ir_to_file(cl_options->ir_file_path, module_);
 
-    if (cl_options.output_ir_to == OutputSink::stderr) {
+    if (cl_options->output_ir_to == OutputSink::stderr) {
         std::cerr << "--- GENERATED IR ----\n" << std::endl;
         module_->dump();
         std::cerr << "\n------ IR ENDS ------\n" << std::endl;
     }
 
-    if (cl_options.output_object_file_to == OutputSink::file)
-        generate_object_file(cl_options.object_file_path, module_);
+    if (cl_options->output_object_file_to == OutputSink::file)
+        generate_object_file(cl_options->object_file_path, module_);
     
 
     return EXIT_SUCCESS;

@@ -25,7 +25,7 @@ bool generate_object_file(const std::string& filename, Module* module_) {
 
     legacy::PassManager pass;
 
-    if (target_machine->addPassesToEmitFile(pass, output, nullptr, CGFT_ObjectFile)) {
+    if (target_machine->addPassesToEmitFile(pass, output, nullptr, CodeGenFileType::ObjectFile)) {
         std::cerr << "Couldn't generate object file for target machine" << std::endl;
         return false;
     }
