@@ -24,50 +24,25 @@
 
 using namespace llvm;
 
-bool init_llvm() {
-    InitializeAllTargetInfos();
-    InitializeAllTargets();
-    InitializeAllTargetMCs();
-    InitializeAllAsmParsers();
-    InitializeAllAsmPrinters();    
-
-    return true;
-}
-
-bool read_source_file(const std::string& filename, std::string& source) {
-    std::ifstream source_file{filename, std::ifstream::in};
-    if (!source_file.is_open()) {
-        std::cerr << "Couldn't open file: " << filename << std::endl;
-        return false;
-    }
-
-    std::string content((std::istreambuf_iterator<char>(source_file)), std::istreambuf_iterator<char>());
-    source = content;
-
-    source_file.close();
-    return true;
-}
-
 int main(int argc, char** argv) {
     std::optional<CL_Options> cl_options = parse_cl_args(argc, argv);
 
     if (!cl_options) {
-        std::cout << USAGE << std::endl;
+        std::cerr << USAGE << std::endl;
         return EXIT_FAILURE;
     }
 
     if (cl_options->input_file_paths.size() == 0) {
-        std::cout << "no input file" << std::endl;
+        std::cerr << "no input file" << std::endl;
         return EXIT_FAILURE;
     }
 
-    // ----- read the source into a buffer -----
-    // TODO: replace with a proper buffer
-    std::string source = "";
-    if (!read_source_file(cl_options->input_file_paths.front(), source))
+    std::string input_file_path = cl_options->input_file_paths.at(0);
+    std::ifstream source_is{ input_file_path, std::ifstream::in};
+    if (!source_is.is_open()) {
+        std::cerr << "Couldn't open file: " << input_file_path << std::endl;
         return EXIT_FAILURE;
-    std::istringstream iss{source};
-    std::istream source_is{iss.rdbuf()};
+    }
 
     // ----- initialize llvm -----
     if (!init_llvm()) {
@@ -75,7 +50,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    // prepare the output streams
+    // prepare the output stream
     std::unique_ptr<std::ofstream> tokens_file;
     std::ostream* tokens_ostream;
     

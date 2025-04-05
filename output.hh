@@ -27,6 +27,7 @@
 #include <string>
 #include <iostream>
 
+bool init_llvm();
 bool print_ir_to_file(const std::string& filename, llvm::Module* module_);
 bool generate_object_file(const std::string& filename, llvm::Module* module_);
 

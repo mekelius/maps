@@ -2,6 +2,16 @@
 
 using namespace llvm;
 
+bool init_llvm() {
+    InitializeAllTargetInfos();
+    InitializeAllTargets();
+    InitializeAllTargetMCs();
+    InitializeAllAsmParsers();
+    InitializeAllAsmPrinters();    
+
+    return true;
+}
+
 bool generate_object_file(const std::string& filename, Module* module_) {
     // check if we have a target
     auto target_triple = sys::getDefaultTargetTriple();
