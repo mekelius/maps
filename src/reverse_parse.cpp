@@ -10,6 +10,9 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::string_literal:
             return ostream << "\"" << expression->string_value << "\"";
         
+        case AST::ExpressionType::numeric_literal:
+            return ostream << expression->string_value;
+
         case AST::ExpressionType::call: {
 
             auto [callee, args] = expression->call_expr;
@@ -25,8 +28,11 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::native_function:
             return ostream << "@{ BUILT-IN FUNCTION: " << expression->string_value << " }@";
 
+        case AST::ExpressionType::not_implemented:
+            return ostream << "Expression type not implemented in parser";
+
         default:
-            return ostream << "UNHANDLED EXPRESSION TYPE!!!";
+            return ostream << "Expression type not implemented in reverse parser";
     }
 }
 

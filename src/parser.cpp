@@ -124,9 +124,11 @@ AST::Expression* Parser::parse_expression() {
                 // if does, copy over
                     // else leave hanging
             // else leave hanging
-        case TokenType::number:
-            // create number value
-            return ast_->create_expression(AST::ExpressionType::not_implemented);
+        case TokenType::number: {
+                auto expression = ast_->create_expression(AST::ExpressionType::numeric_literal, &AST::NumberLiteral);
+                expression->string_value = current_token_.value;
+                return expression;
+            }
         
         case TokenType::string_literal: {
                 auto expr = ast_->create_expression(AST::ExpressionType::string_literal);
