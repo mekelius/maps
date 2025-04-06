@@ -162,7 +162,7 @@ AST::Expression* Parser::parse_call_expression() {
         return ast_->create_expression(AST::ExpressionType::call);
     }
 
-    auto [_1, _2, arg_types] = **maybe_callee;
+    auto [callee_identifier, _2, arg_types] = **maybe_callee;
     unsigned int arity = arg_types.size();
 
     if (arity == 0) {
@@ -190,7 +190,7 @@ AST::Expression* Parser::parse_call_expression() {
     AST::Expression* arg = parse_expression();
 
     auto expr = ast_->create_expression(AST::ExpressionType::call);
-    expr->call_expr = {current_token_.value, {arg}};
+    expr->call_expr = {callee_identifier, {arg}};
     return expr;
 
 }

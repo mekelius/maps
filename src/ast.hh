@@ -9,9 +9,6 @@
 #include <string_view>
 #include <optional>
 
-// forward declaration to make this a friend later
-class IR_Generator;
-
 namespace AST {
 
 struct Type {
@@ -81,6 +78,10 @@ struct Callable {
     std::vector<const Type*> arg_types;
 };
 
+struct Scope {
+    std::unordered_map<std::string, Callable*> identifiers;
+};
+
 class AST {
   public:
     bool valid = true;
@@ -98,9 +99,8 @@ class AST {
     std::optional<Callable*> get_identifier(const std::string& name);
     // std::unordered_map<> call_sites_
     
-    // allow irgenerator to read directly
-    friend class ::IR_Generator;
-  
+    Scope global = {};
+
   private:
     // caller is responsible for checking if the name is free with name_free
     void create_identifier(const std::string& name, Callable* callable);
