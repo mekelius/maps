@@ -31,6 +31,9 @@
         <mxCell id="HwKCkBgiHDpJBRkWVLnF-41" value="Nullary op" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="yL6eGswxiIiQlKBZzDek-39">
           <mxGeometry x="560" y="30" width="120" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="HwKCkBgiHDpJBRkWVLnF-52" value="Callable expr" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="yL6eGswxiIiQlKBZzDek-39">
+          <mxGeometry x="390" y="230" width="120" height="60" as="geometry" />
+        </mxCell>
         <mxCell id="HwKCkBgiHDpJBRkWVLnF-10" value="Types" style="swimlane;startSize=0;" vertex="1" parent="1">
           <mxGeometry x="-800" y="100" width="480" height="890" as="geometry" />
         </mxCell>
@@ -126,6 +129,9 @@
         </mxCell>
         <mxCell id="HwKCkBgiHDpJBRkWVLnF-44" value="Native binary op" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="HwKCkBgiHDpJBRkWVLnF-50">
           <mxGeometry x="720" y="70" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="HwKCkBgiHDpJBRkWVLnF-53" value="Function body" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="HwKCkBgiHDpJBRkWVLnF-50">
+          <mxGeometry x="560" y="70" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

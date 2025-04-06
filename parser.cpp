@@ -8,17 +8,15 @@ errs_(error_stream) {
     ast_ = std::make_unique<AST::AST>();
 }
 
-std::unique_ptr<AST::AST> Parser::run() {
-    *errs_ << "\n" << "--- START PARSING ---" << "\n\n";
-
-    // AST::Expression* hello_call = ast_->create_expression(AST::ExpressionType::call);
-    // AST::Expression* hello_string = ast_->create_expression(AST::ExpressionType::string_literal);
-
-    // hello_string->string_value = "Hellojaajaa";
-    // hello_call->call_expr = {"puts", { hello_string }};
-
-    // ast_->entry_point = hello_call;
-    // finished_ = true;
+std::unique_ptr<AST::AST> Parser::run(const CL_Options& cl_options) {
+    // if tokens get dumped, provide clearer separation
+    if (cl_options.output_token_stream_to == OutputSink::stderr) {
+        *errs_ << "\n" << "--- START PARSING ---" << "\n\n";
+    } else {
+        *errs_ << "Parsing source file(s)...\n";
+    }
+    
+    AST::init_builtin_callables(*ast_);
 
     while (!finished_) {
         get_token();
@@ -63,7 +61,13 @@ std::unique_ptr<AST::AST> Parser::run() {
         }
     }
 
-    print_parsing_complete();
+    // if tokens get dumped, provide clearer separation
+    if (cl_options.output_token_stream_to == OutputSink::stderr) {
+        *errs_ << "\n" << "--- PARSING COMPLETE ---" << "\n" << std::endl;
+    } else {
+        *errs_ << "Parsing complete" << std::endl;
+    }
+
     return finalize_parsing();
 }
 
@@ -76,14 +80,9 @@ void Parser::declare_invalid() {
 }
 
 std::unique_ptr<AST::AST> Parser::finalize_parsing() {
-    if (identifier_exists("main")) {
-            ast_->entry_point = identifiers_.find("main")->second;
-    }
-
     ast_->valid = program_valid_;
     return std::move(ast_);
 }
-
 
 // ----- OUTPUT HELPERS -----
 
@@ -107,22 +106,19 @@ void Parser::print_info(const std::string& message) const {
     print_info(current_token_.get_location(), message);
 }
 
-void Parser::print_parsing_complete() const {
-    *errs_ << "\n" << "--- PARSING COMPLETE ---" << "\n" << std::endl;
-    return;
-}
-
 // ----- IDENTIFIERS -----
 
 bool Parser::identifier_exists(const std::string& identifier) const {
-    return identifiers_.find(identifier) != identifiers_.end();
+    return !(ast_->name_free(identifier));
 }
 
 void Parser::create_identifier(const std::string& identifier, AST::Expression* expression) {
-
-    identifiers_.insert({identifier, expression});
+    ast_->create_callable(identifier, expression);
 }
 
+std::optional<AST::Callable*> Parser::lookup_identifier(const std::string& identifier) {
+    return ast_->get_identifier(identifier);
+}
 
 // ----- PARSING -----
 
@@ -162,28 +158,52 @@ AST::Expression* Parser::parse_expression() {
             }
 
         default:
-            print_error("unexpected !tokentype! in expression"); // !!!
+            print_error("unexpected " + current_token_.get_str() + " in expression");
     }
 
     return ast_->create_expression(AST::ExpressionType::string_literal);
 }
 
 AST::Expression* Parser::parse_call_expression() {
-    std::string callee = current_token_.value;
+    // check that the function exists here, or mark as hanging
+    auto maybe_callee = lookup_identifier(current_token_.value);
+
+    if (!maybe_callee) {
+        // mark somehow as hanging and return later
+        print_error("HOISTING NEEDED, tried to call: \"" + current_token_.value + "\" before definition");
+        declare_invalid();
+        return ast_->create_expression(AST::ExpressionType::call);
+    }
+
+    auto [_1, _2, arg_types] = **maybe_callee;
+    unsigned int arity = arg_types.size();
+
+    if (arity == 0) {
+        auto expr = ast_->create_expression(AST::ExpressionType::call);
+        expr->call_expr = {current_token_.value, {}};
+        return expr;
+    }
+
+    if (arity != 1) {
+        print_error("CAN'T YET PARSE ARG LISTS LONGER THAN 1");
+        declare_invalid();
+        return ast_->create_expression(AST::ExpressionType::call);
+    }
 
     switch (get_token().type) {
         case TokenType::whitespace:
             break;
         default:
             print_error("bad call syntax");
-            return nullptr; //!!! crash
+            declare_invalid();
+            return ast_->create_expression(AST::ExpressionType::call); //!!! crash
     }
-    get_token();
+    get_token(); //eat whitespace
 
     AST::Expression* arg = parse_expression();
 
     auto expr = ast_->create_expression(AST::ExpressionType::call);
-    expr->call_expr = {callee, {arg}};
+    expr->call_expr = {current_token_.value, {arg}};
     return expr;
 
 }
