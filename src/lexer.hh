@@ -89,7 +89,7 @@ class StreamingLexer {
     Token collapsed_semicolon_token_();
     void read_and_ignore_comment_();
 
-    char current_char_;
+    char current_char_ = '\00'; // this null will be read and discarded during the constructor 
     unsigned int current_line_ = 1;
     unsigned int current_col_ = 0;
     unsigned int current_token_start_line_ = 0;
