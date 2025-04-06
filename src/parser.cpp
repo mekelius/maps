@@ -100,6 +100,8 @@ bool Parser::identifier_exists(const std::string& identifier) const {
 }
 
 void Parser::create_identifier(const std::string& identifier, AST::Expression* expression) {
+    assert(expression && "Parser tried to create an identifier with nullptr as the expression");
+
     ast_->create_callable(identifier, expression);
 }
 
@@ -124,7 +126,7 @@ AST::Expression* Parser::parse_expression() {
             // else leave hanging
         case TokenType::number:
             // create number value
-            return {};
+            return ast_->create_expression(AST::ExpressionType::not_implemented);
         
         case TokenType::string_literal: {
                 auto expr = ast_->create_expression(AST::ExpressionType::string_literal);
@@ -141,7 +143,7 @@ AST::Expression* Parser::parse_expression() {
                 case '{':
                     // parse bracket expression
                 default:
-                    return {};
+                    return ast_->create_expression(AST::ExpressionType::not_implemented);
             }
 
         default:

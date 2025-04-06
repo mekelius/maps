@@ -21,10 +21,12 @@ Expression* AST::create_expression(ExpressionType expression_type, const Type* t
         case ExpressionType::native_function:
         case ExpressionType::native_operator:
         case ExpressionType::function_body:
+        case ExpressionType::not_implemented:
+        default:
             return expression;        
             
-        default:
-            assert(false && "unhandled expression type");
+        // default:
+            // assert(false && "unhandled expression type");
     }
 }
 

@@ -8,6 +8,7 @@
 #include <memory>
 #include <string_view>
 #include <optional>
+#include <cassert>
 
 namespace AST {
 
@@ -58,20 +59,23 @@ enum class ExpressionType {
     native_function,
     native_operator,
     function_body,
+    not_implemented,
 };
 
 struct Expression {
     Expression(ExpressionType expr_type, const Type* type): expression_type(expr_type), type(type) {};
     
     ExpressionType expression_type;
-    const Type* type;
+    const Type* type = &Hole;
     std::tuple<std::string, std::vector<Expression*>> call_expr = {"", {}};
     std::string string_value = "";
 };
 
 struct Callable {
     Callable(const std::string& name, Expression* expression, std::vector<const Type*>& arg_types)
-    : name(name), expression(expression), arg_types(arg_types) {}
+    : name(name), expression(expression), arg_types(arg_types) {
+        assert(expression && "Tried to initialize callable with a nullptr expression");
+    }
 
     std::string name;
     Expression* expression;
