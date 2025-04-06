@@ -15,14 +15,16 @@ add_compile_options(-Wall -Wpedantic)
 add_library(mapsc_frontend OBJECT
     src/lexer.cpp
     src/parser.cpp
-    src/ast.cpp    
+    src/ast.cpp
 )
 
 # -------------------- VERIFY MAPSC --------------------
 
 add_executable(verify_mapsc
     src/verify_main.cpp
+    src/reverse_parse.cpp
 )
+
 target_link_libraries(verify_mapsc mapsc_frontend)
 
 # ----------------------- MAPSC ------------------------
