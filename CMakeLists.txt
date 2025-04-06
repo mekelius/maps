@@ -13,16 +13,16 @@ add_compile_options(-Wall -Wpedantic)
 # ------------------- MAPSC FRONTENT -------------------
 
 add_library(mapsc_frontend OBJECT
-    lexer.cpp
-    parser.cpp
-    ast.cpp    
-    config.cpp 
+    src/lexer.cpp
+    src/parser.cpp
+    src/ast.cpp    
+    src/config.cpp 
 )
 
 # -------------------- VERIFY MAPSC --------------------
 
 add_executable(verify_mapsc
-    verify_main.cpp
+    src/verify_main.cpp
 )
 target_link_libraries(verify_mapsc mapsc_frontend)
 
@@ -31,9 +31,9 @@ target_link_libraries(verify_mapsc mapsc_frontend)
 set(CMAKE_LINKER_TYPE "LLD")
 
 add_executable(mapsc 
-    ir_generator.cpp
-    output.cpp
-    main.cpp
+    src/ir_generator.cpp
+    src/output.cpp
+    src/main.cpp
 )
 
 target_link_libraries(mapsc mapsc_frontend -lLLVM-19)
