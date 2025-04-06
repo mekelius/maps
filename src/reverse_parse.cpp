@@ -1,7 +1,11 @@
+#include <cassert>
+
 #include "reverse_parse.hh"
 
 // reverse-parse expression into the stream
 std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
+    assert(expression && "Reverse parse encountered a nullptr expression");
+
     switch (expression->expression_type) {
         case AST::ExpressionType::string_literal:
             return ostream << "\"" << expression->string_value << "\"";
