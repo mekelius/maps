@@ -12,35 +12,61 @@
 
 namespace AST {
 
+// class for booleans we may or may not know yet
+enum class DeferredBool {
+    true_,
+    false_,
+    unknown,
+};
+
 struct Type {
     bool is_native = false;
     std::string_view name;
-    bool is_numeric = false;
-    bool is_integral = false;
+    DeferredBool is_numeric = DeferredBool::false_;
+    DeferredBool is_integral = DeferredBool::false_;
 };
 
 constexpr Type Int {
     true,
     "Int",
+    DeferredBool::true_,
+    DeferredBool::true_,
+};
+
+constexpr Type Boolean {
     true,
-    true,
+    "Boolean",
+    DeferredBool::false_,
+    DeferredBool::false_,
 };
 
 constexpr Type String {
     true,
     "String",
+    DeferredBool::false_,
+    DeferredBool::false_,
 };
 
 constexpr Type Void {
     true,
     "Void",
+    DeferredBool::false_,
+    DeferredBool::false_,
 };
 
 constexpr Type Hole {
     false,
     "Hole",
-    true,
-    true,
+    DeferredBool::unknown,
+    DeferredBool::unknown,
+};
+
+// a number who's type hasn't yet been determined
+constexpr Type NumberLiteral {
+    false,
+    "NumberLiteral",
+    DeferredBool::true_,
+    DeferredBool::unknown,
 };
 
 enum class StatementType {
@@ -52,6 +78,7 @@ enum class StatementType {
 
 enum class ExpressionType {
     string_literal,         // literal: Value value
+    numeric_literal,
     call,                   // call: Callee identifier, [Expression] args
     // binary,              // binary: Operator operator, Expression lhs, Expression rhs
     // block,                  // block: [Statement] statements
