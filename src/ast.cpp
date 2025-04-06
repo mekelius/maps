@@ -40,6 +40,7 @@ std::optional<Callable*> AST::create_callable(
     callables_.push_back(std::make_unique<Callable>(name, expression, arg_types));
     Callable* callable = callables_.back().get();
     create_identifier(name, callable);
+    global.identifiers.insert({name, callable});
     
     return callable;
 }
