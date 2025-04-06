@@ -22,7 +22,104 @@
     #error(need c++17)
 #endif
 
+// TODO: handle multiple inputfiles
+const std::string USAGE = "USAGE: testc inputfile [-o filename] [-ir filename] [-tokens filename] \n                        [-dump ir|tokens]";
+
+const std::string DEFAULT_OBJ_FILE_PATH = "out.o";
+const std::string DEFAULT_IR_FILE_PATH = "out.ll";
+const std::string DEFAULT_TOKENS_FILE_PATH = "out.tokens";
+
+
+enum class OutputSink {
+    stderr,
+    file,
+    none
+};
+
+struct CL_Options {
+    std::vector<std::string> input_file_paths = {};
+
+    // TODO: implement cl-arg for wall
+    bool wall = false; 
+
+    OutputSink output_ir_to = OutputSink::none;
+    OutputSink output_object_file_to = OutputSink::none; // NOTE: object file can't currectly be dumped to stderr
+    OutputSink output_token_stream_to = OutputSink::none;
+    
+    std::string object_file_path = DEFAULT_OBJ_FILE_PATH;
+    std::string ir_file_path = DEFAULT_IR_FILE_PATH;  
+    std::string tokens_file_path = DEFAULT_TOKENS_FILE_PATH;
+};
+
+
 using namespace llvm;
+
+std::optional<CL_Options> parse_cl_args(int argc, char** argv) {
+    if (argc < 2)
+        return std::nullopt;
+
+    std::vector<std::string> args{ argv + 1, argv + argc };
+    CL_Options options = {};
+
+    for (auto it = args.begin(); it < args.end(); it++) {
+        std::string arg = *it;
+
+        if (arg == "-o" || arg == "-ir" || arg == "-tokens") {
+            it++;
+
+            if (it >= args.end())
+                return std::nullopt;
+
+            if (options.output_object_file_to != OutputSink::none) {
+                std::cerr << "Conflicting command line arguments" << std::endl;
+                return std::nullopt;
+            }
+
+            if (arg == "-o") {
+                options.object_file_path = *it;
+                options.output_object_file_to = OutputSink::file;
+            } else if (arg == "-ir") {
+                options.ir_file_path = *it;
+                options.output_ir_to = OutputSink::file;
+            } else if (arg == "-tokens") {
+                options.tokens_file_path = *it;
+                options.output_token_stream_to = OutputSink::file;
+            }
+
+            continue;            
+        }
+        
+        if (arg == "-dump") {
+            OutputSink sink = OutputSink::stderr;
+
+            it++;
+            if (it >= args.end())
+                return std::nullopt;
+            
+            if (*it == "ir") {
+                options.output_ir_to = sink;
+
+            } else if (*it == "tokens") {
+                options.output_token_stream_to = sink;
+
+            } else {
+                return std::nullopt;
+            }
+
+            continue;
+        } 
+        
+        // args without '-' are input files
+        if (options.input_file_paths.size() >= 1) {
+            std::cerr << "Multiple input files not yet supported" << std::endl;
+            return std::nullopt;
+        }
+
+        options.input_file_paths.push_back(arg);
+    }
+
+    return options;
+}
 
 int main(int argc, char** argv) {
     std::optional<CL_Options> cl_options = parse_cl_args(argc, argv);
@@ -66,7 +163,21 @@ int main(int argc, char** argv) {
     StreamingLexer lexer{&source_is, tokens_ostream};
     Parser parser{&lexer, &std::cerr/*, &ir_gen_helper*/};
     
-    std::unique_ptr<AST::AST> ast = parser.run(*cl_options);
+    // if tokens get dumped, provide clearer separation
+    if (cl_options->output_token_stream_to == OutputSink::stderr) {
+        std::cerr << "\n" << "--- START PARSING ---" << "\n\n";
+    } else {
+        std::cerr << "Parsing source file(s)...\n";
+    }
+    
+    std::unique_ptr<AST::AST> ast = parser.run();
+
+    // if tokens get dumped, provide clearer separation
+    if (cl_options->output_token_stream_to == OutputSink::stderr) {
+        std::cerr << "\n" << "--- PARSING COMPLETE ---" << "\n" << std::endl;
+    } else {
+        std::cerr << "Parsing complete" << std::endl;
+    }
     
     
     // ----- CODE GEN -----
