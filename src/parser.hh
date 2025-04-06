@@ -8,7 +8,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "config.hh"
 #include "lexer.hh"
 #include "ast.hh"
 
@@ -17,7 +16,7 @@ class Parser {
   public:
     Parser(StreamingLexer* lexer, std::ostream* error_stream);
     
-    std::unique_ptr<AST::AST> run(const CL_Options& cl_options);
+    std::unique_ptr<AST::AST> run();
   private:
     // gets the next token from the lexer and stores it in current_token_
     Token get_token();

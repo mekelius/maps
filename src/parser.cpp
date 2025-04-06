@@ -8,13 +8,7 @@ errs_(error_stream) {
     ast_ = std::make_unique<AST::AST>();
 }
 
-std::unique_ptr<AST::AST> Parser::run(const CL_Options& cl_options) {
-    // if tokens get dumped, provide clearer separation
-    if (cl_options.output_token_stream_to == OutputSink::stderr) {
-        *errs_ << "\n" << "--- START PARSING ---" << "\n\n";
-    } else {
-        *errs_ << "Parsing source file(s)...\n";
-    }
+std::unique_ptr<AST::AST> Parser::run() {
     
     AST::init_builtin_callables(*ast_);
 
@@ -59,13 +53,6 @@ std::unique_ptr<AST::AST> Parser::run(const CL_Options& cl_options) {
             case TokenType::semicolon:
                 break;
         }
-    }
-
-    // if tokens get dumped, provide clearer separation
-    if (cl_options.output_token_stream_to == OutputSink::stderr) {
-        *errs_ << "\n" << "--- PARSING COMPLETE ---" << "\n" << std::endl;
-    } else {
-        *errs_ << "Parsing complete" << std::endl;
     }
 
     return finalize_parsing();
