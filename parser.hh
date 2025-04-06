@@ -8,6 +8,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include "config.hh"
 #include "lexer.hh"
 #include "ast.hh"
 
@@ -16,7 +17,7 @@ class Parser {
   public:
     Parser(StreamingLexer* lexer, std::ostream* error_stream);
     
-    std::unique_ptr<AST::AST> run();
+    std::unique_ptr<AST::AST> run(const CL_Options& cl_options);
   private:
     // gets the next token from the lexer and stores it in current_token_
     Token get_token();
@@ -29,12 +30,12 @@ class Parser {
     void print_error(const std::string& location, const std::string& message) const;
     void print_info(const std::string& message) const;
     void print_info(const std::string& location, const std::string& message) const;
-    void print_parsing_complete() const;
 
     // ---- IDENTIFIERS -----
 
     bool identifier_exists(const std::string& identifier) const;
     void create_identifier(const std::string& identifier, AST::Expression* expression);
+    std::optional<AST::Callable*> lookup_identifier(const std::string& identifier);
 
     AST::Expression* parse_expression();
     AST::Expression* parse_call_expression();
@@ -47,7 +48,6 @@ class Parser {
     Token current_token_;
     bool finished_ = false;
     bool program_valid_ = true;
-    std::unordered_map<std::string, AST::Expression*> identifiers_;
 };
 
 #endif

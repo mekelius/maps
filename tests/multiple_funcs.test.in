@@ -1,3 +1,4 @@
-let main = print hello
-
+// this now requires inference of hello arity, or just saying it's a value
 let hello = "it works"
+
+let main = print hello

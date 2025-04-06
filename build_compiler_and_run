@@ -1,8 +1,0 @@
-#!/bin/bash
-
-if [[ $# -ne 1 ]]; then
-    echo "Usage: ./build_and_run input_file"
-    exit
-fi
-
-./build_compiler && ./compile_and_link $1 build/build && ./build/build

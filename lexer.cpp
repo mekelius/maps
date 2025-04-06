@@ -239,9 +239,9 @@ Token StreamingLexer::read_linebreak_() {
     }
 
     // if the indent decreased, close the previous indents we passed
-    unsigned int levels_closed = 0;
+    // unsigned int levels_closed = 0;
     while (next_line_indent < indent_stack_.back()) {
-        levels_closed++;
+        // levels_closed++;
         indent_stack_.pop_back();
     }
     
