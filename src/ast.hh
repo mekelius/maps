@@ -80,13 +80,14 @@ enum class ExpressionType {
     string_literal,         // literal: Value value
     numeric_literal,
     call,                   // call: Callee identifier, [Expression] args
-    // binary,              // binary: Operator operator, Expression lhs, Expression rhs
-    // block,                  // block: [Statement] statements
-    callable_expression,
+    deferred_call,          // call where the callee is an expression
     native_function,
     native_operator,
     function_body,
     not_implemented,
+    termed_expression,      // basically something that layer1 can't handle
+    tie,                    // lack of whitespace between an operator and another term
+    unresolved_identifier,  // something to be hoisted
 };
 
 struct Expression {
@@ -95,7 +96,9 @@ struct Expression {
     ExpressionType expression_type;
     const Type* type = &Hole;
     std::tuple<std::string, std::vector<Expression*>> call_expr = {"", {}};
+    std::tuple<Expression*, std::vector<Expression*>> deferred_call_expr;
     std::string string_value = "";
+    std::vector<Expression*> terms = {};
 };
 
 struct Callable {
@@ -109,8 +112,12 @@ struct Callable {
     std::vector<const Type*> arg_types;
 };
 
-struct Scope {
+// TODO: move housekeeping here from AST
+class Scope {
+  public:
     std::unordered_map<std::string, Callable*> identifiers;
+    std::vector<std::string> identifiers_in_order = {};
+  private:
 };
 
 class AST {

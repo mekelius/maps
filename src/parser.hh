@@ -20,6 +20,8 @@ class Parser {
   private:
     // gets the next token from the lexer and stores it in current_token_
     Token get_token();
+    Token current_token() const;
+    Token peek() const;
     // declare the program invalid. Parsing may still continue, but no final output should be produced
     void declare_invalid();
     std::unique_ptr<AST::AST> finalize_parsing();
@@ -31,20 +33,41 @@ class Parser {
     void print_info(const std::string& location, const std::string& message) const;
 
     // ---- IDENTIFIERS -----
-
     bool identifier_exists(const std::string& identifier) const;
     void create_identifier(const std::string& identifier, AST::Expression* expression);
     std::optional<AST::Callable*> lookup_identifier(const std::string& identifier);
 
     AST::Expression* parse_expression();
-    AST::Expression* parse_call_expression();
+    AST::Expression* parse_identifier_expression();
+
+    AST::Expression* parse_termed_expression();
+    AST::Expression* parse_term();
+    // the token has to be an identifier. The caller must also be certain that this is a call expression
+    // i.e. call this only when the current token is an identifier as well
+    AST::Expression* parse_call_expression(const std::string& callee);
+    // Takes an expression for the callee, and optionally a signature if it's known
+    // DO NOT pass nullptr
+    AST::Expression* parse_call_expression(AST::Expression* callee, const std::vector<AST::Type*>& signature = {});
+    std::vector<AST::Expression*> parse_argument_list();
+    AST::Expression* parse_operator_expression(Token previous_token);
+
+    AST::Expression* parse_parenthesized_expression();
+    AST::Expression* parse_access_expression();
+
+
+    AST::Expression* parse_string_literal();
+    AST::Expression* parse_numeric_literal();
+    AST::Expression* parse_mapping_literal();
+
     void parse_let_statement();
     
     StreamingLexer* lexer_;
     std::ostream* errs_;
     std::unique_ptr<AST::AST> ast_;
     
-    Token current_token_;
+    int which_buf_slot_ = 0;
+    std::array<Token, 2> token_buf_;
+
     bool finished_ = false;
     bool program_valid_ = true;
 };

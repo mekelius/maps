@@ -16,7 +16,45 @@ at some point:
     - what about continuations, algebraic effects? gotta learn more
     - check what existing languages have, rust, newer functional languages
 
+!!! {
+    "asd":123:true:"yaas",
+    "asd":123:true:"yaas",
+    "asd":123:true:"yaas",
+    "asd":123:true:"yaas",
+} == [
+    ["asd", 123, true, "yaas"],
+    ["asd", 123, true, "yaas"],    
+    ["asd", 123, true, "yaas"],    
+    ["asd", 123, true, "yaas"],    
+] ~= [
+    {
+        name: "asd", 
+        number: 123, 
+        yeaitis: true, 
+        epic: "yaas",
+    },
+    {
+        name: "asd", 
+        number: 123, 
+        yeaitis: true, 
+        epic: "yaas",
+    },
+    {
+        name: "asd", 
+        number: 123, 
+        yeaitis: true, 
+        epic: "yaas",
+    },
+    {
+        name: "asd", 
+        number: 123, 
+        yeaitis: true, 
+        epic: "yaas",
+    },
+]
+
 ideas:
+    - use << as append to list maybe (we have ; for monadic discard)
     - maybe we can diff the code to last git version to know what changed and produce better error messages
     - define contextual isomorphisms to reduce a bunch of boilerplate
         - for example we might say that a user is isomorphic to a user_id. In this context everything that accepts a user should accept a user id and vice versa.

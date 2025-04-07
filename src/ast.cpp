@@ -17,13 +17,12 @@ Expression* AST::create_expression(ExpressionType expression_type, const Type* t
             expression->call_expr = {"", {}};
             return expression;
 
-        case ExpressionType::callable_expression:
         case ExpressionType::native_function:
         case ExpressionType::native_operator:
         case ExpressionType::function_body:
         case ExpressionType::not_implemented:
         default:
-            return expression;        
+            return expression;
             
         // default:
             // assert(false && "unhandled expression type");
@@ -43,6 +42,7 @@ std::optional<Callable*> AST::create_callable(
     Callable* callable = callables_.back().get();
     create_identifier(name, callable);
     global.identifiers.insert({name, callable});
+    global.identifiers_in_order.push_back(name);
     
     return callable;
 }
