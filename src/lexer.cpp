@@ -21,6 +21,11 @@ std::string Token::get_location() const {
     return std::to_string(line) + ":" + std::to_string(col);
 }
 
+std::string Token::get_str(bool stream_format) const {
+    if (!stream_format) return get_str();
+    return get_location() + line_col_padding(get_location().size()) + "token: " + get_str();
+}
+
 std::string Token::get_str() const {
     switch (type) {
         case TokenType::eof:
@@ -41,8 +46,8 @@ std::string Token::get_str() const {
         case TokenType::string_literal:
             return "string literal \"" + value + "\"";
 
-        case TokenType::whitespace:
-            return "whitespace";
+        case TokenType::tie:
+            return "tie";
 
         case TokenType::char_token:
             return "" + value;
@@ -68,12 +73,7 @@ std::string Token::get_str() const {
 }
 
 std::ostream& operator<<(std::ostream& os, Token token) {
-    std::string location = token.get_location();
-    return os 
-        << location
-        << line_col_padding(location.size())
-        << "token: " 
-        << token.get_str();
+    return os << token.get_str(true);
 }
 
 // ----- StreamingLexer -----
@@ -95,8 +95,11 @@ Token StreamingLexer::get_token() {
     Token token = get_token_();
 
     // if output stream was given, print the token there as well
-    if (tokens_os_)
-        (*tokens_os_) << token << '\n';
+    if (tokens_os_) {
+        // a bit of a hack to keep the outputs in sync
+        (*tokens_os_) << prev_token_str_;
+        prev_token_str_ = token.get_str(true) + "\n";
+    }
 
     prev_token_type_ = token.type;
     return token;
@@ -111,6 +114,11 @@ char StreamingLexer::read_char() {
 }
 
 Token StreamingLexer::read_operator_() {
+    if (tie_possible_) {
+        tie_possible_ = false;
+        return create_token_(TokenType::tie);
+    }
+
     // cannot reset the buffer, since there might be an initial '/' there
     while (is_operator_glyph(current_char_)) {
         buffer_.sputc(current_char_);
@@ -118,6 +126,9 @@ Token StreamingLexer::read_operator_() {
         if (source_is_->eof())
             return create_token_(TokenType::eof);
     }
+
+    tie_possible_ = true;
+
     return create_token_(
         TokenType::operator_t,
         buffer_.str()
@@ -125,6 +136,11 @@ Token StreamingLexer::read_operator_() {
 }
 
 Token StreamingLexer::read_identifier_() {
+    if (tie_possible_) {
+        tie_possible_ = false;
+        return create_token_(TokenType::tie);
+    }
+
     buffer_ = {};
     buffer_.sputc(current_char_);
     read_char();
@@ -149,6 +165,11 @@ Token StreamingLexer::read_identifier_() {
 }
 
 Token StreamingLexer::read_string_literal_() {
+    if (tie_possible_) {
+        tie_possible_ = false;
+        return create_token_(TokenType::tie);
+    }
+
     buffer_ = {};
 
     while (read_char() != '\"' && !source_is_->eof()) {
@@ -163,6 +184,11 @@ Token StreamingLexer::read_string_literal_() {
 }
 
 Token StreamingLexer::read_numeric_literal_() {
+    if (tie_possible_) {
+        tie_possible_ = false;
+        return create_token_(TokenType::tie);
+    }
+
     do {
         buffer_.sputc(current_char_);
         read_char();
@@ -172,28 +198,6 @@ Token StreamingLexer::read_numeric_literal_() {
         TokenType::number,
         buffer_.str()
     );
-}
-
-// whitespace has to be read, since it's sometimes significant
-// try to omit it when possible
-Token StreamingLexer::read_whitespace_() {
-    while (current_char_ == ' ') {
-        read_char();
-        if (source_is_->eof())
-            return create_token_(TokenType::eof);
-    }
-
-    // whitespace can only affect semantics if the previous token is an operator or an identifier
-    // indentation is handled by read_linebreak_
-    switch (prev_token_type_) {
-        case TokenType::operator_t:
-        case TokenType::identifier:
-            return create_token_(
-                TokenType::whitespace
-            );
-        default:
-            return get_token_();
-    }
 }
 
 Token StreamingLexer::read_linebreak_() {
@@ -330,6 +334,13 @@ Token StreamingLexer::get_token_() {
 
     buffer_ = {};
 
+    if (
+        prev_token_type_ != TokenType::operator_t && 
+        prev_token_type_ != TokenType::identifier && 
+        prev_token_type_ != TokenType::number     &&
+        prev_token_type_ != TokenType::string_literal
+    ) tie_possible_ = false;
+
     if (source_is_->eof())
         return create_token_(TokenType::eof);
 
@@ -344,15 +355,15 @@ Token StreamingLexer::get_token_() {
             return read_string_literal_();
 
         // handle whitespace
-        // TODO: rework whitespace into a "packed" token inserted between operators 
-        //       and identifiers not separated by whitespace
         case ' ':
-            return read_whitespace_();
+            while (read_char() == ' ');
+            tie_possible_ = false;
+            return get_token_();
     
         case '/':
             read_char();
 
-            // handle operator case
+            // handle operators that begin with '/'
             // TODO: just use peek
             if (current_char_ != '/' && current_char_ != '*') {
                 buffer_.sputc('/');
@@ -366,13 +377,18 @@ Token StreamingLexer::get_token_() {
             return read_operator_();
 
         // handle single-character tokens
+        // TODO: rework into token types
         case '(':
-        case ')':
-        case '[':
-        case ']':
-        case '{':
-        case '}':
         case ':':
+        case '[':
+        case '{':
+            if (tie_possible_) {
+                tie_possible_ = false;
+                return create_token_(TokenType::tie);
+            }
+        case ')':
+        case ']':
+        case '}':
         case ',':
         case '\\':
             {

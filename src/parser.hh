@@ -37,6 +37,9 @@ class Parser {
     void create_identifier(const std::string& identifier, AST::Expression* expression);
     std::optional<AST::Callable*> lookup_identifier(const std::string& identifier);
 
+    void parse_top_level_statement();
+    void parse_let_statement();
+
     AST::Expression* parse_expression();
     AST::Expression* parse_identifier_expression();
 
@@ -54,12 +57,9 @@ class Parser {
     AST::Expression* parse_parenthesized_expression();
     AST::Expression* parse_access_expression();
 
-
     AST::Expression* parse_string_literal();
     AST::Expression* parse_numeric_literal();
-    AST::Expression* parse_mapping_literal();
-
-    void parse_let_statement();
+    AST::Expression* parse_mapping_literal(char opening);
     
     StreamingLexer* lexer_;
     std::ostream* errs_;

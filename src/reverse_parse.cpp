@@ -44,7 +44,9 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             }
             
             ostream << "\n";
-            indent_stack--;   
+            indent_stack--;
+
+            return ostream;
         }
 
         case AST::ExpressionType::native_function:
@@ -68,6 +70,9 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::deferred_call:
             return ostream << "Expression type deferred call not implemented in reverse parser";
 
+        case AST::ExpressionType::syntax_error:
+            return ostream << "!!SYNTAX ERROR!!";
+
         default:
             return ostream << "Expression type not implemented in reverse parser";
     }
@@ -81,7 +86,14 @@ void reverse_parse(AST::AST& ast, std::ostream& ostream) {
         std::vector<const AST::Type*> arg_types = callable->arg_types;
 
         // assume top level identifiers are created by let-statements
-        ostream << "let " << identifier << " = ";
+        ostream << "let " << identifier;
+        
+        if (callable->expression->expression_type == AST::ExpressionType::uninitialized_identifier) {
+            ostream << ";\n\n";
+            continue;
+        }
+
+        ostream << " = ";
             
         for (const AST::Type* arg_type: arg_types) {
             ostream << arg_type->name << " -> ";

@@ -1,0 +1,16 @@
+let infix
+let x = 5
+let y = 10
+let call
+let arg
+
+8 inf -9
+-8 * 12
+-x * -y
+!call(arg)
+x*y inf b*z
+print x*y
+print x*y*z
+8*-5
+
+8+9 * 7

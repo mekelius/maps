@@ -22,7 +22,7 @@ enum class TokenType: int {
     string_literal,
     reserved_word,
     unknown,
-    whitespace,
+    tie,
     indent_block_start,
     indent_block_end,
     indent_error_fatal,
@@ -59,6 +59,7 @@ class Token {
 
     std::string get_location() const;
     std::string get_str() const;
+    std::string get_str(bool stream_format) const;
 };
 
 class StreamingLexer {
@@ -83,13 +84,14 @@ class StreamingLexer {
     Token read_identifier_();
     Token read_numeric_literal_();
     Token read_string_literal_();
-    Token read_whitespace_();
+    Token read_tie_();
     Token read_linebreak_();
 
     Token collapsed_semicolon_token_();
     void read_and_ignore_comment_();
 
     char current_char_ = '\00'; // this null will be read and discarded during the constructor 
+    bool tie_possible_ = false; // ties mark a lack of whitespace between operators, values and identifiers
     unsigned int current_line_ = 1;
     unsigned int current_col_ = 0;
     unsigned int current_token_start_line_ = 0;
@@ -99,6 +101,7 @@ class StreamingLexer {
     std::istream* source_is_;
     std::ostream* tokens_os_;
     std::vector<unsigned int> indent_stack_ = {0};
+    std::string prev_token_str_ = ""; // a bit of a hack to keep the tokens in sync with the parser
 };
 
 std::ostream& operator<<(std::ostream& os, Token token);

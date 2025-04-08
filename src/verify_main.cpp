@@ -2,6 +2,7 @@
 #include <memory>
 #include <fstream>
 
+#include "config.hh"
 #include "parser.hh"
 #include "lexer.hh"
 #include "ast.hh"
@@ -43,7 +44,7 @@ int main(int argc, char* argv[]) {
             continue;
         }
         
-        StreamingLexer lexer{&source_file};
+        StreamingLexer lexer{&source_file, VERIFY_OUTPUT_TOKENS ? &std::cout : nullptr};
         Parser parser{&lexer, &std::cerr};
         
         std::unique_ptr<AST::AST> ast = parser.run();
