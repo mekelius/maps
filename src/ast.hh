@@ -77,17 +77,20 @@ enum class StatementType {
 };
 
 enum class ExpressionType {
-    string_literal,         // literal: Value value
+    string_literal,           // literal: Value value
     numeric_literal,
-    call,                   // call: Callee identifier, [Expression] args
-    deferred_call,          // call where the callee is an expression
+    call,                     // call: Callee identifier, [Expression] args
+    deferred_call,            // call where the callee is an expression
     native_function,
     native_operator,
     function_body,
     not_implemented,
-    termed_expression,      // basically something that layer1 can't handle
-    tie,                    // lack of whitespace between an operator and another term
-    unresolved_identifier,  // something to be hoisted
+    termed_expression,        // basically something that layer1 can't handle
+    tie,                      // lack of whitespace between an operator and another term
+    unresolved_identifier,    // something to be hoisted
+    unresolved_operator,
+    uninitialized_identifier, // attempting to use should cause a warning maybe?, or just default initialize
+    syntax_error,             // reached something that shouldn't have been such as trying to parse eof as expression
 };
 
 struct Expression {
