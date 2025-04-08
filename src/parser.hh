@@ -10,6 +10,7 @@
 
 #include "lexer.hh"
 #include "ast.hh"
+#include "config.hh"
 
 // First attempt at a parser. Parses tokens directly into the llvm context
 class Parser {
@@ -22,15 +23,17 @@ class Parser {
     Token get_token();
     Token current_token() const;
     Token peek() const;
+
+    void update_brace_levels(Token token);
     // declare the program invalid. Parsing may still continue, but no final output should be produced
     void declare_invalid();
     std::unique_ptr<AST::AST> finalize_parsing();
 
     // Token expect_token(predicate, error_message);
-    void print_error(const std::string& message) const;
-    void print_error(const std::string& location, const std::string& message) const;
-    void print_info(const std::string& message) const;
-    void print_info(const std::string& location, const std::string& message) const;
+    void print_error(const std::string& message, ParserInfoLevel level = ParserInfoLevel::normal) const;
+    void print_error(const std::string& location, const std::string& message,  ParserInfoLevel level = ParserInfoLevel::normal) const;
+    void print_info(const std::string& message, ParserInfoLevel level = ParserInfoLevel::normal) const;
+    void print_info(const std::string& location, const std::string& message,  ParserInfoLevel level = ParserInfoLevel::normal) const;
 
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& identifier) const;
@@ -39,6 +42,11 @@ class Parser {
 
     void parse_top_level_statement();
     void parse_let_statement();
+    void parse_assignment_statement();
+
+    void parse_statement();
+
+    void parse_pragma();
 
     AST::Expression* parse_expression();
     AST::Expression* parse_identifier_expression();
@@ -60,6 +68,8 @@ class Parser {
     AST::Expression* parse_string_literal();
     AST::Expression* parse_numeric_literal();
     AST::Expression* parse_mapping_literal(char opening);
+
+    void reset_to_global_scope();
     
     StreamingLexer* lexer_;
     std::ostream* errs_;
@@ -67,6 +77,12 @@ class Parser {
     
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_;
+
+    // these are automatically incremented and decremented by the get_token()
+    unsigned int indent_level_ = 0;
+    unsigned int parenthese_level_ = 0;
+    unsigned int curly_brace_level_ = 0;
+    unsigned int angle_bracket_level_ = 0;
 
     bool finished_ = false;
     bool program_valid_ = true;

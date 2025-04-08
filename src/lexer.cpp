@@ -17,6 +17,15 @@ bool is_reserved_word(const std::string& word) {
     return std::find(RESERVED_WORDS.begin(), RESERVED_WORDS.end(), word) != RESERVED_WORDS.end();
 }
 
+bool is_tieable_token_type(TokenType token_type) {
+    return (
+        token_type == TokenType::operator_t     ||
+        token_type == TokenType::identifier     ||
+        token_type == TokenType::number         ||
+        token_type == TokenType::string_literal
+    );
+}
+
 std::string Token::get_location() const {
     return std::to_string(line) + ":" + std::to_string(col);
 }
@@ -76,6 +85,33 @@ std::ostream& operator<<(std::ostream& os, Token token) {
     return os << token.get_str(true);
 }
 
+bool is_statement_separator(Token token) {
+    switch (token.type) {
+        case TokenType::semicolon:
+        case TokenType::eof:
+        case TokenType::indent_block_end:
+        case TokenType::indent_error_fatal:
+        case TokenType::unknown:
+            return true;
+
+        case TokenType::char_token:
+            assert(token.value.size() == 1 && 
+                "Parser encountered a char token with more than 1 char");
+            switch (token.value.at(0)) {
+                case '}':
+                case ']':
+                case ')':
+                    return true;
+                
+                default: 
+                    return false;
+            }
+
+        default:
+            return false;
+    }
+}
+
 // ----- Public methods -----
 StreamingLexer::StreamingLexer(std::istream* source_is, std::ostream* tokens_ostream): 
 source_is_(source_is),
@@ -101,6 +137,8 @@ Token StreamingLexer::get_token() {
         prev_token_str_ = token.get_str(true) + "\n";
     }
 
+    tie_possible_ = is_tieable_token_type(token.type);
+
     prev_token_type_ = token.type;
     return token;
 }
@@ -109,7 +147,13 @@ Token StreamingLexer::get_token() {
 
 // Read a character from the input stream
 char StreamingLexer::read_char() {
-    current_col_ = current_char_ != '\n' ? current_col_ + 1 : 1;
+    if (current_char_ == '\n') {
+        current_col_ = 1;
+        current_line_++;
+    } else {
+        current_col_++;
+    }
+
     source_is_->get(current_char_);
 
     // just pretend like CRLF doesn't exist
@@ -136,13 +180,6 @@ Token StreamingLexer::get_token_() {
 
     buffer_ = {};
 
-    if (
-        prev_token_type_ != TokenType::operator_t && 
-        prev_token_type_ != TokenType::identifier && 
-        prev_token_type_ != TokenType::number     &&
-        prev_token_type_ != TokenType::string_literal
-    ) tie_possible_ = false;
-
     if (source_is_->eof())
         return create_token_(TokenType::eof);
 
@@ -161,6 +198,9 @@ Token StreamingLexer::get_token_() {
             while (read_char() == ' ');
             tie_possible_ = false;
             return get_token_();
+
+        case '@':
+            return read_pragma();
     
         case '/':
             read_char();
@@ -243,8 +283,6 @@ Token StreamingLexer::read_operator_() {
             return create_token_(TokenType::eof);
     }
 
-    tie_possible_ = true;
-
     return create_token_(
         TokenType::operator_t,
         buffer_.str()
@@ -274,8 +312,6 @@ Token StreamingLexer::read_identifier_() {
         );
     }
 
-    tie_possible_ = true;
-        
     return create_token_(
         TokenType::identifier,
         value
@@ -321,11 +357,9 @@ Token StreamingLexer::read_numeric_literal_() {
 Token StreamingLexer::read_linebreak_() {
     unsigned int current_indent = indent_stack_.back();
     unsigned int next_line_indent = 0;
-    current_line_++;
 
     // eat empty lines
-    while (read_char() == '\n' && !source_is_->eof())
-        current_line_++;
+    while (read_char() == '\n' && !source_is_->eof());
 
     // determine next line indent
     // TODO: deal with tab characters
@@ -384,6 +418,24 @@ Token StreamingLexer::read_linebreak_() {
         TokenType::indent_block_end,
         ""
     );    
+}
+
+Token StreamingLexer::read_pragma() {
+    buffer_ = {};
+
+    // eat initial whitespace
+    while (read_char() == ' ');
+
+    while (current_char_ != '\n' && !source_is_->eof()) {
+        buffer_.sputc(current_char_);
+        read_char();
+    }
+
+    read_char(); // eat the closing \n
+    return create_token_(
+        TokenType::pragma,
+        buffer_.str()
+    );
 }
 
 // Reduce redundant semicolons

@@ -27,7 +27,8 @@ enum class TokenType: int {
     indent_block_end,
     indent_error_fatal,
     semicolon,
-    char_token // includes single-character tokens that can't be used in operators like: (){}[]:;
+    char_token, // includes single-character tokens that can't be used in operators like: (){}[]:;
+    pragma,
 };
 
 // OPT: roll these into a single enum
@@ -62,6 +63,8 @@ class Token {
     std::string get_str(bool stream_format) const;
 };
 
+bool is_statement_separator(Token token);
+
 class StreamingLexer {
   public:
     StreamingLexer(std::istream* source_is, std::ostream* tokens_ostream = nullptr);
@@ -88,6 +91,7 @@ class StreamingLexer {
     Token read_string_literal_();
     Token read_tie_();
     Token read_linebreak_();
+    Token read_pragma();
 
     Token collapsed_semicolon_token_();
     void read_and_ignore_comment_();

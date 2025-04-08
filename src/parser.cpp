@@ -1,11 +1,22 @@
-#include "parser.hh"
+/**
+ * Recursive descent parser for maps programming language
+ * 
+ * The convention here (unlike in the lexer) is that every production rule must move the buffer
+ * beyond the tokens it consumed.
+ * 
+ * Same if a token is rejected. 
+ */
 
+#include "parser.hh"
 #include "config.hh"
+
+// ----- PUBLIC METHODS -----
 
 Parser::Parser(StreamingLexer* lexer, std::ostream* error_stream):
 lexer_(lexer),
 errs_(error_stream) {
     ast_ = std::make_unique<AST::AST>();
+    get_token();
     get_token();
 }
 
@@ -13,17 +24,26 @@ std::unique_ptr<AST::AST> Parser::run() {
     
     AST::init_builtin_callables(*ast_);
 
-    get_token();
     while (current_token().type != TokenType::eof) {
+        int prev_buf_slot = which_buf_slot_; // a bit of a hack, an easy way to do the assertion below
+
         parse_top_level_statement();
+
+        assert(which_buf_slot_ != prev_buf_slot && 
+            "Parser::parse_top_level_statement didn't advance the tokenstream");
     }
 
     return finalize_parsing();
 }
+// ----- PRIVATE METHODS -----
 
 Token Parser::get_token() {
     token_buf_[which_buf_slot_ % 2] = lexer_->get_token();
     which_buf_slot_++;
+
+    // manage the parentheses and indents etc.
+    update_brace_levels(current_token());
+
     return current_token();
 }
 
@@ -33,6 +53,37 @@ Token Parser::current_token() const {
 
 Token Parser::peek() const {
     return token_buf_[(which_buf_slot_+1) % 2];
+}
+
+void Parser::update_brace_levels(Token token) {
+    switch (token.type) {
+        case TokenType::indent_block_start:
+            indent_level_++; break;
+
+        case TokenType::indent_block_end:
+            indent_level_--; break;
+
+        case TokenType::char_token:
+            assert(token.value.size() == 1 && 
+                "Parser encountered a char token with more than 1 char");
+
+            switch (token.value.at(0)) {
+                case '[':
+                    angle_bracket_level_++; break;
+                case ']':
+                    angle_bracket_level_--; break;
+                case '{':
+                    curly_brace_level_++; break;
+                case '}':
+                    curly_brace_level_--; break;
+                case '(':
+                    parenthese_level_++; break;
+                case ')':
+                    parenthese_level_--; break;
+                default: return;
+            }
+        default: return;
+    }
 }
 
 void Parser::declare_invalid() {
@@ -46,24 +97,30 @@ std::unique_ptr<AST::AST> Parser::finalize_parsing() {
 
 // ----- OUTPUT HELPERS -----
 
-void Parser::print_error(const std::string& location, const std::string& message) const {
+void Parser::print_error(const std::string& location, const std::string& message, ParserInfoLevel level) const {
+    if (level > PARSER_INFO_LEVEL)
+        return;
+
     *errs_ 
         << location << line_col_padding(location.size()) 
         << "error: " << message << "\n";
 }
 
-void Parser::print_error(const std::string& message) const {
-    print_error(current_token().get_location(), message);
+void Parser::print_error(const std::string& message, ParserInfoLevel level) const {
+    print_error(current_token().get_location(), message, level);
 }
 
-void Parser::print_info(const std::string& location, const std::string& message) const {
+void Parser::print_info(const std::string& location, const std::string& message, ParserInfoLevel level) const {
+    if (level > PARSER_INFO_LEVEL)
+        return;
+
     *errs_
         << location << line_col_padding(location.size()) 
         << "info:  " << message << '\n';
 }
 
-void Parser::print_info(const std::string& message) const {
-    print_info(current_token().get_location(), message);
+void Parser::print_info(const std::string& message,  ParserInfoLevel level) const {
+    print_info(current_token().get_location(), message, level);
 }
 
 // ----- IDENTIFIERS -----
@@ -89,44 +146,67 @@ void Parser::parse_top_level_statement() {
         case TokenType::eof:
             finished_ = true;
             return;
-            
+         
+        case TokenType::pragma:
+            parse_pragma();
+            return; 
+
         case TokenType::reserved_word:
-            if (current_token().value == "let")
+            if (current_token().value == "let") {
                 parse_let_statement();
+                return;
+            }
+
+            assert(false && "Unhandled reserved word in Parser::parse_top_level_statement");
+            
+        case TokenType::indent_block_start: {
+            print_error("unexpected " + current_token().get_str() + " in global context");
+            
+            reset_to_global_scope();
+            return;
+        }
+
+        // ----- ignored -----
+        case TokenType::bof:
+        case TokenType::semicolon:
+            get_token();
             return;
             
-        // TODO
+        // ---- errors -----
         default:
         case TokenType::identifier:
+            if (peek().type == TokenType::operator_t && peek().value == "=") {
+                if (!ast_->pragmas.mutable_globals) {
+                    print_error("use \"@ enable mutable globals\" to allow assigning to globals");
+                    reset_to_global_scope();
+                    return;
+                }
+                parse_assignment_statement();
+                return;
+            }
+
         case TokenType::operator_t:
-        case TokenType::char_token:
-        case TokenType::indent_block_start:
-        case TokenType::indent_block_end:
-            print_info("parsing of " + current_token().get_str() + " to be implemented");
-            get_token();
-            return;
-        
-        // ---- errors -----
+        case TokenType::char_token:    
         case TokenType::string_literal:
         case TokenType::number:
-            print_error("unexpected " + current_token().get_str() + " in global context");
-            get_token();
+            if (ast_->pragmas.top_level_context) {
+                parse_statement();
+                return;
+            }
+            
+            print_error("use \"@ enable top level context\" to allow top level evaluation");
+            reset_to_global_scope();
             return;
-
+        
+        case TokenType::indent_block_end:
         case TokenType::indent_error_fatal:
             print_error("incorrect indentation");
-            get_token();
+            reset_to_global_scope();
             return;
 
         case TokenType::unknown:
             print_error("unknown token type");
-            get_token();
-            return;
-
-        // ----- types ignored in global context -----
-        case TokenType::bof:
-        case TokenType::semicolon:
-            get_token();
+            reset_to_global_scope();
             return;
     }
 }
@@ -148,6 +228,8 @@ void Parser::parse_let_statement() {
                 switch (get_token().type) {
                     case TokenType::semicolon:
                         create_identifier(name, ast_->create_expression(AST::ExpressionType::uninitialized_identifier));
+                        get_token();
+                        print_info("parsed let statement declaring \"" + name + "\" with no definition", ParserInfoLevel::everything);
                         return;
 
                     case TokenType::operator_t:
@@ -160,6 +242,7 @@ void Parser::parse_let_statement() {
                         print_error(
                             "unexpected " + current_token().get_str() + 
                             " in let-statement, expected an assignment operator");
+                        reset_to_global_scope();
                         return;
                 }
 
@@ -175,6 +258,63 @@ void Parser::parse_let_statement() {
     }
 }
 
+void Parser::parse_assignment_statement() {
+    print_info("Parsing assignment statements not implemented");
+
+    unsigned int indent_stack = 1;
+            
+    // find the matching indent end
+    while (
+        indent_stack > 0 && 
+        current_token().type != TokenType::eof &&
+        !(
+            current_token().type == TokenType::char_token && 
+            current_token().value == "\n"
+        )
+    ) {
+        get_token();
+        if (current_token().type == TokenType::indent_block_end) {
+            indent_stack--;
+        } else if (current_token().type == TokenType::indent_block_start) {
+            indent_stack++;
+        }
+    }
+    
+    get_token();
+}
+
+void Parser::parse_statement() {
+    switch (current_token().type) {
+    
+        default:
+            parse_expression();
+
+            // print_error("unexpected token: " + current_token().get_str() + " in statement");
+            // get_token();
+            return;
+    }
+}
+
+void Parser::parse_pragma() {
+    *errs_ << current_token().value;
+    
+    if (current_token().value == "enable mutable globals") {
+        ast_->pragmas.mutable_globals = true;
+
+    } else if (current_token().value == "enable top level context") {
+        ast_->pragmas.top_level_context = true;
+    
+    } else if (current_token().value == "script") {
+        ast_->pragmas.top_level_context = true;
+        ast_->pragmas.mutable_globals = true;
+    
+    } else {
+        print_error("unknown pragma: " + current_token().value);
+    }
+
+    get_token();
+}
+
 // how to signal failure
 AST::Expression* Parser::parse_expression() {
 
@@ -184,6 +324,10 @@ AST::Expression* Parser::parse_expression() {
 
         case TokenType::identifier: {
             Token next_token = peek();
+
+            if (is_statement_separator(next_token))
+                return parse_identifier_expression();
+
             switch (next_token.type) {
                 case TokenType::char_token:
                     if (
@@ -192,13 +336,15 @@ AST::Expression* Parser::parse_expression() {
                         next_token.value == "{"  ||
                         next_token.value == "::" ||
                         next_token.value == "."
-                    )
-                        return parse_access_expression();
+                    ) return parse_access_expression();
+                    print_error("unexpected " + next_token.get_str() + " after identifier");
+                    return parse_identifier_expression();
 
                 case TokenType::identifier:
                 case TokenType::operator_t:
                 case TokenType::number:
                 case TokenType::string_literal:
+                case TokenType::tie:
                     return parse_termed_expression();    
 
                 case TokenType::eof:
@@ -273,6 +419,7 @@ AST::Expression* Parser::parse_expression() {
             return ast_->create_expression(AST::ExpressionType::not_implemented);
             
         default:
+            get_token();
             print_error("unexpected " + current_token().get_str() + " in the start of an expression");
     }
 
@@ -297,6 +444,7 @@ AST::Expression* Parser::parse_termed_expression() {
                     case ')':
                     case ']':
                     case '}':
+                        get_token();
                         return expression;
 
                     case '(':
@@ -472,7 +620,6 @@ AST::Expression* Parser::parse_call_expression(AST::Expression* callee, const st
     }
 }
 
-
 AST::Expression* Parser::parse_operator_expression(Token previous_token) {
     return ast_->create_expression(AST::ExpressionType::not_implemented);
 }
@@ -481,4 +628,17 @@ AST::Expression* Parser::parse_operator_expression(Token previous_token) {
 std::vector<AST::Expression*> Parser::parse_argument_list() {
     assert(false && "Not ready");
     return {};    
+}
+
+void Parser::reset_to_global_scope() {
+    while (
+        current_token().type != TokenType::eof          && (
+            !is_statement_separator(current_token())    || 
+            angle_bracket_level_    >   0               ||
+            curly_brace_level_      >   0               ||
+            parenthese_level_       >   0               ||
+            indent_level_           >   0
+        )
+    ) get_token();
+    get_token();
 }
