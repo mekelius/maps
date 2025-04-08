@@ -7,8 +7,16 @@
 constexpr unsigned int LINE_COL_FORMAT_PADDING = 8;
 
 constexpr bool REVERSE_PARSE_INCLUDE_DEBUG_INFO = true;
-constexpr bool VERIFY_OUTPUT_TOKENS = false;
+constexpr bool VERIFY_OUTPUT_TOKENS = true;
 constexpr unsigned int REVERSE_PARSE_INDENT_WIDTH = 4;
+
+enum class ParserInfoLevel {
+    quiet = 0,
+    normal = 1,
+    everything = 2,
+};
+
+constexpr ParserInfoLevel PARSER_INFO_LEVEL = ParserInfoLevel::everything;
 
 inline std::string line_col_padding(unsigned int width) {
     return ( width < LINE_COL_FORMAT_PADDING ? 

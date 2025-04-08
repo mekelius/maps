@@ -89,7 +89,7 @@ void reverse_parse(AST::AST& ast, std::ostream& ostream) {
         ostream << "let " << identifier;
         
         if (callable->expression->expression_type == AST::ExpressionType::uninitialized_identifier) {
-            ostream << ";\n\n";
+            ostream << "\n\n";
             continue;
         }
 

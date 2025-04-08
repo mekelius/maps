@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(Maps)
 
-add_compile_options(-Wall -Wpedantic)
+add_compile_options(-Wall -Wextra)
 
 # ------------------- MAPSC FRONTENT -------------------
 

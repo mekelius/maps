@@ -10,6 +10,8 @@
 #include <optional>
 #include <cassert>
 
+#include "pragmas.hh"
+
 namespace AST {
 
 // class for booleans we may or may not know yet
@@ -141,6 +143,8 @@ class AST {
     // std::unordered_map<> call_sites_
     
     Scope global = {};
+    
+    Pragmas pragmas;
 
   private:
     // caller is responsible for checking if the name is free with name_free

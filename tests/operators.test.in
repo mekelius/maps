@@ -1,3 +1,5 @@
+@ script
+
 let x = id1*2
 let y = id1 >> id2
 let z = (id3) >+> id4 ?| id5
