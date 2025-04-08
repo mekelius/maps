@@ -76,7 +76,7 @@ std::ostream& operator<<(std::ostream& os, Token token) {
     return os << token.get_str(true);
 }
 
-// ----- StreamingLexer -----
+// ----- Public methods -----
 StreamingLexer::StreamingLexer(std::istream* source_is, std::ostream* tokens_ostream): 
 source_is_(source_is),
 tokens_os_(tokens_ostream) {
@@ -105,12 +105,128 @@ Token StreamingLexer::get_token() {
     return token;
 }
 
+// ----- Private methods -----
+
+// Read a character from the input stream
 char StreamingLexer::read_char() {
     current_col_ = current_char_ != '\n' ? current_col_ + 1 : 1;
     source_is_->get(current_char_);
 
     // just pretend like CRLF doesn't exist
     return current_char_ != '\r' ? current_char_ : read_char();
+}
+
+Token StreamingLexer::create_token_(TokenType type) {
+    return Token{type, current_token_start_line_, current_token_start_col_};
+}
+
+Token StreamingLexer::create_token_(TokenType type, const std::string& value) {
+    return Token{type, current_token_start_line_, current_token_start_col_, value};
+}
+
+Token StreamingLexer::create_token_(TokenType type, int value) {
+    return Token{type, current_token_start_line_, current_token_start_col_, "", value};
+}
+
+// ----- PRODUCTION RULES -----
+
+Token StreamingLexer::get_token_() {
+    current_token_start_col_ = current_col_;
+    current_token_start_line_ = current_line_;
+
+    buffer_ = {};
+
+    if (
+        prev_token_type_ != TokenType::operator_t && 
+        prev_token_type_ != TokenType::identifier && 
+        prev_token_type_ != TokenType::number     &&
+        prev_token_type_ != TokenType::string_literal
+    ) tie_possible_ = false;
+
+    if (source_is_->eof())
+        return create_token_(TokenType::eof);
+
+    switch (current_char_) {
+        case EOF:
+            return create_token_(TokenType::eof);
+
+        // handle string literals
+        // TODO: handle '
+        // TODO: string interpolation
+        case '\"':
+            return read_string_literal_();
+
+        // handle whitespace
+        case ' ':
+            while (read_char() == ' ');
+            tie_possible_ = false;
+            return get_token_();
+    
+        case '/':
+            read_char();
+
+            // handle operators that begin with '/'
+            // TODO: just use peek
+            if (current_char_ != '/' && current_char_ != '*') {
+                buffer_.sputc('/');
+                return read_operator_();
+            }
+
+            read_and_ignore_comment_();
+            return get_token_();
+
+            // handle operator
+            return read_operator_();
+
+        // handle single-character tokens
+        // TODO: rework into token types
+        case '(':
+        case ':':
+        case '[':
+        case '{':
+            if (tie_possible_) {
+                tie_possible_ = false;
+                return create_token_(TokenType::tie);
+            }
+        case ')':
+        case ']':
+        case '}':
+        case ',':
+        case '\\':
+            {
+                std::string value(1, current_char_);
+                read_char();
+                return create_token_(TokenType::char_token, value);
+            }
+        
+        case '\n':
+            return read_linebreak_();
+
+        case ';':
+            while(read_char() == ';' && !source_is_->eof());
+            return collapsed_semicolon_token_();
+
+        default:
+            // handle identifiers
+            // TODO: handle suffixes
+            if (std::isalpha(current_char_) || current_char_ == '_')
+                return read_identifier_();
+
+            // handle numerics
+            // TODO: how to support spaces in numerics?
+            // TODO: hex and oct
+            if (std::iswdigit(current_char_))
+                return read_numeric_literal_();
+
+            // handle operators
+            // TODO: move into a case expression
+            if (is_operator_glyph(current_char_))
+                return read_operator_();
+
+            // unknown token
+            read_char();
+            return create_token_(TokenType::unknown);
+    }
 }
 
 Token StreamingLexer::read_operator_() {
@@ -157,6 +273,8 @@ Token StreamingLexer::read_identifier_() {
             value
         );
     }
+
+    tie_possible_ = true;
         
     return create_token_(
         TokenType::identifier,
@@ -314,115 +432,4 @@ void StreamingLexer::read_and_ignore_comment_() {
     }
 
     return;
-}
-
-Token StreamingLexer::create_token_(TokenType type) {
-    return Token{type, current_token_start_line_, current_token_start_col_};
-}
-
-Token StreamingLexer::create_token_(TokenType type, const std::string& value) {
-    return Token{type, current_token_start_line_, current_token_start_col_, value};
-}
-
-Token StreamingLexer::create_token_(TokenType type, int value) {
-    return Token{type, current_token_start_line_, current_token_start_col_, "", value};
-}
-
-Token StreamingLexer::get_token_() {
-    current_token_start_col_ = current_col_;
-    current_token_start_line_ = current_line_;
-
-    buffer_ = {};
-
-    if (
-        prev_token_type_ != TokenType::operator_t && 
-        prev_token_type_ != TokenType::identifier && 
-        prev_token_type_ != TokenType::number     &&
-        prev_token_type_ != TokenType::string_literal
-    ) tie_possible_ = false;
-
-    if (source_is_->eof())
-        return create_token_(TokenType::eof);
-
-    switch (current_char_) {
-        case EOF:
-            return create_token_(TokenType::eof);
-
-        // handle string literals
-        // TODO: handle '
-        // TODO: string interpolation
-        case '\"':
-            return read_string_literal_();
-
-        // handle whitespace
-        case ' ':
-            while (read_char() == ' ');
-            tie_possible_ = false;
-            return get_token_();
-    
-        case '/':
-            read_char();
-
-            // handle operators that begin with '/'
-            // TODO: just use peek
-            if (current_char_ != '/' && current_char_ != '*') {
-                buffer_.sputc('/');
-                return read_operator_();
-            }
-
-            read_and_ignore_comment_();
-            return get_token_();
-
-            // handle operator
-            return read_operator_();
-
-        // handle single-character tokens
-        // TODO: rework into token types
-        case '(':
-        case ':':
-        case '[':
-        case '{':
-            if (tie_possible_) {
-                tie_possible_ = false;
-                return create_token_(TokenType::tie);
-            }
-        case ')':
-        case ']':
-        case '}':
-        case ',':
-        case '\\':
-            {
-                std::string value(1, current_char_);
-                read_char();
-                return create_token_(TokenType::char_token, value);
-            }
-        
-        case '\n':
-            return read_linebreak_();
-
-        case ';':
-            while(read_char() == ';' && !source_is_->eof());
-            return collapsed_semicolon_token_();
-
-        default:
-            // handle identifiers
-            // TODO: handle suffixes
-            if (std::isalpha(current_char_) || current_char_ == '_')
-                return read_identifier_();
-
-            // handle numerics
-            // TODO: how to support spaces in numerics?
-            // TODO: hex and oct
-            if (std::iswdigit(current_char_))
-                return read_numeric_literal_();
-
-            // handle operators
-            // TODO: move into a case expression
-            if (is_operator_glyph(current_char_))
-                return read_operator_();
-
-            // unknown token
-            read_char();
-            return create_token_(TokenType::unknown);
-    }
 }

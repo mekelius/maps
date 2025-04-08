@@ -410,7 +410,6 @@ AST::Expression* Parser::parse_term() {
     }
 }
 
-// this means that the previous token was an identifier or an operator
 AST::Expression* Parser::parse_call_expression(const std::string& callee) {
     // TODO: handle tuple arg lists
     assert(
