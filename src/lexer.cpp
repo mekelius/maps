@@ -392,7 +392,7 @@ Token StreamingLexer::get_token_() {
         case ',':
         case '\\':
             {
-                std::string value{1, current_char_};
+                std::string value(1, current_char_);
                 read_char();
                 return create_token_(TokenType::char_token, value);
             }
