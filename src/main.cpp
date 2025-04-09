@@ -122,6 +122,8 @@ std::optional<CL_Options> parse_cl_args(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+    Logging::init();
+
     std::optional<CL_Options> cl_options = parse_cl_args(argc, argv);
 
     if (!cl_options) {

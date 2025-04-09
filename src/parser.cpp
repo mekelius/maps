@@ -10,7 +10,8 @@
 #include "parser.hh"
 #include "config.hh"
 
-using LogLevel::MessageType;
+using Logging::LogLevel;
+using Logging::MessageType;
 
 // ----- PUBLIC METHODS -----
 
@@ -298,8 +299,6 @@ void Parser::parse_statement() {
 }
 
 void Parser::parse_pragma() {
-    *errs_ << current_token().value;
-    
     if (current_token().value == "enable mutable globals") {
         ast_->pragmas.mutable_globals = true;
 

@@ -53,6 +53,9 @@ at some point:
     },
 ]
 
+Enum mapping types should be iterable, how to do that?
+    meaning you can loop through all the values in the enum
+
 ideas:
     - use << as append to list maybe (we have ; for monadic discard)
     - maybe we can diff the code to last git version to know what changed and produce better error messages

@@ -21,18 +21,47 @@ std::string separator(char character = '-', const std::string& title = "") {
 }
 
 int main(int argc, char* argv[]) {
+    using Logging::LogLevel;
+    Logging::init();
+
     if (argc < 2) {
         std::cerr << "USAGE: verify_mapsc inputfile" << std::endl;
         return EXIT_FAILURE;
     }
 
+    // ----- PARSE CL ARGS -----
+    std::vector<std::string> args = { argv + 1, argv + argc };
+    std::vector<std::string> source_filenames{};
+
+    std::ostream* lexer_ostream = nullptr;
+
+    Logging::LogLevel::set(LogLevel::default_);
+
+    for (std::string arg : args) {
+        if (arg == "--tokens") {
+            lexer_ostream = &std::cout;
+
+        } else if (arg == "--parser-debug") {
+            Logging::LogLevel::set(LogLevel::everything);
+            
+        } else if (arg == "-q") {
+            Logging::LogLevel::set(LogLevel::quiet);
+
+        } else if (arg == "-v") {
+            Logging::LogLevel::set(LogLevel::everything);
+            lexer_ostream = &std::cout;
+
+        } else {
+            source_filenames.push_back(arg);
+        }
+    }
+
     std::cout << separator('#') << separator('#', "VERIFY MAPSC") << "\n" 
               << "Running with " << argc - 1 << " input files\n\n";
 
-    std::vector<std::string> source_filenames = { argv + 1, argv + argc };
 
+    // ----- PROCESS FILES -----
     bool all_succeeded = true;
-    
     for (std::string filename: source_filenames) {
         std::cout << separator('-', filename) << "\n";
         
@@ -44,7 +73,7 @@ int main(int argc, char* argv[]) {
             continue;
         }
         
-        StreamingLexer lexer{&source_file, VERIFY_OUTPUT_TOKENS ? &std::cout : nullptr};
+        StreamingLexer lexer{&source_file, lexer_ostream};
         Parser parser{&lexer, &std::cerr};
         
         std::unique_ptr<AST::AST> ast = parser.run();

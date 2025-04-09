@@ -16,6 +16,7 @@ add_library(mapsc_frontend OBJECT
     src/lexer.cpp
     src/parser.cpp
     src/ast.cpp
+    src/config.cpp
 )
 
 # -------------------- VERIFY MAPSC --------------------
