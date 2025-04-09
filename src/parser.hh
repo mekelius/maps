@@ -40,16 +40,15 @@ class Parser {
     void create_identifier(const std::string& identifier, AST::Expression* expression);
     std::optional<AST::Callable*> lookup_identifier(const std::string& identifier);
 
+    void handle_pragma();
+
     void parse_top_level_statement();
     void parse_let_statement();
     void parse_assignment_statement();
 
     void parse_statement();
 
-    void parse_pragma();
-
     AST::Expression* parse_expression();
-    AST::Expression* parse_identifier_expression();
 
     AST::Expression* parse_termed_expression();
     AST::Expression* parse_term();
@@ -63,11 +62,13 @@ class Parser {
     AST::Expression* parse_operator_expression(Token previous_token);
 
     AST::Expression* parse_parenthesized_expression();
+    AST::Expression* parse_mapping_literal(char opening);
     AST::Expression* parse_access_expression();
 
-    AST::Expression* parse_string_literal();
-    AST::Expression* parse_numeric_literal();
-    AST::Expression* parse_mapping_literal(char opening);
+    // ----- TERMINALS -----
+    AST::Expression* handle_string_literal();
+    AST::Expression* handle_numeric_literal();
+    AST::Expression* handle_identifier();
 
     void reset_to_global_scope();
     

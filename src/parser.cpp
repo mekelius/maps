@@ -151,7 +151,7 @@ void Parser::parse_top_level_statement() {
             return;
          
         case TokenType::pragma:
-            parse_pragma();
+            handle_pragma();
             return; 
 
         case TokenType::reserved_word:
@@ -291,14 +291,14 @@ void Parser::parse_statement() {
     
         default:
             parse_expression();
-
+            print_info("parsed expression statement", MessageType::parser_debug);
             // print_error("unexpected token: " + current_token().get_str() + " in statement");
             // get_token();
             return;
     }
 }
 
-void Parser::parse_pragma() {
+void Parser::handle_pragma() {
     if (current_token().value == "enable mutable globals") {
         ast_->pragmas.mutable_globals = true;
 
@@ -314,7 +314,7 @@ void Parser::parse_pragma() {
     }
 
     get_token();
-    print_info("parsed pragma", MessageType::parser_debug);
+    print_info("set pragma", MessageType::parser_debug);
 }
 
 // how to signal failure
@@ -328,7 +328,7 @@ AST::Expression* Parser::parse_expression() {
             Token next_token = peek();
 
             if (is_statement_separator(next_token))
-                return parse_identifier_expression();
+                return handle_identifier();
 
             switch (next_token.type) {
                 case TokenType::char_token:
@@ -340,7 +340,7 @@ AST::Expression* Parser::parse_expression() {
                         next_token.value == "."
                     ) return parse_access_expression();
                     print_error("unexpected " + next_token.get_str() + " after identifier");
-                    return parse_identifier_expression();
+                    return handle_identifier();
 
                 case TokenType::identifier:
                 case TokenType::operator_t:
@@ -352,18 +352,18 @@ AST::Expression* Parser::parse_expression() {
                 case TokenType::eof:
                 case TokenType::semicolon:
                 case TokenType::indent_block_end:
-                    return parse_identifier_expression();
+                    return handle_identifier();
 
                 default:
-                    return parse_identifier_expression();
+                    return handle_identifier();
             }
         }
 
         case TokenType::number: 
-            return parse_numeric_literal();
+            return handle_numeric_literal();
 
         case TokenType::string_literal: 
-            return parse_string_literal();
+            return handle_string_literal();
             
         case TokenType::char_token:
             switch (current_token().value.at(0)) {
@@ -434,21 +434,25 @@ AST::Expression* Parser::parse_termed_expression() {
 
     expression->terms.push_back(parse_term());
 
-    while (true) {
+    std::string start_location = current_token().get_location();
+    print_info("start parsing termed expression", MessageType::parser_debug);
+
+    bool done = false;
+    while (!done) {
         switch (current_token().type) {
             case TokenType::eof:
             case TokenType::indent_block_end:
             case TokenType::semicolon:
-                print_info("parsed termed expression", MessageType::parser_debug);
-                return expression;
+                done = true;
+                break;
 
             case TokenType::char_token:
                 switch (current_token().value.at(0)) {
                     case ')':
                     case ']':
                     case '}':
-                        print_info("parsed termed expression", MessageType::parser_debug);
-                        return expression;
+                        done = true;
+                        break;
 
                     case '(':
                     case '[':
@@ -469,17 +473,15 @@ AST::Expression* Parser::parse_termed_expression() {
                 expression->terms.push_back(parse_term());
 
             default:
+                print_error("unexpected: " + current_token().get_str() + ", in termed expression");
                 expression->terms.push_back(ast_->create_expression(AST::ExpressionType::not_implemented));
                 get_token();
         }
     }
-}
 
-AST::Expression* Parser::parse_identifier_expression() {
-    AST::Expression* expression = ast_->create_expression(AST::ExpressionType::unresolved_identifier);
-    expression->string_value = current_token().value;
-    get_token();
+    print_info("finished parsing termed expression from " + start_location, MessageType::parser_debug);
     return expression;
+
 }
 
 AST::Expression* Parser::parse_access_expression() {
@@ -517,24 +519,34 @@ AST::Expression* Parser::parse_mapping_literal(char opening) {
     return ast_->create_expression(AST::ExpressionType::not_implemented);
 }
 
-AST::Expression* Parser::parse_string_literal() {
+AST::Expression* Parser::handle_string_literal() {
     auto expr = ast_->create_expression(AST::ExpressionType::string_literal);
     expr->string_value = current_token().value;
 
     get_token();
     get_token(); // eat closing '"'
     
-    print_info("parsed string literal", MessageType::parser_debug);
+    print_info("parsed string literal", MessageType::parser_debug_terminals);
     return expr;
 }
 
-AST::Expression* Parser::parse_numeric_literal() {
+AST::Expression* Parser::handle_numeric_literal() {
     auto expression = ast_->create_expression(AST::ExpressionType::numeric_literal, &AST::NumberLiteral);
     expression->string_value = current_token().value;
     
     get_token();
 
-    print_info("parsed string literal", MessageType::parser_debug);
+    print_info("parsed numeric literal", MessageType::parser_debug_terminals);
+    return expression;
+}
+
+AST::Expression* Parser::handle_identifier() {
+    AST::Expression* expression = ast_->create_expression(AST::ExpressionType::unresolved_identifier);
+    print_info("parsed unresolved identifier", MessageType::parser_debug_terminals);
+
+    expression->string_value = current_token().value;
+
+    get_token();
     return expression;
 }
 
@@ -543,11 +555,11 @@ AST::Expression* Parser::parse_term() {
     switch (current_token().type) {
         case TokenType::identifier:
             // TODO: revamp access expressions
-            return parse_identifier_expression();
+            return handle_identifier();
         case TokenType::string_literal:
-            return parse_string_literal();
+            return handle_string_literal();
         case TokenType::number:
-            return parse_numeric_literal();
+            return handle_numeric_literal();
 
         case TokenType::tie:
             get_token();
