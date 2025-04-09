@@ -10,6 +10,8 @@
 #include "parser.hh"
 #include "config.hh"
 
+using LogLevel::MessageType;
+
 // ----- PUBLIC METHODS -----
 
 Parser::Parser(StreamingLexer* lexer, std::ostream* error_stream):
@@ -97,8 +99,8 @@ std::unique_ptr<AST::AST> Parser::finalize_parsing() {
 
 // ----- OUTPUT HELPERS -----
 
-void Parser::print_error(const std::string& location, const std::string& message, ParserInfoLevel level) const {
-    if (level > PARSER_INFO_LEVEL)
+void Parser::print_error(const std::string& location, const std::string& message) const {
+    if (LogLevel::has_message_type(MessageType::error))
         return;
 
     *errs_ 
@@ -106,12 +108,12 @@ void Parser::print_error(const std::string& location, const std::string& message
         << "error: " << message << "\n";
 }
 
-void Parser::print_error(const std::string& message, ParserInfoLevel level) const {
-    print_error(current_token().get_location(), message, level);
+void Parser::print_error(const std::string& message) const {
+    print_error(current_token().get_location(), message);
 }
 
-void Parser::print_info(const std::string& location, const std::string& message, ParserInfoLevel level) const {
-    if (level > PARSER_INFO_LEVEL)
+void Parser::print_info(const std::string& location, const std::string& message, MessageType message_type) const {
+    if (!LogLevel::has_message_type(message_type))
         return;
 
     *errs_
@@ -119,8 +121,8 @@ void Parser::print_info(const std::string& location, const std::string& message,
         << "info:  " << message << '\n';
 }
 
-void Parser::print_info(const std::string& message,  ParserInfoLevel level) const {
-    print_info(current_token().get_location(), message, level);
+void Parser::print_info(const std::string& message,  MessageType message_type) const {
+    print_info(current_token().get_location(), message, message_type);
 }
 
 // ----- IDENTIFIERS -----
@@ -229,7 +231,7 @@ void Parser::parse_let_statement() {
                     case TokenType::semicolon:
                         create_identifier(name, ast_->create_expression(AST::ExpressionType::uninitialized_identifier));
                         get_token();
-                        print_info("parsed let statement declaring \"" + name + "\" with no definition", ParserInfoLevel::everything);
+                        print_info("parsed let statement declaring \"" + name + "\" with no definition", MessageType::parser_debug);
                         return;
 
                     case TokenType::operator_t:
@@ -259,7 +261,7 @@ void Parser::parse_let_statement() {
 }
 
 void Parser::parse_assignment_statement() {
-    print_info("Parsing assignment statements not implemented");
+    print_error("Parsing assignment statements not implemented");
 
     unsigned int indent_stack = 1;
             
@@ -313,6 +315,7 @@ void Parser::parse_pragma() {
     }
 
     get_token();
+    print_info("parsed pragma", MessageType::parser_debug);
 }
 
 // how to signal failure
@@ -414,7 +417,7 @@ AST::Expression* Parser::parse_expression() {
                 return ast_->create_expression(AST::ExpressionType::syntax_error);
             }
             
-            print_info("Scoped let not yet implemented");
+            print_error("Scoped let not yet implemented");
             get_token();
             return ast_->create_expression(AST::ExpressionType::not_implemented);
             
@@ -437,6 +440,7 @@ AST::Expression* Parser::parse_termed_expression() {
             case TokenType::eof:
             case TokenType::indent_block_end:
             case TokenType::semicolon:
+                print_info("parsed termed expression", MessageType::parser_debug);
                 return expression;
 
             case TokenType::char_token:
@@ -444,13 +448,18 @@ AST::Expression* Parser::parse_termed_expression() {
                     case ')':
                     case ']':
                     case '}':
-                        get_token();
+                        print_info("parsed termed expression", MessageType::parser_debug);
                         return expression;
 
                     case '(':
                     case '[':
                     case '{':
                         expression->terms.push_back(parse_term());
+                        continue;
+                    default:
+                        print_error("unexpected: " + current_token().get_str() + ", in termed expression");
+                        get_token();
+                        continue;
                 }
 
             case TokenType::string_literal:
@@ -461,8 +470,8 @@ AST::Expression* Parser::parse_termed_expression() {
                 expression->terms.push_back(parse_term());
 
             default:
-                get_token();
                 expression->terms.push_back(ast_->create_expression(AST::ExpressionType::not_implemented));
+                get_token();
         }
     }
 }
@@ -482,7 +491,8 @@ AST::Expression* Parser::parse_access_expression() {
 
 // expects to be called with the opening parenthese as the current_token_
 AST::Expression* Parser::parse_parenthesized_expression() {
-    get_token();
+    get_token(); // eat '('
+
     if (current_token().type == TokenType::char_token && current_token().value == ")") {
         print_error("Empty parentheses in an expression");
         get_token();
@@ -495,27 +505,37 @@ AST::Expression* Parser::parse_parenthesized_expression() {
         return expression;
     }
 
-    get_token();
+    get_token(); // eat ')'
     return expression;
 }
 
 AST::Expression* Parser::parse_mapping_literal(char opening) {
     get_token();
     // eat until the closing character
+
+    print_info("parsed mapping literal (not implemented)", MessageType::parser_debug);
+
     return ast_->create_expression(AST::ExpressionType::not_implemented);
 }
 
 AST::Expression* Parser::parse_string_literal() {
     auto expr = ast_->create_expression(AST::ExpressionType::string_literal);
     expr->string_value = current_token().value;
+
     get_token();
+    get_token(); // eat closing '"'
+    
+    print_info("parsed string literal", MessageType::parser_debug);
     return expr;
 }
 
 AST::Expression* Parser::parse_numeric_literal() {
     auto expression = ast_->create_expression(AST::ExpressionType::numeric_literal, &AST::NumberLiteral);
     expression->string_value = current_token().value;
+    
     get_token();
+
+    print_info("parsed string literal", MessageType::parser_debug);
     return expression;
 }
 
@@ -631,6 +651,8 @@ std::vector<AST::Expression*> Parser::parse_argument_list() {
 }
 
 void Parser::reset_to_global_scope() {
+    print_info("resetting to global scope", MessageType::parser_debug);
+
     while (
         current_token().type != TokenType::eof          && (
             !is_statement_separator(current_token())    || 
