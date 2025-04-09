@@ -21,12 +21,14 @@ enum class MessageType: unsigned int {
     error = 0,
     general_info,
     parser_debug,
+    parser_debug_terminals,
 };
 
 struct LogLevel {
     std::array<bool, 5> message_types = {
         true,
         true,
+        false,
         false,
     };
 
@@ -45,6 +47,7 @@ struct LogLevel {
 
     static LogLevel quiet;
     static LogLevel default_;
+    static LogLevel debug;
     static LogLevel everything;
 };
 

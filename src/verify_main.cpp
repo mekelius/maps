@@ -9,6 +9,7 @@
 #include "reverse_parse.hh"
 
 constexpr unsigned int OUTPUT_WIDTH = 80;
+constexpr std::string_view USAGE = "USAGE: verify_mapsc inputfile... [ -v | --verbose | --parser-debug | --debug | -q | --quiet | -e | --everything ] [ -t | --tokens ]";
 
 std::string separator(char character = '-', const std::string& title = "") {
     if (title == "")
@@ -25,7 +26,7 @@ int main(int argc, char* argv[]) {
     Logging::init();
 
     if (argc < 2) {
-        std::cerr << "USAGE: verify_mapsc inputfile" << std::endl;
+        std::cerr << USAGE << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -38,16 +39,16 @@ int main(int argc, char* argv[]) {
     Logging::LogLevel::set(LogLevel::default_);
 
     for (std::string arg : args) {
-        if (arg == "--tokens") {
+        if (arg == "-t" || arg == "--tokens") {
             lexer_ostream = &std::cout;
 
-        } else if (arg == "--parser-debug") {
-            Logging::LogLevel::set(LogLevel::everything);
+        } else if (arg == "-v" || arg == "--verbose" || arg == "--debug" || arg == "--parser-debug") {
+            Logging::LogLevel::set(LogLevel::debug);
             
-        } else if (arg == "-q") {
+        } else if (arg == "-q" || arg == "--quiet") {
             Logging::LogLevel::set(LogLevel::quiet);
 
-        } else if (arg == "-v") {
+        } else if (arg == "-e | --everything") {
             Logging::LogLevel::set(LogLevel::everything);
             lexer_ostream = &std::cout;
 
@@ -63,7 +64,7 @@ int main(int argc, char* argv[]) {
     // ----- PROCESS FILES -----
     bool all_succeeded = true;
     for (std::string filename: source_filenames) {
-        std::cout << separator('-', filename) << "\n";
+        std::cout << separator('#') << separator(' ', filename) << "\n";
         
         std::ifstream source_file{ filename, std::ifstream::in };
         
@@ -78,7 +79,7 @@ int main(int argc, char* argv[]) {
         
         std::unique_ptr<AST::AST> ast = parser.run();
         
-        std::cout << "Parsed into this:\n" << std::endl; 
+        std::cout << "\n\n" << separator('-', "Parsed into") << "\n" << std::endl; 
         reverse_parse(*ast, std::cout);
         std::cout << std::endl;
     }
