@@ -12,24 +12,20 @@ const std::string OPERATOR_GLYPHS = "+-*/^=!?:|<>.$&€£@¬§¤";
 bool is_operator_glyph(char);
 bool is_parenthese(char);
 
-
 enum class TokenType: int {
-    bof,
-    eof,
-    identifier,
-    number,
-    operator_t,
-    string_literal,
+    bof, eof,
+    identifier, operator_t,
+    number, string_literal,
     reserved_word,
-    unknown,
+    indent_block_start, indent_block_end, indent_error_fatal,
+    curly_brace_open, curly_brace_close,
+    parenthesis_open, parenthesis_close,
+    bracket_open, bracket_close,
+    semicolon, comma, lambda,
     tie,
-    indent_block_start,
-    indent_block_end,
-    indent_error_fatal,
-    semicolon,
-    char_token, // includes single-character tokens that can't be used in operators like: (){}[]:;
     pragma,
-};
+    unknown,
+  };
 
 // OPT: roll these into a single enum
 const std::array<std::string, 36> RESERVED_WORDS = {
@@ -64,6 +60,10 @@ class Token {
 };
 
 bool is_statement_separator(Token token);
+bool is_block_starter(Token token);
+bool is_assignment_operator(Token token);
+bool is_access_operator(Token token);
+bool is_term_token(Token token);
 
 class StreamingLexer {
   public:

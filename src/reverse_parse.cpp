@@ -5,7 +5,76 @@
 
 unsigned int indent_stack = 0;
 
-// reverse-parse expression into the stream
+std::string linebreak() {
+    return "\n" + std::string(indent_stack * REVERSE_PARSE_INDENT_WIDTH, ' ');
+}
+
+std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body);
+
+std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
+    assert(statement && "Reverse parse encountered a nullptr statement");
+    
+    switch (static_cast<AST::StatementType>(statement->index())) {
+        case AST::StatementType::broken:
+            ostream << "@broken statement@" << linebreak();
+            break;
+        case AST::StatementType::illegal:
+            ostream << "@illegal statement@" << linebreak();
+            break;
+        case AST::StatementType::empty:
+            break;
+
+        case AST::StatementType::expression_statement:
+            ostream << std::get<AST::ExpressionStatement>(*statement).expression;
+            break;
+
+        case AST::StatementType::block: {
+            ostream << '{';
+            indent_stack++;
+            for (AST::Statement* substatement: 
+                std::get<AST::BlockStatement>(*statement).statements) {
+                ostream << substatement << ";" << linebreak();
+            }
+            indent_stack--;
+            ostream << '}';
+            break;
+        }
+
+        case AST::StatementType::let: {
+            auto [name, body] = std::get<AST::LetStatement>(*statement);
+            // assume top level identifiers are created by let-statements
+            ostream << "let " << name;
+            
+            // noninitialized
+            if (!body.index())
+                break;
+
+            ostream << " = " << body;
+                
+            // for (const AST::Type* arg_type: arg_types) {
+            //     ostream << arg_type->name << " -> ";
+            // }
+            // ostream << return type
+            break;
+        }
+        
+
+        case AST::StatementType::assignment: {
+            auto [name, body] = std::get<AST::AssignmentStatement>(*statement);
+            ostream << name << " = " << body;
+            break;
+        }
+
+        case AST::StatementType::return_:
+            ostream 
+                    << "return" 
+                    << std::get<AST::ReturnStatement>(*statement).expression;
+            break;
+    }
+
+    return ostream << ';' << linebreak();
+}
+
 std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
     assert(expression && "Reverse parse encountered a nullptr expression");
 
@@ -29,9 +98,8 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         }
 
         case AST::ExpressionType::termed_expression: {
-
             indent_stack++;
-            ostream << "\n" << std::string(indent_stack * REVERSE_PARSE_INDENT_WIDTH, ' ');
+            ostream << linebreak();
 
             bool pad_left = false;
             for (AST::Expression* term: expression->terms) {
@@ -43,9 +111,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
                 }
             }
             
-            ostream << "\n";
             indent_stack--;
-
             return ostream;
         }
 
@@ -53,7 +119,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*built-in:*/ " + expression->string_value : expression->string_value );
 
         case AST::ExpressionType::not_implemented:
-            return ostream << "Expression type not implemented in parser";
+            return ostream << "Expression type not implemented in parser: " << static_cast<int>(expression->expression_type);
 
         case AST::ExpressionType::tie:
             return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;
@@ -64,41 +130,33 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::unresolved_identifier:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved identifier:*/ " + expression->string_value : expression->string_value );
 
-        case AST::ExpressionType::function_body:
-            return ostream << "Expression type function body not implemented in reverse parser";
-
         case AST::ExpressionType::deferred_call:
             return ostream << "Expression type deferred call not implemented in reverse parser";
 
         case AST::ExpressionType::syntax_error:
-            return ostream << "!!SYNTAX ERROR!!";
+            return ostream << "@SYNTAX ERROR@";
 
         default:
-            return ostream << "Expression type not implemented in reverse parser";
+            return ostream << "Expression type not implemented in reverse parser:" << static_cast<int>(expression->expression_type);
+    }
+}
+
+// reverse-parse expression into the stream
+std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body) {
+    switch (body.index()) {
+        case 0:
+            return ostream << "@empty callable body@";
+
+        case 1: // expression
+            return ostream << std::get<AST::Expression*>(body);
+
+        case 2: // statement
+            return ostream << std::get<AST::Statement*>(body);
     }
 }
 
 void reverse_parse(AST::AST& ast, std::ostream& ostream) {
-    for (const std::string& identifier: ast.global.identifiers_in_order) {
-        AST::Callable* callable = ast.global.identifiers.at(identifier);
-        
-        const AST::Type* return_type = callable->expression->type;
-        std::vector<const AST::Type*> arg_types = callable->arg_types;
-
-        // assume top level identifiers are created by let-statements
-        ostream << "let " << identifier;
-        
-        if (callable->expression->expression_type == AST::ExpressionType::uninitialized_identifier) {
-            ostream << "\n\n";
-            continue;
-        }
-
-        ostream << " = ";
-            
-        for (const AST::Type* arg_type: arg_types) {
-            ostream << arg_type->name << " -> ";
-        }
-
-        ostream << return_type->name << ": " << callable->expression << "\n\n";
+    for (auto statement: ast.root_) {
+        ostream << statement;
     }
 }

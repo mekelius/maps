@@ -70,6 +70,7 @@ ideas:
         - const globally, var locally
         - or just use const and let, whatever
             - benefits are pretty minimal, but there are maybe some
+    - cases
 
 inpurity and purity, strictness, laziness
     - {}-access denotes lazy access

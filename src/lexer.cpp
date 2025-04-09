@@ -39,27 +39,20 @@ std::string Token::get_str() const {
     switch (type) {
         case TokenType::eof:
             return "EOF";
-            
-        case TokenType::unknown:
-            return "unknown token";
+        case TokenType::bof:
+            return "BOF";
 
         case TokenType::identifier:
             return "identifier: " + value;
 
+        case TokenType::operator_t:
+            return "operator: " + value;
+    
         case TokenType::number:
             return "numeric literal: " + value;
 
-        case TokenType::operator_t:
-            return "operator: " + value;
-
         case TokenType::string_literal:
             return "string literal \"" + value + "\"";
-
-        case TokenType::tie:
-            return "tie";
-
-        case TokenType::char_token:
-            return "" + value;
 
         case TokenType::reserved_word:
             return "reserved word " + value;
@@ -70,14 +63,39 @@ std::string Token::get_str() const {
         case TokenType::indent_block_end:
             return "indent block end";
         
+        case TokenType::indent_error_fatal:
+            return "indent error fatal";
+
+        case TokenType::curly_brace_open:
+            return "{";
+        case TokenType::curly_brace_close:
+            return "}";
+        case TokenType::parenthesis_open:
+            return "(";
+        case TokenType::parenthesis_close:
+            return ")";
+        case TokenType::bracket_open:
+            return "[";
+        case TokenType::bracket_close:
+            return "]";
         case TokenType::semicolon:
             return ";";
+        case TokenType::comma:
+            return ",";
+        case TokenType::lambda:
+            return "\\";
 
-        case TokenType::bof:
-            return "BOF";
+        case TokenType::tie:
+            return "tie";
+
+        case TokenType::pragma:
+            return "pragma: " + value;
+
+        case TokenType::unknown:
+            return "unknown token";
 
         default:
-            return "unhandled token type";
+            assert(false && "tokentype is lacking a string representation");
     }
 }
 
@@ -92,20 +110,70 @@ bool is_statement_separator(Token token) {
         case TokenType::indent_block_end:
         case TokenType::indent_error_fatal:
         case TokenType::unknown:
+        case TokenType::curly_brace_close:
+        case TokenType::bracket_close:
+        case TokenType::parenthesis_close:
             return true;
-
-        case TokenType::char_token:
-            assert(token.value.size() == 1 && 
-                "Parser encountered a char token with more than 1 char");
-            switch (token.value.at(0)) {
-                case '}':
-                case ']':
-                case ')':
-                    return true;
                 
-                default: 
-                    return false;
-            }
+        default: 
+            return false;
+    }
+}
+
+bool is_block_starter(Token token) {
+    switch (token.type) {
+        case TokenType::indent_block_start:        
+        case TokenType::curly_brace_open:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool is_assignment_operator(Token token) {
+    if (token.type != TokenType::operator_t)
+        return false;       
+    
+    return (
+        token.value == "="      //||
+        // token.value == "+="     ||
+        // token.value == "-="     ||
+        // token.value == "++"     ||
+        // token.value == "--"     ||
+        // token.value == "?="     ||
+    );
+}
+
+bool is_access_operator(Token token) {
+    switch (token.type) {
+        case TokenType::operator_t:
+            if (token.value != "::" && token.value != ".")
+                return false;
+
+        case TokenType::parenthesis_open:
+        case TokenType::curly_brace_open:
+        case TokenType::bracket_open:
+            return true;
+        
+        default:
+            return false;
+    }
+}
+
+bool is_term_token(Token token) {
+    switch (token.type) {
+        case TokenType::string_literal:
+        case TokenType::number:
+        case TokenType::parenthesis_open:
+        case TokenType::bracket_open:
+        case TokenType::curly_brace_open:
+        case TokenType::identifier:
+        case TokenType::indent_block_start:
+        case TokenType::lambda:
+        case TokenType::operator_t:
+        case TokenType::tie:
+        case TokenType::reserved_word:
+            return true;
 
         default:
             return false;
@@ -199,7 +267,7 @@ Token StreamingLexer::get_token_() {
             tie_possible_ = false;
             return get_token_();
 
-        case '@':
+        case '#':
             return read_pragma();
     
         case '/':
@@ -218,26 +286,46 @@ Token StreamingLexer::get_token_() {
             // handle operator
             return read_operator_();
 
-        // handle single-character tokens
-        // TODO: rework into token types
         case '(':
-        case ':':
+            if (tie_possible_) {
+                tie_possible_ = false;
+                return create_token_(TokenType::tie);
+            }
+            read_char();
+            return create_token_(TokenType::parenthesis_open);
+
         case '[':
+            read_char();
+            if (tie_possible_) {
+                tie_possible_ = false;
+                return create_token_(TokenType::tie);
+            }
+            read_char();
+            return create_token_(TokenType::bracket_close);
+
         case '{':
             if (tie_possible_) {
                 tie_possible_ = false;
                 return create_token_(TokenType::tie);
             }
+            read_char();
+            return create_token_(TokenType::curly_brace_open);
+
         case ')':
+            read_char();
+            return create_token_(TokenType::parenthesis_close);
         case ']':
+            read_char();
+            return create_token_(TokenType::bracket_close);
         case '}':
+            read_char();
+            return create_token_(TokenType::curly_brace_close);
         case ',':
+            read_char();
+            return create_token_(TokenType::comma);
         case '\\':
-            {
-                std::string value(1, current_char_);
-                read_char();
-                return create_token_(TokenType::char_token, value);
-            }
+            read_char();
+            return create_token_(TokenType::lambda);
         
         case '\n':
             return read_linebreak_();
