@@ -19,30 +19,39 @@ Expression* AST::create_expression(ExpressionType expression_type, const Type* t
 
         case ExpressionType::native_function:
         case ExpressionType::native_operator:
-        case ExpressionType::function_body:
         case ExpressionType::not_implemented:
         default:
             return expression;
             
         // default:
-            // assert(false && "unhandled expression type");
+        //     assert(false && "unhandled expression type in AST::create_expression");
     }
+}
+
+Statement* AST::create_statement(Statement&& statement) {
+    statements_.push_back(std::make_unique<Statement>(std::move(statement)));
+    return statements_.back().get();
+}
+
+void AST::append_top_level_statement(Statement* statement) {
+    root_.push_back(statement);
 }
 
 std::optional<Callable*> AST::create_callable(
     const std::string& name,
-    Expression* expression,
+    CallableBody body,
+    const Type* return_type,
     std::vector<const Type*> arg_types
 ) {
     if (!name_free(name)) {
         return std::nullopt;
     }
 
-    callables_.push_back(std::make_unique<Callable>(name, expression, arg_types));
+    callables_.push_back(std::make_unique<Callable>(name, body, return_type, arg_types));
     Callable* callable = callables_.back().get();
     create_identifier(name, callable);
-    global.identifiers.insert({name, callable});
-    global.identifiers_in_order.push_back(name);
+    global_.identifiers.insert({name, callable});
+    global_.identifiers_in_order.push_back(name);
     
     return callable;
 }
@@ -63,15 +72,14 @@ std::optional<Callable*> AST::get_identifier(const std::string& name) {
     return it->second;
 }
 
-
-bool init_builtin_callables(AST& ast) {
-    auto print_expr = ast.create_expression(ExpressionType::native_function, &Void);
-    auto print = ast.create_callable("print", print_expr, { &String });
+bool AST::init_builtin_callables() {
+    auto print_expr = create_expression(ExpressionType::native_function, &Void);
+    auto print = create_callable("print", print_expr, { &String });
     
     if (!print)
         return false;
 
-    (*print)->expression->string_value = "print";
+    (*print)->name = "print";
 
     return true;
 }
