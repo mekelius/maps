@@ -32,8 +32,8 @@ class Parser {
     // Token expect_token(predicate, error_message);
     void print_error(const std::string& message) const;
     void print_error(const std::string& location, const std::string& message) const;
-    void print_info(const std::string& message, LogLevel::MessageType message_type = LogLevel::MessageType::general_info) const;
-    void print_info(const std::string& location, const std::string& message, LogLevel::MessageType message_type = LogLevel::MessageType::general_info) const;
+    void print_info(const std::string& message, Logging::MessageType message_type = Logging::MessageType::general_info) const;
+    void print_info(const std::string& location, const std::string& message, Logging::MessageType message_type = Logging::MessageType::general_info) const;
 
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& identifier) const;

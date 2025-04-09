@@ -13,10 +13,9 @@ inline std::string line_col_padding(unsigned int width) {
 }
 
 constexpr bool REVERSE_PARSE_INCLUDE_DEBUG_INFO = true;
-constexpr bool VERIFY_OUTPUT_TOKENS = true;
 constexpr unsigned int REVERSE_PARSE_INDENT_WIDTH = 4;
 
-namespace LogLevel {
+namespace Logging {
 
 enum class MessageType: unsigned int {
     error = 0,
@@ -29,34 +28,29 @@ struct LogLevel {
         true,
         true,
         false,
-        false,
-        false
     };
+
+    void set_message_type(MessageType message_type, bool value) {
+        message_types.at(static_cast<unsigned int>(message_type)) = value;
+    }
+
+    static void set(LogLevel& level) {
+        current = &level;
+    }
+    static bool has_message_type(MessageType message_type) {
+        return current->message_types[static_cast<unsigned int>(message_type)];
+    }
+    
+    static LogLevel* current;
+
+    static LogLevel quiet;
+    static LogLevel default_;
+    static LogLevel everything;
 };
 
-constexpr LogLevel quiet = {{
-    false,
-    false,
-    false,
-    false,
-    false,
-}};
-constexpr LogLevel default_;
-constexpr LogLevel everything = {{
-    true,
-    true,
-    true,
-    true,
-    true,
-}};
+void init(LogLevel& log_level = LogLevel::default_);
 
-constexpr LogLevel current = everything;
-
-constexpr inline bool has_message_type(MessageType message_type) {
-    return current.message_types[static_cast<unsigned int>(message_type)];
-}
-
-} // namespace LogLevel
+} // namespace Logging
 
 
 #endif
