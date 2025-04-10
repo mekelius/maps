@@ -69,15 +69,15 @@ Value* IR_Generator::handle_expression(AST::Expression& expression) {
         //     handle_native_operator(expression);
         //     break;
 
-        case AST::ExpressionType::function_body:
-            *errs_ << "error during codegen: encountered function_body without a callable wrapper\n";
-            has_failed_ = true;
-            return nullptr;
+        // case AST::ExpressionType::function_body:
+        //     *errs_ << "error during codegen: encountered function_body without a callable wrapper\n";
+        //     has_failed_ = true;
+        //     return nullptr;
 
-        case AST::ExpressionType::callable_expression:
-            *errs_ << "error during codegen: encountered callable_expression\n";
-            has_failed_ = true;
-            return nullptr;
+        // case AST::ExpressionType::callable_expression:
+        //     *errs_ << "error during codegen: encountered callable_expression\n";
+        //     has_failed_ = true;
+        //     return nullptr;
 
         default:
             *errs_ << "error during codegen: encountered unhandled expression type\n";
@@ -87,76 +87,76 @@ Value* IR_Generator::handle_expression(AST::Expression& expression) {
 }
 
 std::optional<Function*> IR_Generator::handle_function(AST::Callable& callable) {
-    auto [name, expression, arg_types] = callable;
-    const AST::Type* return_type = expression->type;
+    // auto [name, expression, arg_types] = callable;
+    // const AST::Type* return_type = expression->type;
 
     // check expression type
-    if (expression->expression_type == AST::ExpressionType::native_function) {
-        // what to do here
-        if (name == "print")
-            return puts_;
-        if (name == "sprintf")
-            return sprintf_;
+    // if (expression->expression_type == AST::ExpressionType::native_function) {
+    //     // what to do here
+    //     if (name == "print")
+    //         return puts_;
+    //     if (name == "sprintf")
+    //         return sprintf_;
 
-        fail("unknown native function definition: " + name);
-        return {};
-    }
+    //     fail("unknown native function definition: " + name);
+    //     return {};
+    // }
 
     // if (expression->expression_type != AST::ExpressionType::function_body) {
     //     fail("encountered callable expression: \"" + name + "\" with a non-reduced body");
     //     return {};
     // }
 
-    if (!function_name_is_ok(name)) {
-        fail("invalid function name \"" + name + "\" (likely conflicts with a builtin or an internal name)");
-        return {};
-    }
+    // if (!function_name_is_ok(name)) {
+    //     fail("invalid function name \"" + name + "\" (likely conflicts with a builtin or an internal name)");
+    //     return {};
+    // }
 
     // check that types are reduced
-    if (!return_type->is_native) {
-        fail(
-            "encountered callable expression: \"" + name + 
-            "\" with a non-reduced return type: " + static_cast<std::string>(return_type->name)
-        );
-        return {};
-    }
+    // if (!return_type->is_native) {
+    //     fail(
+    //         "encountered callable expression: \"" + name + 
+    //         "\" with a non-reduced return type: " + static_cast<std::string>(return_type->name)
+    //     );
+    //     return {};
+    // }
 
-    for (const AST::Type* arg_type : arg_types) {
-        if (!arg_type->is_native) {
-            fail(
-                "encountered callable expression: \"" + name + 
-                "\" with a non-reduced parameter type: " + static_cast<std::string>(return_type->name)
-            );
-            return {};
-        }
-    }
+    // for (const AST::Type* arg_type : arg_types) {
+    //     if (!arg_type->is_native) {
+    //         fail(
+    //             "encountered callable expression: \"" + name + 
+    //             "\" with a non-reduced parameter type: " + static_cast<std::string>(return_type->name)
+    //         );
+    //         return {};
+    //     }
+    // }
 
     // ----- construct the function signature -----
     
     // TODO: this sucks, simplify with enum
-    auto return_type_ = convert_type(return_type);
-    if (!return_type_) {
-        fail("cannot map type to native type: " + static_cast<std::string>(return_type->name));
-        return {};
-    }
+    // auto return_type_ = convert_type(return_type);
+    // if (!return_type_) {
+    //     fail("cannot map type to native type: " + static_cast<std::string>(return_type->name));
+    //     return {};
+    // }
     
-    std::vector<Type*> arg_types_ = {};
+    // std::vector<Type*> arg_types_ = {};
     
-    for (auto arg_type : arg_types) {
-        auto arg_type_ = convert_type(arg_type);
-        if (!arg_type_) {
-            fail("cannot map type to native type: " + static_cast<std::string>(return_type->name));
-            return {};
-        }
-        arg_types_.push_back(*arg_type_);
-    }
+    // for (auto arg_type : arg_types) {
+    //     auto arg_type_ = convert_type(arg_type);
+    //     if (!arg_type_) {
+    //         fail("cannot map type to native type: " + static_cast<std::string>(return_type->name));
+    //         return {};
+    //     }
+    //     arg_types_.push_back(*arg_type_);
+    // }
 
     // // TODO: handle vararg
-    FunctionType* signature = FunctionType::get(*return_type_, arg_types_, false);
-    function_definition(name, signature);
+    // FunctionType* signature = FunctionType::get(*return_type_, arg_types_, false);
+    // function_definition(name, signature);
 
     // SINGLE EXPRESSION FUNCTION BODIES SHOULD JUST BE HANDLED AND RETURN
-    builder_->CreateRet(handle_expression(*expression));
+    // builder_->CreateRet(handle_expression(*expression));
 
     // ???? recursion? does it need to know it's own name for something
     // handle_function_body(body, signature);
@@ -176,9 +176,9 @@ bool IR_Generator::generate_ir(AST::AST* ast) {
         (*main)->arg_types = { &AST::Int, &AST::String };
     }
 
-    for (auto& function : ast_->callables_) {
-        handle_function(*function.get());
-    }
+    // for (auto& function : ast_->callables_) {
+    //     handle_function(*function.get());
+    // }
 
     return !has_failed_;
 }

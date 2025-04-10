@@ -1,7 +1,7 @@
 #include <cassert>
 
+#include "../config.hh"
 #include "reverse_parse.hh"
-#include "config.hh"
 
 unsigned int indent_stack = 0;
 

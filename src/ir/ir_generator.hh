@@ -13,7 +13,7 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 
-#include "ast.hh"
+#include "../lang/ast.hh"
 
 #include <ostream>
 

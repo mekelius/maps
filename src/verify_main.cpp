@@ -3,10 +3,14 @@
 #include <fstream>
 
 #include "config.hh"
-#include "parser.hh"
-#include "lexer.hh"
-#include "ast.hh"
-#include "reverse_parse.hh"
+#include "logging.hh"
+
+#include "lang/ast.hh"
+#include "lang/reverse_parse.hh"
+
+#include "parsing/parser_common.hh"
+#include "parsing/parser_layer1.hh"
+#include "parsing/parser_layer2.hh"
 
 constexpr unsigned int OUTPUT_WIDTH = 80;
 constexpr std::string_view USAGE = "USAGE: verify_mapsc inputfile... [ -v | --verbose | --parser-debug | --debug | -q | --quiet | -e | --everything ] [ -t | --tokens ]";
