@@ -12,7 +12,6 @@
 
 #include "llvm/IR/Module.h"
 
-#include "config.hh"
 #include "logging.hh"
 
 #include "lang/ast.hh"
@@ -129,7 +128,7 @@ std::optional<CL_Options> parse_cl_args(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-    Logging::init();
+    Logging::init_logging(&std::cerr);
 
     std::optional<CL_Options> cl_options = parse_cl_args(argc, argv);
 
@@ -170,7 +169,7 @@ int main(int argc, char** argv) {
     // ----- parse the source -----
     
     StreamingLexer lexer{&source_is, tokens_ostream};
-    Parser parser{&lexer, &std::cerr/*, &ir_gen_helper*/};
+    Parser parser{&lexer};
     
     // if tokens get dumped, provide clearer separation
     if (cl_options->output_token_stream_to == OutputSink::stderr) {

@@ -8,15 +8,15 @@
 #include <vector>
 #include <unordered_map>
 
-#include "../config.hh"
 #include "../lang/ast.hh"
+#include "../logging.hh"
 
 #include "lexer.hh"
 
 // First attempt at a parser. Parses tokens directly into the llvm context
 class Parser {
   public:
-    Parser(StreamingLexer* lexer, std::ostream* error_stream);
+    Parser(StreamingLexer* lexer);
     
     std::unique_ptr<AST::AST> run();
   private:
@@ -32,9 +32,9 @@ class Parser {
 
     // TODO: refactor these
     void print_error(const std::string& message) const;
-    void print_error(const std::string& location, const std::string& message) const;
+    void print_error(Logging::Location location, const std::string& message) const;
     void print_info(const std::string& message, Logging::MessageType message_type = Logging::MessageType::general_info) const;
-    void print_info(const std::string& location, const std::string& message, Logging::MessageType message_type = Logging::MessageType::general_info) const;
+    void print_info(Logging::Location location, const std::string& message, Logging::MessageType message_type = Logging::MessageType::general_info) const;
 
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& identifier) const;
@@ -77,7 +77,6 @@ class Parser {
     void reset_to_top_level();
     
     StreamingLexer* lexer_;
-    std::ostream* errs_;
     std::unique_ptr<AST::AST> ast_;
     
     int which_buf_slot_ = 0;

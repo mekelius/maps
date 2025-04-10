@@ -9,8 +9,9 @@
 
 #include <variant>
 
-#include "../config.hh"
+#include "../logging.hh"
 
+#include "tokens.hh"
 #include "parser_common.hh"
 #include "parser_layer1.hh"
 
@@ -19,9 +20,8 @@ using Logging::MessageType;
 
 // ----- PUBLIC METHODS -----
 
-Parser::Parser(StreamingLexer* lexer, std::ostream* error_stream):
-lexer_(lexer),
-errs_(error_stream) {
+Parser::Parser(StreamingLexer* lexer):
+lexer_(lexer) {
     ast_ = std::make_unique<AST::AST>();
     get_token();
     get_token();
@@ -98,31 +98,24 @@ std::unique_ptr<AST::AST> Parser::finalize_parsing() {
 
 // ----- OUTPUT HELPERS -----
 
-void Parser::print_error(const std::string& location, const std::string& message) const {
-    if (!LogLevel::has_message_type(MessageType::error))
-        return;
-
-    *errs_ 
-        << location << line_col_padding(location.size()) 
-        << "error: " << message << "\n";
-}
 
 void Parser::print_error(const std::string& message) const {
-    print_error(current_token().get_location(), message);
+    print_error({current_token().line, current_token().col}, message);
 }
 
-void Parser::print_info(const std::string& location, const std::string& message, MessageType message_type) const {
-    if (!LogLevel::has_message_type(message_type))
-        return;
-
-    *errs_
-        << location << line_col_padding(location.size()) 
-        << "info:  " << message << '\n';
+void Parser::print_error(Logging::Location location, const std::string& message) const {
+    Logging::log_error(location, message);
 }
 
-void Parser::print_info(const std::string& message,  MessageType message_type) const {
-    print_info(current_token().get_location(), message, message_type);
+void Parser::print_info(const std::string& message, Logging::MessageType message_type) const {
+    print_info({current_token().line, current_token().col}, message, message_type);
 }
+
+void Parser::print_info(Logging::Location location, const std::string& message, Logging::MessageType message_type) const {
+    Logging::log_info(location, message, message_type);
+}
+
+
 
 // ----- IDENTIFIERS -----
 
@@ -599,7 +592,7 @@ AST::Expression* Parser::handle_string_literal() {
     get_token();
     get_token(); // eat closing '"'
     
-    print_info("parsed string literal", MessageType::parser_debug_terminals);
+    print_info("parsed string literal", MessageType::parser_debug_terminal);
     return expr;
 }
 
@@ -609,13 +602,13 @@ AST::Expression* Parser::handle_numeric_literal() {
     
     get_token();
 
-    print_info("parsed numeric literal", MessageType::parser_debug_terminals);
+    print_info("parsed numeric literal", MessageType::parser_debug_terminal);
     return expression;
 }
 
 AST::Expression* Parser::handle_identifier() {
     AST::Expression* expression = ast_->create_expression(AST::ExpressionType::unresolved_identifier);
-    print_info("parsed unresolved identifier", MessageType::parser_debug_terminals);
+    print_info("parsed unresolved identifier", MessageType::parser_debug_terminal);
 
     expression->string_value = current_token().value;
 

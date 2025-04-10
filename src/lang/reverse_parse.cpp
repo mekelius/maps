@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "../config.hh"
+#include "../logging.hh"
 #include "reverse_parse.hh"
 
 unsigned int indent_stack = 0;

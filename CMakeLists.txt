@@ -14,7 +14,6 @@ add_compile_options(-Wall -Wextra)
 
 add_library(parsing OBJECT
     src/logging.cpp
-    src/config.cpp
     src/lang/ast.cpp
     src/lang/types.cpp
     src/parsing/tokens.cpp

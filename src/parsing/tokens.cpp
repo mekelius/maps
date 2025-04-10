@@ -2,7 +2,7 @@
 
 #include "tokens.hh"
 
-#include "../config.hh"
+#include "../logging.hh"
 
 bool is_tieable_token_type(TokenType token_type) {
     return (
@@ -13,14 +13,14 @@ bool is_tieable_token_type(TokenType token_type) {
     );
 }
 
-
 std::string Token::get_location() const {
     return std::to_string(line) + ":" + std::to_string(col);
 }
 
+// TODO: refactor
 std::string Token::get_str(bool stream_format) const {
     if (!stream_format) return get_str();
-    return get_location() + line_col_padding(get_location().size()) + "token: " + get_str();
+    return get_location() + Logging::line_col_padding(get_location().size()) + "token: " + get_str();
 }
 
 std::string Token::get_str() const {
