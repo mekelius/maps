@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
         }
         
         StreamingLexer lexer{&source_file, lexer_ostream};
-        Parser parser{&lexer};
+        ParserLayer1 parser{&lexer};
         
         std::unique_ptr<AST::AST> ast = parser.run();
         

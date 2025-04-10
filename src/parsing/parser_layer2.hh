@@ -1,5 +1,5 @@
-#ifndef __PARSER_LAYER2_HH
-#define __PARSER_LAYER2_HH
+#ifndef __PARSER_LAYER_2_HH
+#define __PARSER_LAYER_2_HH
 
 /**
  * Parser layer 2 is responsible for:
@@ -24,6 +24,7 @@ class ParserLayer2 {
     // TODO: refactor logging
 
     // walks the tree and tries to resolve any unresolved identifiers
+    // This could probably do this without being part of the class for more flexibility
     void resolve_identifiers();
 
     // declares the tree invalid

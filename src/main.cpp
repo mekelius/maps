@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
     // ----- parse the source -----
     
     StreamingLexer lexer{&source_is, tokens_ostream};
-    Parser parser{&lexer};
+    ParserLayer1 parser{&lexer};
     
     // if tokens get dumped, provide clearer separation
     if (cl_options->output_token_stream_to == OutputSink::stderr) {

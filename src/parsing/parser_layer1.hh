@@ -1,5 +1,5 @@
-#ifndef __PARSER_HH
-#define __PARSER_HH
+#ifndef __PARSER_LAYER_1_HH
+#define __PARSER_LAYER_1_HH
 
 #include <istream>
 #include <memory>
@@ -14,9 +14,9 @@
 #include "lexer.hh"
 
 // First attempt at a parser. Parses tokens directly into the llvm context
-class Parser {
+class ParserLayer1 {
   public:
-    Parser(StreamingLexer* lexer);
+    ParserLayer1(StreamingLexer* lexer);
     
     std::unique_ptr<AST::AST> run();
   private:

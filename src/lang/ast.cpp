@@ -10,22 +10,56 @@ Expression* AST::create_expression(ExpressionType expression_type, const Type* t
 
     switch (expression_type) {
         case ExpressionType::string_literal:
-            expression->type = &String;
-            return expression;
+            if (expression->type == &Hole)
+                expression->type = &String;
+            expression->value = "";
+            break;
+
+        case ExpressionType::numeric_literal:
+            if (expression->type == &Hole)
+                expression->type = &NumberLiteral;
+            expression->value = "";
+            break;
 
         case ExpressionType::call:
-            expression->call_expr = {"", {}};
-            return expression;
+            expression->value = CallExpressionValue{};
+            break;
+
+        case ExpressionType::deferred_call:
+            expression->value = CallExpressionValueDeferred{};
+            break;
 
         case ExpressionType::native_function:
+            // TODO: infer type
+            expression->value = "";
+            break;
+
         case ExpressionType::native_operator:
+            // TODO: create enum of native operators
+            expression->value = "";
+            break;
+
+        case ExpressionType::termed_expression:
+            expression->value = TermedExpressionValue{};
+            break;
+
+        case ExpressionType::unresolved_identifier:
+        case ExpressionType::unresolved_operator:
+        case ExpressionType::syntax_error:
         case ExpressionType::not_implemented:
-        default:
-            return expression;
+            expression->value = "";
+            break;
+
+        case ExpressionType::tie:
+        case ExpressionType::deleted:
+            expression->value = std::monostate{};
+            break;
             
-        // default:
-        //     assert(false && "unhandled expression type in AST::create_expression");
+        default:
+            assert(false && "unhandled expression type in AST::create_expression");
+            break;
     }
+    return expression;
 }
 
 Statement* AST::create_statement(Statement&& statement) {
@@ -74,7 +108,7 @@ std::optional<Callable*> AST::get_identifier(const std::string& name) {
 
 bool AST::init_builtin_callables() {
     auto print_expr = create_expression(ExpressionType::native_function, &Void);
-    auto print = create_callable("print", print_expr, { &String });
+    auto print = create_callable("print", print_expr, &Void, { &String });
     
     if (!print)
         return false;
