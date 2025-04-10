@@ -44,13 +44,11 @@ std::string Token::get_str() const {
 
         case TokenType::identifier:
             return "identifier: " + value;
-
         case TokenType::operator_t:
             return "operator: " + value;
     
         case TokenType::number:
             return "numeric literal: " + value;
-
         case TokenType::string_literal:
             return "string literal \"" + value + "\"";
 
@@ -59,10 +57,8 @@ std::string Token::get_str() const {
         
         case TokenType::indent_block_start:
             return "indent block start";
-        
         case TokenType::indent_block_end:
             return "indent block end";
-        
         case TokenType::indent_error_fatal:
             return "indent error fatal";
 
@@ -243,6 +239,14 @@ Token StreamingLexer::create_token_(TokenType type, int value) {
 // ----- PRODUCTION RULES -----
 
 Token StreamingLexer::get_token_() {
+    if (indents_to_close_ > 0) {
+        indents_to_close_--;
+        return create_token_(
+            TokenType::indent_block_end,
+            ""
+        );
+    }
+
     current_token_start_col_ = current_col_;
     current_token_start_line_ = current_line_;
 
@@ -444,13 +448,13 @@ Token StreamingLexer::read_numeric_literal_() {
 
 Token StreamingLexer::read_linebreak_() {
     unsigned int current_indent = indent_stack_.back();
-    unsigned int next_line_indent = 0;
-
+    
     // eat empty lines
     while (read_char() == '\n' && !source_is_->eof());
-
+    
     // determine next line indent
     // TODO: deal with tab characters
+    unsigned int next_line_indent = 0;
     while (current_char_ == ' ' && !source_is_->eof()) {
         next_line_indent++;
         read_char();
@@ -482,11 +486,10 @@ Token StreamingLexer::read_linebreak_() {
         return create_token_(TokenType::indent_block_start);
     }
 
-    // if the indent decreased, close the previous indents we passed
-    // unsigned int levels_closed = 0;
+    // if the indent decreased, enter indent closing mode
     while (next_line_indent < indent_stack_.back()) {
-        // levels_closed++;
         indent_stack_.pop_back();
+        indents_to_close_++;
     }
     
     // if the indent went down to a level that was not used before, the code is invalid
@@ -502,10 +505,11 @@ Token StreamingLexer::read_linebreak_() {
         );
     }
 
+    indents_to_close_--;
     return create_token_(
         TokenType::indent_block_end,
         ""
-    );    
+    );
 }
 
 Token StreamingLexer::read_pragma() {

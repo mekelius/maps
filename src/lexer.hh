@@ -98,6 +98,7 @@ class StreamingLexer {
 
     char current_char_ = '\00'; // this null will be read and discarded during the constructor 
     bool tie_possible_ = false; // ties mark a lack of whitespace between operators, values and identifiers
+    unsigned int indents_to_close_ = 0; // if there's indents to close, close one instead of reading further
     unsigned int current_line_ = 1;
     unsigned int current_col_ = 0;
     unsigned int current_token_start_line_ = 0;
