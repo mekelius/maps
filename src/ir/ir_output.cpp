@@ -1,4 +1,4 @@
-#include "output.hh"
+#include "ir_output.hh"
 
 using namespace llvm;
 

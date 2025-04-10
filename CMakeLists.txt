@@ -12,36 +12,41 @@ add_compile_options(-Wall -Wextra)
 
 # ------------------- MAPSC FRONTENT -------------------
 
-add_library(mapsc_frontend OBJECT
-    src/lexer.cpp
-    src/parser.cpp
-    src/ast.cpp
+add_library(parsing OBJECT
+    src/logging.cpp
     src/config.cpp
+    src/lang/ast.cpp
+    src/lang/types.cpp
+    src/parsing/tokens.cpp
+    src/parsing/lexer.cpp
+    src/parsing/parser_common.cpp
+    src/parsing/parser_layer1.cpp
+    src/parsing/parser_layer2.cpp
 )
 
 # -------------------- VERIFY MAPSC --------------------
 
 add_executable(verify_mapsc
+    src/lang/reverse_parse.cpp
     src/verify_main.cpp
-    src/reverse_parse.cpp
 )
 
-target_link_libraries(verify_mapsc mapsc_frontend)
+target_link_libraries(verify_mapsc parsing)
 
 # ----------------------- MAPSC ------------------------
 
 set(CMAKE_LINKER_TYPE "LLD")
 
 add_executable(mapsc 
-    src/ir_generator.cpp
-    src/output.cpp
+    src/ir/ir_generator.cpp
+    src/ir/ir_output.cpp
     src/main.cpp
 )
 
-target_link_libraries(mapsc mapsc_frontend -lLLVM-19)
+target_link_libraries(mapsc parsing -lLLVM-19)
+target_include_directories(mapsc SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
-target_compile_options(mapsc PRIVATE
-    -I/usr/lib/llvm-19/include 
+target_compile_options(mapsc PRIVATE 
     -fno-exceptions -funwind-tables 
     -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
 )

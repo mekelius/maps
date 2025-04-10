@@ -13,10 +13,17 @@
 #include "llvm/IR/Module.h"
 
 #include "config.hh"
-#include "ir_generator.hh"
-#include "output.hh"
-#include "lexer.hh"
-#include "parser.hh"
+#include "logging.hh"
+
+#include "lang/ast.hh"
+
+#include "parsing/lexer.hh"
+#include "parsing/parser_common.hh"
+#include "parsing/parser_layer1.hh"
+#include "parsing/parser_layer2.hh"
+
+#include "ir/ir_generator.hh"
+#include "ir/ir_output.hh"
 
 #if __cplusplus < 201703L
     #error(need c++17)

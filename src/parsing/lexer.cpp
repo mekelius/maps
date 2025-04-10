@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cassert>
 
-#include "config.hh"
+#include "../config.hh"
 
 bool is_operator_glyph(char glyph) {
     return OPERATOR_GLYPHS.find(glyph) != std::string::npos;

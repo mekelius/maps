@@ -9,8 +9,10 @@
 
 #include <variant>
 
-#include "parser.hh"
-#include "config.hh"
+#include "../config.hh"
+
+#include "parser_common.hh"
+#include "parser_layer1.hh"
 
 using Logging::LogLevel;
 using Logging::MessageType;

@@ -8,9 +8,10 @@
 #include <vector>
 #include <unordered_map>
 
+#include "../config.hh"
+#include "../lang/ast.hh"
+
 #include "lexer.hh"
-#include "ast.hh"
-#include "config.hh"
 
 // First attempt at a parser. Parses tokens directly into the llvm context
 class Parser {
