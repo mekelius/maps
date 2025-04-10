@@ -4,66 +4,9 @@
 #include <istream>
 #include <memory>
 #include <array>
-#include <sstream>
 #include <vector>
 
-// TODO: update the compiler and make these constexpr
-const std::string OPERATOR_GLYPHS = "+-*/^=!?:|<>.$&€£@¬§¤";
-bool is_operator_glyph(char);
-bool is_parenthese(char);
-
-enum class TokenType: int {
-    bof, eof,
-    identifier, operator_t,
-    number, string_literal,
-    reserved_word,
-    indent_block_start, indent_block_end, indent_error_fatal,
-    curly_brace_open, curly_brace_close,
-    parenthesis_open, parenthesis_close,
-    bracket_open, bracket_close,
-    semicolon, comma, lambda,
-    tie,
-    pragma,
-    unknown,
-  };
-
-// OPT: roll these into a single enum
-const std::array<std::string, 36> RESERVED_WORDS = {
-    "if", "else",
-    "for", "while", "do",
-    "return",
-    "match", "case", "switch", "default",
-    "from",
-    "let", "const", "var", "type", "class",
-    "has", "in", "of",                          // has could be a builtin
-    "with",
-    "not", "and", "or", "xor", "nor", "nand",   // these could be builtins 
-    "is", "typeof", "derives", "from",
-    "extern",
-    "async", "await", "maybe", "value", "fail", // might be builtins
-};
-bool is_reserved_word(const std::string& word);
-
-class Token {
-  public:
-    TokenType type = TokenType::unknown;
-
-    unsigned int line;
-    unsigned int col;
-
-    std::string value = "";
-    int int_value = 0;
-
-    std::string get_location() const;
-    std::string get_str() const;
-    std::string get_str(bool stream_format) const;
-};
-
-bool is_statement_separator(Token token);
-bool is_block_starter(Token token);
-bool is_assignment_operator(Token token);
-bool is_access_operator(Token token);
-bool is_term_token(Token token);
+#include "tokens.hh"
 
 class StreamingLexer {
   public:
@@ -113,6 +56,5 @@ class StreamingLexer {
     std::ostream* tokens_os_;
 };
 
-std::ostream& operator<<(std::ostream& os, Token token);
 
 #endif
