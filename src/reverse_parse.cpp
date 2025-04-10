@@ -10,6 +10,7 @@ std::string linebreak() {
 }
 
 std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body);
+std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression);
 
 std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
     assert(statement && "Reverse parse encountered a nullptr statement");
@@ -119,7 +120,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*built-in:*/ " + expression->string_value : expression->string_value );
 
         case AST::ExpressionType::not_implemented:
-            return ostream << "Expression type not implemented in parser: " << static_cast<int>(expression->expression_type);
+            return ostream << "Expression type not implemented in parser: ";
 
         case AST::ExpressionType::tie:
             return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;

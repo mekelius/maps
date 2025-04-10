@@ -1,3 +1,5 @@
+# script
+
 let main =
     ;
     ;
@@ -36,6 +38,14 @@ let main =
                         ;
             ;
     ;
+
+normal_style {
+    yea
+}
+
+whilee (x == y)
+  { foo();
+    bar(); }
 
 let gnu_style = {
         let y = 3
