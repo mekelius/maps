@@ -2,7 +2,6 @@
 #include <memory>
 #include <fstream>
 
-#include "config.hh"
 #include "logging.hh"
 
 #include "lang/ast.hh"
@@ -27,7 +26,7 @@ std::string separator(char character = '-', const std::string& title = "") {
 
 int main(int argc, char* argv[]) {
     using Logging::LogLevel;
-    Logging::init();
+    Logging::init_logging(&std::cout);
 
     if (argc < 2) {
         std::cerr << USAGE << std::endl;
@@ -40,20 +39,20 @@ int main(int argc, char* argv[]) {
 
     std::ostream* lexer_ostream = nullptr;
 
-    Logging::LogLevel::set(LogLevel::default_);
+    Logging::Settings::set_loglevel(LogLevel::default_);
 
     for (std::string arg : args) {
         if (arg == "-t" || arg == "--tokens") {
             lexer_ostream = &std::cout;
 
         } else if (arg == "-v" || arg == "--verbose" || arg == "--debug" || arg == "--parser-debug") {
-            Logging::LogLevel::set(LogLevel::debug);
+            Logging::Settings::set_loglevel(LogLevel::debug);
             
         } else if (arg == "-q" || arg == "--quiet") {
-            Logging::LogLevel::set(LogLevel::quiet);
+            Logging::Settings::set_loglevel(LogLevel::quiet);
 
         } else if (arg == "-e | --everything") {
-            Logging::LogLevel::set(LogLevel::everything);
+            Logging::Settings::set_loglevel(LogLevel::everything);
             lexer_ostream = &std::cout;
 
         } else {
@@ -79,7 +78,7 @@ int main(int argc, char* argv[]) {
         }
         
         StreamingLexer lexer{&source_file, lexer_ostream};
-        Parser parser{&lexer, &std::cerr};
+        Parser parser{&lexer};
         
         std::unique_ptr<AST::AST> ast = parser.run();
         

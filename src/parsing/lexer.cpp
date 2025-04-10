@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cassert>
 
-#include "../config.hh"
+#include "../logging.hh"
 #include "../lang/words.hh"
 
 // ----- Public methods -----
