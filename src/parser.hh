@@ -29,7 +29,7 @@ class Parser {
     void declare_invalid();
     std::unique_ptr<AST::AST> finalize_parsing();
 
-    // Token expect_token(predicate, error_message);
+    // TODO: refactor these
     void print_error(const std::string& message) const;
     void print_error(const std::string& location, const std::string& message) const;
     void print_info(const std::string& message, Logging::MessageType message_type = Logging::MessageType::general_info) const;
