@@ -16,7 +16,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
     assert(statement && "Reverse parse encountered a nullptr statement");
     ostream << linebreak();
 
-    switch (static_cast<AST::StatementType>(statement->index())) {
+    switch (AST::statement_type(statement)) {
         case AST::StatementType::broken:
             ostream << "@broken statement@";
             break;
@@ -82,13 +82,13 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
 
     switch (expression->expression_type) {
         case AST::ExpressionType::string_literal:
-            return ostream << "\"" << expression->string_value << "\"";
+            return ostream << "\"" << std::get<std::string>(expression->value) << "\"";
         
         case AST::ExpressionType::numeric_literal:
-            return ostream << expression->string_value;
+            return ostream << std::get<std::string>(expression->value);
 
         case AST::ExpressionType::call: {
-            auto [callee, args] = expression->call_expr;
+            auto [callee, args] = expression->call();
             ostream << callee;
             
             for (AST::Expression* arg_expression: args) {
@@ -103,7 +103,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             ostream << linebreak();
 
             bool pad_left = false;
-            for (AST::Expression* term: expression->terms) {
+            for (AST::Expression* term: expression->terms()) {
                 if (term->expression_type == AST::ExpressionType::tie) {
                     pad_left = false;
                 } else {
@@ -117,7 +117,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         }
 
         case AST::ExpressionType::native_function:
-            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*built-in:*/ " + expression->string_value : expression->string_value );
+            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*built-in:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
 
         case AST::ExpressionType::not_implemented:
             return ostream << "Expression type not implemented in parser: ";
@@ -126,13 +126,13 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;
 
         case AST::ExpressionType::native_operator:
-            return ostream << expression->string_value;            
+            return ostream << std::get<std::string>(expression->value);            
 
         case AST::ExpressionType::unresolved_identifier:
-            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved identifier:*/ " + expression->string_value : expression->string_value );
+            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved identifier:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
 
         case AST::ExpressionType::unresolved_operator:
-            return ostream << expression->string_value;
+            return ostream << std::get<std::string>(expression->value);
 
         case AST::ExpressionType::deferred_call:
             return ostream << "Expression type deferred call not implemented in reverse parser";

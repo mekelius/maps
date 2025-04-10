@@ -20,14 +20,14 @@ using Logging::MessageType;
 
 // ----- PUBLIC METHODS -----
 
-Parser::Parser(StreamingLexer* lexer):
+ParserLayer1::ParserLayer1(StreamingLexer* lexer):
 lexer_(lexer) {
     ast_ = std::make_unique<AST::AST>();
     get_token();
     get_token();
 }
 
-std::unique_ptr<AST::AST> Parser::run() {    
+std::unique_ptr<AST::AST> ParserLayer1::run() {    
     ast_->init_builtin_callables();
 
     while (current_token().type != TokenType::eof) {
@@ -43,7 +43,7 @@ std::unique_ptr<AST::AST> Parser::run() {
 }
 // ----- PRIVATE METHODS -----
 
-Token Parser::get_token() {
+Token ParserLayer1::get_token() {
     token_buf_[which_buf_slot_ % 2] = lexer_->get_token();
     which_buf_slot_++;
 
@@ -53,15 +53,15 @@ Token Parser::get_token() {
     return current_token();
 }
 
-Token Parser::current_token() const {
+Token ParserLayer1::current_token() const {
     return token_buf_[which_buf_slot_ % 2];
 }
 
-Token Parser::peek() const {
+Token ParserLayer1::peek() const {
     return token_buf_[(which_buf_slot_+1) % 2];
 }
 
-void Parser::update_brace_levels(Token token) {
+void ParserLayer1::update_brace_levels(Token token) {
     switch (token.type) {
         case TokenType::indent_block_start:
             indent_level_++; break;
@@ -87,53 +87,51 @@ void Parser::update_brace_levels(Token token) {
     }
 }
 
-void Parser::declare_invalid() {
+void ParserLayer1::declare_invalid() {
     program_valid_ = false;
 }
 
-std::unique_ptr<AST::AST> Parser::finalize_parsing() {
+std::unique_ptr<AST::AST> ParserLayer1::finalize_parsing() {
     ast_->valid = program_valid_;
     return std::move(ast_);
 }
 
 // ----- OUTPUT HELPERS -----
 
-
-void Parser::print_error(const std::string& message) const {
+void ParserLayer1::print_error(const std::string& message) const {
     print_error({current_token().line, current_token().col}, message);
 }
 
-void Parser::print_error(Logging::Location location, const std::string& message) const {
+void ParserLayer1::print_error(Logging::Location location, const std::string& message) const {
     Logging::log_error(location, message);
 }
 
-void Parser::print_info(const std::string& message, Logging::MessageType message_type) const {
+void ParserLayer1::print_info(const std::string& message, Logging::MessageType message_type) const {
     print_info({current_token().line, current_token().col}, message, message_type);
 }
 
-void Parser::print_info(Logging::Location location, const std::string& message, Logging::MessageType message_type) const {
+void ParserLayer1::print_info(Logging::Location location, const std::string& message, Logging::MessageType message_type) const {
     Logging::log_info(location, message, message_type);
 }
 
 
-
 // ----- IDENTIFIERS -----
 
-bool Parser::identifier_exists(const std::string& identifier) const {
+bool ParserLayer1::identifier_exists(const std::string& identifier) const {
     return !(ast_->name_free(identifier));
 }
 
-void Parser::create_identifier(const std::string& identifier, AST::CallableBody body) {
+void ParserLayer1::create_identifier(const std::string& identifier, AST::CallableBody body) {
     ast_->create_callable(identifier, body);
 }
 
-std::optional<AST::Callable*> Parser::lookup_identifier(const std::string& identifier) {
+std::optional<AST::Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
     return ast_->get_identifier(identifier);
 }
 
 // ########## PARSING ##########
 
-void Parser::handle_pragma() {
+void ParserLayer1::handle_pragma() {
     if (current_token().value == "enable mutable globals") {
         ast_->pragmas.mutable_globals = true;
 
@@ -154,7 +152,7 @@ void Parser::handle_pragma() {
 
 // --------- STATEMENTS --------
 
-void Parser::parse_top_level_statement() {
+void ParserLayer1::parse_top_level_statement() {
     AST::Statement* statement;
 
     switch (current_token().type) {
@@ -175,7 +173,7 @@ void Parser::parse_top_level_statement() {
     }
 }
 
-AST::Statement* Parser::parse_non_global_statement() {
+AST::Statement* ParserLayer1::parse_non_global_statement() {
     switch (current_token().type) {
         case TokenType::pragma:
             print_error("unexpected non top-level pragma");
@@ -191,7 +189,7 @@ AST::Statement* Parser::parse_non_global_statement() {
     }
 }
 
-AST::Statement* Parser::parse_statement() {
+AST::Statement* ParserLayer1::parse_statement() {
     switch (current_token().type) {
         case TokenType::eof:
             finished_ = true;
@@ -252,7 +250,7 @@ AST::Statement* Parser::parse_statement() {
     }
 }
 
-AST::Statement* Parser::parse_expression_statement() {
+AST::Statement* ParserLayer1::parse_expression_statement() {
     AST::Expression* expression = parse_expression();
     AST::Statement* statement = ast_->create_statement(AST::ExpressionStatement{expression});
 
@@ -264,7 +262,7 @@ AST::Statement* Parser::parse_expression_statement() {
     return statement;
 }
 
-AST::Statement* Parser::parse_let_statement() {
+AST::Statement* ParserLayer1::parse_let_statement() {
     switch (get_token().type) {
         case TokenType::identifier:
             // TODO: check lower case here
@@ -320,7 +318,7 @@ AST::Statement* Parser::parse_let_statement() {
     }
 }
 
-AST::Statement* Parser::parse_assignment_statement() {
+AST::Statement* ParserLayer1::parse_assignment_statement() {
     assert(current_token().type == TokenType::identifier 
         && "parse_assignment_statement called with current_token that was not an identifier");
 
@@ -344,7 +342,7 @@ AST::Statement* Parser::parse_assignment_statement() {
     return statement;
 }
 
-AST::Statement* Parser::parse_block_statement() {
+AST::Statement* ParserLayer1::parse_block_statement() {
     assert(is_block_starter(current_token())
         && "parse_block_statement called with current token that is not a block starter");
 
@@ -399,7 +397,7 @@ AST::Statement* Parser::parse_block_statement() {
     return statement;
 }
 
-AST::Statement* Parser::parse_return_statement() {
+AST::Statement* ParserLayer1::parse_return_statement() {
     assert(current_token().type == TokenType::reserved_word && current_token().value == "return" 
         && "parse_return_statement called with current token other than \"return\"");
 
@@ -417,7 +415,7 @@ AST::Statement* Parser::parse_return_statement() {
 // --------- EXPRESSIONS --------
 
 // how to signal failure
-AST::Expression* Parser::parse_expression() {
+AST::Expression* ParserLayer1::parse_expression() {
 
     switch (current_token().type) {
         case TokenType::eof:
@@ -504,10 +502,10 @@ AST::Expression* Parser::parse_expression() {
 }
 
 // expects to be called with the first term as current
-AST::Expression* Parser::parse_termed_expression() {
+AST::Expression* ParserLayer1::parse_termed_expression() {
     AST::Expression* expression = ast_->create_expression(AST::ExpressionType::termed_expression);
 
-    expression->terms.push_back(parse_term());
+    expression->terms().push_back(parse_term());
 
     std::string start_location = current_token().get_location();
     print_info("start parsing termed expression", MessageType::parser_debug);
@@ -527,7 +525,7 @@ AST::Expression* Parser::parse_termed_expression() {
             case TokenType::parenthesis_open:
             case TokenType::bracket_open:
             case TokenType::curly_brace_open:
-                expression->terms.push_back(parse_term());
+                expression->terms().push_back(parse_term());
                 continue;
 
             case TokenType::string_literal:
@@ -535,12 +533,12 @@ AST::Expression* Parser::parse_termed_expression() {
             case TokenType::identifier:
             case TokenType::operator_t:
             case TokenType::indent_block_start:
-                expression->terms.push_back(parse_term());
+                expression->terms().push_back(parse_term());
                 continue;
 
             default:
                 print_error("unexpected: " + current_token().get_str() + ", in termed expression");
-                expression->terms.push_back(ast_->create_expression(AST::ExpressionType::not_implemented));
+                expression->terms().push_back(ast_->create_expression(AST::ExpressionType::not_implemented));
                 get_token();
         }
     }
@@ -550,14 +548,14 @@ AST::Expression* Parser::parse_termed_expression() {
 
 }
 
-AST::Expression* Parser::parse_access_expression() {
+AST::Expression* ParserLayer1::parse_access_expression() {
     // TODO: eat until the closing character
     get_token();
     return ast_->create_expression(AST::ExpressionType::not_implemented);
 }
 
 // expects to be called with the opening parenthese as the current_token_
-AST::Expression* Parser::parse_parenthesized_expression() {
+AST::Expression* ParserLayer1::parse_parenthesized_expression() {
     get_token(); // eat '('
 
     if (current_token().type == TokenType::parenthesis_close) {
@@ -576,7 +574,7 @@ AST::Expression* Parser::parse_parenthesized_expression() {
     return expression;
 }
 
-AST::Expression* Parser::parse_mapping_literal() {
+AST::Expression* ParserLayer1::parse_mapping_literal() {
     get_token();
     // eat until the closing character
 
@@ -585,20 +583,20 @@ AST::Expression* Parser::parse_mapping_literal() {
     return ast_->create_expression(AST::ExpressionType::not_implemented);
 }
 
-AST::Expression* Parser::handle_string_literal() {
-    auto expr = ast_->create_expression(AST::ExpressionType::string_literal);
-    expr->string_value = current_token().value;
+AST::Expression* ParserLayer1::handle_string_literal() {
+    auto expression = ast_->create_expression(AST::ExpressionType::string_literal);
+    std::get<std::string>(expression->value) = current_token().value;
 
     get_token();
     get_token(); // eat closing '"'
     
     print_info("parsed string literal", MessageType::parser_debug_terminal);
-    return expr;
+    return expression;
 }
 
-AST::Expression* Parser::handle_numeric_literal() {
+AST::Expression* ParserLayer1::handle_numeric_literal() {
     auto expression = ast_->create_expression(AST::ExpressionType::numeric_literal, &AST::NumberLiteral);
-    expression->string_value = current_token().value;
+    std::get<std::string>(expression->value) = current_token().value;
     
     get_token();
 
@@ -606,18 +604,18 @@ AST::Expression* Parser::handle_numeric_literal() {
     return expression;
 }
 
-AST::Expression* Parser::handle_identifier() {
+AST::Expression* ParserLayer1::handle_identifier() {
     AST::Expression* expression = ast_->create_expression(AST::ExpressionType::unresolved_identifier);
     print_info("parsed unresolved identifier", MessageType::parser_debug_terminal);
 
-    expression->string_value = current_token().value;
+    std::get<std::string>(expression->value) = current_token().value;
 
     get_token();
     return expression;
 }
 
 // Expects not to be called if the current token is not parseable into a term
-AST::Expression* Parser::parse_term() {
+AST::Expression* ParserLayer1::parse_term() {
     switch (current_token().type) {
         case TokenType::identifier:
             // TODO: revamp access expressions
@@ -643,7 +641,7 @@ AST::Expression* Parser::parse_term() {
             
         case TokenType::operator_t: {
             AST::Expression* expression = ast_->create_expression(AST::ExpressionType::unresolved_operator);
-            expression->string_value = current_token().value;
+            std::get<std::string>(expression->value) = current_token().value;
             get_token();
             return expression;
         }
@@ -725,7 +723,7 @@ AST::Expression* Parser::parse_term() {
 //     return {};    
 // }
 
-void Parser::reset_to_top_level() {
+void ParserLayer1::reset_to_top_level() {
     print_info("resetting to global scope", MessageType::parser_debug);
 
     while (

@@ -16,6 +16,8 @@
 
 namespace AST {
 
+// ----- EXPRESSIONS -----
+
 enum class ExpressionType {
     string_literal          = 0,    // literal: Value value
     numeric_literal         = 1,
@@ -29,18 +31,44 @@ enum class ExpressionType {
     unresolved_operator     = 9,
     syntax_error            = 10,   // reached something that shouldn't have been such as trying to parse eof as expression
     not_implemented         = 11,
+    deleted                 = 12,
 };
+
+struct Expression;
+
+using CallExpressionValue = std::tuple<std::string, std::vector<Expression*>>;
+using CallExpressionValueDeferred = std::tuple<Expression*, std::vector<Expression*>>;
+using TermedExpressionValue = std::vector<Expression*>;
+
+using ExpressionValue = std::variant<
+    std::monostate,
+    std::string, 
+    CallExpressionValue, 
+    CallExpressionValueDeferred, 
+    TermedExpressionValue
+>;
 
 struct Expression {
     Expression(ExpressionType expr_type, const Type* type): expression_type(expr_type), type(type) {};
     
     ExpressionType expression_type;
     const Type* type = &Hole;
-    std::tuple<std::string, std::vector<Expression*>> call_expr = {"", {}};
-    std::tuple<Expression*, std::vector<Expression*>> deferred_call_expr;
-    std::string string_value = "";
-    std::vector<Expression*> terms = {};
+    ExpressionValue value;
+
+    TermedExpressionValue& terms() {
+        assert(std::holds_alternative<TermedExpressionValue>(value) 
+            && "Expression::terms() called on wrong kind of expression");
+        return std::get<TermedExpressionValue>(value);
+    }
+    
+    CallExpressionValue& call() {
+        assert(std::holds_alternative<CallExpressionValue>(value) 
+            && "Expression::terms() called on wrong kind of expression");
+        return std::get<CallExpressionValue>(value);
+    }
 };
+
+// ----- STATEMENTS -----
 
 struct BrokenStatement {};
 
@@ -111,6 +139,10 @@ struct BlockStatement {
     std::vector<Statement*> statements;
 };
 
+inline StatementType statement_type(Statement* statement) {
+    return static_cast<StatementType>(statement->index());
+}
+
 struct Callable {
     Callable(const std::string& name, CallableBody body, const Type* return_type, std::vector<const Type*>& arg_types)
     : name(name), body(body), return_type(return_type), arg_types(arg_types) {}
@@ -175,6 +207,10 @@ class AST {
     // caller is responsible for checking if the name is free with name_free
     void create_identifier(const std::string& name, Callable* callable);
 
+    // currently these guys, once created, stay in memory forever
+    // we could create a way to sweep them by having some sort of "alive"-flag
+    // or maybe "DeletedStatement" statement type
+    // probably won't need that until we do the interpreter
     std::vector<std::unique_ptr<Statement>> statements_ = {};
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
 
