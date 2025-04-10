@@ -13,13 +13,14 @@ std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body);
 
 std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
     assert(statement && "Reverse parse encountered a nullptr statement");
-    
+    ostream << linebreak();
+
     switch (static_cast<AST::StatementType>(statement->index())) {
         case AST::StatementType::broken:
-            ostream << "@broken statement@" << linebreak();
+            ostream << "@broken statement@";
             break;
         case AST::StatementType::illegal:
-            ostream << "@illegal statement@" << linebreak();
+            ostream << "@illegal statement@";
             break;
         case AST::StatementType::empty:
             break;
@@ -31,12 +32,14 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
         case AST::StatementType::block: {
             ostream << '{';
             indent_stack++;
+
             for (AST::Statement* substatement: 
-                std::get<AST::BlockStatement>(*statement).statements) {
-                ostream << substatement << ";" << linebreak();
+                    std::get<AST::BlockStatement>(*statement).statements) {
+                ostream << substatement;
             }
+
             indent_stack--;
-            ostream << '}';
+            ostream << linebreak() << '}';
             break;
         }
 
@@ -58,7 +61,6 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
             break;
         }
         
-
         case AST::StatementType::assignment: {
             auto [name, body] = std::get<AST::AssignmentStatement>(*statement);
             ostream << name << " = " << body;
@@ -66,13 +68,12 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
         }
 
         case AST::StatementType::return_:
-            ostream 
-                    << "return" 
+            ostream << "return" 
                     << std::get<AST::ReturnStatement>(*statement).expression;
             break;
     }
 
-    return ostream << ';' << linebreak();
+    return ostream << ';';
 }
 
 std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
@@ -86,7 +87,6 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return ostream << expression->string_value;
 
         case AST::ExpressionType::call: {
-
             auto [callee, args] = expression->call_expr;
             ostream << callee;
             
@@ -129,6 +129,9 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
 
         case AST::ExpressionType::unresolved_identifier:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved identifier:*/ " + expression->string_value : expression->string_value );
+
+        case AST::ExpressionType::unresolved_operator:
+            return ostream << expression->string_value;
 
         case AST::ExpressionType::deferred_call:
             return ostream << "Expression type deferred call not implemented in reverse parser";

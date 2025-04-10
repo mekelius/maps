@@ -174,7 +174,8 @@ void Parser::parse_top_level_statement() {
         default:
             // TODO: check pragmas for top-level statement types
             statement = parse_statement();
-            ast_->append_top_level_statement(statement);
+            if (!std::holds_alternative<AST::EmptyStatement>(*statement))            
+                ast_->append_top_level_statement(statement);
             return;
     }
 }
@@ -245,8 +246,12 @@ AST::Statement* Parser::parse_statement() {
             return ast_->create_statement(AST::BrokenStatement{});
         
         case TokenType::indent_error_fatal:
+            print_error("indent error");
+            reset_to_top_level();
+            return ast_->create_statement(AST::BrokenStatement{});
+
         case TokenType::unknown:
-            print_error("syntax error");
+            print_error("unknown token");
             reset_to_top_level();
             return ast_->create_statement(AST::BrokenStatement{});
     }
@@ -384,7 +389,10 @@ AST::Statement* Parser::parse_block_statement() {
             return statement;
         }
 
-        substatements->push_back(parse_statement());
+        AST::Statement* substatement = parse_statement();
+        // discard empty statements
+        if (!std::holds_alternative<AST::EmptyStatement>(*substatement))
+            substatements->push_back(substatement);
     }
 
     get_token(); // eat block closer
@@ -548,7 +556,7 @@ AST::Expression* Parser::parse_termed_expression() {
 }
 
 AST::Expression* Parser::parse_access_expression() {
-    // eat until the closing character
+    // TODO: eat until the closing character
     get_token();
     return ast_->create_expression(AST::ExpressionType::not_implemented);
 }
