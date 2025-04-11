@@ -28,18 +28,29 @@ class ParserLayer1 {
     void update_brace_levels(Token token);
     // declare the program invalid. Parsing may still continue, but no final output should be produced
     void declare_invalid();
-    std::unique_ptr<AST::AST> finalize_parsing();
 
     // TODO: refactor these
-    void print_error(const std::string& message) const;
-    void print_error(Logging::Location location, const std::string& message) const;
-    void print_info(const std::string& message, Logging::MessageType message_type = Logging::MessageType::general_info) const;
-    void print_info(Logging::Location location, const std::string& message, Logging::MessageType message_type = Logging::MessageType::general_info) const;
+    void log_error(const std::string& message) const;
+    void log_error(Logging::Location location, const std::string& message) const;
+    
+    void log_info(const std::string& message, 
+        Logging::MessageType message_type = Logging::MessageType::general_info) const;
+    
+    void log_info(Logging::Location location, const std::string& message, 
+        Logging::MessageType message_type = Logging::MessageType::general_info) const;
 
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& identifier) const;
     void create_identifier(const std::string& identifier, AST::CallableBody body);
     std::optional<AST::Callable*> lookup_identifier(const std::string& identifier);
+
+    // mark down the location for logging purposes
+    void expression_start();
+    void statement_start();
+
+    // creates an expression using ast_, marking the location as the current_expression_start_
+    AST::Expression* create_expression(AST::ExpressionType expression_type);
+    // AST::Statement* create_statement(AST::Statement** statement);
 
     void handle_pragma();
 
@@ -82,6 +93,9 @@ class ParserLayer1 {
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_;
 
+    std::optional<Logging::Location> current_expression_start_;
+    std::optional<Logging::Location> current_statement_start_;
+
     // these are automatically incremented and decremented by the get_token()
     unsigned int indent_level_ = 0;
     unsigned int parenthese_level_ = 0;
@@ -89,7 +103,6 @@ class ParserLayer1 {
     unsigned int angle_bracket_level_ = 0;
 
     bool finished_ = false;
-    bool program_valid_ = true;
 };
 
 #endif

@@ -18,7 +18,6 @@ add_library(parsing OBJECT
     src/lang/types.cpp
     src/parsing/tokens.cpp
     src/parsing/lexer.cpp
-    src/parsing/parser_common.cpp
     src/parsing/parser_layer1.cpp
     src/parsing/parser_layer2.cpp
 )

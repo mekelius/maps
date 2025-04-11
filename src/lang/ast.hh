@@ -13,6 +13,7 @@
 
 #include "pragmas.hh"
 #include "types.hh"
+#include "../logging.hh"
 
 namespace AST {
 
@@ -49,22 +50,22 @@ using ExpressionValue = std::variant<
 >;
 
 struct Expression {
-    Expression(ExpressionType expr_type, const Type* type): expression_type(expr_type), type(type) {};
+    Expression(ExpressionType expr_type, Logging::Location location, const Type* type): 
+    expression_type(expr_type), location(location), type(type) {};
     
     ExpressionType expression_type;
+    Logging::Location location;
     const Type* type = &Hole;
     ExpressionValue value;
 
     TermedExpressionValue& terms() {
-        assert(std::holds_alternative<TermedExpressionValue>(value) 
-            && "Expression::terms() called on wrong kind of expression");
         return std::get<TermedExpressionValue>(value);
     }
-    
     CallExpressionValue& call() {
-        assert(std::holds_alternative<CallExpressionValue>(value) 
-            && "Expression::terms() called on wrong kind of expression");
         return std::get<CallExpressionValue>(value);
+    }
+    std::string& string_value() {
+        return std::get<std::string>(value);
     }
 };
 
@@ -177,7 +178,8 @@ class Scope {
 
 class AST {
   public:
-    Expression* create_expression(ExpressionType expression_type, const Type* type = &Void);
+    Expression* create_expression(
+        ExpressionType expression_type, Logging::Location location, const Type* type = &Void);
     Statement* create_statement(Statement&& statement);
     
     // returns nullopt if the name is taken
@@ -191,7 +193,7 @@ class AST {
     void append_top_level_statement(Statement* statement);
     
     // TODO: these should be Scope's responsibility
-    bool name_free(const std::string& name) const;
+    bool identifier_exists(const std::string& name) const;
     std::optional<Callable*> get_identifier(const std::string& name);
 
     bool init_builtin_callables();
@@ -202,6 +204,11 @@ class AST {
     Pragmas pragmas;
     bool valid = true;
     Scope global_ = {};
+
+    // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't 
+    // need to walk the tree to find them
+    std::vector<Expression*> unresolved_identifiers_and_operators = {};
+    std::vector<Expression*> unparsed_termed_expressions = {};
 
   private:
     // caller is responsible for checking if the name is free with name_free
@@ -219,7 +226,5 @@ class AST {
 };
 
 } // namespace AST
-    
-      
 
 #endif

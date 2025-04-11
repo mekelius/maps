@@ -4,8 +4,10 @@
 
 namespace AST {
 
-Expression* AST::create_expression(ExpressionType expression_type, const Type* type) {
-    expressions_.push_back(std::make_unique<Expression>(expression_type, type));
+Expression* AST::create_expression(
+    ExpressionType expression_type, Logging::Location location, const Type* type) {
+    
+    expressions_.push_back(std::make_unique<Expression>(expression_type, location, type));
     Expression* expression = expressions_.back().get();
 
     switch (expression_type) {
@@ -77,7 +79,7 @@ std::optional<Callable*> AST::create_callable(
     const Type* return_type,
     std::vector<const Type*> arg_types
 ) {
-    if (!name_free(name)) {
+    if (identifier_exists(name)) {
         return std::nullopt;
     }
 
@@ -94,8 +96,8 @@ void AST::create_identifier(const std::string& name, Callable* callable) {
     identifiers_.insert({name, callable});
 }
 
-bool AST::name_free(const std::string& name) const {
-    return identifiers_.find(name) == identifiers_.end();
+bool AST::identifier_exists(const std::string& name) const {
+    return identifiers_.find(name) != identifiers_.end();
 }
 
 std::optional<Callable*> AST::get_identifier(const std::string& name) {
@@ -107,7 +109,7 @@ std::optional<Callable*> AST::get_identifier(const std::string& name) {
 }
 
 bool AST::init_builtin_callables() {
-    auto print_expr = create_expression(ExpressionType::native_function, &Void);
+    auto print_expr = create_expression(ExpressionType::native_function, {0, 0}, &Void);
     auto print = create_callable("print", print_expr, &Void, { &String });
     
     if (!print)
