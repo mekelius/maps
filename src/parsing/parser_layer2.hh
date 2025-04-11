@@ -26,6 +26,8 @@ class ParserLayer2 {
     // walks the tree and tries to resolve any unresolved identifiers
     // This could probably do this without being part of the class for more flexibility
     void resolve_identifiers();
+    void resolve_identifier(AST::Expression* expression);
+    void resolve_operator(AST::Expression* expression);
 
     // declares the tree invalid
     void declare_invalid();

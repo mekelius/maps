@@ -7,7 +7,6 @@
 #include "lang/ast.hh"
 #include "lang/reverse_parse.hh"
 
-#include "parsing/parser_common.hh"
 #include "parsing/parser_layer1.hh"
 #include "parsing/parser_layer2.hh"
 
@@ -78,11 +77,16 @@ int main(int argc, char* argv[]) {
         }
         
         StreamingLexer lexer{&source_file, lexer_ostream};
-        ParserLayer1 parser{&lexer};
+        ParserLayer1 layer1{&lexer};
         
-        std::unique_ptr<AST::AST> ast = parser.run();
-        
-        std::cout << "\n\n" << separator('-', "Parsed into") << "\n" << std::endl; 
+        std::unique_ptr<AST::AST> ast = layer1.run();
+        std::cout << "\nlayer1 done" << std::endl;
+
+        ParserLayer2 layer2{ast.get()};
+        layer2.run();
+        std::cout << "layer2 done\n" << std::endl;
+
+        std::cout << separator('-', "Parsed into") << "\n" << std::endl; 
         reverse_parse(*ast, std::cout);
         std::cout << std::endl;
     }
