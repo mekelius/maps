@@ -14,6 +14,7 @@
 
 #include "tokens.hh"
 #include "parser_layer1.hh"
+#include "builtins.hh"
 
 using Logging::LogLevel;
 using Logging::MessageType;
@@ -28,7 +29,7 @@ lexer_(lexer), pragmas_(pragmas) {
 }
 
 std::unique_ptr<AST::AST> ParserLayer1::run() {    
-    ast_->init_builtin_callables();
+    create_builtin_identifiers(*ast_);
 
     while (current_token().token_type != TokenType::eof) {
         int prev_buf_slot = which_buf_slot_; // a bit of a hack, an easy way to do the assertion below
@@ -114,15 +115,15 @@ void ParserLayer1::log_info(SourceLocation location, const std::string& message,
 // ----- IDENTIFIERS -----
 
 bool ParserLayer1::identifier_exists(const std::string& identifier) const {
-    return ast_->identifier_exists(identifier);
+    return ast_->global_.identifier_exists(identifier);
 }
 
-void ParserLayer1::create_identifier(const std::string& identifier, AST::CallableBody body) {
+void ParserLayer1::create_identifier(const std::string& identifier, AST::Node body) {
     ast_->create_callable(identifier, body);
 }
 
-std::optional<AST::Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
-    return ast_->get_identifier(identifier);
+std::optional<AST::Identifier*> ParserLayer1::lookup_identifier(const std::string& identifier) {
+    return ast_->global_.get_identifier(identifier);
 }
 
 
@@ -342,7 +343,7 @@ AST::Statement* ParserLayer1::parse_let_statement() {
                 if (is_assignment_operator(current_token())) {
                     get_token(); // eat the assignment operator
 
-                    AST::CallableBody body;
+                    AST::Node body;
                     if (is_block_starter(current_token())) {
                         body = parse_block_statement();
                     } else {
