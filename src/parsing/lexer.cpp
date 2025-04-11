@@ -10,33 +10,20 @@
 #include "../lang/words.hh"
 
 // ----- Public methods -----
-StreamingLexer::StreamingLexer(std::istream* source_is, std::ostream* tokens_ostream): 
-source_is_(source_is),
-tokens_os_(tokens_ostream) {
+StreamingLexer::StreamingLexer(std::istream* source_is): 
+source_is_(source_is) {
     read_char();
-}
-
-void StreamingLexer::set_tokens_ostream(std::ostream* tokens_ostream) {
-    tokens_os_ = tokens_ostream;
-}
-
-unsigned int StreamingLexer::get_current_line() {
-    return current_line_;
 }
 
 Token StreamingLexer::get_token() {
     Token token = get_token_();
 
-    // if output stream was given, print the token there as well
-    if (tokens_os_) {
-        // a bit of a hack to keep the outputs in sync
-        (*tokens_os_) << prev_token_str_;
-        prev_token_str_ = token.get_str(true) + "\n";
-    }
-
+    Logging::log_token(prev_token_.location, prev_token_.get_string());
+    
+    // a bit of a hack to keep the outputs in sync
+    prev_token_ = token;
     tie_possible_ = is_tieable_token_type(token.type);
 
-    prev_token_type_ = token.type;
     return token;
 }
 
@@ -58,15 +45,15 @@ char StreamingLexer::read_char() {
 }
 
 Token StreamingLexer::create_token_(TokenType type) {
-    return Token{type, current_token_start_line_, current_token_start_col_};
+    return Token{type, {current_token_start_line_, current_token_start_col_}};
 }
 
 Token StreamingLexer::create_token_(TokenType type, const std::string& value) {
-    return Token{type, current_token_start_line_, current_token_start_col_, value};
+    return Token{type, {current_token_start_line_, current_token_start_col_}, value};
 }
 
 Token StreamingLexer::create_token_(TokenType type, int value) {
-    return Token{type, current_token_start_line_, current_token_start_col_, "", value};
+    return Token{type, {current_token_start_line_, current_token_start_col_}, "", value};
 }
 
 // ----- PRODUCTION RULES -----
@@ -365,7 +352,7 @@ Token StreamingLexer::read_pragma() {
 
 // Reduce redundant semicolons
 Token StreamingLexer::collapsed_semicolon_token_() {
-    switch (prev_token_type_) {
+    switch (prev_token_.type) {
         case TokenType::indent_block_start:
         case TokenType::indent_block_end:
         case TokenType::semicolon:

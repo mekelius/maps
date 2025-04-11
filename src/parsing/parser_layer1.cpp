@@ -344,7 +344,7 @@ AST::Statement* ParserLayer1::parse_let_statement() {
 
                 get_token();
                 declare_invalid();
-                log_error("unexpected " + current_token().get_str() + ", in let-statement");
+                log_error("unexpected " + current_token().get_string() + ", in let-statement");
                 reset_to_top_level();
                 return create_statement(AST::StatementType::broken);
             }
@@ -356,7 +356,7 @@ AST::Statement* ParserLayer1::parse_let_statement() {
 
         default:
             declare_invalid();
-            log_error("unexpected token: " + current_token().get_str() + " in let statement");
+            log_error("unexpected token: " + current_token().get_string() + " in let statement");
             reset_to_top_level();
             return create_statement(AST::StatementType::broken);
     }
@@ -534,9 +534,9 @@ AST::Expression* ParserLayer1::parse_expression() {
         case TokenType::reserved_word: {
             if (current_token().value != "let") {
                 declare_invalid();
-                log_error("unknown " + current_token().get_str());
+                log_error("unknown " + current_token().get_string());
                 AST::Expression* expression = create_expression(AST::ExpressionType::syntax_error);
-                expression->value = "unknown " + current_token().get_str();
+                expression->value = "unknown " + current_token().get_string();
                 
                 get_token();
                 return expression;
@@ -552,9 +552,9 @@ AST::Expression* ParserLayer1::parse_expression() {
             
         default:
             declare_invalid();
-            log_error("unexpected " + current_token().get_str() + ", at the start of an expression");
+            log_error("unexpected " + current_token().get_string() + ", at the start of an expression");
             AST::Expression* expression = create_expression(AST::ExpressionType::syntax_error);
-            expression->value = "unexpected " + current_token().get_str() + ", at the start of an expression";
+            expression->value = "unexpected " + current_token().get_string() + ", at the start of an expression";
 
             get_token();
             return expression;
@@ -597,9 +597,9 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
 
             default:
                 declare_invalid();
-                log_error("unexpected: " + current_token().get_str() + ", in termed expression");
+                log_error("unexpected: " + current_token().get_string() + ", in termed expression");
                 AST::Expression* term = create_expression(AST::ExpressionType::not_implemented);
-                term->value = current_token().get_str();
+                term->value = current_token().get_string();
                 expression->terms().push_back(term);
                 
                 get_token();

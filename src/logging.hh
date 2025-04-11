@@ -42,10 +42,14 @@ class LogLevel {
     static LogLevel debug;
     static LogLevel everything;
   
-    static void init(LogLevel& loglevel = LogLevel::default_);
+    static void init(LogLevel loglevel = LogLevel::default_);
 
     bool has_message_type(MessageType message_type) {
         return message_types[static_cast<unsigned int>(message_type)];
+    }
+
+    void set_message_type(MessageType message_type, bool value) {
+        message_types.at(static_cast<unsigned int>(message_type)) = value;
     }
 
   private:
@@ -56,23 +60,28 @@ class LogLevel {
         false,
         false,
     };
-
-    void set_message_type(MessageType message_type, bool value) {
-        message_types.at(static_cast<unsigned int>(message_type)) = value;
-    }
 };
 
 struct Settings {
-    static void set_loglevel(LogLevel& level) {
-        Settings::current_loglevel = &level;
+    static void set_loglevel(LogLevel level) {
+        Settings::current_loglevel = level;
     }
 
     static void set_ostream(std::ostream* ostream) {
         Settings::ostream = ostream;
     }
 
-    static LogLevel* current_loglevel;
+    static void set_tokens_ofstream(std::ofstream* ofstream) {
+        Settings::tokens_ofstream = ofstream;
+    }
+
+    static void set_message_type(MessageType message_type, bool value) {
+        Settings::current_loglevel.set_message_type(message_type, value);
+    }
+
+    static LogLevel current_loglevel;
     static std::ostream* ostream; // NOTE: allowed to be nullptr
+    static std::ofstream* tokens_ofstream; // NOTE: allowed to be nullptr
 };
 
 // pass nullptr to disable logging
@@ -84,6 +93,7 @@ inline void init_logging(std::ostream* ostream, LogLevel& log_level = LogLevel::
 
 void log_error(SourceLocation location, const std::string& message);
 void log_info(SourceLocation location, const std::string& message, MessageType message_type);
+void log_token(SourceLocation location, const std::string& message);
 
 } // namespace Logging
 

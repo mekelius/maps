@@ -10,16 +10,12 @@
 
 class StreamingLexer {
   public:
-    StreamingLexer(std::istream* source_is, std::ostream* tokens_ostream = nullptr);
+    StreamingLexer(std::istream* source_is);
 
-    void set_tokens_ostream(std::ostream* tokens_ostream);
-    unsigned int get_current_line();
-    
     // extracts the next token from the stream
     Token get_token();
 
   private:
-  
     char read_char();
     // creates a token filled with the correct line and col info
     Token create_token_(TokenType type);
@@ -48,12 +44,10 @@ class StreamingLexer {
     unsigned int current_token_start_col_ = 0;
 
     std::stringbuf buffer_ = {};
-    TokenType prev_token_type_ = TokenType::bof;
-    std::string prev_token_str_ = ""; // a bit of a hack to keep the tokens in sync with the parser
+    Token prev_token_; // a bit of a hack to keep the tokens in sync with the parser
     std::vector<unsigned int> indent_stack_ = {0};
     
     std::istream* source_is_;
-    std::ostream* tokens_os_;
 };
 
 
