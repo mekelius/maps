@@ -106,9 +106,9 @@ void AST::append_top_level_statement(Statement* statement) {
     root_.push_back(statement);
 }
 
-std::optional<Callable*> AST::create_callable(
+std::optional<Identifier*> Scope::create_identifier(
     const std::string& name,
-    CallableBody body,
+    Node body,
     const Type* return_type,
     std::vector<const Type*> arg_types
 ) {
@@ -116,41 +116,29 @@ std::optional<Callable*> AST::create_callable(
         return std::nullopt;
     }
 
-    callables_.push_back(std::make_unique<Callable>(name, body, return_type, arg_types));
-    Callable* callable = callables_.back().get();
-    create_identifier(name, callable);
-    global_.identifiers.insert({name, callable});
-    global_.identifiers_in_order.push_back(name);
+    identifiers_.push_back(std::make_unique<Identifier>(name, body, return_type, arg_types));
+    Identifier* identifier = identifiers_.back().get();
+    create_identifier(name, identifier);
+    identifiers_.insert({name, identifier});
+    identifiers_in_order.push_back(name);
     
-    return callable;
+    return identifier;
 }
 
-void AST::create_identifier(const std::string& name, Callable* callable) {
-    identifiers_.insert({name, callable});
+void Scope::create_identifier(const std::string& name, Identifier* identifier) {
+    identifiers_.insert({name, identifier});
 }
 
-bool AST::identifier_exists(const std::string& name) const {
+bool Scope::identifier_exists(const std::string& name) const {
     return identifiers_.find(name) != identifiers_.end();
 }
 
-std::optional<Callable*> AST::get_identifier(const std::string& name) {
+std::optional<Identifier*> Scope::get_identifier(const std::string& name) {
     auto it = identifiers_.find(name);
     if (it == identifiers_.end())
         return {};
 
     return it->second;
-}
-
-bool AST::init_builtin_callables() {
-    auto print_expr = create_expression(ExpressionType::native_function, {0, 0}, &Void);
-    auto print = create_callable("print", print_expr, &Void, { &String });
-    
-    if (!print)
-        return false;
-
-    (*print)->name = "print";
-
-    return true;
 }
 
 } // namespace AST

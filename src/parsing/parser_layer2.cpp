@@ -33,11 +33,11 @@ void ParserLayer2::resolve_identifiers() {
 }
 
 void ParserLayer2::resolve_identifier(AST::Expression* expression) {
-    std::optional<AST::Callable*> callable = ast_->get_identifier(expression->string_value());
+    std::optional<AST::Identifier*> callable = ast_->global_.get_identifier(expression->string_value());
 
-    // if (!callable) {
+    if (!callable) {
 
-    // }
+    }
 }
 
 void ParserLayer2::resolve_operator(AST::Expression* expression) {
