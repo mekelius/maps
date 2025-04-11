@@ -3,6 +3,6 @@
 
 #include "ast.hh"
 
-void create_builtin_identifiers(AST::AST& ast);
+void init_builtin_callables(AST::AST& ast);
 
 #endif

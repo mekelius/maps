@@ -4,6 +4,73 @@
 
 namespace AST {
 
+Statement::Statement(StatementType statement_type, SourceLocation location)
+:statement_type(statement_type), location(location) {
+    switch (statement_type) {
+        case StatementType::broken:
+        case StatementType::illegal:
+            value = static_cast<std::string>("");
+            break;
+        case StatementType::empty:
+            value = std::monostate{};
+            break;               
+
+        case StatementType::expression_statement:
+            break;
+        case StatementType::block:
+            break;               
+        case StatementType::let:
+            value = Let{};
+            break;                 
+        case StatementType::assignment:
+            break;          
+        case StatementType::return_:
+            break;             
+        //case StatementType::if:break;
+        //case StatementType::else:break;
+        //case StatementType::for:break;
+        //case StatementType::for_id:break;
+        //case StatementType::do_while:break;
+        //case StatementType::do_for:break;
+        //case StatementType::while/until: break;
+        //case StatementType::switch:break;
+    }
+}
+
+Callable::Callable(CallableBody body, SourceLocation location)
+:location(location), body(body) {
+
+}
+
+std::optional<Callable*> Scope::create_identifier(const std::string& name, 
+    SourceLocation location, CallableBody body) {
+
+    if (identifier_exists(name)) {
+        return std::nullopt;
+    }
+
+    Callable* callable = ast_->create_callable(body, location);
+    identifiers_.insert({name, callable});
+    identifiers_in_order.push_back(name);
+    
+    return callable;
+}
+
+bool Scope::identifier_exists(const std::string& name) const {
+    return identifiers_.find(name) != identifiers_.end();
+}
+
+std::optional<Callable*> Scope::get_identifier(const std::string& name) const {
+    auto it = identifiers_.find(name);
+    if (it == identifiers_.end())
+        return {};
+
+    return it->second;
+}
+
+AST::AST(): globals_(this) {}
+
+
 Expression* AST::create_expression(
     ExpressionType expression_type, SourceLocation location, const Type* type) {
     
@@ -64,81 +131,23 @@ Expression* AST::create_expression(
     return expression;
 }
 
-Statement::Statement(StatementType statement_type, SourceLocation location)
-:statement_type(statement_type), location(location) {
-    switch (statement_type) {
-        case StatementType::broken:
-        case StatementType::illegal:
-            value = static_cast<std::string>("");
-            break;
-        case StatementType::empty:
-            value = std::monostate{};
-            break;               
-
-        case StatementType::expression_statement:
-            break;
-        case StatementType::block:
-            break;               
-        case StatementType::let:
-            value = Let{};
-            break;                 
-        case StatementType::assignment:
-            break;          
-        case StatementType::return_:
-            break;             
-        //case StatementType::if:break;
-        //case StatementType::else:break;
-        //case StatementType::for:break;
-        //case StatementType::for_id:break;
-        //case StatementType::do_while:break;
-        //case StatementType::do_for:break;
-        //case StatementType::while/until: break;
-        //case StatementType::switch:break;
-    }
-}
-
 Statement* AST::create_statement(StatementType statement_type, SourceLocation location) {
     statements_.push_back(std::make_unique<Statement>(statement_type, location));
     return statements_.back().get();
+}
+
+Callable* AST::create_callable(CallableBody body, SourceLocation location) {
+    callables_.push_back(std::make_unique<Callable>(body, location));
+    return callables_.back().get();
+}
+
+Callable* AST::create_callable(SourceLocation location) {
+    return create_callable(std::monostate{}, location);
 }
 
 void AST::append_top_level_statement(Statement* statement) {
     root_.push_back(statement);
 }
 
-std::optional<Identifier*> Scope::create_identifier(
-    const std::string& name,
-    Node body,
-    const Type* return_type,
-    std::vector<const Type*> arg_types
-) {
-    if (identifier_exists(name)) {
-        return std::nullopt;
-    }
-
-    identifiers_.push_back(std::make_unique<Identifier>(name, body, return_type, arg_types));
-    Identifier* identifier = identifiers_.back().get();
-    create_identifier(name, identifier);
-    identifiers_.insert({name, identifier});
-    identifiers_in_order.push_back(name);
-    
-    return identifier;
-}
-
-void Scope::create_identifier(const std::string& name, Identifier* identifier) {
-    identifiers_.insert({name, identifier});
-}
-
-bool Scope::identifier_exists(const std::string& name) const {
-    return identifiers_.find(name) != identifiers_.end();
-}
-
-std::optional<Identifier*> Scope::get_identifier(const std::string& name) {
-    auto it = identifiers_.find(name);
-    if (it == identifiers_.end())
-        return {};
-
-    return it->second;
-}
 
 } // namespace AST

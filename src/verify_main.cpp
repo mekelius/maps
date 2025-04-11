@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << separator('#') << separator('#', "VERIFY MAPSC") << "\n" 
-              << "Running with " << argc - 1 << " input files\n\n";
+              << "Running with " << source_filenames.size() << " input files\n\n";
 
 
     // ----- PROCESS FILES -----

@@ -9,7 +9,7 @@ std::string linebreak() {
     return "\n" + std::string(indent_stack * REVERSE_PARSE_INDENT_WIDTH, ' ');
 }
 
-std::ostream& operator<<(std::ostream& ostream, AST::Node body);
+std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body);
 std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression);
 
 std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
@@ -146,7 +146,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
 }
 
 // reverse-parse expression into the stream
-std::ostream& operator<<(std::ostream& ostream, AST::Node body) {
+std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body) {
     switch (body.index()) {
         case 0:
             return ostream << "@empty callable body@";
