@@ -77,12 +77,13 @@ int main(int argc, char* argv[]) {
         }
         
         StreamingLexer lexer{&source_file};
-        ParserLayer1 layer1{&lexer};
+        std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
+        ParserLayer1 layer1{&lexer, pragmas.get()};
         
         std::unique_ptr<AST::AST> ast = layer1.run();
         std::cout << "\nlayer1 done" << std::endl;
 
-        ParserLayer2 layer2{ast.get()};
+        ParserLayer2 layer2{ast.get(), pragmas.get()};
         layer2.run();
         std::cout << "layer2 done\n" << std::endl;
 

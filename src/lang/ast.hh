@@ -194,7 +194,6 @@ class AST {
     // container for top-level statements
     std::vector<Statement*> root_ = {};
     // std::unique_ptr<Context> root_ = std::make_unique<Context>(Context::Type::global);
-    Pragmas pragmas;
     bool valid = true;
     Scope global_ = {};
 

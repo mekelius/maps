@@ -10,6 +10,7 @@
 #include <variant>
 
 #include "../logging.hh"
+#include "../source.hh"
 
 #include "tokens.hh"
 #include "parser_layer1.hh"
@@ -19,8 +20,8 @@ using Logging::MessageType;
 
 // ----- PUBLIC METHODS -----
 
-ParserLayer1::ParserLayer1(StreamingLexer* lexer):
-lexer_(lexer) {
+ParserLayer1::ParserLayer1(StreamingLexer* lexer, Pragma::Pragmas* pragmas):
+lexer_(lexer), pragmas_(pragmas) {
     ast_ = std::make_unique<AST::AST>();
     get_token();
     get_token();
@@ -160,24 +161,37 @@ AST::Statement* ParserLayer1::create_statement(AST::StatementType statement_type
 
 // ########## PARSING ##########
 
+// NOTE: pragma.cpp does its own logging
 void ParserLayer1::handle_pragma() {
-    if (current_token().string_value() == "enable mutable globals") {
-        ast_->pragmas.mutable_globals = true;
+    // get the first word
+    std::istringstream token_value_iss{current_token().string_value()};
+    std::string value_string;
+    std::getline(token_value_iss, value_string, ' ');
 
-    } else if (current_token().string_value() == "enable top level context") {
-        ast_->pragmas.top_level_context = true;
+    std::string flag_name;
+    std::getline(token_value_iss, flag_name);
     
-    } else if (current_token().string_value() == "script") {
-        ast_->pragmas.top_level_context = true;
-        ast_->pragmas.mutable_globals = true;
-    
+    // convert the forst word into bool
+    bool value;
+    if (value_string == "enable") {
+        value = true;
+    } else if (value_string == "disable") {
+        value == false;
     } else {
+        log_error("invalid pragma declaration");
         declare_invalid();
-        log_error("unknown pragma: " + current_token().string_value());
+        get_token();
+        return;
     }
 
+    // the rest should be the flag name
+    bool succeeded = pragmas_->set_flag(
+        flag_name, value, current_token().location);
+    
+    if (!succeeded) 
+        declare_invalid();
+
     get_token();
-    log_info("set pragma", MessageType::parser_debug);
 }
 
 

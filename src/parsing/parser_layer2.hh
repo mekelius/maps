@@ -16,7 +16,7 @@ class ParserLayer2 {
     using TermList = std::vector<Term*>;
     using TermIterator = TermList::iterator;
   public:
-    ParserLayer2(AST::AST* ast);
+    ParserLayer2(AST::AST* ast, Pragma::Pragmas* pragmas);
 
     void run();
 
@@ -40,6 +40,7 @@ class ParserLayer2 {
     TermIterator current_term_;
 
     AST::AST* ast_;
+    Pragma::Pragmas* pragmas_;
 };
 
 #endif

@@ -5,17 +5,10 @@
 #include <ostream>
 #include <array>
 
+#include "source.hh"
+
 constexpr bool REVERSE_PARSE_INCLUDE_DEBUG_INFO = true;
 constexpr unsigned int REVERSE_PARSE_INDENT_WIDTH = 4;
-
-struct SourceLocation {
-    unsigned int line;
-    unsigned int column;
-
-    std::string to_string() const {
-        return std::to_string(line) + ":" + std::to_string(column);
-    };
-};
 
 namespace Logging {
 
@@ -33,6 +26,7 @@ enum class MessageType: unsigned int {
     parser_debug,
     parser_debug_terminal,
     lexer_debug_token,
+    pragma_debug
 };
 
 class LogLevel {
@@ -53,9 +47,10 @@ class LogLevel {
     }
 
   private:
-    std::array<bool, 5> message_types = {
+    std::array<bool, 6> message_types = {
         true,
         true,
+        false,
         false,
         false,
         false,
@@ -96,6 +91,5 @@ void log_info(SourceLocation location, const std::string& message, MessageType m
 void log_token(SourceLocation location, const std::string& message);
 
 } // namespace Logging
-
 
 #endif
