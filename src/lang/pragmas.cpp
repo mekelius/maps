@@ -28,16 +28,16 @@ bool Pragmas::set_flag(const std::string& flag_name, bool value, const SourceLoc
     return true;
 }
 
-// NOTE: these may need to be cached
-bool Pragmas::check_flag_value(const SourceLocation& location, const Flags::Flag& flag) const {
-    auto flag_declarations_it = declarations_.find(flag.name);
+// NOTE: if these were ever somehow to become a bottleneck they could be cached
+bool Pragmas::check_flag_value(const std::string& flag_name, const SourceLocation& location) const {
+    auto flag_declarations_it = declarations_.find(flag_name);
     assert(flag_declarations_it != declarations_.end() && "tried to read an unknown pragma");
     
     auto flag_declarations = flag_declarations_it->second;
 
     // get the last value that is above the location in the source file  
     // never hitting the begin() is ok, since that just contains the default value (set in the constructor)
-    auto it = flag_declarations.upper_bound(location);
+    auto it = flag_declarations.lower_bound(location);
     assert(it != flag_declarations.end() && "somehow check_flag_value failed to produce a value");
     return it->second;
 }
