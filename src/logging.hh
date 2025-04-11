@@ -8,9 +8,7 @@
 constexpr bool REVERSE_PARSE_INCLUDE_DEBUG_INFO = true;
 constexpr unsigned int REVERSE_PARSE_INDENT_WIDTH = 4;
 
-namespace Logging {
-
-struct Location {
+struct SourceLocation {
     unsigned int line;
     unsigned int column;
 
@@ -18,6 +16,8 @@ struct Location {
         return std::to_string(line) + ":" + std::to_string(column);
     };
 };
+
+namespace Logging {
 
 // at line 1000 the token stream is gonna shift right, but that's ok
 constexpr unsigned int LINE_COL_FORMAT_PADDING = 8;
@@ -82,8 +82,8 @@ inline void init_logging(std::ostream* ostream, LogLevel& log_level = LogLevel::
     Settings::set_ostream(ostream);
 }
 
-void log_error(Location location, const std::string& message);
-void log_info(Location location, const std::string& message, MessageType message_type);
+void log_error(SourceLocation location, const std::string& message);
+void log_info(SourceLocation location, const std::string& message, MessageType message_type);
 
 } // namespace Logging
 

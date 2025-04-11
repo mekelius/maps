@@ -16,7 +16,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
     assert(statement && "Reverse parse encountered a nullptr statement");
     ostream << linebreak();
 
-    switch (AST::statement_type(statement)) {
+    switch (statement->statement_type) {
         case AST::StatementType::broken:
             ostream << "@broken statement@";
             break;
@@ -27,7 +27,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
             break;
 
         case AST::StatementType::expression_statement:
-            ostream << std::get<AST::ExpressionStatement>(*statement).expression;
+            ostream << std::get<AST::Expression*>(statement->value);
             break;
 
         case AST::StatementType::block: {
@@ -35,7 +35,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
             indent_stack++;
 
             for (AST::Statement* substatement: 
-                    std::get<AST::BlockStatement>(*statement).statements) {
+                    std::get<AST::Block>(statement->value)) {
                 ostream << substatement;
             }
 
@@ -45,7 +45,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
         }
 
         case AST::StatementType::let: {
-            auto [name, body] = std::get<AST::LetStatement>(*statement);
+            auto [name, body] = std::get<AST::Let>(statement->value);
             // assume top level identifiers are created by let-statements
             ostream << "let " << name;
             
@@ -63,14 +63,14 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
         }
         
         case AST::StatementType::assignment: {
-            auto [name, body] = std::get<AST::AssignmentStatement>(*statement);
+            auto [name, body] = std::get<AST::Assignment>(statement->value);
             ostream << name << " = " << body;
             break;
         }
 
         case AST::StatementType::return_:
             ostream << "return" 
-                    << std::get<AST::ReturnStatement>(*statement).expression;
+                    << std::get<AST::Expression*>(statement->value);
             break;
     }
 
