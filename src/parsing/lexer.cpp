@@ -10,8 +10,8 @@
 #include "../lang/words.hh"
 
 // ----- Public methods -----
-StreamingLexer::StreamingLexer(std::istream* source_is): 
-source_is_(source_is) {
+StreamingLexer::StreamingLexer(std::istream* source_is)
+:source_is_(source_is) {
     read_char();
 }
 
@@ -22,7 +22,7 @@ Token StreamingLexer::get_token() {
     
     // a bit of a hack to keep the outputs in sync
     prev_token_ = token;
-    tie_possible_ = is_tieable_token_type(token.type);
+    tie_possible_ = is_tieable_token(token);
 
     return token;
 }
@@ -53,7 +53,7 @@ Token StreamingLexer::create_token_(TokenType type, const std::string& value) {
 }
 
 Token StreamingLexer::create_token_(TokenType type, int value) {
-    return Token{type, {current_token_start_line_, current_token_start_col_}, "", value};
+    return Token{type, {current_token_start_line_, current_token_start_col_}, value};
 }
 
 // ----- PRODUCTION RULES -----
@@ -176,6 +176,7 @@ Token StreamingLexer::get_token_() {
                 return read_operator_();
 
             // unknown token
+            assert(false && "unhandled token type in StreamingLexer::get_token_()");
             read_char();
             return create_token_(TokenType::unknown);
     }
@@ -352,11 +353,11 @@ Token StreamingLexer::read_pragma() {
 
 // Reduce redundant semicolons
 Token StreamingLexer::collapsed_semicolon_token_() {
-    switch (prev_token_.type) {
+    switch (prev_token_.token_type) {
         case TokenType::indent_block_start:
         case TokenType::indent_block_end:
         case TokenType::semicolon:
-        case TokenType::bof:
+        case TokenType::dummy:
             return get_token_();
         
         default:

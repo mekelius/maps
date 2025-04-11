@@ -2,11 +2,12 @@
 #define __TOKENS_HH
 
 #include <sstream>
+#include <variant>
 
 #include "../logging.hh"
 
 enum class TokenType: int {
-    bof, eof,
+    eof,
     identifier, operator_t,
     number, string_literal,
     reserved_word,
@@ -17,28 +18,38 @@ enum class TokenType: int {
     semicolon, comma, lambda,
     tie,
     pragma,
-    unknown,
+    dummy,  // dummy token used to initialize token values
+    unknown // unhandled, means a bug
 };
 
 class Token {
   public:
-    TokenType type = TokenType::unknown;
+    using Value = std::variant<std::monostate, std::string, int>;
 
+    Token(TokenType token_type, SourceLocation location, Value value = std::monostate{});
+
+    TokenType token_type;
     SourceLocation location;
+    Value value;
 
-    std::string value = "";
-    int int_value = 0;
+    // the raw string value
+    std::string string_value() const {
+        return std::get<std::string>(value);
+    }
 
+    // a formatted representation of the token
     std::string get_string() const;
+
+    static const Token dummy_token;
 };
 
-std::ostream& operator<<(std::ostream& os, Token token);
+std::ostream& operator<<(std::ostream& os, const Token& token);
 
-bool is_tieable_token_type(TokenType token_type);  
-bool is_statement_separator(Token token);
-bool is_block_starter(Token token);
-bool is_assignment_operator(Token token);
-bool is_access_operator(Token token);
-bool is_term_token(Token token);
+bool is_assignment_operator(const Token& token);
+bool is_statement_separator(const Token& token);
+bool is_access_operator(const Token& token);
+bool is_block_starter(const Token& token);
+bool is_tieable_token(const Token& token);  
+bool is_term_token(const Token& token);
 
 #endif

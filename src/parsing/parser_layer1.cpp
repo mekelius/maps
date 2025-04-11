@@ -29,7 +29,7 @@ lexer_(lexer) {
 std::unique_ptr<AST::AST> ParserLayer1::run() {    
     ast_->init_builtin_callables();
 
-    while (current_token().type != TokenType::eof) {
+    while (current_token().token_type != TokenType::eof) {
         int prev_buf_slot = which_buf_slot_; // a bit of a hack, an easy way to do the assertion below
 
         parse_top_level_statement();
@@ -61,7 +61,7 @@ Token ParserLayer1::peek() const {
 }
 
 void ParserLayer1::update_brace_levels(Token token) {
-    switch (token.type) {
+    switch (token.token_type) {
         case TokenType::indent_block_start:
             indent_level_++; break;
         case TokenType::indent_block_end:
@@ -161,19 +161,19 @@ AST::Statement* ParserLayer1::create_statement(AST::StatementType statement_type
 // ########## PARSING ##########
 
 void ParserLayer1::handle_pragma() {
-    if (current_token().value == "enable mutable globals") {
+    if (current_token().string_value() == "enable mutable globals") {
         ast_->pragmas.mutable_globals = true;
 
-    } else if (current_token().value == "enable top level context") {
+    } else if (current_token().string_value() == "enable top level context") {
         ast_->pragmas.top_level_context = true;
     
-    } else if (current_token().value == "script") {
+    } else if (current_token().string_value() == "script") {
         ast_->pragmas.top_level_context = true;
         ast_->pragmas.mutable_globals = true;
     
     } else {
         declare_invalid();
-        log_error("unknown pragma: " + current_token().value);
+        log_error("unknown pragma: " + current_token().string_value());
     }
 
     get_token();
@@ -186,7 +186,7 @@ void ParserLayer1::handle_pragma() {
 void ParserLayer1::parse_top_level_statement() {
     AST::Statement* statement;
 
-    switch (current_token().type) {
+    switch (current_token().token_type) {
         case TokenType::pragma:
             handle_pragma();
             return parse_top_level_statement();
@@ -205,7 +205,7 @@ void ParserLayer1::parse_top_level_statement() {
 }
 
 AST::Statement* ParserLayer1::parse_non_global_statement() {
-    switch (current_token().type) {
+    switch (current_token().token_type) {
         case TokenType::pragma:
             declare_invalid();
             log_error("unexpected non top-level pragma");
@@ -222,20 +222,20 @@ AST::Statement* ParserLayer1::parse_non_global_statement() {
 }
 
 AST::Statement* ParserLayer1::parse_statement() {
-    switch (current_token().type) {
+    switch (current_token().token_type) {
         case TokenType::eof:
             finished_ = true;
             return create_statement(AST::StatementType::empty);
 
         case TokenType::reserved_word:
             log_info("scoping not yet implemented");
-            if (current_token().value == "let")
+            if (current_token().string_value() == "let")
                 return parse_let_statement();
             
             assert(false && "Unhandled reserved word in Parser::parse_top_level_statement");
             
         case TokenType::identifier:
-            if (peek().type == TokenType::operator_t && peek().value == "=") {
+            if (peek().token_type == TokenType::operator_t && peek().string_value() == "=") {
                 return parse_assignment_statement();
             }
             return parse_expression_statement();
@@ -256,8 +256,8 @@ AST::Statement* ParserLayer1::parse_statement() {
             return create_statement(AST::StatementType::empty);
 
         // ----- ignored -----
-        case TokenType::bof:
-            get_token(); // eat the bof
+        case TokenType::dummy:
+            get_token(); // eat the dummy
             return create_statement(AST::StatementType::empty);
             
         // ---- errors -----
@@ -298,11 +298,11 @@ AST::Statement* ParserLayer1::parse_expression_statement() {
 }
 
 AST::Statement* ParserLayer1::parse_let_statement() {
-    switch (get_token().type) {
+    switch (get_token().token_type) {
         case TokenType::identifier:
             // TODO: check lower case here
             {
-                std::string name = current_token().value;
+                std::string name = current_token().string_value();
                 
                 // check if name already exists
                 if (identifier_exists(name)) {
@@ -363,11 +363,11 @@ AST::Statement* ParserLayer1::parse_let_statement() {
 }
 
 AST::Statement* ParserLayer1::parse_assignment_statement() {
-    assert(current_token().type == TokenType::identifier 
+    assert(current_token().token_type == TokenType::identifier 
         && "parse_assignment_statement called with current_token that was not an identifier");
 
     statement_start();
-    std::string name = current_token().value;
+    std::string name = current_token().string_value();
 
     get_token();
     // TODO: change '=' to it's own TokenType
@@ -401,7 +401,7 @@ AST::Statement* ParserLayer1::parse_block_statement() {
     // must trust the assertion above that other types of tokens won't end up here
     TokenType ending_token;
 
-    switch (current_token().type) {
+    switch (current_token().token_type) {
         case TokenType::curly_brace_open:
             ending_token = TokenType::curly_brace_close;
             break;
@@ -419,11 +419,11 @@ AST::Statement* ParserLayer1::parse_block_statement() {
     std::vector<AST::Statement*>* substatements = &std::get<AST::Block>(statement->value);
 
     while (
-        current_token().type != ending_token            ||
+        current_token().token_type != ending_token            ||
             indent_level_ > indent_at_start             || 
             curly_brace_level_ > curly_brace_at_start
     ) {
-        if (current_token().type == TokenType::eof) {
+        if (current_token().token_type == TokenType::eof) {
             declare_invalid();
             log_error("Unexpected eof while parsing block statement");
             return statement;
@@ -437,7 +437,7 @@ AST::Statement* ParserLayer1::parse_block_statement() {
 
     get_token(); // eat block closer
     
-    if (current_token().type == TokenType::semicolon)
+    if (current_token().token_type == TokenType::semicolon)
         get_token(); // eat possible trailing semicolon
 
     log_info("finished parsing block statement from " + statement->location.to_string(), 
@@ -446,7 +446,7 @@ AST::Statement* ParserLayer1::parse_block_statement() {
 }
 
 AST::Statement* ParserLayer1::parse_return_statement() {
-    assert(current_token().type == TokenType::reserved_word && current_token().value == "return" 
+    assert(current_token().token_type == TokenType::reserved_word && current_token().string_value() == "return" 
         && "parse_return_statement called with current token other than \"return\"");
 
     get_token(); //eat return
@@ -465,7 +465,7 @@ AST::Statement* ParserLayer1::parse_return_statement() {
 // --------- EXPRESSIONS --------
 
 AST::Expression* ParserLayer1::parse_expression() {
-    switch (current_token().type) {
+    switch (current_token().token_type) {
         case TokenType::eof:
             return create_expression(AST::ExpressionType::syntax_error);
 
@@ -478,7 +478,7 @@ AST::Expression* ParserLayer1::parse_expression() {
             if (is_access_operator(next_token))
                 return parse_termed_expression();
 
-            switch (next_token.type) {
+            switch (next_token.token_type) {
                 case TokenType::identifier:
                 case TokenType::operator_t:
                 case TokenType::number:
@@ -520,7 +520,7 @@ AST::Expression* ParserLayer1::parse_expression() {
             get_token(); // eat the starting indent
             AST::Expression* expression = parse_expression();
             
-            if (current_token().type != TokenType::indent_block_end) {
+            if (current_token().token_type != TokenType::indent_block_end) {
                 declare_invalid();
                 log_error("Mismatched indents!");
                 return expression;
@@ -532,7 +532,7 @@ AST::Expression* ParserLayer1::parse_expression() {
         }
 
         case TokenType::reserved_word: {
-            if (current_token().value != "let") {
+            if (current_token().string_value() != "let") {
                 declare_invalid();
                 log_error("unknown " + current_token().get_string());
                 AST::Expression* expression = create_expression(AST::ExpressionType::syntax_error);
@@ -571,7 +571,7 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
 
     bool done = false;
     while (!done) {
-        switch (current_token().type) {
+        switch (current_token().token_type) {
             case TokenType::eof:
             case TokenType::indent_block_end:
             case TokenType::semicolon:
@@ -624,7 +624,7 @@ AST::Expression* ParserLayer1::parse_parenthesized_expression() {
     expression_start();
     get_token(); // eat '('
 
-    if (current_token().type == TokenType::parenthesis_close) {
+    if (current_token().token_type == TokenType::parenthesis_close) {
         declare_invalid();
         log_error("Empty parentheses in an expression");
         get_token();
@@ -632,7 +632,7 @@ AST::Expression* ParserLayer1::parse_parenthesized_expression() {
     }
 
     AST::Expression* expression = parse_expression();
-    if (current_token().type != TokenType::parenthesis_close) {
+    if (current_token().token_type != TokenType::parenthesis_close) {
         declare_invalid();
         log_error("Mismatched parentheses");
         return expression;
@@ -654,7 +654,7 @@ AST::Expression* ParserLayer1::parse_mapping_literal() {
 
 AST::Expression* ParserLayer1::handle_string_literal() {
     auto expression = create_expression(AST::ExpressionType::string_literal);
-    std::get<std::string>(expression->value) = current_token().value;
+    std::get<std::string>(expression->value) = current_token().string_value();
 
     get_token();
     get_token(); // eat closing '"'
@@ -665,7 +665,7 @@ AST::Expression* ParserLayer1::handle_string_literal() {
 
 AST::Expression* ParserLayer1::handle_numeric_literal() {
     AST::Expression* expression = create_expression(AST::ExpressionType::numeric_literal);
-    std::get<std::string>(expression->value) = current_token().value;
+    std::get<std::string>(expression->value) = current_token().string_value();
     
     get_token();
 
@@ -678,7 +678,7 @@ AST::Expression* ParserLayer1::handle_identifier() {
     ast_->unresolved_identifiers_and_operators.push_back(expression);
     log_info("parsed unresolved identifier", MessageType::parser_debug_terminal);
 
-    std::get<std::string>(expression->value) = current_token().value;
+    std::get<std::string>(expression->value) = current_token().string_value();
 
     get_token();
     return expression;
@@ -686,7 +686,7 @@ AST::Expression* ParserLayer1::handle_identifier() {
 
 // Expects not to be called if the current token is not parseable into a term
 AST::Expression* ParserLayer1::parse_term() {
-    switch (current_token().type) {
+    switch (current_token().token_type) {
         case TokenType::identifier:
             // TODO: revamp access expressions
             return handle_identifier();
@@ -713,7 +713,7 @@ AST::Expression* ParserLayer1::parse_term() {
         case TokenType::operator_t: {
             AST::Expression* expression = create_expression(AST::ExpressionType::unresolved_operator);
             ast_->unresolved_identifiers_and_operators.push_back(expression);
-            std::get<std::string>(expression->value) = current_token().value;
+            std::get<std::string>(expression->value) = current_token().string_value();
             get_token();
             return expression;
         }
@@ -751,14 +751,14 @@ AST::Expression* ParserLayer1::parse_term() {
 //         case AST::ExpressionType::native_function:
 //         case AST::ExpressionType::native_operator: { // why the heck not
         
-//             auto maybe_callee = lookup_identifier(current_token().value);
+//             auto maybe_callee = lookup_identifier(current_token().string_value());
 //             // TODO: ideally assert here that the callee exists as a builtin
 //             auto [callee_identifier, _2,  arg_types] = **maybe_callee;
 //             unsigned int arity = arg_types.size();
             
 //             if (arity == 0) {
 //                 auto expr = ast_->create_expression(AST::ExpressionType::call);
-//                 expr->call_expr = {current_token().value, {}};
+//                 expr->call_expr = {current_token().string_value(), {}};
 //                 return expr;
 //             }
             
@@ -799,7 +799,7 @@ void ParserLayer1::reset_to_top_level() {
     log_info("resetting to global scope", MessageType::parser_debug);
 
     while (
-        current_token().type != TokenType::eof          && (
+        current_token().token_type != TokenType::eof          && (
             !is_statement_separator(current_token())    || 
             angle_bracket_level_    >   0               ||
             curly_brace_level_      >   0               ||
