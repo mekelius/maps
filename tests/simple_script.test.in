@@ -1,4 +1,4 @@
-@ script
+#enable global evaluation context
 
 let x = 54
 let y = 89

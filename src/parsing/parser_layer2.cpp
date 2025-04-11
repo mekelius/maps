@@ -1,6 +1,7 @@
 #include "parser_layer2.hh"
 
-ParserLayer2::ParserLayer2(AST::AST* ast): ast_(ast) {
+ParserLayer2::ParserLayer2(AST::AST* ast, Pragma::Pragmas* pragmas)
+: ast_(ast), pragmas_(pragmas) {
 }
 
 void ParserLayer2::run() {

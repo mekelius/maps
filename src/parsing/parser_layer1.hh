@@ -16,7 +16,7 @@
 // First attempt at a parser. Parses tokens directly into the llvm context
 class ParserLayer1 {
   public:
-    ParserLayer1(StreamingLexer* lexer);
+    ParserLayer1(StreamingLexer* lexer, Pragma::Pragmas* pragmas);
     
     std::unique_ptr<AST::AST> run();
   private:
@@ -89,6 +89,7 @@ class ParserLayer1 {
     
     StreamingLexer* lexer_;
     std::unique_ptr<AST::AST> ast_;
+    Pragma::Pragmas* pragmas_;
     
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_ = { Token::dummy_token, Token::dummy_token };

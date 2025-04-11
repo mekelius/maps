@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 4.0.0)
 
 set(CMAKE_C_COMPILER "clang-19")
 set(CMAKE_CXX_COMPILER "clang++-19")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 
@@ -16,6 +16,7 @@ add_library(parsing OBJECT
     src/logging.cpp
     src/lang/ast.cpp
     src/lang/types.cpp
+    src/lang/pragmas.cpp
     src/parsing/tokens.cpp
     src/parsing/lexer.cpp
     src/parsing/parser_layer1.cpp
