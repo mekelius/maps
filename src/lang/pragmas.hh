@@ -39,12 +39,14 @@ class Pragmas {
     
     // returns false if the flag doesn't exist
     bool set_flag(const std::string& flag_name, bool value, const SourceLocation& location);
-    bool check_flag_value(const SourceLocation& location, const Flags::Flag& flag) const;
+    bool check_flag_value(const std::string& flag_name, const SourceLocation& location) const;
 
   private:
     std::unordered_map<
         std::string_view,
-        std::map<SourceLocation, bool>
+        // The locations are stored in reverse order so that we can easily find the
+        // current value of the flag using std::map::lower_bound
+        std::map<SourceLocation, bool, std::greater<SourceLocation>>
     > declarations_;
 };
 
