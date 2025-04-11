@@ -3,6 +3,9 @@
 
 #include <optional>
 #include <variant>
+#include <vector>
+#include <string>
+#include <string_view>
 
 namespace AST {
 
@@ -13,7 +16,19 @@ enum class DeferredBool {
     unknown,
 };
 
-struct FunctionType;
+// ----- COMPLEX TYPES -----
+
+struct Type;
+
+struct FunctionType {
+    Type* return_type;
+    std::vector<Type*> arg_types = {};
+
+    unsigned int arity() const {
+        return arg_types.size();
+    }
+};
+
 using ComplexType = std::variant<std::monostate, FunctionType>;
 
 struct Type {
@@ -24,27 +39,13 @@ struct Type {
 
     // this seems like a sane way to implement complex types without inheritance or 
     // whole-type variant
-    // ComplexType ct = std::monostate{};
+    ComplexType ct = std::monostate{};
 
-    // bool is_complex() const {
-    //     return !std::holds_alternative<std::monostate>(ct);
-    // }
-    
-    // unsigned int arity() const {
-    //     if (const auto function_type = std::get_if<FunctionType>(&ct))
-    //         return function_type->arity();
-    //     return 0;
-    // }
+    bool is_complex() const;    
+    unsigned int arity() const;
 };
 
-struct FunctionType {
-    Type* return_type;
-    std::vector<Type*> arg_types = {};
-
-    unsigned int arity() const {
-        return arg_types.size();
-    }
-};
+// ----- SIMPLE TYPES -----
 
 const Type Int {
     true,
