@@ -17,6 +17,11 @@
 
 namespace AST {
 
+struct Expression;
+struct Statement;
+
+using CallableBody = std::variant<std::monostate, Expression*, Statement*>;
+
 // ----- EXPRESSIONS -----
 
 enum class ExpressionType {
@@ -35,8 +40,6 @@ enum class ExpressionType {
     deleted                 = 12,
 };
 
-struct Expression;
-
 using CallExpressionValue = std::tuple<std::string, std::vector<Expression*>>;
 using CallExpressionValueDeferred = std::tuple<Expression*, std::vector<Expression*>>;
 using TermedExpressionValue = std::vector<Expression*>;
@@ -50,11 +53,12 @@ using ExpressionValue = std::variant<
 >;
 
 struct Expression {
-    Expression(ExpressionType expr_type, Logging::Location location, const Type* type): 
+    // TODO: move initializing expression values from AST::create_expression
+    Expression(ExpressionType expr_type, SourceLocation location, const Type* type): 
     expression_type(expr_type), location(location), type(type) {};
     
     ExpressionType expression_type;
-    Logging::Location location;
+    SourceLocation location;
     const Type* type = &Hole;
     ExpressionValue value;
 
@@ -70,38 +74,27 @@ struct Expression {
 };
 
 // ----- STATEMENTS -----
-
-struct BrokenStatement {};
-
-struct IllegalStatement {
-    std::string reason;
+struct Let{
+    std::string identifier; 
+    CallableBody body;
 };
 
-struct EmptyStatement {
+struct Assignment{
+    std::string identifier; 
+    CallableBody body;
 };
 
-struct ExpressionStatement {
-    Expression* expression;
-};
+using Block = std::vector<Statement*>;
 
-struct ReturnStatement {
-    Expression* expression;
-};
-
-struct LetStatement;
-struct AssignmentStatement;
-struct BlockStatement;
-
-// !important! these need to be in the same order
 enum class StatementType {
-    broken                  = 0, // parsing failed
-    illegal                 = 1, // well formed but illegal statements
-    empty                   = 2,
-    expression_statement    = 3, // statement consisting of a single expression
-    block                   = 4,
-    let                     = 5,
-    assignment              = 6,
-    return_                 = 7,
+    broken                  , // parsing failed
+    illegal                 , // well formed but illegal statements
+    empty                   ,
+    expression_statement    , // statement consisting of a single expression
+    block                   ,
+    let                     ,
+    assignment              ,
+    return_                 ,
     // if
     // else
     // for
@@ -111,38 +104,38 @@ enum class StatementType {
     // while/until
     // switch
 };
-using Statement = std::variant<
-    BrokenStatement,    // 0
-    IllegalStatement,   // 1
-    EmptyStatement,     // 2
-    ExpressionStatement,// 3
-    BlockStatement,     // 4
-    LetStatement,       // 5
-    AssignmentStatement,// 6
-    ReturnStatement     // 7
+
+using StatementValue = std::variant<
+    std::monostate,
+    std::string,
+    Expression*,
+
+    Let,
+    Assignment,
+    Block
 >;
 
-struct NotInitialized {};
-constexpr NotInitialized not_initialized;
-using CallableBody = std::variant<NotInitialized, Expression*, Statement*>;
-
-struct LetStatement {
-    std::string name;
-    CallableBody body = not_initialized;
+struct Statement {
+    Statement(StatementType statement_type, SourceLocation location);
+    
+    StatementType statement_type;
+    SourceLocation location;
+    StatementValue value;
 };
 
-struct AssignmentStatement {
-    std::string name;
-    CallableBody body;
-};
 
-struct BlockStatement {
-    std::vector<Statement*> statements;
-};
+// ----- CALLABLES -----
 
-inline StatementType statement_type(Statement* statement) {
-    return static_cast<StatementType>(statement->index());
-}
+
+// struct Let {
+//     std::string name;
+//     CallableBody body = not_initialized;
+// };
+
+// struct Assignment {
+//     std::string name;
+//     CallableBody body;
+// };
 
 struct Callable {
     Callable(const std::string& name, CallableBody body, const Type* return_type, std::vector<const Type*>& arg_types)
@@ -179,8 +172,8 @@ class Scope {
 class AST {
   public:
     Expression* create_expression(
-        ExpressionType expression_type, Logging::Location location, const Type* type = &Void);
-    Statement* create_statement(Statement&& statement);
+        ExpressionType expression_type, SourceLocation location, const Type* type = &Void);
+    Statement* create_statement(StatementType statement_type, SourceLocation location);
     
     // returns nullopt if the name is taken
     std::optional<Callable*> create_callable(

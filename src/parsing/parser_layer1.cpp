@@ -94,18 +94,18 @@ void ParserLayer1::declare_invalid() {
 // ----- OUTPUT HELPERS -----
 
 void ParserLayer1::log_error(const std::string& message) const {
-    log_error({current_token().line, current_token().col}, message);
+    log_error(current_token().location, message);
 }
 
-void ParserLayer1::log_error(Logging::Location location, const std::string& message) const {
+void ParserLayer1::log_error(SourceLocation location, const std::string& message) const {
     Logging::log_error(location, message);
 }
 
 void ParserLayer1::log_info(const std::string& message, Logging::MessageType message_type) const {
-    log_info({current_token().line, current_token().col}, message, message_type);
+    log_info(current_token().location, message, message_type);
 }
 
-void ParserLayer1::log_info(Logging::Location location, const std::string& message, Logging::MessageType message_type) const {
+void ParserLayer1::log_info(SourceLocation location, const std::string& message, Logging::MessageType message_type) const {
     Logging::log_info(location, message, message_type);
 }
 
@@ -128,22 +128,33 @@ std::optional<AST::Callable*> ParserLayer1::lookup_identifier(const std::string&
 // ----- EXPRESSION AND STATEMENT HELPERS -----
 
 void ParserLayer1::expression_start() {
-    current_expression_start_ = {current_token().line, current_token().line};
+    current_expression_start_ = current_token().location;
 }
 
 void ParserLayer1::statement_start() {
-    current_statement_start_ = {current_token().line, current_token().line};
+    current_statement_start_ = current_token().location;
 }
 
 // creates an expression using ast_, marking the location as the current_expression_start_
 // or if it's not set, the current token location
 AST::Expression* ParserLayer1::create_expression(AST::ExpressionType expression_type) {
     if (!current_expression_start_)
-        return ast_->create_expression(expression_type, {current_token().line, current_token().line});
+        return ast_->create_expression(expression_type, current_token().location);
 
     AST::Expression* expression = ast_->create_expression(expression_type, *current_expression_start_);
     current_expression_start_ = std::nullopt;
     return expression;
+}
+
+// creates a statement using ast_, marking the location as the current_statement_start_
+// or if it's not set, the current token location
+AST::Statement* ParserLayer1::create_statement(AST::StatementType statement_type) {
+    if (!current_statement_start_)
+        return ast_->create_statement(statement_type, current_token().location);
+
+    AST::Statement* statement = ast_->create_statement(statement_type, *current_statement_start_);
+    current_statement_start_ = std::nullopt;
+    return statement;
 }
 
 
@@ -187,7 +198,7 @@ void ParserLayer1::parse_top_level_statement() {
         default:
             // TODO: check pragmas for top-level statement types
             statement = parse_statement();
-            if (!std::holds_alternative<AST::EmptyStatement>(*statement))            
+            if (statement->statement_type != AST::StatementType::empty)            
                 ast_->append_top_level_statement(statement);
             return;
     }
@@ -199,11 +210,11 @@ AST::Statement* ParserLayer1::parse_non_global_statement() {
             declare_invalid();
             log_error("unexpected non top-level pragma");
             reset_to_top_level();
-            return ast_->create_statement(AST::BrokenStatement{}); 
+            return create_statement(AST::StatementType::broken); 
 
         case TokenType::eof:
             finished_ = true;
-            return ast_->create_statement(AST::BrokenStatement{});
+            return create_statement(AST::StatementType::broken);
 
         default:
             return parse_statement();
@@ -214,7 +225,7 @@ AST::Statement* ParserLayer1::parse_statement() {
     switch (current_token().type) {
         case TokenType::eof:
             finished_ = true;
-            return ast_->create_statement(AST::EmptyStatement{});
+            return create_statement(AST::StatementType::empty);
 
         case TokenType::reserved_word:
             log_info("scoping not yet implemented");
@@ -242,47 +253,47 @@ AST::Statement* ParserLayer1::parse_statement() {
 
         case TokenType::semicolon:
             get_token(); // eat the semicolon
-            return ast_->create_statement(AST::EmptyStatement{});
+            return create_statement(AST::StatementType::empty);
 
         // ----- ignored -----
         case TokenType::bof:
             get_token(); // eat the bof
-            return ast_->create_statement(AST::EmptyStatement{});
+            return create_statement(AST::StatementType::empty);
             
         // ---- errors -----
         default:
             declare_invalid();    
             log_error("use \"@ enable top level context\" to allow top level evaluation");
             reset_to_top_level();
-            return ast_->create_statement(AST::BrokenStatement{});
+            return create_statement(AST::StatementType::broken);
         
         case TokenType::indent_block_end:
             assert(false && "parse_statement called at indent_block_end");
-            return ast_->create_statement(AST::BrokenStatement{});
+            return create_statement(AST::StatementType::broken);
         
         case TokenType::indent_error_fatal:
             declare_invalid();
             log_error("indent error");
             reset_to_top_level();
-            return ast_->create_statement(AST::BrokenStatement{});
+            return create_statement(AST::StatementType::broken);
 
         case TokenType::unknown:
             declare_invalid();
             log_error("unknown token");
             reset_to_top_level();
-            return ast_->create_statement(AST::BrokenStatement{});
+            return create_statement(AST::StatementType::broken);
     }
 }
 
 AST::Statement* ParserLayer1::parse_expression_statement() {
     AST::Expression* expression = parse_expression();
-    AST::Statement* statement = ast_->create_statement(AST::ExpressionStatement{expression});
-
-    std::string start_location = current_token().get_location();
+    AST::Statement* statement = create_statement(AST::StatementType::expression_statement);
+    statement->value = expression;
 
     assert(is_block_starter(current_token()) || is_statement_separator(current_token()) && "statement didn't end in a statement separator");
+
     get_token(); // eat statement separator
-    log_info("finished parsing expression statement from " + start_location, MessageType::parser_debug);
+    log_info("finished parsing expression statement from " + statement->location.to_string(), MessageType::parser_debug);
     return statement;
 }
 
@@ -297,7 +308,9 @@ AST::Statement* ParserLayer1::parse_let_statement() {
                 if (identifier_exists(name)) {
                     declare_invalid();
                     log_error("Attempting to redefine identifier " + name);
-                    return ast_->create_statement(AST::IllegalStatement{"Attempting to redefine identifier: " + name});
+                    AST::Statement* statement = create_statement(AST::StatementType::illegal);
+                    statement->value = "Attempting to redefine identifier: " + name;
+                    return statement;
                 }
 
                 get_token();
@@ -306,7 +319,10 @@ AST::Statement* ParserLayer1::parse_let_statement() {
                     log_info("parsed let statement declaring \"" + name + "\" with no definition", MessageType::parser_debug);
                     
                     get_token(); // eat the semicolon
-                    return ast_->create_statement(AST::LetStatement{name});
+                    AST::Statement* statement = create_statement(AST::StatementType::let);
+                    statement->value = AST::Let{ name , std::monostate{} };
+                    
+                    return statement;
                 }
 
                 if (is_assignment_operator(current_token())) {
@@ -319,7 +335,8 @@ AST::Statement* ParserLayer1::parse_let_statement() {
                         body = parse_expression();
                     }
 
-                    AST::Statement* statement = ast_->create_statement(AST::LetStatement{name, body});
+                    AST::Statement* statement = create_statement(AST::StatementType::let);
+                    statement->value = AST::Let{name, body};
 
                     log_info("parsed let statement", MessageType::parser_debug);
                     return statement;
@@ -329,19 +346,19 @@ AST::Statement* ParserLayer1::parse_let_statement() {
                 declare_invalid();
                 log_error("unexpected " + current_token().get_str() + ", in let-statement");
                 reset_to_top_level();
-                return ast_->create_statement(AST::BrokenStatement{});
+                return create_statement(AST::StatementType::broken);
             }
 
         case TokenType::operator_t:
             log_info("operator overloading not yet implemented, ignoring");
             reset_to_top_level();
-            return ast_->create_statement(AST::EmptyStatement{});
+            return create_statement(AST::StatementType::empty);
 
         default:
             declare_invalid();
             log_error("unexpected token: " + current_token().get_str() + " in let statement");
             reset_to_top_level();
-            return ast_->create_statement(AST::BrokenStatement{});
+            return create_statement(AST::StatementType::broken);
     }
 }
 
@@ -349,7 +366,7 @@ AST::Statement* ParserLayer1::parse_assignment_statement() {
     assert(current_token().type == TokenType::identifier 
         && "parse_assignment_statement called with current_token that was not an identifier");
 
-    std::string start_location = current_token().get_location();
+    statement_start();
     std::string name = current_token().value;
 
     get_token();
@@ -361,11 +378,12 @@ AST::Statement* ParserLayer1::parse_assignment_statement() {
     get_token(); // eat '='
 
     AST::Statement* inner_statement = parse_statement();
-    AST::Statement* statement = ast_->create_statement(AST::AssignmentStatement{name, inner_statement});
+    AST::Statement* statement = create_statement(AST::StatementType::assignment);
+    statement->value = AST::Assignment{name, inner_statement};
 
     // expect parse_statement to eat the semicolon etc.
 
-    log_info("finished parsing assignment statement from " + start_location, MessageType::parser_debug);
+    log_info("finished parsing assignment statement from " + statement->location.to_string(), MessageType::parser_debug);
     return statement;
 }
 
@@ -375,7 +393,8 @@ AST::Statement* ParserLayer1::parse_block_statement() {
 
     unsigned int indent_at_start = indent_level_;
     unsigned int curly_brace_at_start = curly_brace_level_;
-    std::string start_location = current_token().get_location();
+
+    statement_start();
     log_info("start parsing block statement", MessageType::parser_debug);
     
     // determine the block type, i.e. curly-brace or indent
@@ -395,9 +414,9 @@ AST::Statement* ParserLayer1::parse_block_statement() {
 
     get_token(); // eat start token
 
-    AST::Statement* statement = ast_->create_statement(AST::BlockStatement{});
+    AST::Statement* statement = create_statement(AST::StatementType::block);
     // fetch the substatements vector
-    std::vector<AST::Statement*>* substatements = &std::get<AST::BlockStatement>(*statement).statements;
+    std::vector<AST::Statement*>* substatements = &std::get<AST::Block>(statement->value);
 
     while (
         current_token().type != ending_token            ||
@@ -412,7 +431,7 @@ AST::Statement* ParserLayer1::parse_block_statement() {
 
         AST::Statement* substatement = parse_statement();
         // discard empty statements
-        if (!std::holds_alternative<AST::EmptyStatement>(*substatement))
+        if (substatement->statement_type != AST::StatementType::empty)
             substatements->push_back(substatement);
     }
 
@@ -421,7 +440,8 @@ AST::Statement* ParserLayer1::parse_block_statement() {
     if (current_token().type == TokenType::semicolon)
         get_token(); // eat possible trailing semicolon
 
-    log_info("finished parsing block statement from " + start_location, MessageType::parser_debug);
+    log_info("finished parsing block statement from " + statement->location.to_string(), 
+        MessageType::parser_debug);
     return statement;
 }
 
@@ -431,7 +451,8 @@ AST::Statement* ParserLayer1::parse_return_statement() {
 
     get_token(); //eat return
     AST::Expression* expression = parse_expression();
-    AST::Statement* statement = ast_->create_statement(AST::ReturnStatement{expression});
+    AST::Statement* statement = create_statement(AST::StatementType::return_);
+    statement->value = expression;
 
     assert(is_statement_separator(current_token()) 
         && "return statement didn't end in statement separator");
@@ -546,7 +567,6 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
 
     expression->terms().push_back(parse_term());
 
-    std::string start_location = current_token().get_location();
     log_info("start parsing termed expression", MessageType::parser_debug);
 
     bool done = false;
@@ -587,7 +607,7 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
     }
     ast_->unparsed_termed_expressions.push_back(expression);
 
-    log_info("finished parsing termed expression from " + start_location, MessageType::parser_debug);
+    log_info("finished parsing termed expression from " + expression->location.to_string(), MessageType::parser_debug);
     return expression;
 
 }

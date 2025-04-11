@@ -21,7 +21,7 @@ void LogLevel::init(LogLevel& log_level) {
     LogLevel::debug.set_message_type(MessageType::parser_debug, true);
 }
 
-void log_error(Location location, const std::string& message) {
+void log_error(SourceLocation location, const std::string& message) {
     if (!Settings::ostream)
         return;
     if (!Settings::current_loglevel->has_message_type(MessageType::error))
@@ -32,7 +32,7 @@ void log_error(Location location, const std::string& message) {
         << "error: " << message << "\n";
 }
 
-void log_info(Location location, const std::string& message, MessageType message_type) {
+void log_info(SourceLocation location, const std::string& message, MessageType message_type) {
     if (!Settings::ostream)
         return;
     if (!Settings::current_loglevel->has_message_type(message_type))

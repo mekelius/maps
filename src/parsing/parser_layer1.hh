@@ -31,12 +31,12 @@ class ParserLayer1 {
 
     // TODO: refactor these
     void log_error(const std::string& message) const;
-    void log_error(Logging::Location location, const std::string& message) const;
+    void log_error(SourceLocation location, const std::string& message) const;
     
     void log_info(const std::string& message, 
         Logging::MessageType message_type = Logging::MessageType::general_info) const;
     
-    void log_info(Logging::Location location, const std::string& message, 
+    void log_info(SourceLocation location, const std::string& message, 
         Logging::MessageType message_type = Logging::MessageType::general_info) const;
 
     // ---- IDENTIFIERS -----
@@ -50,7 +50,7 @@ class ParserLayer1 {
 
     // creates an expression using ast_, marking the location as the current_expression_start_
     AST::Expression* create_expression(AST::ExpressionType expression_type);
-    // AST::Statement* create_statement(AST::Statement** statement);
+    AST::Statement* create_statement(AST::StatementType statement_type);
 
     void handle_pragma();
 
@@ -93,8 +93,8 @@ class ParserLayer1 {
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_;
 
-    std::optional<Logging::Location> current_expression_start_;
-    std::optional<Logging::Location> current_statement_start_;
+    std::optional<SourceLocation> current_expression_start_;
+    std::optional<SourceLocation> current_statement_start_;
 
     // these are automatically incremented and decremented by the get_token()
     unsigned int indent_level_ = 0;

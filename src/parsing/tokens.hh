@@ -3,6 +3,8 @@
 
 #include <sstream>
 
+#include "../logging.hh"
+
 enum class TokenType: int {
     bof, eof,
     identifier, operator_t,
@@ -22,13 +24,11 @@ class Token {
   public:
     TokenType type = TokenType::unknown;
 
-    unsigned int line;
-    unsigned int col;
+    SourceLocation location;
 
     std::string value = "";
     int int_value = 0;
 
-    std::string get_location() const;
     std::string get_str() const;
     std::string get_str(bool stream_format) const;
 };
