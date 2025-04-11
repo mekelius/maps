@@ -17,7 +17,6 @@
 #include "lang/ast.hh"
 
 #include "parsing/lexer.hh"
-#include "parsing/parser_common.hh"
 #include "parsing/parser_layer1.hh"
 #include "parsing/parser_layer2.hh"
 
@@ -155,20 +154,21 @@ int main(int argc, char** argv) {
     
     switch (cl_options->output_token_stream_to) {
         case OutputSink::file:
+            // TODO: allow outputting tokens both to stderr and a file at the same time
             tokens_file = std::make_unique<std::ofstream>(cl_options->tokens_file_path);
-            tokens_ostream = tokens_file.get();
+            Logging::Settings::set_tokens_ofstream(tokens_file.get());
             break;
         case OutputSink::stderr:
-            tokens_ostream = &std::cerr;
+            Logging::Settings::set_message_type(Logging::MessageType::lexer_debug_token, true);
             break;
         case OutputSink::none:
-            tokens_ostream = nullptr;
+            Logging::Settings::set_message_type(Logging::MessageType::lexer_debug_token, false);
             break;
     }
 
     // ----- parse the source -----
     
-    StreamingLexer lexer{&source_is, tokens_ostream};
+    StreamingLexer lexer{&source_is};
     ParserLayer1 parser{&lexer};
     
     // if tokens get dumped, provide clearer separation

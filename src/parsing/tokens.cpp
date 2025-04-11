@@ -13,13 +13,7 @@ bool is_tieable_token_type(TokenType token_type) {
     );
 }
 
-// TODO: refactor
-std::string Token::get_str(bool stream_format) const {
-    if (!stream_format) return get_str();
-    return location.to_string() + Logging::line_col_padding(location.to_string().size()) + "token: " + get_str();
-}
-
-std::string Token::get_str() const {
+std::string Token::get_string() const {
     switch (type) {
         case TokenType::eof:
             return "EOF";
@@ -77,10 +71,6 @@ std::string Token::get_str() const {
         default:
             assert(false && "tokentype is lacking a string representation");
     }
-}
-
-std::ostream& operator<<(std::ostream& os, Token token) {
-    return os << token.get_str(true);
 }
 
 bool is_statement_separator(Token token) {

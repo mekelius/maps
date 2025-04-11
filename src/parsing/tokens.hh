@@ -29,8 +29,7 @@ class Token {
     std::string value = "";
     int int_value = 0;
 
-    std::string get_str() const;
-    std::string get_str(bool stream_format) const;
+    std::string get_string() const;
 };
 
 std::ostream& operator<<(std::ostream& os, Token token);
