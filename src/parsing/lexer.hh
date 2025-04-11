@@ -18,9 +18,9 @@ class StreamingLexer {
   private:
     char read_char();
     // creates a token filled with the correct line and col info
-    Token create_token_(TokenType type);
-    Token create_token_(TokenType type, const std::string& value);
-    Token create_token_(TokenType type, int value);
+    Token create_token_(TokenType token_type);
+    Token create_token_(TokenType token_type, const std::string& value);
+    Token create_token_(TokenType token_type, int value);
   
     // production rules
     Token get_token_();
@@ -44,7 +44,7 @@ class StreamingLexer {
     unsigned int current_token_start_col_ = 0;
 
     std::stringbuf buffer_ = {};
-    Token prev_token_; // a bit of a hack to keep the tokens in sync with the parser
+    Token prev_token_ = Token{TokenType::dummy, {0,0}}; // a bit of a hack to keep the tokens in sync with the parser
     std::vector<unsigned int> indent_stack_ = {0};
     
     std::istream* source_is_;

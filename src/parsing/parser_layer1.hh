@@ -91,7 +91,7 @@ class ParserLayer1 {
     std::unique_ptr<AST::AST> ast_;
     
     int which_buf_slot_ = 0;
-    std::array<Token, 2> token_buf_;
+    std::array<Token, 2> token_buf_ = { Token::dummy_token, Token::dummy_token };
 
     std::optional<SourceLocation> current_expression_start_;
     std::optional<SourceLocation> current_statement_start_;
