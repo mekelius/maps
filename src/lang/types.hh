@@ -24,25 +24,25 @@ struct Type {
 
     // this seems like a sane way to implement complex types without inheritance or 
     // whole-type variant
-    ComplexType ct = std::monostate{};
+    // ComplexType ct = std::monostate{};
 
-    bool is_complex() const {
-        return !std::holds_alternative<std::monostate>(ct);
-    }
+    // bool is_complex() const {
+    //     return !std::holds_alternative<std::monostate>(ct);
+    // }
     
-    unsigned int arity() const {
-        if (const auto function_type = std::get_if<FunctionType>(&ct))
-            return function_type->arity();
-        return 0;
-    }
+    // unsigned int arity() const {
+    //     if (const auto function_type = std::get_if<FunctionType>(&ct))
+    //         return function_type->arity();
+    //     return 0;
+    // }
 };
 
 struct FunctionType {
     Type* return_type;
-    std::vector<Type*> parameter_types = {};
+    std::vector<Type*> arg_types = {};
 
     unsigned int arity() const {
-        return parameter_types.size();
+        return arg_types.size();
     }
 };
 

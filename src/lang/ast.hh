@@ -17,6 +17,7 @@
 
 namespace AST {
 
+class AST;
 struct Expression;
 struct Statement;
 
@@ -123,36 +124,45 @@ struct Statement {
     StatementValue value;
 };
 
+/**
+ * Callables represent either expressions or statements, with the unique ability
+ * to hold types for statements. A bit convoluted but we'll see.
+ */
+class Callable {
+  public:
+    Callable(CallableBody body, SourceLocation location);
 
-// ----- CALLABLES -----
-
-
-// struct Let {
-//     std::string name;
-//     CallableBody body = not_initialized;
-// };
-
-// struct Assignment {
-//     std::string name;
-//     CallableBody body;
-// };
-
-struct Callable {
-    Callable(const std::string& name, CallableBody body, const Type* return_type, std::vector<const Type*>& arg_types)
-    : name(name), body(body), return_type(return_type), arg_types(arg_types) {}
-
-    std::string name;
+    SourceLocation location;
     CallableBody body;
-    const Type* return_type;
-    std::vector<const Type*> arg_types;
+
+    // since statements don't store types, we'll have to store them here
+    // if the body is an expression, the type will just mirror it's type
+    Type* get_type();
+    void set_type(Type* type);
+
+  private:
+    std::optional<Type*> type;
 };
 
-// TODO: move housekeeping here from AST
+/**
+ * Scopes contain names bound to callables
+ * Note that it is the AST that owns the callables, but they can be created through the scope
+ */
 class Scope {
   public:
-    std::unordered_map<std::string, Callable*> identifiers;
+    Scope(AST* ast): ast_(ast) {};
+
+    std::optional<Callable*> create_identifier(const std::string& name, 
+        SourceLocation location, CallableBody body = std::monostate{});
+  
+    bool identifier_exists(const std::string& name) const;
+    std::optional<Callable*> get_identifier(const std::string& name) const;
+  
     std::vector<std::string> identifiers_in_order = {};
+
   private:
+    std::unordered_map<std::string, Callable*> identifiers_;
+    AST* ast_;
 };
 
 // TODO: expand mind enough for contexts
@@ -171,49 +181,34 @@ class Scope {
 
 class AST {
   public:
-    Expression* create_expression(
-        ExpressionType expression_type, SourceLocation location, const Type* type = &Void);
+    AST();
+
+    Expression* create_expression(ExpressionType expression_type, SourceLocation location, 
+        const Type* type = &Void);
     Statement* create_statement(StatementType statement_type, SourceLocation location);
-    
-    // returns nullopt if the name is taken
-    std::optional<Callable*> create_callable(
-        const std::string& name,
-        CallableBody body,
-        const Type* return_type = &Hole,
-        std::vector<const Type*> arg_types = {}
-    );
+    Callable* create_callable(CallableBody body, SourceLocation location);
+    Callable* create_callable(SourceLocation location);
+
     // appends a statement to root_
     void append_top_level_statement(Statement* statement);
-    
-    // TODO: these should be Scope's responsibility
-    bool identifier_exists(const std::string& name) const;
-    std::optional<Callable*> get_identifier(const std::string& name);
 
-    bool init_builtin_callables();
-    
     // container for top-level statements
-    std::vector<Statement*> root_ = {};
-    // std::unique_ptr<Context> root_ = std::make_unique<Context>(Context::Type::global);
-    bool valid = true;
-    Scope global_ = {};
+    std::vector<Statement*> root_ = {};   
+    Scope globals_;
+    bool is_valid = true;
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't 
     // need to walk the tree to find them
     std::vector<Expression*> unresolved_identifiers_and_operators = {};
     std::vector<Expression*> unparsed_termed_expressions = {};
-
+    
   private:
-    // caller is responsible for checking if the name is free with name_free
-    void create_identifier(const std::string& name, Callable* callable);
-
     // currently these guys, once created, stay in memory forever
     // we could create a way to sweep them by having some sort of "alive"-flag
     // or maybe "DeletedStatement" statement type
     // probably won't need that until we do the interpreter
     std::vector<std::unique_ptr<Statement>> statements_ = {};
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
-
-    std::unordered_map<std::string, Callable*> identifiers_ = {};
     std::vector<std::unique_ptr<Callable>> callables_ = {};
 };
 

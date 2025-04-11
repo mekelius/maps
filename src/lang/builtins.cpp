@@ -1,14 +1,16 @@
 #include "builtins.hh"
 
+#include "ast.hh"
+#include "types.hh"
 
 void init_builtin_callables(AST::AST& ast) {
-    auto print_expr = ast.create_expression(ExpressionType::native_function, {0, 0}, &Void);
-    auto print = create_callable("print", print_expr, &Void, { &String });
+    // auto print_expr = ast.create_expression(ExpressionType::native_function, {0, 0}, &Void);
+    // auto print = create_callable("print", print_expr, &Void, { &String });
     
-    if (!print)
-        return false;
+    // if (!print)
+    //     return false;
 
-    (*print)->name = "print";
+    // (*print)->name = "print";
 
-    return true;
+    // return true;
 }

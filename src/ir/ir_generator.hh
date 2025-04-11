@@ -48,7 +48,7 @@ public:
 private:
     llvm::Value* handle_call(AST::Expression& call);
     llvm::Value* handle_expression(AST::Expression& expression);
-    std::optional<llvm::Function*> handle_function(AST::Identifier& callable);
+    std::optional<llvm::Function*> handle_function(AST::Callable& callable);
     llvm::GlobalVariable* handle_string_literal(AST::Expression& str);
     
     void fail(const std::string& message);

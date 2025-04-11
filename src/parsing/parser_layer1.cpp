@@ -12,9 +12,10 @@
 #include "../logging.hh"
 #include "../source.hh"
 
+#include "../lang/builtins.hh"
+
 #include "tokens.hh"
 #include "parser_layer1.hh"
-#include "builtins.hh"
 
 using Logging::LogLevel;
 using Logging::MessageType;
@@ -29,7 +30,7 @@ lexer_(lexer), pragmas_(pragmas) {
 }
 
 std::unique_ptr<AST::AST> ParserLayer1::run() {    
-    create_builtin_identifiers(*ast_);
+    init_builtin_callables(*ast_);
 
     while (current_token().token_type != TokenType::eof) {
         int prev_buf_slot = which_buf_slot_; // a bit of a hack, an easy way to do the assertion below
@@ -89,7 +90,7 @@ void ParserLayer1::update_brace_levels(Token token) {
 }
 
 void ParserLayer1::declare_invalid() {
-    ast_->valid = false;
+    ast_->is_valid = false;
 }
 
 
@@ -115,15 +116,17 @@ void ParserLayer1::log_info(SourceLocation location, const std::string& message,
 // ----- IDENTIFIERS -----
 
 bool ParserLayer1::identifier_exists(const std::string& identifier) const {
-    return ast_->global_.identifier_exists(identifier);
+    return ast_->globals_.identifier_exists(identifier);
 }
 
-void ParserLayer1::create_identifier(const std::string& identifier, AST::Node body) {
-    ast_->create_callable(identifier, body);
+void ParserLayer1::create_identifier(const std::string& name, SourceLocation location,
+    AST::CallableBody body) {
+    
+    ast_->globals_.create_identifier(name, location, body);
 }
 
-std::optional<AST::Identifier*> ParserLayer1::lookup_identifier(const std::string& identifier) {
-    return ast_->global_.get_identifier(identifier);
+std::optional<AST::Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
+    return ast_->globals_.get_identifier(identifier);
 }
 
 
@@ -343,7 +346,7 @@ AST::Statement* ParserLayer1::parse_let_statement() {
                 if (is_assignment_operator(current_token())) {
                     get_token(); // eat the assignment operator
 
-                    AST::Node body;
+                    AST::CallableBody body;
                     if (is_block_starter(current_token())) {
                         body = parse_block_statement();
                     } else {

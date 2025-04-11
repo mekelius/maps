@@ -86,7 +86,7 @@ Value* IR_Generator::handle_expression(AST::Expression& expression) {
     }
 }
 
-std::optional<Function*> IR_Generator::handle_function(AST::Identifier& callable) {
+std::optional<Function*> IR_Generator::handle_function(AST::Callable& callable) {
     // auto [name, expression, arg_types] = callable;
     // const AST::Type* return_type = expression->type;
 
@@ -171,7 +171,7 @@ bool IR_Generator::generate_ir(AST::AST* ast) {
     // start_main();
     
     // fix main to have the correct type
-    std::optional<AST::Identifier*> main = ast_->get_identifier("main");
+    std::optional<AST::Callable*> main = ast_->get_identifier("main");
     if (main) {
         (*main)->arg_types = { &AST::Int, &AST::String };
     }

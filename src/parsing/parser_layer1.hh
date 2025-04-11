@@ -40,9 +40,10 @@ class ParserLayer1 {
         Logging::MessageType message_type = Logging::MessageType::general_info) const;
 
     // ---- IDENTIFIERS -----
-    bool identifier_exists(const std::string& identifier) const;
-    void create_identifier(const std::string& identifier, AST::Node body);
-    std::optional<AST::Identifier*> lookup_identifier(const std::string& identifier);
+    bool identifier_exists(const std::string& name) const;
+    void create_identifier(const std::string& name, SourceLocation location, 
+        AST::CallableBody body = std::monostate{});
+    std::optional<AST::Callable*> lookup_identifier(const std::string& name);
 
     // mark down the location for logging purposes
     void expression_start();
