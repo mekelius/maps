@@ -4,13 +4,12 @@
 #include "types.hh"
 
 void init_builtin_callables(AST::AST& ast) {
-    // auto print_expr = ast.create_expression(ExpressionType::native_function, {0, 0}, &Void);
-    // auto print = create_callable("print", print_expr, &Void, { &String });
+    AST::Expression* print = ast.create_expression(AST::ExpressionType::native_function, 
+        {0, 0}, AST::Void);
     
-    // if (!print)
-    //     return false;
+    // print->type = AST::create_function_type(AST::Void, {AST::String});
 
-    // (*print)->name = "print";
-
-    // return true;
+    if (!ast.builtins_.create_identifier("print", print, {0,0})) {
+        assert(false && "couldn't create builtin: print");
+    }
 }

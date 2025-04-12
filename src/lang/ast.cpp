@@ -38,12 +38,10 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
 }
 
 Callable::Callable(CallableBody body, SourceLocation location)
-:location(location), body(body) {
+:location(location), body(body) {}
 
-}
-
-std::optional<Callable*> Scope::create_identifier(const std::string& name, 
-    SourceLocation location, CallableBody body) {
+std::optional<Callable*> Scope::create_identifier(const std::string& name, CallableBody body,
+    SourceLocation location) {
 
     if (identifier_exists(name)) {
         return std::nullopt;
@@ -55,6 +53,11 @@ std::optional<Callable*> Scope::create_identifier(const std::string& name,
     
     return callable;
 }
+
+std::optional<Callable*> Scope::create_identifier(const std::string& name, SourceLocation location) {
+    return create_identifier(name, std::monostate{}, location);
+}
+
 
 bool Scope::identifier_exists(const std::string& name) const {
     return identifiers_.find(name) != identifiers_.end();
@@ -72,21 +75,21 @@ AST::AST(): globals_(this) {}
 
 
 Expression* AST::create_expression(
-    ExpressionType expression_type, SourceLocation location, const Type* type) {
+    ExpressionType expression_type, SourceLocation location, const Type& type) {
     
     expressions_.push_back(std::make_unique<Expression>(expression_type, location, type));
     Expression* expression = expressions_.back().get();
 
     switch (expression_type) {
         case ExpressionType::string_literal:
-            if (expression->type == &Hole)
-                expression->type = &String;
+            if (expression->type == Hole)
+                expression->type = String;
             expression->value = "";
             break;
 
         case ExpressionType::numeric_literal:
-            if (expression->type == &Hole)
-                expression->type = &NumberLiteral;
+            if (expression->type == Hole)
+                expression->type = NumberLiteral;
             expression->value = "";
             break;
 
