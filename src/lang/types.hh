@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <string_view>
+#include <memory>
 
 namespace AST {
 
@@ -16,79 +17,121 @@ enum class DeferredBool {
     unknown,
 };
 
-// ----- COMPLEX TYPES -----
 
-struct Type;
+struct FunctionType;
+
+
+using TypeComplex = std::variant<std::monostate, std::unique_ptr<FunctionType>>;
+
+struct TypeTemplate {
+    const std::string_view name;
+    const bool is_native = false;
+    const DeferredBool is_numeric = DeferredBool::false_;
+    const DeferredBool is_integral = DeferredBool::false_;
+    const bool is_user_defined = false;
+    const bool is_type_alias = false;
+};
+
+struct Type {
+    TypeTemplate* type_template;
+    TypeComplex complex = std::monostate{};
+
+    Type(TypeTemplate* type_template);
+    Type(const Type& rhs);
+    Type& operator=(const Type& other);
+
+    // rule of 5
+    Type(Type&& rhs) = delete;
+    Type&& operator=(Type&& other) = delete;
+
+    ~Type() = default;
+
+    bool is_complex() const;   
+    unsigned int arity() const;
+
+    std::string_view name() const { return type_template->name; }
+    bool is_native() const { return type_template->is_native; }
+    DeferredBool is_numeric() const { return type_template->is_numeric; }
+    DeferredBool is_integral() const { return type_template->is_integral; }
+    bool is_user_defined() const { return type_template->is_user_defined; }
+    bool is_type_alias() const { return type_template->is_type_alias; }
+};
+
+
+// currently simple types are only compared based on their name 
+// TODO: need to prevent user created types from colliding
+bool operator==(const Type& lhs, const Type& rhs);
+inline bool operator!=(const Type& lhs, const Type& rhs) {
+    return !(lhs == rhs);
+}
 
 struct FunctionType {
-    Type* return_type;
-    std::vector<Type*> arg_types = {};
+    Type return_type;
+    std::vector<Type> arg_types;
 
     unsigned int arity() const {
         return arg_types.size();
     }
 };
+inline bool operator==(const FunctionType& lhs, const FunctionType& rhs) {
+    if (lhs.return_type != rhs.return_type)
+        return false;
 
-using ComplexType = std::variant<std::monostate, FunctionType>;
+    return lhs.arg_types == rhs.arg_types;  
+}
 
-struct Type {
-    bool is_native = false;
-    std::string_view name;
-    DeferredBool is_numeric = DeferredBool::false_;
-    DeferredBool is_integral = DeferredBool::false_;
-
-    // this seems like a sane way to implement complex types without inheritance or 
-    // whole-type variant
-    ComplexType ct = std::monostate{};
-
-    bool is_complex() const;    
-    unsigned int arity() const;
-};
+Type create_function_type(Type return_type, const std::vector<Type>& arg_types);
 
 // ----- SIMPLE TYPES -----
 
-const Type Int {
-    true,
+static TypeTemplate Int_ {
     "Int",
+    true,
     DeferredBool::true_,
     DeferredBool::true_,
 };
+static const Type Int = { &Int_ };
 
-const Type Boolean {
-    true,
+static TypeTemplate Boolean_ {
     "Boolean",
+    true,
     DeferredBool::false_,
     DeferredBool::false_,
 };
+static const Type Boolean = { &Boolean_ };
 
-const Type String {
-    true,
+static TypeTemplate String_ {
     "String",
-    DeferredBool::false_,
-    DeferredBool::false_,
-};
-
-const Type Void {
     true,
-    "Void",
     DeferredBool::false_,
     DeferredBool::false_,
 };
+static const Type String = { &String_};
 
-const Type Hole {
-    false,
+static TypeTemplate Void_ {
+    "Void",
+    true,
+    DeferredBool::false_,
+    DeferredBool::false_,
+};
+static const Type Void = { &Void_ };
+
+static TypeTemplate Hole_ {
     "Hole",
+    false,
     DeferredBool::unknown,
     DeferredBool::unknown,
 };
+static const Type Hole = { &Hole_ };
 
 // a number who's type hasn't yet been determined
-const Type NumberLiteral {
-    false,
+static TypeTemplate NumberLiteral_ {
     "NumberLiteral",
+    false,
     DeferredBool::true_,
     DeferredBool::unknown,
 };
+static const Type NumberLiteral = { &NumberLiteral_};
 
 } // namespace AST
 #endif

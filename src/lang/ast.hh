@@ -55,12 +55,12 @@ using ExpressionValue = std::variant<
 
 struct Expression {
     // TODO: move initializing expression values from AST::create_expression
-    Expression(ExpressionType expr_type, SourceLocation location, const Type* type): 
+    Expression(ExpressionType expr_type, SourceLocation location, const Type& type): 
     expression_type(expr_type), location(location), type(type) {};
     
     ExpressionType expression_type;
     SourceLocation location;
-    const Type* type = &Hole;
+    Type type = Hole;
     ExpressionValue value;
 
     TermedExpressionValue& terms() {
@@ -152,9 +152,10 @@ class Scope {
   public:
     Scope(AST* ast): ast_(ast) {};
 
-    std::optional<Callable*> create_identifier(const std::string& name, 
-        SourceLocation location, CallableBody body = std::monostate{});
-  
+    std::optional<Callable*> create_identifier(const std::string& name, CallableBody body, 
+        SourceLocation location);
+    std::optional<Callable*> create_identifier(const std::string& name, SourceLocation location);
+   
     bool identifier_exists(const std::string& name) const;
     std::optional<Callable*> get_identifier(const std::string& name) const;
   
@@ -184,7 +185,7 @@ class AST {
     AST();
 
     Expression* create_expression(ExpressionType expression_type, SourceLocation location, 
-        const Type* type = &Void);
+        const Type& type = Void);
     Statement* create_statement(StatementType statement_type, SourceLocation location);
     Callable* create_callable(CallableBody body, SourceLocation location);
     Callable* create_callable(SourceLocation location);
@@ -195,6 +196,7 @@ class AST {
     // container for top-level statements
     std::vector<Statement*> root_ = {};   
     Scope globals_;
+    Scope builtins_ = { this };
     bool is_valid = true;
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't 

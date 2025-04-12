@@ -122,7 +122,7 @@ bool ParserLayer1::identifier_exists(const std::string& identifier) const {
 void ParserLayer1::create_identifier(const std::string& name, SourceLocation location,
     AST::CallableBody body) {
     
-    ast_->globals_.create_identifier(name, location, body);
+    ast_->globals_.create_identifier(name, body, location);
 }
 
 std::optional<AST::Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
@@ -180,7 +180,7 @@ void ParserLayer1::handle_pragma() {
     if (value_string == "enable") {
         value = true;
     } else if (value_string == "disable") {
-        value == false;
+        value = false;
     } else {
         log_error("invalid pragma declaration");
         declare_invalid();

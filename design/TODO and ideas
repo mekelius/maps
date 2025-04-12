@@ -70,7 +70,10 @@ ideas:
         - const globally, var locally
         - or just use const and let, whatever
             - benefits are pretty minimal, but there are maybe some
-    - cases
+    - could we do algebra on datatypes based on isomorphism during compilation?
+        - the compiler would pick a single internal representation for all of them
+        - is that what haskell does?
+            - could be kinda confusing
 
 inpurity and purity, strictness, laziness
     - {}-access denotes lazy access
