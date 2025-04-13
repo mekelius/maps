@@ -4,7 +4,7 @@
 #include "types.hh"
 
 void init_builtin_callables(AST::AST& ast) {
-    AST::Expression* print = ast.create_expression(AST::ExpressionType::native_function, 
+    AST::Expression* print = ast.create_expression(AST::ExpressionType::builtin_function, 
         {0, 0}, AST::Void);
     
     // print->type = AST::create_function_type(AST::Void, {AST::String});

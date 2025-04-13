@@ -116,7 +116,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return ostream;
         }
 
-        case AST::ExpressionType::native_function:
+        case AST::ExpressionType::builtin_function:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*built-in:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
 
         case AST::ExpressionType::not_implemented:

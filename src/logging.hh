@@ -25,6 +25,7 @@ enum class MessageType: unsigned int {
     general_info,
     parser_debug,
     parser_debug_terminal,
+    parser_debug_identifier,
     lexer_debug_token,
     pragma_debug
 };
@@ -47,9 +48,10 @@ class LogLevel {
     }
 
   private:
-    std::array<bool, 6> message_types = {
+    std::array<bool, 7> message_types = {
         true,
         true,
+        false,
         false,
         false,
         false,
