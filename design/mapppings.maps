@@ -66,6 +66,42 @@ let total_dict2 = total Mapping String -> String {
     "some key": "existing value"
 } with default ""                                       // daniel suggested ?? as shorthand for "with default"
 
+    "asd":123:true:"yaas",
+    "asd":123:true:"yaas",
+    "asd":123:true:"yaas",
+    "asd":123:true:"yaas",
+} == [
+    ["asd", 123, true, "yaas"],
+    ["asd", 123, true, "yaas"],    
+    ["asd", 123, true, "yaas"],    
+    ["asd", 123, true, "yaas"],    
+] ~= [
+    {
+        name: "asd", 
+        number: 123, 
+        yeaitis: true, 
+        epic: "yaas",
+    },
+    {
+        name: "asd", 
+        number: 123, 
+        yeaitis: true, 
+        epic: "yaas",
+    },
+    {
+        name: "asd", 
+        number: 123, 
+        yeaitis: true, 
+        epic: "yaas",
+    },
+    {
+        name: "asd", 
+        number: 123, 
+        yeaitis: true, 
+        epic: "yaas",
+    },
+]
+
 // iterable means that a mapping can be iterated over (TODO: syntax)
 // ordered means that the keys will be kept in order
 //
