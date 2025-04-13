@@ -26,30 +26,32 @@ using CallableBody = std::variant<std::monostate, Expression*, Statement*>;
 // ----- EXPRESSIONS -----
 
 enum class ExpressionType {
-    string_literal          = 0,    // literal: Value value
-    numeric_literal         = 1,
-    call                    = 2,    // call: Callee identifier, [Expression] args
-    deferred_call           = 3,    // call where the callee is an expression
-    native_function         = 4,
-    native_operator         = 5,
-    termed_expression       = 6,    // basically something that layer1 can't handle
-    tie                     = 7,    // lack of whitespace between an operator and another term
-    unresolved_identifier   = 8,    // something to be hoisted
-    unresolved_operator     = 9,
-    syntax_error            = 10,   // reached something that shouldn't have been such as trying to parse eof as expression
-    not_implemented         = 11,
-    deleted                 = 12,
+    string_literal = 0,     // literal: Value value
+    numeric_literal,
+    identifier,
+    call,                   // call: Callee identifier, [Expression] args
+    deferred_call,          // call where the callee is an expression
+    builtin_function,
+    native_operator,
+    termed_expression,      // basically something that layer1 can't handle
+    tie,                    // lack of whitespace between an operator and another term
+    unresolved_identifier,  // something to be hoisted
+    unresolved_operator,
+    syntax_error,           // reached something that shouldn't have been such as trying to parse eof as expression
+    not_implemented,
+    deleted,
 };
 
 using CallExpressionValue = std::tuple<std::string, std::vector<Expression*>>;
 using CallExpressionValueDeferred = std::tuple<Expression*, std::vector<Expression*>>;
 using TermedExpressionValue = std::vector<Expression*>;
+using TermedExpressionValue = std::vector<Expression*>;
 
 using ExpressionValue = std::variant<
     std::monostate,
-    std::string, 
-    CallExpressionValue, 
-    CallExpressionValueDeferred, 
+    std::string,
+    CallExpressionValue,
+    CallExpressionValueDeferred,
     TermedExpressionValue
 >;
 
@@ -88,22 +90,22 @@ struct Assignment{
 using Block = std::vector<Statement*>;
 
 enum class StatementType {
-    broken                  , // parsing failed
-    illegal                 , // well formed but illegal statements
-    empty                   ,
-    expression_statement    , // statement consisting of a single expression
-    block                   ,
-    let                     ,
-    assignment              ,
-    return_                 ,
-    // if
-    // else
-    // for
-    // for_id
-    // do_while
-    // do_for
-    // while/until
-    // switch
+    broken,                 // parsing failed
+    illegal,                // well formed but illegal statements
+    empty,
+    expression_statement,   // statement consisting of a single expression
+    block,
+    let,
+    assignment,
+    return_,
+    // if,
+    // else,
+    // for,
+    // for_id,
+    // do_while,
+    // do_for,
+    // while/until,
+    // switch,
 };
 
 using StatementValue = std::variant<
@@ -137,11 +139,11 @@ class Callable {
 
     // since statements don't store types, we'll have to store them here
     // if the body is an expression, the type will just mirror it's type
-    Type* get_type();
-    void set_type(Type* type);
+    Type get_type() const;
+    void set_type(Type& type);
 
   private:
-    std::optional<Type*> type;
+    std::optional<Type> type_;
 };
 
 /**

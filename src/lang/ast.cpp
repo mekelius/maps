@@ -37,8 +37,33 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
     }
 }
 
+
+// ----- CALLABLE -----
+
 Callable::Callable(CallableBody body, SourceLocation location)
 :location(location), body(body) {}
+
+Type Callable::get_type() const {
+    switch (body.index()) {
+        case 0: // uninitialized
+            return type_ ? *type_ : Hole;
+        
+        case 1: // expression
+            return std::get<Expression*>(body)->type;
+
+        case 2: // statement
+            Statement* statement = std::get<Statement*>(body);
+
+            if (statement->statement_type == StatementType::expression_statement) {
+                return std::get<Expression*>(statement->value)->type;
+            } 
+
+            return type_ ? *type_ : Hole;
+    }
+}
+
+
+// ----- SCOPE -----
 
 std::optional<Callable*> Scope::create_identifier(const std::string& name, CallableBody body,
     SourceLocation location) {
@@ -73,7 +98,6 @@ std::optional<Callable*> Scope::get_identifier(const std::string& name) const {
 
 AST::AST(): globals_(this) {}
 
-
 Expression* AST::create_expression(
     ExpressionType expression_type, SourceLocation location, const Type& type) {
     
@@ -101,7 +125,7 @@ Expression* AST::create_expression(
             expression->value = CallExpressionValueDeferred{};
             break;
 
-        case ExpressionType::native_function:
+        case ExpressionType::builtin_function:
             // TODO: infer type
             expression->value = "";
             break;
@@ -119,6 +143,7 @@ Expression* AST::create_expression(
         case ExpressionType::unresolved_operator:
         case ExpressionType::syntax_error:
         case ExpressionType::not_implemented:
+        case ExpressionType::identifier:
             expression->value = "";
             break;
 

@@ -41,8 +41,8 @@ struct Type {
     Type& operator=(const Type& other);
 
     // rule of 5
-    Type(Type&& rhs) = delete;
-    Type&& operator=(Type&& other) = delete;
+    // Type(Type&& rhs) = delete;
+    // Type&& operator=(Type&& other) = delete;
 
     ~Type() = default;
 
