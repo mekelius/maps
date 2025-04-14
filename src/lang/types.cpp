@@ -58,7 +58,7 @@ bool operator==(const Type& lhs, const Type& rhs) {
         return lhs_complex == rhs_complex;
     }
 
-    assert(false && "unandled alternative in type operator ==");
+    assert(false && "unhandled alternative in Type::==");
     return false;
 }
 
@@ -70,11 +70,18 @@ Type create_function_type(const Type& return_type, const std::vector<Type>& arg_
 }
 
 Type create_binary_operator_type(const Type& return_type, const Type& lhs_type, 
-    const Type& rhs_type, unsigned int precedence, bool is_arithmetic) {
+    const Type& rhs_type, unsigned int precedence, bool is_arithmetic, Associativity associativity) {
     Type type = Type{ &Function_ };
     type.complex = std::make_unique<FunctionTypeComplex>(return_type, std::vector<Type>{lhs_type, rhs_type},
-        true, Fixity::infix, precedence, is_arithmetic);
+        true, Fixity::infix, precedence, is_arithmetic, associativity);
     return type;
+}
+
+unsigned int get_precedence(const Type& type) {
+    FunctionTypeComplex complex = std::get<FunctionTypeComplex>(type.complex);
+    assert(complex.is_operator && "get_precedence called with a non-operator type");
+
+    return complex.precedence;
 }
 
 } // namespace AST

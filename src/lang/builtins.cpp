@@ -10,21 +10,20 @@ void init_builtins(AST::AST& ast) {
 
 void init_builtin_operators(AST::AST& ast) {
     AST::Expression* plus = ast.create_expression(AST::ExpressionType::builtin_operator,
-        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 1));
+        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 1, AST::Associativity::both));
     ast.builtin_operators_.create_identifier("+", {0,0});
 
     AST::Expression* minus = ast.create_expression(AST::ExpressionType::builtin_operator,
-        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 1));
+        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 1, AST::Associativity::left));
     ast.builtin_operators_.create_identifier("-", {0,0});
 
-
     AST::Expression* times = ast.create_expression(AST::ExpressionType::builtin_operator,
-        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 2));
+        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 2, AST::Associativity::both));
     ast.builtin_operators_.create_identifier("*", {0,0});
 
     // TODO: subset types here
     AST::Expression* divide = ast.create_expression(AST::ExpressionType::builtin_operator,
-        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 3));
+        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 3, AST::Associativity::left));
     ast.builtin_operators_.create_identifier("/", {0,0});
 }
 

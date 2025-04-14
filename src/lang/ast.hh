@@ -194,6 +194,7 @@ class AST {
 
     // appends a statement to root_
     void append_top_level_statement(Statement* statement);
+    void declare_invalid() { is_valid = false; };
 
     // container for top-level statements
     std::vector<Statement*> root_ = {};   
