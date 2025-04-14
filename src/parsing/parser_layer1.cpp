@@ -119,9 +119,13 @@ bool ParserLayer1::identifier_exists(const std::string& identifier) const {
     return ast_->globals_.identifier_exists(identifier);
 }
 
-void ParserLayer1::create_identifier(const std::string& name, SourceLocation location,
-    AST::CallableBody body) {
-    
+void ParserLayer1::create_identifier(const std::string& name, SourceLocation location) {
+    create_identifier(name, std::monostate{}, location);
+}
+
+void ParserLayer1::create_identifier(const std::string& name,
+    AST::CallableBody body, SourceLocation location) {
+    log_info("created identifier" + name, Logging::MessageType::parser_debug_identifier);
     ast_->globals_.create_identifier(name, body, location);
 }
 
@@ -316,6 +320,8 @@ AST::Statement* ParserLayer1::parse_expression_statement() {
 }
 
 AST::Statement* ParserLayer1::parse_let_statement() {
+    statement_start();
+    
     switch (get_token().token_type) {
         case TokenType::identifier:
             // TODO: check lower case here
@@ -331,15 +337,19 @@ AST::Statement* ParserLayer1::parse_let_statement() {
                     return statement;
                 }
 
-                get_token();
+                get_token(); // eat the identifier
 
                 if (is_statement_separator(current_token())) {
                     log_info("parsed let statement declaring \"" + name + "\" with no definition", MessageType::parser_debug);
                     
+                    // create an unitialized identifier
+                    assert(current_statement_start_ && "current statement start wasn't set while createing identifier");
+                    create_identifier(name, std::monostate{}, *current_statement_start_);
+
                     get_token(); // eat the semicolon
                     AST::Statement* statement = create_statement(AST::StatementType::let);
                     statement->value = AST::Let{ name , std::monostate{} };
-                    
+
                     return statement;
                 }
 

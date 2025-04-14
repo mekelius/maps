@@ -17,10 +17,9 @@ void LogLevel::init(LogLevel log_level) {
 
     LogLevel::quiet.set_message_type(MessageType::general_info, false);
 
-    LogLevel::everything.set_message_type(MessageType::parser_debug, true);
-    LogLevel::everything.set_message_type(MessageType::parser_debug_terminal, true);
-    LogLevel::everything.set_message_type(MessageType::parser_debug_identifier, true);
-    LogLevel::everything.set_message_type(MessageType::pragma_debug, true);
+    for (auto it = LogLevel::everything.message_types.begin(); it != LogLevel::everything.message_types.end(); it++) {
+        *it = true;
+    }
 
     LogLevel::debug.set_message_type(MessageType::parser_debug, true);
     LogLevel::debug.set_message_type(MessageType::parser_debug_identifier, true);
