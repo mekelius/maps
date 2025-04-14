@@ -4,7 +4,7 @@
 namespace AST {
 
 unsigned int Type::arity() const {
-    if (const auto function_type = std::get_if<std::unique_ptr<FunctionType>>(&complex))
+    if (const auto function_type = std::get_if<std::unique_ptr<FunctionTypeComplex>>(&complex))
         return (*function_type)->arity();
     return 0;
 }
@@ -34,7 +34,7 @@ Type& Type::operator=(const Type& rhs) {
             break;
 
         case 1: // function type
-            complex = std::make_unique<FunctionType>(*std::get<std::unique_ptr<FunctionType>>(rhs.complex));
+            complex = std::make_unique<FunctionTypeComplex>(*std::get<std::unique_ptr<FunctionTypeComplex>>(rhs.complex));
             break;
     }
 
@@ -51,9 +51,9 @@ bool operator==(const Type& lhs, const Type& rhs) {
     if (!lhs.is_complex())
         return true; // both are simple
 
-    if (std::holds_alternative<std::unique_ptr<FunctionType>>(lhs.complex)) {
-        auto& lhs_complex = *(std::get<std::unique_ptr<FunctionType>>(lhs.complex));
-        auto& rhs_complex = *(std::get<std::unique_ptr<FunctionType>>(rhs.complex));
+    if (std::holds_alternative<std::unique_ptr<FunctionTypeComplex>>(lhs.complex)) {
+        auto& lhs_complex = *(std::get<std::unique_ptr<FunctionTypeComplex>>(lhs.complex));
+        auto& rhs_complex = *(std::get<std::unique_ptr<FunctionTypeComplex>>(rhs.complex));
         // both are functiontypes
         return lhs_complex == rhs_complex;
     }
@@ -62,5 +62,19 @@ bool operator==(const Type& lhs, const Type& rhs) {
     return false;
 }
 
+// how could we make this more efficient
+Type create_function_type(const Type& return_type, const std::vector<Type>& arg_types) {
+    Type type = Type{ &Function_ };
+    type.complex = std::make_unique<FunctionTypeComplex>(return_type, arg_types, false);
+    return type;
+}
+
+Type create_binary_operator_type(const Type& return_type, const Type& lhs_type, 
+    const Type& rhs_type, unsigned int precedence, bool is_arithmetic) {
+    Type type = Type{ &Function_ };
+    type.complex = std::make_unique<FunctionTypeComplex>(return_type, std::vector<Type>{lhs_type, rhs_type},
+        true, Fixity::infix, precedence, is_arithmetic);
+    return type;
+}
 
 } // namespace AST

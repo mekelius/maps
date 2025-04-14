@@ -14,14 +14,19 @@ namespace AST {
 enum class DeferredBool {
     true_,
     false_,
-    unknown,
+    maybe,
 };
 
+// is this even a word
+enum class Fixity {
+    prefix,
+    infix,
+    postfix,
+};
 
-struct FunctionType;
+struct FunctionTypeComplex;
 
-
-using TypeComplex = std::variant<std::monostate, std::unique_ptr<FunctionType>>;
+using TypeComplex = std::variant<std::monostate, std::unique_ptr<FunctionTypeComplex>>;
 
 struct TypeTemplate {
     const std::string_view name;
@@ -65,22 +70,32 @@ inline bool operator!=(const Type& lhs, const Type& rhs) {
     return !(lhs == rhs);
 }
 
-struct FunctionType {
+// !! this struct has way too much stuff
+// maybe inheritance is the way
+struct FunctionTypeComplex {
     Type return_type;
     std::vector<Type> arg_types;
+    bool is_operator = false;
+    Fixity fixity = Fixity::prefix;
+    unsigned int precedence = 999;
+    bool is_arithmetic_operator = false;
 
     unsigned int arity() const {
         return arg_types.size();
     }
 };
-inline bool operator==(const FunctionType& lhs, const FunctionType& rhs) {
+inline bool operator==(const FunctionTypeComplex& lhs, const FunctionTypeComplex& rhs) {
+    if (lhs.is_operator != rhs.is_operator)
+        return false;
+
     if (lhs.return_type != rhs.return_type)
         return false;
 
     return lhs.arg_types == rhs.arg_types;  
 }
 
-Type create_function_type(Type return_type, const std::vector<Type>& arg_types);
+Type create_function_type(const Type& return_type, const std::vector<Type>& arg_types);
+Type create_binary_operator_type(const Type& return_type, const Type& lhs, const Type& rhs, unsigned int precedence, bool is_arithmetic = false);
 
 // ----- SIMPLE TYPES -----
 
@@ -119,19 +134,41 @@ static const Type Void = { &Void_ };
 static TypeTemplate Hole_ {
     "Hole",
     false,
-    DeferredBool::unknown,
-    DeferredBool::unknown,
+    DeferredBool::maybe,
+    DeferredBool::maybe,
 };
 static const Type Hole = { &Hole_ };
+
+static TypeTemplate Number_ {
+    "Number",
+    false,
+    DeferredBool::true_,
+    DeferredBool::maybe,
+};
+static const Type Number = { &Number_ };
 
 // a number who's type hasn't yet been determined
 static TypeTemplate NumberLiteral_ {
     "NumberLiteral",
     false,
     DeferredBool::true_,
-    DeferredBool::unknown,
+    DeferredBool::maybe,
 };
 static const Type NumberLiteral = { &NumberLiteral_};
+
+static TypeTemplate Function_ {
+    "Function",
+    false,
+    DeferredBool::maybe,
+    DeferredBool::maybe,
+};
+
+static TypeTemplate Operator_ {
+    "Operator",
+    false,
+    DeferredBool::maybe,
+    DeferredBool::maybe,
+};
 
 } // namespace AST
 #endif
