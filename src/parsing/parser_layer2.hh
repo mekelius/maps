@@ -11,34 +11,21 @@
 
 #include "../lang/ast.hh"
 
+// TODO: these things don't really logically belong together in any way
+//       i.e. shoulnd't be a class
 class ParserLayer2 {
-    using Term = AST::Expression;
-    using TermList = std::vector<Term*>;
-    using TermIterator = TermList::iterator;
   public:
     ParserLayer2(AST::AST* ast, Pragma::Pragmas* pragmas);
 
     void run();
 
   private:
-    // TODO: refactor logging
-
-    // walks the tree and tries to resolve any unresolved identifiers
-    // This could probably do this without being part of the class for more flexibility
-    void resolve_identifiers();
-    void resolve_identifier(AST::Expression* expression);
-    void resolve_operator(AST::Expression* expression);
-
-    // declares the tree invalid
-    void declare_invalid();
     
     // Selects a termed expression to parse. That expressions terms become the tokenstream
     void select_expression(AST::Expression* expression);
-    AST::Expression* parse_termed_expression();
+    void reduce_termed_expressions();
+    AST::Expression* reduce_termed_expression(AST::Expression* expression);
     
-    TermList current_terms_;
-    TermIterator current_term_;
-
     AST::AST* ast_;
     Pragma::Pragmas* pragmas_;
 };

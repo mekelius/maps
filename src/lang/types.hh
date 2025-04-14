@@ -24,6 +24,13 @@ enum class Fixity {
     postfix,
 };
 
+enum class Associativity {
+    left,
+    right,
+    both,
+    none,
+};
+
 struct FunctionTypeComplex;
 
 using TypeComplex = std::variant<std::monostate, std::unique_ptr<FunctionTypeComplex>>;
@@ -62,7 +69,6 @@ struct Type {
     bool is_type_alias() const { return type_template->is_type_alias; }
 };
 
-
 // currently simple types are only compared based on their name 
 // TODO: need to prevent user created types from colliding
 bool operator==(const Type& lhs, const Type& rhs);
@@ -79,6 +85,7 @@ struct FunctionTypeComplex {
     Fixity fixity = Fixity::prefix;
     unsigned int precedence = 999;
     bool is_arithmetic_operator = false;
+    Associativity associativity = Associativity::none;
 
     unsigned int arity() const {
         return arg_types.size();
@@ -95,7 +102,12 @@ inline bool operator==(const FunctionTypeComplex& lhs, const FunctionTypeComplex
 }
 
 Type create_function_type(const Type& return_type, const std::vector<Type>& arg_types);
-Type create_binary_operator_type(const Type& return_type, const Type& lhs, const Type& rhs, unsigned int precedence, bool is_arithmetic = false);
+Type create_binary_operator_type(const Type& return_type, const Type& lhs, const Type& rhs, 
+    unsigned int precedence, bool is_arithmetic = false, 
+    Associativity associativity = Associativity::none);
+
+// caller needs to be sure that type is an operator type
+unsigned int get_precedence(const Type& type);
 
 // ----- SIMPLE TYPES -----
 
