@@ -30,7 +30,7 @@ lexer_(lexer), pragmas_(pragmas) {
 }
 
 std::unique_ptr<AST::AST> ParserLayer1::run() {    
-    init_builtin_callables(*ast_);
+    init_builtins(*ast_);
 
     while (current_token().token_type != TokenType::eof) {
         int prev_buf_slot = which_buf_slot_; // a bit of a hack, an easy way to do the assertion below
