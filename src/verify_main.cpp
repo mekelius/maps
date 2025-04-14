@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
         } else if (arg == "-q" || arg == "--quiet") {
             Logging::Settings::set_loglevel(LogLevel::quiet);
 
-        } else if (arg == "-e | --everything") {
+        } else if (arg == "-e" || arg == "--everything") {
             Logging::Settings::set_loglevel(LogLevel::everything);
             lexer_ostream = &std::cout;
 

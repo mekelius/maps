@@ -41,8 +41,9 @@ class ParserLayer1 {
 
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& name) const;
-    void create_identifier(const std::string& name, SourceLocation location, 
-        AST::CallableBody body = std::monostate{});
+
+    void create_identifier(const std::string& name, AST::CallableBody body, SourceLocation location);
+    void create_identifier(const std::string& name, SourceLocation location);
     std::optional<AST::Callable*> lookup_identifier(const std::string& name);
 
     // mark down the location for logging purposes

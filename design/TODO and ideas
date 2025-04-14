@@ -7,6 +7,9 @@ TODO:
     - laziness
     - sum types
 
+vertically split code
+    - use | as a separator
+
 at some point:
     - first class async
     - modules
