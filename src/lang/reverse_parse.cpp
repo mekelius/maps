@@ -119,23 +119,21 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::builtin_function:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*built-in:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
 
+        case AST::ExpressionType::identifier:
+        case AST::ExpressionType::builtin_operator:
+            return ostream << expression->string_value();
+
         case AST::ExpressionType::not_implemented:
             return ostream << "Expression type not implemented in parser: ";
 
         case AST::ExpressionType::tie:
             return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;
 
-        case AST::ExpressionType::builtin_operator:
-            return ostream << std::get<std::string>(expression->value);            
-
         case AST::ExpressionType::unresolved_identifier:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved identifier:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
-
-        case AST::ExpressionType::identifier:
-            return ostream << expression->string_value();
-
+            
         case AST::ExpressionType::unresolved_operator:
-            return ostream << std::get<std::string>(expression->value);
+            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved operator:*/ " + expression->string_value() : expression->string_value() );
 
         case AST::ExpressionType::deferred_call:
             return ostream << "Expression type deferred call not implemented in reverse parser";

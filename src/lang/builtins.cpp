@@ -15,13 +15,17 @@ void init_builtin_operators(AST::AST& ast) {
 
     AST::Expression* minus = ast.create_expression(AST::ExpressionType::builtin_operator,
         {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 1));
+    ast.builtin_operators_.create_identifier("-", {0,0});
+
 
     AST::Expression* times = ast.create_expression(AST::ExpressionType::builtin_operator,
         {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 2));
+    ast.builtin_operators_.create_identifier("*", {0,0});
 
     // TODO: subset types here
     AST::Expression* divide = ast.create_expression(AST::ExpressionType::builtin_operator,
         {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 3));
+    ast.builtin_operators_.create_identifier("/", {0,0});
 }
 
 void init_builtin_callables(AST::AST& ast) {

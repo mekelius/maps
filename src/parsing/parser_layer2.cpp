@@ -22,11 +22,9 @@ void ParserLayer2::resolve_identifiers() {
                 // assert(ast_->builtins_.identifier_exists(expression->string_value()) 
                 //     && "Builtin identifier passed to layer2");
                 resolve_identifier(expression);
-
                 break;
             case AST::ExpressionType::unresolved_operator:
-                // TODO: assert not a native operator
-                // TODO: resolve it
+                resolve_operator(expression);
                 break;
 
             default:
@@ -61,7 +59,26 @@ void ParserLayer2::resolve_identifier(AST::Expression* expression) {
 }
 
 void ParserLayer2::resolve_operator(AST::Expression* expression) {
-    assert(false && "ParserLayer2::resolve_operator not implemented");
+    std::optional<AST::Callable*> builtin = ast_->builtin_operators_.get_identifier(expression->string_value());
+    if (builtin) {
+        log_info(expression->location, "Parsed built-in operator", Logging::MessageType::parser_debug_terminal);
+        expression->expression_type = AST::ExpressionType::builtin_operator;
+        expression->type = (*builtin)->get_type();
+        return;
+    }
+
+    // TODO:user-defined operators
+    // std::optional<AST::Callable*> callable = ast_->global_operators_.get_identifier(expression->string_value());
+
+    // if (!callable) {
+        log_error(expression->location, "unknown operator: " + expression->string_value());
+        declare_invalid();
+        return;
+    // }
+
+    // expression->expression_type = AST::ExpressionType::identifier;
+    // expression->type = (*callable)->get_type();
+    // return;
 }
 
 void ParserLayer2::declare_invalid() {
