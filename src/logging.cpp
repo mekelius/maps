@@ -52,12 +52,12 @@ void log_token(SourceLocation location, const std::string& message) {
     if (Settings::ostream && Settings::current_loglevel.has_message_type(MessageType::lexer_debug_token))
         *Settings::ostream
             << location.to_string() << line_col_padding(location.to_string().size()) 
-            << "info:  " << message << '\n';
+            << "token: " << message << '\n';
 
     if (Settings::tokens_ofstream)
         *Settings::ostream
         << location.to_string() << line_col_padding(location.to_string().size()) 
-        << "info:  " << message << '\n';
+        << "token: " << message << '\n';
 }
 
 } //namespace logging
