@@ -32,7 +32,7 @@ enum class ExpressionType {
     call,                   // call: Callee identifier, [Expression] args
     deferred_call,          // call where the callee is an expression
     builtin_function,
-    native_operator,
+    builtin_operator,
     termed_expression,      // basically something that layer1 can't handle
     tie,                    // lack of whitespace between an operator and another term
     unresolved_identifier,  // something to be hoisted
@@ -199,6 +199,8 @@ class AST {
     std::vector<Statement*> root_ = {};   
     Scope globals_;
     Scope builtins_ = { this };
+    Scope builtin_operators_ = { this };
+
     bool is_valid = true;
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't 

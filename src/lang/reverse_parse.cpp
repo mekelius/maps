@@ -125,7 +125,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::tie:
             return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;
 
-        case AST::ExpressionType::native_operator:
+        case AST::ExpressionType::builtin_operator:
             return ostream << std::get<std::string>(expression->value);            
 
         case AST::ExpressionType::unresolved_identifier:

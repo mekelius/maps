@@ -51,7 +51,7 @@ Type Callable::get_type() const {
         case 1: // expression
             return std::get<Expression*>(body)->type;
 
-        case 2: // statement
+        case 2: { // statement
             Statement* statement = std::get<Statement*>(body);
 
             if (statement->statement_type == StatementType::expression_statement) {
@@ -59,6 +59,10 @@ Type Callable::get_type() const {
             } 
 
             return type_ ? *type_ : Hole;
+        }
+        default:
+            assert(false && "unhandled CallableBody in CallableBody::get_type");
+            return Hole;
     }
 }
 
@@ -130,7 +134,7 @@ Expression* AST::create_expression(
             expression->value = "";
             break;
 
-        case ExpressionType::native_operator:
+        case ExpressionType::builtin_operator:
             // TODO: create enum of native operators
             expression->value = "";
             break;
