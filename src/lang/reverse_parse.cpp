@@ -131,6 +131,9 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::unresolved_identifier:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved identifier:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
 
+        case AST::ExpressionType::identifier:
+            return ostream << expression->string_value();
+
         case AST::ExpressionType::unresolved_operator:
             return ostream << std::get<std::string>(expression->value);
 
@@ -156,6 +159,10 @@ std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body) {
 
         case 2: // statement
             return ostream << std::get<AST::Statement*>(body);
+
+        default:
+            assert(false && "unhandled callable body type in reverse_parse");
+            return ostream;
     }
 }
 
