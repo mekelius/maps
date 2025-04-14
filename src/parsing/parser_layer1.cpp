@@ -137,32 +137,32 @@ std::optional<AST::Callable*> ParserLayer1::lookup_identifier(const std::string&
 // ----- EXPRESSION AND STATEMENT HELPERS -----
 
 void ParserLayer1::expression_start() {
-    current_expression_start_ = current_token().location;
+    current_expression_start_.push_back(current_token().location);
 }
 
 void ParserLayer1::statement_start() {
-    current_statement_start_ = current_token().location;
+    current_statement_start_.push_back(current_token().location);
 }
 
 // creates an expression using ast_, marking the location as the current_expression_start_
 // or if it's not set, the current token location
 AST::Expression* ParserLayer1::create_expression(AST::ExpressionType expression_type) {
-    if (!current_expression_start_)
+    if (current_expression_start_.empty())
         return ast_->create_expression(expression_type, current_token().location);
 
-    AST::Expression* expression = ast_->create_expression(expression_type, *current_expression_start_);
-    current_expression_start_ = std::nullopt;
+    AST::Expression* expression = ast_->create_expression(expression_type, current_expression_start_.back());
+    current_expression_start_.pop_back();
     return expression;
 }
 
 // creates a statement using ast_, marking the location as the current_statement_start_
 // or if it's not set, the current token location
 AST::Statement* ParserLayer1::create_statement(AST::StatementType statement_type) {
-    if (!current_statement_start_)
+    if (current_statement_start_.empty())
         return ast_->create_statement(statement_type, current_token().location);
 
-    AST::Statement* statement = ast_->create_statement(statement_type, *current_statement_start_);
-    current_statement_start_ = std::nullopt;
+    AST::Statement* statement = ast_->create_statement(statement_type, current_statement_start_.back());
+    current_statement_start_.pop_back();
     return statement;
 }
 
@@ -342,12 +342,12 @@ AST::Statement* ParserLayer1::parse_let_statement() {
                 if (is_statement_separator(current_token())) {
                     log_info("parsed let statement declaring \"" + name + "\" with no definition", MessageType::parser_debug);
                     
-                    // create an unitialized identifier
-                    assert(current_statement_start_ && "current statement start wasn't set while createing identifier");
-                    create_identifier(name, std::monostate{}, *current_statement_start_);
-
+                    
                     get_token(); // eat the semicolon
                     AST::Statement* statement = create_statement(AST::StatementType::let);
+
+                    // create an unitialized identifier
+                    create_identifier(name, std::monostate{}, statement->location);
                     statement->value = AST::Let{ name , std::monostate{} };
 
                     return statement;
@@ -366,6 +366,7 @@ AST::Statement* ParserLayer1::parse_let_statement() {
                     AST::Statement* statement = create_statement(AST::StatementType::let);
                     statement->value = AST::Let{name, body};
 
+                    create_identifier(name, body, statement->location);
                     log_info("parsed let statement", MessageType::parser_debug);
                     return statement;
                 }

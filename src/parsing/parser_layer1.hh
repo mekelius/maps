@@ -96,8 +96,8 @@ class ParserLayer1 {
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_ = { Token::dummy_token, Token::dummy_token };
 
-    std::optional<SourceLocation> current_expression_start_;
-    std::optional<SourceLocation> current_statement_start_;
+    std::vector<SourceLocation> current_expression_start_;
+    std::vector<SourceLocation> current_statement_start_;
 
     // these are automatically incremented and decremented by the get_token()
     unsigned int indent_level_ = 0;
