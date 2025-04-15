@@ -78,7 +78,7 @@ Type create_binary_operator_type(const Type& return_type, const Type& lhs_type,
 }
 
 unsigned int get_precedence(const Type& type) {
-    FunctionTypeComplex complex = std::get<FunctionTypeComplex>(type.complex);
+    FunctionTypeComplex complex = *std::get<std::unique_ptr<FunctionTypeComplex>>(type.complex);
     assert(complex.is_operator && "get_precedence called with a non-operator type");
 
     return complex.precedence;

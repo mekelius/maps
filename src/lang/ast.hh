@@ -29,8 +29,6 @@ enum class ExpressionType {
     string_literal = 0,     // literal: Value value
     numeric_literal,
     identifier,
-    call,                   // call: Callee identifier, [Expression] args
-    deferred_call,          // call where the callee is an expression
     builtin_function,
     builtin_operator,
     termed_expression,      // basically something that layer1 can't handle
@@ -40,6 +38,10 @@ enum class ExpressionType {
     syntax_error,           // reached something that shouldn't have been such as trying to parse eof as expression
     not_implemented,
     deleted,
+    
+// layer2
+    call,                   // call: Callee identifier, [Expression] args
+    deferred_call,          // call where the callee is an expression
 };
 
 using CallExpressionValue = std::tuple<std::string, std::vector<Expression*>>;
