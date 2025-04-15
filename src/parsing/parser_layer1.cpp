@@ -613,6 +613,7 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
             case TokenType::parenthesis_open:
             case TokenType::bracket_open:
             case TokenType::curly_brace_open:
+            case TokenType::tie:
                 expression->terms().push_back(parse_term());
                 continue;
 
