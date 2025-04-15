@@ -22,6 +22,7 @@ add_library(parsing OBJECT
     src/parsing/lexer.cpp
     src/parsing/parser_layer1.cpp
     src/parsing/parser_layer2.cpp
+    src/parsing/name_resolution.cpp
 )
 
 # -------------------- VERIFY MAPSC --------------------
