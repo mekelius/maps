@@ -23,6 +23,7 @@ add_library(parsing OBJECT
     src/parsing/parser_layer1.cpp
     src/parsing/parser_layer2.cpp
     src/parsing/name_resolution.cpp
+    src/parsing/full_parse.cpp
 )
 
 # ----------------- PARSING UNIT_TESTS -----------------
@@ -50,7 +51,7 @@ target_link_libraries(verify_mapsc parsing)
 
 set(CMAKE_LINKER_TYPE "LLD")
 
-add_executable(mapsc 
+add_executable(mapsc
     src/ir/ir_generator.cpp
     src/ir/ir_output.cpp
     src/main.cpp
