@@ -36,6 +36,8 @@ enum class ExpressionType {
     tie,                    // lack of whitespace between an operator and another term
     unresolved_identifier,  // something to be hoisted
     unresolved_operator,
+    empty,
+    
     syntax_error,           // reached something that shouldn't have been such as trying to parse eof as expression
     not_implemented,
     deleted,
@@ -88,6 +90,20 @@ struct Expression {
     }
     UnaryOperatorApplyValue unop_apply_value() {
         return std::get<UnaryOperatorApplyValue>(value);
+    }
+
+    friend bool operator==(const Expression& lhs, const Expression& rhs) {
+        return std::tie(
+            lhs.expression_type,
+            lhs.location,
+            lhs.type,
+            lhs.value
+        ) == std::tie(
+            rhs.expression_type,
+            rhs.location,
+            rhs.type,
+            rhs.value
+        );
     }
 };
 

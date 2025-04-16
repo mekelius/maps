@@ -11,54 +11,59 @@ ParserLayer2::ParserLayer2(AST::AST* ast, Pragma::Pragmas* pragmas)
 }
 
 void ParserLayer2::run() {
-    // TODO: infer types
-    
     for (Expression* expression: ast_->unparsed_termed_expressions) {
-        select_expression(expression);
-        parse_stack_ = {};
-        previous_operator_precedence_ = MAX_OPERATOR_PRECEDENCE;
-        parse_termed_expression();
+        SourceLocation original_location = expression->location;
+
+        TermedExpressionParser{ast_, expression}.run();
         
-        assert(parse_stack_.size() == 1 && "parse_termed_expression didn't correctly parse the stack");
-        assert(parse_stack_.back()->location == expression->location && "parsing termed expression didn't result in correct location");
-        log_info(parse_stack_.back()->location, "parsed a termed expression", Logging::MessageType::parser_debug_termed_expression);
-        *expression = *parse_stack_.back();        
+        assert(expression->location == original_location 
+            && "parsing termed expression changed the location of the expression");
     }
 }
 
-void ParserLayer2::select_expression(Expression* expression) {
-    current_expression_ = expression;
-    current_terms_ = std::get<AST::TermedExpressionValue>(expression->value);
-    next_term_it_ = current_terms_.begin();
+TermedExpressionParser::TermedExpressionParser(AST::AST* ast, Expression* expression)
+:ast_(ast), expression_(expression) {
+    expression_terms_ = &std::get<AST::TermedExpressionValue>(expression->value);
+    next_term_it_ = expression_terms_->begin();
     
-    next_term_ = (next_term_it_ != current_terms_.end()) ? 
+    next_term_ = (next_term_it_ != expression_terms_->end()) ? 
         *next_term_it_ : nullptr;    
 }
 
-Expression* ParserLayer2::get_term() {
+void TermedExpressionParser::run() {
+    Expression* result = parse_termed_expression();
+
+    // overwrite the expression in-place
+    *expression_ = *result;
+
+    log_info(result->location, "parsed a termed expression",
+        Logging::MessageType::parser_debug_termed_expression);
+}
+
+Expression* TermedExpressionParser::get_term() {
     current_term_ = next_term_;
 
     next_term_it_++;
 
-    next_term_ = (next_term_it_ < current_terms_.end()) ? 
+    next_term_ = (next_term_it_ < expression_terms_->end()) ? 
         *next_term_it_ : nullptr;
 
     return current_term_;
 }
 
-AST::Expression* ParserLayer2::peek() const {
+AST::Expression* TermedExpressionParser::peek() const {
     return next_term_;
 }
 
-void ParserLayer2::shift() {
+void TermedExpressionParser::shift() {
     parse_stack_.push_back(get_term());
 }
 
-bool ParserLayer2::at_expression_end() const {
-    return static_cast<bool>(next_term_);
+bool TermedExpressionParser::at_expression_end() const {
+    return next_term_it_ >= expression_terms_->end();
 }
 
-bool ParserLayer2::parse_stack_reduced() const {
+bool TermedExpressionParser::parse_stack_reduced() const {
     // quick and dirty
     // TODO: some better check
     return parse_stack_.size() == 1;
@@ -76,11 +81,11 @@ bool is_value_literal(Expression* expression) {
     }
 }
 
-Expression* ParserLayer2::parse_termed_expression() {
+Expression* TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
-        log_error(current_expression_->location, "layer2 tried to parse an empty expresison");
+        log_error(expression_->location, "layer2 tried to parse an empty expresison");
         ast_->declare_invalid();
-        return current_expression_;
+        return ast_->create_expression(AST::ExpressionType::empty, expression_->location);
     }
 
     // safe to unwrap because at_expression_end was checked above
@@ -95,6 +100,7 @@ Expression* ParserLayer2::parse_termed_expression() {
         case ExpressionType::numeric_literal:
         case ExpressionType::builtin_function:
         case ExpressionType::termed_expression:
+            initial_value_state();
             break;
 
         case ExpressionType::builtin_operator:
@@ -108,39 +114,42 @@ Expression* ParserLayer2::parse_termed_expression() {
             break;
 
         case ExpressionType::tie:
-            log_error(current_expression_->location, "unexpected tie in termed expression");
+            log_error(expression_->location, "unexpected tie in termed expression");
             ast_->declare_invalid();
             break;
 
         default:
-            assert(false && "unhandled expressiontype in ParserLayer2::parse_termed_expression");
+            assert(false && "unhandled expressiontype in TermedExpressionParser::parse_termed_expression");
     }
 
-    assert(!parse_stack_.empty() && "parse_termed_expression didn't put anything on the parse_stack");
-
-    if (at_expression_end()) {
-        if (!parse_stack_reduced()) {
-            log_error(current_expression_->location, 
-                "parse_termed_expression failed to reduce the stack");
-            ast_->declare_invalid();
-            return current_expression_;
-        }
-        return parse_stack_.back();
+    if (!at_expression_end()) {
+        assert(false && "parse_termed_expression didn't parse the whole expression");
+        log_error(expression_->location, 
+            "parse_termed_expression didn't parse the whole expression");
+        ast_->declare_invalid();
+        return expression_;
     }
     
-    assert(false && "parse_termed_expression didn't parse the whole expression");
-    return current_expression_;
+    if (!parse_stack_reduced()) {
+        assert(false && "parse_termed_expression failed to reduce completely");
+        log_error(expression_->location, 
+            "parse_termed_expression failed to reduce the stack");
+        ast_->declare_invalid();
+        return expression_;
+    }
+
+    return parse_stack_.back();
 }
 
-void ParserLayer2::parse_tied_operator() {
-    log_error(current_expression_->location, "parse_tied_operator not implemented");
+void TermedExpressionParser::parse_tied_operator() {
+    log_error(expression_->location, "parse_tied_operator not implemented");
     ast_->declare_invalid();
 }
 
 
 // ----- STATE FUNCTIONS -----
 
-void ParserLayer2::initial_identifier_state() {
+void TermedExpressionParser::initial_identifier_state() {
     shift();
     if (at_expression_end()) {
         return;
@@ -148,7 +157,7 @@ void ParserLayer2::initial_identifier_state() {
 
 }
 
-void ParserLayer2::initial_value_state() {
+void TermedExpressionParser::initial_value_state() {
     shift();
     if (at_expression_end()) {
         return;
@@ -169,7 +178,7 @@ void ParserLayer2::initial_value_state() {
     }
 }
 
-void ParserLayer2::initial_operator_state() {
+void TermedExpressionParser::initial_operator_state() {
     shift();
     if (at_expression_end()) {
         // might be partial application or postfix unary
@@ -180,7 +189,7 @@ void ParserLayer2::initial_operator_state() {
 }
 
 // maybe dumb?
-void ParserLayer2::pre_binary_operator_state() {
+void TermedExpressionParser::pre_binary_operator_state() {
     shift();
     if (at_expression_end()) {
         return;
@@ -191,7 +200,7 @@ void ParserLayer2::pre_binary_operator_state() {
     // compare precedence
 }
 
-void ParserLayer2::post_binary_operator_state() {
+void TermedExpressionParser::post_binary_operator_state() {
     shift();
     if (at_expression_end()) {
         return;
@@ -212,7 +221,7 @@ void ParserLayer2::post_binary_operator_state() {
 // stack state: REDUCED_TREE OP1 VAL | input state: OP2(?)
 // so, we compare the precedences of the operators
 // if OP1 wins, we can reduce left, if OP2 wins we must wait (how?)
-void ParserLayer2::compare_precedence_state() {
+void TermedExpressionParser::compare_precedence_state() {
     shift();
     if (at_expression_end()) {
         reduce_operator_left();
@@ -226,14 +235,14 @@ void ParserLayer2::compare_precedence_state() {
     }
 }
 
-void ParserLayer2::arg_list_state() {
+void TermedExpressionParser::arg_list_state() {
     shift();
     if (at_expression_end()) {
         return;
     }
 }
 
-void ParserLayer2::unary_operators_state() {
+void TermedExpressionParser::unary_operators_state() {
     shift();
     if (at_expression_end()) {
         return;
@@ -241,9 +250,9 @@ void ParserLayer2::unary_operators_state() {
 }
 
 // Pops 3 values from the parse stack, reduces them into a binop apply expression and pushes it on top
-void ParserLayer2::reduce_operator_left() {
+void TermedExpressionParser::reduce_operator_left() {
     assert(parse_stack_.size() >= 3 
-        && "ParserLayer2::reduce_operator_left_ called with parse stack size < 3");
+        && "TermedExpressionParser::reduce_operator_left_ called with parse stack size < 3");
 
     Expression* rhs = parse_stack_.back();
     parse_stack_.pop_back();
