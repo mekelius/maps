@@ -20,6 +20,7 @@ namespace AST {
 class AST;
 struct Expression;
 struct Statement;
+class Callable;
 
 using CallableBody = std::variant<std::monostate, Expression*, Statement*>;
 
@@ -42,19 +43,25 @@ enum class ExpressionType {
 // layer2
     call,                   // call: Callee identifier, [Expression] args
     deferred_call,          // call where the callee is an expression
+    binary_operator_apply,
+    unary_operator_apply,
 };
 
 using CallExpressionValue = std::tuple<std::string, std::vector<Expression*>>;
 using CallExpressionValueDeferred = std::tuple<Expression*, std::vector<Expression*>>;
 using TermedExpressionValue = std::vector<Expression*>;
 using TermedExpressionValue = std::vector<Expression*>;
+using BinaryOperatorApplyValue = std::tuple<Callable*, Expression*, Expression*>;
+using UnaryOperatorApplyValue = std::tuple<Callable*, Expression*>;
 
 using ExpressionValue = std::variant<
     std::monostate,
     std::string,
     CallExpressionValue,
     CallExpressionValueDeferred,
-    TermedExpressionValue
+    TermedExpressionValue,
+    BinaryOperatorApplyValue,
+    UnaryOperatorApplyValue
 >;
 
 struct Expression {
@@ -75,6 +82,12 @@ struct Expression {
     }
     std::string& string_value() {
         return std::get<std::string>(value);
+    }
+    BinaryOperatorApplyValue binop_apply_value() {
+        return std::get<BinaryOperatorApplyValue>(value);
+    }
+    UnaryOperatorApplyValue unop_apply_value() {
+        return std::get<UnaryOperatorApplyValue>(value);
     }
 };
 
