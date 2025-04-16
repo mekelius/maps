@@ -10,7 +10,7 @@ project(Maps)
 
 add_compile_options(-Wall -Wextra)
 
-# ------------------- MAPSC FRONTENT -------------------
+# ------------------- MAPSC PARSING -------------------
 
 add_library(parsing OBJECT
     src/logging.cpp
@@ -24,6 +24,15 @@ add_library(parsing OBJECT
     src/parsing/parser_layer2.cpp
     src/parsing/name_resolution.cpp
 )
+
+# ----------------- PARSING UNIT_TESTS -----------------
+
+add_executable(parsing_tests
+    tests/layer2_tests.cpp
+)
+
+target_link_libraries(parsing_tests parsing)
+target_include_directories(parsing_tests SYSTEM PRIVATE doctest)
 
 # -------------------- VERIFY MAPSC --------------------
 
