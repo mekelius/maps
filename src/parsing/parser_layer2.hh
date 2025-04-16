@@ -42,8 +42,11 @@ class ParserLayer2 {
     void initial_operator_state();
     void pre_binary_operator_state();
     void post_binary_operator_state();
+    void compare_precedence_state();
     void arg_list_state();
     void unary_operators_state();
+
+    void reduce_operator_left();
     
     AST::AST* ast_;
     Pragma::Pragmas* pragmas_;

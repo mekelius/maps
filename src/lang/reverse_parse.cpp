@@ -89,13 +89,15 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
 
         case AST::ExpressionType::call: {
             auto [callee, args] = expression->call();
-            ostream << callee;
+            ostream << callee << '(';
             
+            bool first_arg = true;
             for (AST::Expression* arg_expression: args) {
-                ostream << ' ' << arg_expression;
+                ostream << (first_arg ? "" : ", ") << arg_expression;
+                first_arg = false;
             }            
 
-            return ostream;
+            return ostream << ')';
         }
 
         case AST::ExpressionType::termed_expression: {
@@ -141,6 +143,17 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::syntax_error:
             return ostream << "@SYNTAX ERROR@";
 
+        // Layer2:
+        case AST::ExpressionType::binary_operator_apply: {
+            auto [op, lhs, rhs] = expression->binop_apply_value();
+            return ostream << "( " << lhs << " " << op << " " << rhs << " )";
+        }
+            
+        case AST::ExpressionType::unary_operator_apply: {
+            auto [op, value] = expression->unop_apply_value();
+            return ostream << "( " << op << value << " )";
+        }
+           
         default:
             return ostream << "Expression type not implemented in reverse parser:" << static_cast<int>(expression->expression_type);
     }

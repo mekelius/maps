@@ -156,6 +156,14 @@ Expression* AST::create_expression(
             expression->value = std::monostate{};
             break;
             
+        case ExpressionType::binary_operator_apply:
+            expression->value = BinaryOperatorApplyValue{};
+            break;
+        
+        case ExpressionType::unary_operator_apply:
+            expression->value = UnaryOperatorApplyValue{};
+            break;
+            
         default:
             assert(false && "unhandled expression type in AST::create_expression");
             break;

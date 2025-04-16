@@ -7,6 +7,7 @@
 #include "lang/ast.hh"
 #include "lang/reverse_parse.hh"
 
+#include "parsing/name_resolution.hh"
 #include "parsing/parser_layer1.hh"
 #include "parsing/parser_layer2.hh"
 
@@ -82,6 +83,8 @@ int main(int argc, char* argv[]) {
         
         std::unique_ptr<AST::AST> ast = layer1.run();
         std::cout << "\nlayer1 done" << std::endl;
+
+        resolve_identifiers(*ast);
 
         ParserLayer2 layer2{ast.get(), pragmas.get()};
         layer2.run();

@@ -11,7 +11,6 @@ ParserLayer2::ParserLayer2(AST::AST* ast, Pragma::Pragmas* pragmas)
 }
 
 void ParserLayer2::run() {
-    resolve_identifiers(*ast_);
     // TODO: infer types
     
     for (Expression* expression: ast_->unparsed_termed_expressions) {
@@ -19,6 +18,11 @@ void ParserLayer2::run() {
         parse_stack_ = {};
         previous_operator_precedence_ = MAX_OPERATOR_PRECEDENCE;
         parse_termed_expression();
+        
+        assert(parse_stack_.size() == 1 && "parse_termed_expression didn't correctly parse the stack");
+        assert(parse_stack_.back()->location == expression->location && "parsing termed expression didn't result in correct location");
+        log_info(parse_stack_.back()->location, "parsed a termed expression", Logging::MessageType::parser_debug_termed_expression);
+        *expression = *parse_stack_.back();        
     }
 }
 
@@ -181,6 +185,8 @@ void ParserLayer2::pre_binary_operator_state() {
     if (at_expression_end()) {
         return;
     }
+
+    
     // check type
     // compare precedence
 }
@@ -191,7 +197,33 @@ void ParserLayer2::post_binary_operator_state() {
         return;
     }
 
+    switch (peek()->expression_type) {
+        case ExpressionType::builtin_operator:
+            // assert that it's unary
+            break;
+        case ExpressionType::identifier:
+        case ExpressionType::numeric_literal:
+        case ExpressionType::string_literal:
+            return compare_precedence_state();
+    }
 
+}
+
+// stack state: REDUCED_TREE OP1 VAL | input state: OP2(?)
+// so, we compare the precedences of the operators
+// if OP1 wins, we can reduce left, if OP2 wins we must wait (how?)
+void ParserLayer2::compare_precedence_state() {
+    shift();
+    if (at_expression_end()) {
+        reduce_operator_left();
+        return;
+    }
+
+    switch (peek()->expression_type) {
+        case ExpressionType::builtin_operator:
+            reduce_operator_left();
+        default:
+    }
 }
 
 void ParserLayer2::arg_list_state() {
@@ -206,4 +238,30 @@ void ParserLayer2::unary_operators_state() {
     if (at_expression_end()) {
         return;
     }
+}
+
+// Pops 3 values from the parse stack, reduces them into a binop apply expression and pushes it on top
+void ParserLayer2::reduce_operator_left() {
+    assert(parse_stack_.size() >= 3 
+        && "ParserLayer2::reduce_operator_left_ called with parse stack size < 3");
+
+    Expression* rhs = parse_stack_.back();
+    parse_stack_.pop_back();
+
+    Expression* operator_ = parse_stack_.back();
+    parse_stack_.pop_back();
+
+    // TODO: have this on the operator expression value
+    std::optional<AST::Callable*> operator_callable = ast_->builtin_operators_.get_identifier(operator_->string_value());
+    assert(operator_callable && "somehow a non-existent operator got past name resolution step to ParseLayer2::reduce_operator_left");
+
+    Expression* lhs = parse_stack_.back();
+    parse_stack_.pop_back();
+
+    // TODO: check types here
+
+    Expression* reduced = ast_->create_expression(ExpressionType::binary_operator_apply, lhs->location);
+    reduced->value = AST::BinaryOperatorApplyValue{*operator_callable, lhs, rhs};
+
+    parse_stack_.push_back(reduced);
 }
