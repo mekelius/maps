@@ -151,6 +151,10 @@ Expression* AST::create_expression(
         case ExpressionType::identifier:
             expression->value = "";
             break;
+        
+        case ExpressionType::operator_ref:
+            expression->value = nullptr;
+            break;
 
         case ExpressionType::tie:
         case ExpressionType::deleted:

@@ -1,14 +1,17 @@
 import Data.Char
 
+-- FAILS ON CASE LIKE: "1+2-3*4+5/6"
+
 data AST a = Error | Empty | Leaf a | Branch Operator (AST a) (AST a)
     deriving (Show)
 
-data Operator = Add | Multiply | Subtract
+data Operator = Add | Multiply | Subtract | Divide
 instance Show Operator where {
     show op = case op of
         Add         -> "+"
         Multiply    -> "*"
         Subtract    -> "-"
+        Divide      -> "/"
 }
 
 opFromChar :: Char -> Operator
@@ -19,24 +22,28 @@ opFromChar c
         = Add
     | c == '-'
         = Subtract
+    | c == '/'
+        = Divide
 
 operators :: [Char]
-operators = ['+', '*', '-']
+operators = ['+', '*', '-', '/']
 
 operator :: Char -> Bool
 operator = (`elem` operators)
 
 precedence :: Operator -> Int
 precedence op = case op of
-    Subtract    -> 1
-    Add         -> 2
+    Add         -> 1
+    Subtract    -> 2
     Multiply    -> 3
+    Divide      -> 4
 
-runOp :: Operator -> (Int -> Int -> Int)
+runOp :: Operator -> (Rational -> Rational -> Rational)
 runOp op = case op of
     Add         -> (+)
     Multiply    -> (*)
     Subtract    -> (-)
+    Divide      -> (/)
 
 reduceAst :: String -> AST Char
 reduceAst = reduceAst' Empty
@@ -71,7 +78,7 @@ reduceAst' (Branch lo lhs Empty) (r:ro:rs)
     | operator r 
         = Error
     | precedence lo < precedence (opFromChar ro)
-        = Branch lo lhs (reduceAst' (Branch (opFromChar ro) (Leaf r) Empty) rs)
+        = Branch lo lhs (reduceAst' (Branch (opFromChar ro) (Leaf r) Empty) rs) -- THIS IS WRONG
     | otherwise
         = reduceAst' (Branch lo lhs (Leaf r)) (ro:rs)
 
@@ -83,7 +90,7 @@ reduceAst' lhs@(Branch{}) (r:rs)
     | otherwise
         = reduceAst' (Branch (opFromChar r) lhs Empty) rs
 
-evalAst :: AST Char -> AST Int
+evalAst :: AST Char -> AST Rational
 evalAst Empty = Empty
 evalAst (Branch op Empty _) = Empty
 evalAst (Branch op _ Empty) = Empty
@@ -92,12 +99,12 @@ evalAst (Branch op Error _) = Error
 evalAst (Branch op _ Error) = Error
 evalAst (Leaf a)
     | isDigit a
-        = Leaf (read [a])
+        = Leaf (fromIntegral $ read [a])
     | otherwise
         = Error
 evalAst (Branch op lhs@(Leaf lv) rhs@(Leaf rv))
     | all isDigit [lv, rv]
-        = Leaf $ runOp op (read [lv]) (read [rv])
+        = Leaf $ runOp op (fromIntegral $ read [lv]) (fromIntegral $ read [rv])
     | otherwise
         = Error
 evalAst (Branch op lhs rhs)
@@ -105,4 +112,4 @@ evalAst (Branch op lhs rhs)
         where fromLeaf leaf = case leaf of
                 Leaf x -> x
 
-
+run = evalAst . reduceAst

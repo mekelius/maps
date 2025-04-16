@@ -60,6 +60,7 @@ struct Type {
 
     bool is_complex() const;   
     unsigned int arity() const;
+    unsigned int precedence() const;
 
     std::string_view name() const { return type_template->name; }
     bool is_native() const { return type_template->is_native; }

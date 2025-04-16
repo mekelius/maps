@@ -9,6 +9,12 @@ unsigned int Type::arity() const {
     return 0;
 }
 
+unsigned int Type::precedence() const {
+    if (const auto function_type = std::get_if<std::unique_ptr<FunctionTypeComplex>>(&complex))
+        return (*function_type)->precedence;
+    return 0;
+}
+
 bool Type::is_complex() const {
     return !std::holds_alternative<std::monostate>(complex);
 }

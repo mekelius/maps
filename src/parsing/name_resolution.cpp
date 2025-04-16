@@ -50,7 +50,8 @@ void resolve_operator(AST::AST& ast, AST::Expression* expression) {
     std::optional<AST::Callable*> builtin = ast.builtin_operators_.get_identifier(expression->string_value());
     if (builtin) {
         log_info(expression->location, "Parsed built-in operator", Logging::MessageType::parser_debug_terminal);
-        expression->expression_type = AST::ExpressionType::builtin_operator;
+        expression->expression_type = AST::ExpressionType::operator_ref;
+        expression->value = *builtin;
         expression->type = (*builtin)->get_type();
         return;
     }
