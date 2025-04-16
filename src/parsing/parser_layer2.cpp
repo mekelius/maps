@@ -103,7 +103,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             initial_value_state();
             break;
 
-        case ExpressionType::builtin_operator:
+        case ExpressionType::operator_ref:
             // TODO: check if unary
             shift();
             break;
@@ -160,6 +160,7 @@ void TermedExpressionParser::initial_identifier_state() {
 void TermedExpressionParser::initial_value_state() {
     shift();
     if (at_expression_end()) {
+        // single values just get returned
         return;
     }
 
@@ -167,7 +168,8 @@ void TermedExpressionParser::initial_value_state() {
         case ExpressionType::tie:
             return parse_tied_operator();
 
-        case ExpressionType::builtin_operator:
+        case ExpressionType::operator_ref:
+            precedence_stack_.push_back(peek()->type.precedence());
             return post_binary_operator_state();
 
         default:
@@ -201,15 +203,19 @@ void TermedExpressionParser::pre_binary_operator_state() {
 }
 
 void TermedExpressionParser::post_binary_operator_state() {
-    shift();
+    shift(); // shift in the operator
     if (at_expression_end()) {
+        assert(false && "partial application not pmplemented");
+        // handle partial application
         return;
     }
 
     switch (peek()->expression_type) {
-        case ExpressionType::builtin_operator:
+        case ExpressionType::operator_ref:
             // assert that it's unary
             break;
+
+        // value
         case ExpressionType::identifier:
         case ExpressionType::numeric_literal:
         case ExpressionType::string_literal:
@@ -222,30 +228,59 @@ void TermedExpressionParser::post_binary_operator_state() {
 // so, we compare the precedences of the operators
 // if OP1 wins, we can reduce left, if OP2 wins we must wait (how?)
 void TermedExpressionParser::compare_precedence_state() {
-    shift();
+    shift(); //!!! shift in an assumed value
     if (at_expression_end()) {
         reduce_operator_left();
+        precedence_stack_.pop_back();
         return;
     }
 
-    switch (peek()->expression_type) {
-        case ExpressionType::builtin_operator:
-            reduce_operator_left();
-        default:
-    }
-}
-
-void TermedExpressionParser::arg_list_state() {
-    shift();
-    if (at_expression_end()) {
+    // precedence goes down => one or more "closing parenthesis" required
+    if (precedence_stack_.back() > peek()->type.precedence()) {
+        reduce_operator_left();
+        precedence_stack_.pop_back();
+        
+        // if there's an "intermediate level" or operators, we need to handle those before returning
+        if (precedence_stack_.back() < peek()->type.precedence()) {
+            precedence_stack_.push_back(peek()->type.precedence());
+            return post_binary_operator_state();
+        }
+        
+        // otherwise simply return 
         return;
     }
-}
 
-void TermedExpressionParser::unary_operators_state() {
-    shift();
-    if (at_expression_end()) {
-        return;
+    assert(peek()->expression_type == ExpressionType::operator_ref
+        && "compare_precedence_state called with not an operator ref next");
+
+    if (precedence_stack_.back() == peek()->type.precedence()) { // !!!: assuming left-associativity
+        // if the precedence stays the same, just reduce and carry on
+        reduce_operator_left();
+        return post_binary_operator_state();
+    }
+
+    // if the precedence goes up, push it into the stack and run post_binary_op_state with the new precedence stack
+    // once it returns, there should be a nice reduced rhs on the parse_stack_
+    if (precedence_stack_.back() < peek()->type.precedence()) {
+        unsigned int previous_precedence = precedence_stack_.back();
+        precedence_stack_.push_back(peek()->type.precedence());
+        
+        post_binary_operator_state();
+        assert(precedence_stack_.back() == previous_precedence 
+            && "post_binary_operator_state didn't return to the same precedence level");
+            
+        reduce_operator_left();
+
+        if (at_expression_end()) {
+            // ??? should we look at the precedence stack here? 
+            return;
+        }
+
+        assert(peek()->type.precedence() >= precedence_stack_.back() 
+            && "post_binary_operator_state didn't run until the end or a lover/equal precedence that the caller put on the precedence stack");
+        
+        // continue parsing
+        return post_binary_operator_state(); /// how about the shifts here
     }
 }
 
@@ -260,17 +295,27 @@ void TermedExpressionParser::reduce_operator_left() {
     Expression* operator_ = parse_stack_.back();
     parse_stack_.pop_back();
 
-    // TODO: have this on the operator expression value
-    std::optional<AST::Callable*> operator_callable = ast_->builtin_operators_.get_identifier(operator_->string_value());
-    assert(operator_callable && "somehow a non-existent operator got past name resolution step to ParseLayer2::reduce_operator_left");
-
     Expression* lhs = parse_stack_.back();
     parse_stack_.pop_back();
 
     // TODO: check types here
 
     Expression* reduced = ast_->create_expression(ExpressionType::binary_operator_apply, lhs->location);
-    reduced->value = AST::BinaryOperatorApplyValue{*operator_callable, lhs, rhs};
+    reduced->value = AST::BinaryOperatorApplyValue{std::get<AST::Callable*>(operator_->value), lhs, rhs};
 
     parse_stack_.push_back(reduced);
+}
+
+void TermedExpressionParser::arg_list_state() {
+    shift();
+    if (at_expression_end()) {
+        return;
+    }
+}
+
+void TermedExpressionParser::unary_operators_state() {
+    shift();
+    if (at_expression_end()) {
+        return;
+    }
 }

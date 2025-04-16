@@ -27,12 +27,15 @@ add_library(parsing OBJECT
 
 # ----------------- PARSING UNIT_TESTS -----------------
 
-add_executable(parsing_tests
+add_executable(parsing_unit_tests
+    tests/tests_main.cpp
     tests/layer2_tests.cpp
+    tests/types_tests.cpp
+    tests/ast_tests.cpp
 )
 
-target_link_libraries(parsing_tests parsing)
-target_include_directories(parsing_tests SYSTEM PRIVATE doctest)
+target_link_libraries(parsing_unit_tests parsing)
+target_include_directories(parsing_unit_tests SYSTEM PRIVATE doctest)
 
 # -------------------- VERIFY MAPSC --------------------
 

@@ -30,13 +30,17 @@ enum class ExpressionType {
     string_literal = 0,     // literal: Value value
     numeric_literal,
     identifier,
-    builtin_function,
-    builtin_operator,
+    operator_ref,
+
+    builtin_function,       // TODO: these shouldn't really be expressions
+    builtin_operator,       // TODO: they should be specail types of callables
+    
     termed_expression,      // basically something that layer1 can't handle
     tie,                    // lack of whitespace between an operator and another term
+    empty,
+    
     unresolved_identifier,  // something to be hoisted
     unresolved_operator,
-    empty,
     
     syntax_error,           // reached something that shouldn't have been such as trying to parse eof as expression
     not_implemented,
@@ -63,7 +67,8 @@ using ExpressionValue = std::variant<
     CallExpressionValueDeferred,
     TermedExpressionValue,
     BinaryOperatorApplyValue,
-    UnaryOperatorApplyValue
+    UnaryOperatorApplyValue,
+    Callable*                       // for references to operators and functions
 >;
 
 struct Expression {
@@ -90,6 +95,9 @@ struct Expression {
     }
     UnaryOperatorApplyValue unop_apply_value() {
         return std::get<UnaryOperatorApplyValue>(value);
+    }
+    Callable* callable_ref() {
+        return std::get<Callable*>(value);
     }
 
     friend bool operator==(const Expression& lhs, const Expression& rhs) {
@@ -188,7 +196,7 @@ class Scope {
     std::optional<Callable*> create_identifier(const std::string& name, CallableBody body, 
         SourceLocation location);
     std::optional<Callable*> create_identifier(const std::string& name, SourceLocation location);
-   
+
     bool identifier_exists(const std::string& name) const;
     std::optional<Callable*> get_identifier(const std::string& name) const;
   
