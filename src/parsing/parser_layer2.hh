@@ -3,30 +3,23 @@
 
 /**
  * Parser layer 2 is responsible for:
- *  - resolving rest of the names
  *  - parsing "termed expressions" i.e. binary and unary operators and access expressions
  *  - parsing mapping literals i.e. lists, enums, dictionaries etc.
- *  - doing type inference
  */
 
 #include "../lang/ast.hh"
 
 constexpr unsigned int MAX_OPERATOR_PRECEDENCE = 1000;
 
-// TODO: these things don't really logically belong together in any way
-//       i.e. shoulnd't be a class
-class ParserLayer2 {
+class TermedExpressionParser {
   public:
-    ParserLayer2(AST::AST* ast, Pragma::Pragmas* pragmas);
-
+    TermedExpressionParser(AST::AST* ast, AST::Expression* expression);
+    // parses the expression in-place
     void run();
 
-  private:
-    
-    // Selects a termed expression to parse. That expressions terms become the tokenstream
-    void select_expression(AST::Expression* expression);
+  private:  
     AST::Expression* get_term();
-    
+        
     // caller must first check that we aren't at expression end by calling at_expression_end 
     AST::Expression* peek() const;
     void shift();
@@ -47,18 +40,31 @@ class ParserLayer2 {
     void unary_operators_state();
 
     void reduce_operator_left();
-    
-    AST::AST* ast_;
-    Pragma::Pragmas* pragmas_;
 
-    AST::Expression* current_expression_;
-    std::vector<AST::Expression*> current_terms_;
+    AST::AST* ast_;
+
+    AST::Expression* expression_;
+    std::vector<AST::Expression*>* expression_terms_;
     AST::Expression* current_term_;
     AST::Expression* next_term_;
     std::vector<AST::Expression*>::iterator next_term_it_;
 
     std::vector<AST::Expression*> parse_stack_;
-    unsigned int previous_operator_precedence_ = MAX_OPERATOR_PRECEDENCE;
+    unsigned int previous_operator_precedence_ = MAX_OPERATOR_PRECEDENCE;    
+};
+
+// basically a small wrapper that creates TermedExpressionParser for each unparsed termed expression
+// in the ast and runs them
+class ParserLayer2 {
+  public:
+    ParserLayer2(AST::AST* ast, Pragma::Pragmas* pragmas);
+    void run();
+
+  private:
+    // Selects a termed expression to parse. That expressions terms become the tokenstream
+    void select_expression(AST::Expression* expression);
+    AST::AST* ast_;
+    Pragma::Pragmas* pragmas_;
 };
 
 #endif

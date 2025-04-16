@@ -145,6 +145,7 @@ Expression* AST::create_expression(
 
         case ExpressionType::unresolved_identifier:
         case ExpressionType::unresolved_operator:
+        case ExpressionType::empty:
         case ExpressionType::syntax_error:
         case ExpressionType::not_implemented:
         case ExpressionType::identifier:

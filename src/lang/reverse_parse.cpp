@@ -140,6 +140,9 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::deferred_call:
             return ostream << "Expression type deferred call not implemented in reverse parser";
 
+        case AST::ExpressionType::empty:
+            return ostream << "(/*empty expression*/)";
+
         case AST::ExpressionType::syntax_error:
             return ostream << "@SYNTAX ERROR@";
 
