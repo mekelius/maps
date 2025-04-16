@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <tuple>
 #include <memory>
 #include <string>
 #include <vector>
@@ -16,16 +17,10 @@
 
 #include "lang/ast.hh"
 
-#include "parsing/lexer.hh"
-#include "parsing/parser_layer1.hh"
-#include "parsing/parser_layer2.hh"
+#include "parsing/full_parse.hh"
 
 #include "ir/ir_generator.hh"
 #include "ir/ir_output.hh"
-
-#if __cplusplus < 201703L
-    #error(need c++17)
-#endif
 
 // TODO: handle multiple inputfiles
 const std::string USAGE = "USAGE: testc inputfile [-o filename] [-ir filename] [-tokens filename] \n                        [-dump ir|tokens]";
@@ -168,17 +163,17 @@ int main(int argc, char** argv) {
 
     // ----- parse the source -----
     
-    StreamingLexer lexer{&source_is};
-    ParserLayer1 parser{&lexer};
-    
     // if tokens get dumped, provide clearer separation
     if (cl_options->output_token_stream_to == OutputSink::stderr) {
         std::cerr << "\n" << "--- START PARSING ---" << "\n\n";
     } else {
         std::cerr << "Parsing source file(s)...\n";
     }
-    
-    std::unique_ptr<AST::AST> ast = parser.run();
+
+    std::unique_ptr<AST::AST> ast;
+    std::unique_ptr<Pragma::Pragmas> pragmas;
+
+    std::tie(ast, pragmas) = parse_source(source_is);
 
     // if tokens get dumped, provide clearer separation
     if (cl_options->output_token_stream_to == OutputSink::stderr) {
@@ -186,7 +181,6 @@ int main(int argc, char** argv) {
     } else {
         std::cerr << "Parsing complete" << std::endl;
     }
-    
     
     // ----- CODE GEN -----
     std::cerr << "Initializing llvm module and target" << std::endl;

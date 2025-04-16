@@ -29,7 +29,7 @@ Function* IR_Generator::function_declaration(const std::string& name, FunctionTy
 }
 
 Value* IR_Generator::handle_call(AST::Expression& expression) {
-    auto [callee, args] = expression.call_expr;
+    auto [callee, args] = expression.call();
 
     std::optional<FunctionCallee> function = get_function(callee);
 
@@ -52,7 +52,7 @@ Value* IR_Generator::handle_call(AST::Expression& expression) {
 }
 
 GlobalVariable* IR_Generator::handle_string_literal(AST::Expression& expression) {
-    return builder_->CreateGlobalString(expression.string_value);
+    return builder_->CreateGlobalString(expression.string_value());
 }
 
 Value* IR_Generator::handle_expression(AST::Expression& expression) {
@@ -165,13 +165,12 @@ std::optional<Function*> IR_Generator::handle_function(AST::Callable& callable) 
 }
 
 bool IR_Generator::generate_ir(AST::AST* ast) {
-    ast_ = ast;
 
     create_builtins();
     // start_main();
     
     // fix main to have the correct type
-    std::optional<AST::Callable*> main = ast_->get_identifier("main");
+    std::optional<AST::Callable*> main = ast->globals_->get_identifier("main");
     if (main) {
         (*main)->arg_types = { &AST::Int, &AST::String };
     }
