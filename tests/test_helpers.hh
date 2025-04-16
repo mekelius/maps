@@ -1,6 +1,8 @@
 #ifndef __TEST_HELPERS_HH
 #define __TEST_HELPERS_HH
 
+#include <sstream>
+
 #include "../src/lang/ast.hh"
 
 // jesus christ how horrifying
@@ -16,6 +18,25 @@ inline std::tuple<AST::Expression*, AST::Callable*> create_operator_helper(AST::
     op_ref->type = op_callable->get_type();
 
     return {op_ref, op_callable};
+}
+
+// takes a parsed binop expression tree and traverses it in preorder
+void traverse_pre_order(AST::Expression* tree, std::ostream& output) {
+    auto [op, lhs, rhs] = tree->binop_apply_value();
+
+    output << std::get<AST::Expression*>(op->body)->string_value();
+
+    if (lhs->expression_type == AST::ExpressionType::binary_operator_apply) {
+        traverse_pre_order(lhs, output);
+    } else {
+        output << lhs->string_value();
+    }
+
+    if (rhs->expression_type == AST::ExpressionType::binary_operator_apply) {
+        traverse_pre_order(rhs, output);
+    } else {
+        output << rhs->string_value();
+    }
 }
 
 #endif

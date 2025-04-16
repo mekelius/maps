@@ -43,6 +43,28 @@ TEST_CASE("TermedExpressionParser should replace an empty termed expression with
     CHECK(expr->expression_type == ExpressionType::empty);
 }
 
+void prime_tree(auto expr, const std::string& input, auto op1_ref, auto op2_ref, auto op3_ref, auto val) {
+    expr->terms().push_back(val);
+    for (char c: input) {
+        switch (c) {
+            case ' ':
+                break;
+            case '1':
+                expr->terms().push_back(op1_ref);
+                expr->terms().push_back(val);
+                break;
+            case '2':
+                expr->terms().push_back(op2_ref);
+                expr->terms().push_back(val);
+                break;
+            case '3':
+                expr->terms().push_back(op3_ref);
+                expr->terms().push_back(val);
+                break;
+        }
+    }
+}
+
 TEST_CASE("TermedExpressionParser should handle binop expressions") {
     AST::AST ast{};
     Expression* expr = ast.create_expression(ExpressionType::termed_expression, {0,0});
@@ -117,5 +139,44 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         CHECK(inner_op == op2);
         CHECK(inner_lhs == val2);
         CHECK(inner_rhs == val3);
+    }
+}
+
+TEST_CASE ("should handle more complex expressions") {
+    AST::AST ast{};
+    Expression* expr = ast.create_expression(ExpressionType::termed_expression, {0,0});
+
+    auto [op1_ref, op1] = create_operator_helper(ast, "1", 1);
+    auto [op2_ref, op2] = create_operator_helper(ast, "2", 2);
+    auto [op3_ref, op3] = create_operator_helper(ast, "3", 3);
+    Expression* val = ast.create_expression(ExpressionType::numeric_literal, {0,0});
+    val->value = "v";
+
+    REQUIRE(expr->terms().size() == 0);
+
+    SUBCASE("1 2 1") {
+        std::string input = "1 2 1";
+        auto expected_pre_order = "11v2vvv";
+        
+        prime_tree(expr, input, op1_ref, op2_ref, op3_ref, val);
+
+        TermedExpressionParser{&ast, expr}.run();
+        
+        std::stringstream output;
+        traverse_pre_order(expr, output);
+        CHECK(output.str() == expected_pre_order);
+    }
+
+    SUBCASE("1 2 2 2 1 2 2 2 3 3 2 2 1") {
+        std::string input = "1 2 2 2 1 2 2 2 3 3 2 2 1";
+        auto expected_pre_order = "111v222vvvv22222vvv33vvvvvv";
+        
+        prime_tree(expr, input, op1_ref, op2_ref, op3_ref, val);
+
+        TermedExpressionParser{&ast, expr}.run();
+        
+        std::stringstream output;
+        traverse_pre_order(expr, output);
+        CHECK(output.str() == expected_pre_order);
     }
 }
