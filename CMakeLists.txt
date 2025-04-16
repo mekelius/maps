@@ -47,17 +47,29 @@ add_executable(verify_mapsc
 
 target_link_libraries(verify_mapsc parsing)
 
-# ----------------------- MAPSC ------------------------
 
+# ---------------------- IR_GEN ------------------------
+
+#does this do anything?
 set(CMAKE_LINKER_TYPE "LLD")
 
-add_executable(mapsc
+add_library(ir_gen OBJECT
     src/ir/ir_generator.cpp
+    src/ir/ir_builtins.cpp
     src/ir/ir_output.cpp
+    src/ir/ir_types.cpp
+)
+
+target_link_libraries(ir_gen parsing -lLLVM-19)
+target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
+
+# ----------------------- MAPSC ------------------------
+
+add_executable(mapsc
     src/main.cpp
 )
 
-target_link_libraries(mapsc parsing -lLLVM-19)
+target_link_libraries(mapsc parsing ir_gen -lLLVM-19)
 target_include_directories(mapsc SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 target_compile_options(mapsc PRIVATE 

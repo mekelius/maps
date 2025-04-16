@@ -51,9 +51,6 @@ struct CL_Options {
     std::string tokens_file_path = DEFAULT_TOKENS_FILE_PATH;
 };
 
-
-using namespace llvm;
-
 std::optional<CL_Options> parse_cl_args(int argc, char** argv) {
     if (argc < 2)
         return std::nullopt;
@@ -192,12 +189,12 @@ int main(int argc, char** argv) {
     }
 
     std::string module_name = "Test module";
-    IR_Generator ir_gen_helper{module_name, &std::cerr};
+    IR::IR_Generator ir_gen_helper{module_name, &std::cerr};
     
     // ----- run codegen -----
     std::cerr << "Running codegen..." << std::endl;
 
-    if (!ir_gen_helper.generate_ir(ast.get())) {
+    if (!ir_gen_helper.run(*ast)) {
         std::cerr << "Codegen failed, exiting" << std::endl;
         return EXIT_FAILURE;
     }
@@ -206,7 +203,7 @@ int main(int argc, char** argv) {
     
     // ----- produce output -----
     
-    Module* module_ = ir_gen_helper.get_module();
+    llvm::Module* module_ = ir_gen_helper.module_.get();
     if (cl_options->output_ir_to == OutputSink::file) {
         std::cerr << "outputting ir to " << cl_options->ir_file_path << std::endl;
         print_ir_to_file(cl_options->ir_file_path, module_);

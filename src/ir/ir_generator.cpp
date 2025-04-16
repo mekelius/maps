@@ -1,17 +1,26 @@
 #include "ir_generator.hh"
 
+#include "ir_builtins.hh"
+
+namespace IR {
+
 using namespace llvm;
+
+using AST::StatementType, 
+    AST::ExpressionType, 
+    AST::Expression, 
+    AST::Statement, 
+    AST::Callable,
+    Pragma::Pragmas;
 
 // ----- IR Generation -----
 
 IR_Generator::IR_Generator(const std::string& module_name, std::ostream* info_stream)
-:errs_(info_stream) {
-    context_ = std::make_unique<LLVMContext>();
+:errs_(info_stream), context_(std::make_unique<LLVMContext>()), types_({*context_}) {
     module_ = std::make_unique<Module>(module_name, *context_);
     builder_ = std::make_unique<IRBuilder<>>(*context_);
 
-    if (type_map_.size() == 0)
-        populate_type_map();
+    insert_builtins(*this);
 }
 
 Function* IR_Generator::function_definition(const std::string& name, FunctionType* type, Function::LinkageTypes linkage) {
@@ -55,7 +64,12 @@ GlobalVariable* IR_Generator::handle_string_literal(AST::Expression& expression)
     return builder_->CreateGlobalString(expression.string_value());
 }
 
-Value* IR_Generator::handle_expression(AST::Expression& expression) {
+Value* IR_Generator::handle_callable(AST::Callable& callable) {
+    assert(false);
+    return nullptr;
+}
+
+Value* IR_Generator::handle_expression(Expression& expression) {
     switch (expression.expression_type) {
         case AST::ExpressionType::call:
             return handle_call(expression);
@@ -164,16 +178,44 @@ std::optional<Function*> IR_Generator::handle_function(AST::Callable& callable) 
     return nullptr;
 }
 
-bool IR_Generator::generate_ir(AST::AST* ast) {
+bool IR_Generator::run(AST::AST& ast, std::optional<Pragma::Pragmas*> pragmas) {
+    if (pragmas)
+        set_pragmas(*pragmas);
 
-    create_builtins();
+    // global definitions
+    for (std::string name: ast.globals_.identifiers_in_order) {
+        std::optional<AST::Callable*> callable = ast.globals_.get_identifier(name);
+        assert(callable && "nonexistent name in ast.globals_.identifiers_in_order");
+
+        handle_callable(**callable);
+    }
+
+    // check if global eval context
+    if (true /*pragma global eval context*/) {
+        for (AST::Statement* statement: ast.root_) {
+            switch (statement->statement_type) {
+                // let statements are hoisted
+                case StatementType::let:
+                    break;
+
+                case StatementType::assignment:
+                case StatementType::expression_statement:
+                case StatementType::return_:
+                    // run it if true
+                    break;
+
+                default:
+                    assert(false && "uhandled statement type encountered in genererate_ir");
+            }
+        }
+    }
     // start_main();
     
     // fix main to have the correct type
-    std::optional<AST::Callable*> main = ast->globals_->get_identifier("main");
-    if (main) {
-        (*main)->arg_types = { &AST::Int, &AST::String };
-    }
+    // std::optional<AST::Callable*> main = ast->globals_->get_identifier("main");
+    // if (main) {
+    //     (*main)->arg_types = { &AST::Int, &AST::String };
+    // }
 
     // for (auto& function : ast_->callables_) {
     //     handle_function(*function.get());
@@ -185,31 +227,6 @@ bool IR_Generator::generate_ir(AST::AST* ast) {
 void IR_Generator::fail(const std::string& message) {
     has_failed_ = true;
     *errs_ << "error during codegen: " << message << "\n";
-}
-
-void IR_Generator::create_builtins() {
-    // declare c functions to be used as builtins
-    puts_ = function_declaration("puts", FunctionType::get(int_type, {char_array_ptr_type}, false));
-    functions_map_.insert({"print", puts_});
-    sprintf_ = function_declaration("sprintf", FunctionType::get(void_type, {char_array_13_type, char_array_13_type, double_type}, true));
-}
-
-void IR_Generator::populate_type_map() {
-    // get some types
-    char_type = Type::getInt8Ty(*context_);
-    char_array_13_type = ArrayType::get(char_type, 13);
-    char_array_ptr_type = PointerType::getUnqual(PointerType::getUnqual(char_type));
-    int_type = Type::getInt64Ty(*context_);
-    double_type = Type::getDoubleTy(*context_);
-    void_type = Type::getVoidTy(*context_);
-
-    type_map_ = {
-        { "Int", int_type },
-        { "String", char_array_ptr_type },
-        { "Void", void_type },
-        // { "Boolean", bool_type },
-        // { "",  },
-    };
 }
 
 bool IR_Generator::function_name_is_ok(const std::string& name) {
@@ -228,26 +245,10 @@ std::optional<llvm::FunctionCallee> IR_Generator::get_function(const std::string
     return it->second;
 }
 
-
-std::optional<Type*> IR_Generator::convert_type(const AST::Type* type) const {
-    auto it = type_map_.find(type->name);
-    if (it == type_map_.end())
-        return std::nullopt;
-
-    return it->second;
-}
-
 void IR_Generator::start_main() {
     // create the main function
-    function_definition("main", FunctionType::get(int_type, {int_type, char_array_ptr_type}, false));
+    function_definition("main", 
+        FunctionType::get(types_.int_t, {types_.int_t, types_.char_array_ptr_t}, false));
 }
 
-bool generate_ir(IR_Generator& generator) {
-    IRBuilder<>* builder = generator.get_builder();
-
-    Value* lhs = ConstantInt::get(generator.int_type, 9);
-    Value* rhs = ConstantInt::get(generator.int_type, 6);
-    builder->CreateAdd(lhs, rhs);
-    
-    return true;
-}
+} // namespace IR
