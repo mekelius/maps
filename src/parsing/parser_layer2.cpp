@@ -98,7 +98,6 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         case ExpressionType::call:
         case ExpressionType::string_literal:
         case ExpressionType::numeric_literal:
-        case ExpressionType::builtin_function:
         case ExpressionType::termed_expression:
             initial_value_state();
             break;

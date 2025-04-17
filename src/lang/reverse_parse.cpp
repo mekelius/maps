@@ -118,12 +118,11 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return ostream;
         }
 
-        case AST::ExpressionType::builtin_function:
-            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*built-in:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
-
+        case AST::ExpressionType::operator_ref:
+            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*operator-ref:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
+        
         case AST::ExpressionType::identifier:
-        case AST::ExpressionType::builtin_operator:
-            return ostream << expression->string_value();
+            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*identifier:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
 
         case AST::ExpressionType::not_implemented:
             return ostream << "Expression type not implemented in parser: " + expression->string_value();

@@ -9,31 +9,25 @@ void init_builtins(AST::AST& ast) {
 }
 
 void init_builtin_operators(AST::AST& ast) {
-    AST::Expression* add = ast.create_expression(AST::ExpressionType::builtin_operator,
-        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 1, AST::Associativity::both));
-    ast.builtin_operators_.create_identifier("+", add, {0,0});
+    using AST::BuiltinType;
 
-    AST::Expression* subtract = ast.create_expression(AST::ExpressionType::builtin_operator,
-        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 1, AST::Associativity::left));
-    ast.builtin_operators_.create_identifier("-", subtract, {0,0});
+    ast.create_builtin(BuiltinType::builtin_operator, "+",
+        AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 1, AST::Associativity::both));
 
-    AST::Expression* multiply = ast.create_expression(AST::ExpressionType::builtin_operator,
-        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 2, AST::Associativity::both));
-    ast.builtin_operators_.create_identifier("*", multiply, {0,0});
+    ast.create_builtin(BuiltinType::builtin_operator, "-", 
+        AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 1, AST::Associativity::left));
+
+    ast.create_builtin(BuiltinType::builtin_operator, "*", 
+        AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 2, AST::Associativity::both));
 
     // TODO: subset types here
-    AST::Expression* divide = ast.create_expression(AST::ExpressionType::builtin_operator,
-        {0, 0}, AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 3, AST::Associativity::left));
-    ast.builtin_operators_.create_identifier("/", divide, {0,0});
+    ast.create_builtin(BuiltinType::builtin_operator, "/", 
+        AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, true, 3, AST::Associativity::left));
 }
 
 void init_builtin_callables(AST::AST& ast) {
-    AST::Expression* print = ast.create_expression(AST::ExpressionType::builtin_function, 
-        {0, 0}, AST::Void);
-    
-    // print->type = AST::create_function_type(AST::Void, {AST::String});
+    using AST::BuiltinType;
 
-    if (!ast.builtins_.create_identifier("print", print, {0,0})) {
-        assert(false && "couldn't create builtin: print");
-    }
+    ast.create_builtin(BuiltinType::builtin_function, "print", 
+        AST::create_function_type(AST::Void, {AST::String}));
 }

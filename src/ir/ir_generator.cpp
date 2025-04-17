@@ -183,8 +183,8 @@ bool IR_Generator::run(AST::AST& ast, std::optional<Pragma::Pragmas*> pragmas) {
         set_pragmas(*pragmas);
 
     // global definitions
-    for (std::string name: ast.globals_.identifiers_in_order) {
-        std::optional<AST::Callable*> callable = ast.globals_.get_identifier(name);
+    for (std::string name: ast.globals_->identifiers_in_order) {
+        std::optional<AST::Callable*> callable = ast.globals_->get_identifier(name);
         assert(callable && "nonexistent name in ast.globals_.identifiers_in_order");
 
         handle_callable(**callable);

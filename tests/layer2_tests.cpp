@@ -5,18 +5,16 @@
 #include "../src/lang/ast.hh"
 #include "../src/parsing/parser_layer2.hh"
 
-using AST::Expression, AST::ExpressionType, AST::Callable;
+using AST::Expression, AST::ExpressionType, AST::Callable, AST::BuiltinType;
 
 // --------------- HELPERS ---------------
 
-// jesus christ how horrifying
 inline std::tuple<AST::Expression*, AST::Callable*> create_operator_helper(AST::AST& ast, 
     const std::string& op_string, unsigned int precedence = 500) {
-    AST::Expression* op = ast.create_expression(AST::ExpressionType::builtin_operator, {0,0});
-    op->value = op_string;
-    op->type = AST::create_binary_operator_type(AST::Void, AST::Number, AST::Number, precedence);
-    AST::Callable* op_callable = ast.create_callable({0,0});
-    op_callable->body = op;
+
+    AST::Type type = AST::create_binary_operator_type(AST::Void, AST::Number, AST::Number, precedence);
+    AST::Callable* op_callable = ast.create_builtin(AST::BuiltinType::builtin_operator, op_string, type);
+
     AST::Expression* op_ref = ast.create_expression(AST::ExpressionType::operator_ref, {0,0});
     op_ref->value = op_callable;
     op_ref->type = op_callable->get_type();
@@ -28,7 +26,7 @@ inline std::tuple<AST::Expression*, AST::Callable*> create_operator_helper(AST::
 void traverse_pre_order(AST::Expression* tree, std::ostream& output) {
     auto [op, lhs, rhs] = tree->binop_apply_value();
 
-    output << std::get<AST::Expression*>(op->body)->string_value();
+    output << op->name;
 
     if (lhs->expression_type == AST::ExpressionType::binary_operator_apply) {
         traverse_pre_order(lhs, output);
@@ -223,14 +221,15 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     AST::AST ast{};
     Expression* expr = ast.create_expression(ExpressionType::termed_expression, {0,0});
     
-    Expression* function = ast.create_expression(ExpressionType::builtin_function, {0,0});
-    ast.globals_.create_identifier("test_f", function, {0,0});
-    Expression* id = ast.create_expression(ExpressionType::identifier, {0,0});
-    id->value = "test_f";
     
     SUBCASE("1 arg") {    
-        function->type = AST::create_function_type(AST::Void, {AST::String});
-        id->type = function->type;
+        AST::Type function_type = AST::create_function_type(AST::Void, {AST::String});
+
+        Callable* function = ast.create_builtin(BuiltinType::builtin_function, "test_f", function_type);
+        Expression* id = ast.create_expression(ExpressionType::identifier, {0,0});
+        id->value = function;    
+        id->type = function_type;
+
         Expression* arg1 = ast.create_expression(ExpressionType::string_literal, {0,0});
 
         expr->terms().push_back(id);
@@ -246,9 +245,14 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     }
 
     SUBCASE("4 args") {    
-        function->type = AST::create_function_type(AST::Void, 
+        AST::Type function_type = AST::create_function_type(AST::Void, 
             {AST::String, AST::String, AST::String, AST::String});
-        id->type = function->type;
+        
+        Callable* function = ast.create_builtin(BuiltinType::builtin_function, "test_f", function_type);
+        Expression* id = ast.create_expression(ExpressionType::identifier, {0,0});
+        id->value = function;    
+        id->type = function_type;
+    
         Expression* arg1 = ast.create_expression(ExpressionType::string_literal, {0,0});
         Expression* arg2 = ast.create_expression(ExpressionType::string_literal, {0,0});
         Expression* arg3 = ast.create_expression(ExpressionType::string_literal, {0,0});
@@ -274,8 +278,13 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
 
     SUBCASE("If the call is not partial, the call expression's type should be the return type") {
 
-        function->type = AST::create_function_type(AST::Number, {AST::String});
-        id->type = function->type;
+        AST::Type function_type = AST::create_function_type(AST::Number, {AST::String});
+        
+        Callable* function = ast.create_builtin(BuiltinType::builtin_function, "test_f", function_type);
+        Expression* id = ast.create_expression(ExpressionType::identifier, {0,0});
+        id->value = function;    
+        id->type = function_type;
+
         Expression* arg1 = ast.create_expression(ExpressionType::string_literal, {0,0});
 
         expr->terms().push_back(id);
