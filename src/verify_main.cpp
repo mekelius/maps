@@ -37,32 +37,10 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> args = { argv + 1, argv + argc };
     std::vector<std::string> source_filenames{};
 
-    std::ostream* lexer_ostream = nullptr;
-
     Logging::Settings::set_loglevel(LogLevel::default_);
-
-    for (std::string arg : args) {
-        if (arg == "-t" || arg == "--tokens") {
-            lexer_ostream = &std::cout;
-
-        } else if (arg == "-v" || arg == "--verbose" || arg == "--debug" || arg == "--parser-debug") {
-            Logging::Settings::set_loglevel(LogLevel::debug);
-            
-        } else if (arg == "-q" || arg == "--quiet") {
-            Logging::Settings::set_loglevel(LogLevel::quiet);
-
-        } else if (arg == "-e" || arg == "--everything") {
-            Logging::Settings::set_loglevel(LogLevel::everything);
-            lexer_ostream = &std::cout;
-
-        } else {
-            source_filenames.push_back(arg);
-        }
-    }
 
     std::cout << separator('#') << separator('#', "VERIFY MAPSC") << "\n" 
               << "Running with " << source_filenames.size() << " input files\n\n";
-
 
     // ----- PROCESS FILES -----
     bool all_succeeded = true;

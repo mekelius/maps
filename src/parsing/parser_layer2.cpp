@@ -189,6 +189,9 @@ void TermedExpressionParser::initial_identifier_state() {
         case ExpressionType::operator_ref:
             precedence_stack_.push_back(peek()->type.precedence());
             return post_binary_operator_state();
+
+        default:
+            assert(false && "unhandled term type in TermedExpressionParser::initial_identifier_state");
     }
 }
 
@@ -256,6 +259,9 @@ void TermedExpressionParser::post_binary_operator_state() {
         case ExpressionType::numeric_literal:
         case ExpressionType::string_literal:
             return compare_precedence_state();
+
+        default:
+            assert(false && "unhandled term type in TermedExpressionParser::post_binary_operator_state");
     }
 
 }
@@ -428,7 +434,4 @@ void TermedExpressionParser::call_expression_state() {
     }
 
     parse_stack_.push_back(call_expression);
-}
-
-AST::Expression* TermedExpressionParser::parse_call_expression() {
 }

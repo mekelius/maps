@@ -48,7 +48,6 @@ class TermedExpressionParser {
         const std::vector<AST::Expression*>& args, AST::Expression* next_arg);
 
     void call_expression_state();
-    AST::Expression* parse_call_expression();
     void arg_list_state();
 
     AST::AST* ast_;
