@@ -19,22 +19,32 @@ class TermedExpressionParser {
     void run();
 
   private:  
+    // advances the input stream without putting the term on the parse stack
     AST::Expression* get_term();
         
     // caller must first check that we aren't at expression end by calling at_expression_end 
     AST::Expression* peek() const;
+    // caller must be sure that the parse_stack isn't empty
+    AST::Expression* current_term() const;
+
+    // advances the input stream by one and pushes the term onto the parse stack
     void shift();
+
+    // pops an expression from the parse stack, returns nullopt if parse stack empty
+    std::optional<AST::Expression*> pop_term();
+
     bool at_expression_end() const;
     bool parse_stack_reduced() const;
     
     AST::Expression* parse_termed_expression();
 
-    AST::Expression* handle_sub_termed_expression(AST::Expression* expression);
+    AST::Expression* handle_termed_sub_expression(AST::Expression* expression);
     
     // state functioms
     void initial_identifier_state();
     void initial_value_state();
     void initial_operator_state();
+    void initial_function_state();
     
     // binary operators
     void post_binary_operator_state();
@@ -54,8 +64,6 @@ class TermedExpressionParser {
 
     AST::Expression* expression_;
     std::vector<AST::Expression*>* expression_terms_;
-    AST::Expression* current_term_;
-    AST::Expression* next_term_;
     std::vector<AST::Expression*>::iterator next_term_it_;
 
     std::vector<AST::Expression*> parse_stack_ = {};

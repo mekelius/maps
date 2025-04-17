@@ -192,6 +192,10 @@ Expression* AST::create_operator_ref(Callable* callable, SourceLocation location
 Expression* AST::create_valueless_expression(ExpressionType expression_type, SourceLocation location) {
     return create_expression(expression_type, std::monostate{}, Absurd, location);
 }
+Expression* AST::create_missing_argument(const Type& type, SourceLocation location) {
+    return create_expression(ExpressionType::missing_arg, std::monostate{}, type, location);
+}
+
 
 void AST::delete_expression(Expression* expression) {
     expression->expression_type = ExpressionType::deleted;
