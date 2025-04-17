@@ -41,9 +41,15 @@ class TermedExpressionParser {
     void compare_precedence_state();
     void reduce_operator_left();
     
-    void arg_list_state();
     void unary_operators_state();
 
+    // calls/access operations
+    bool is_acceptable_next_arg(AST::Expression* callee, 
+        const std::vector<AST::Expression*>& args, AST::Expression* next_arg);
+
+    void call_expression_state();
+    AST::Expression* parse_call_expression();
+    void arg_list_state();
 
     AST::AST* ast_;
 
