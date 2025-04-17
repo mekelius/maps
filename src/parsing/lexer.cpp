@@ -62,8 +62,7 @@ Token StreamingLexer::get_token_() {
     if (indents_to_close_ > 0) {
         indents_to_close_--;
         return create_token_(
-            TokenType::indent_block_end,
-            ""
+            TokenType::indent_block_end
         );
     }
 
@@ -321,15 +320,13 @@ Token StreamingLexer::read_linebreak_() {
     // All options seem like possible causes for confusion
     if (next_line_indent != indent_stack_.back()) {
         return create_token_(
-            TokenType::indent_error_fatal,
-            "Mismatched indent"
+            TokenType::indent_error_fatal
         );
     }
 
     indents_to_close_--;
     return create_token_(
-        TokenType::indent_block_end,
-        ""
+        TokenType::indent_block_end
     );
 }
 

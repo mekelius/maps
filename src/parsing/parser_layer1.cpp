@@ -116,7 +116,7 @@ void ParserLayer1::log_info(SourceLocation location, const std::string& message,
 // ----- IDENTIFIERS -----
 
 bool ParserLayer1::identifier_exists(const std::string& identifier) const {
-    return ast_->globals_.identifier_exists(identifier);
+    return ast_->globals_->identifier_exists(identifier);
 }
 
 void ParserLayer1::create_identifier(const std::string& name, SourceLocation location) {
@@ -126,11 +126,11 @@ void ParserLayer1::create_identifier(const std::string& name, SourceLocation loc
 void ParserLayer1::create_identifier(const std::string& name,
     AST::CallableBody body, SourceLocation location) {
     log_info("created identifier" + name, Logging::MessageType::parser_debug_identifier);
-    ast_->globals_.create_identifier(name, body, location);
+    ast_->globals_->create_identifier(name, body, location);
 }
 
 std::optional<AST::Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
-    return ast_->globals_.get_identifier(identifier);
+    return ast_->globals_->get_identifier(identifier);
 }
 
 

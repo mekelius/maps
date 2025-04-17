@@ -20,43 +20,63 @@ namespace AST {
 class AST;
 struct Expression;
 struct Statement;
+struct Builtin;
 class Callable;
 
-using CallableBody = std::variant<std::monostate, Expression*, Statement*>;
+using CallableBody = std::variant<std::monostate, Expression*, Statement*, Builtin*>;
+
+// ----- BUILTINS -----
+
+enum class BuiltinType {
+    builtin_function,
+    builtin_operator,
+};
+
+struct Builtin {
+    BuiltinType builtin_type;
+    std::string name;
+    Type type;
+};
 
 // ----- EXPRESSIONS -----
 
 enum class ExpressionType {
-    string_literal = 0,     // literal: Value value
+// layer1
+    string_literal = 0,     // value: string
     numeric_literal,
-    identifier,
-    operator_ref,
-
-    builtin_function,       // TODO: these shouldn't really be expressions
-    builtin_operator,       // TODO: they should be specail types of callables
     
-    termed_expression,      // basically something that layer1 can't handle
-    tie,                    // lack of whitespace between an operator and another term
-    empty,
-    
-    unresolved_identifier,  // something to be hoisted
+    unresolved_identifier,  // value: string
     unresolved_operator,
     
-    syntax_error,           // reached something that shouldn't have been such as trying to parse eof as expression
+    identifier,
+    operator_ref,           // value: Callable*
+
+    termed_expression,      // value: std::vector<Expression*>
+
+    tie,                    // value: std::monostate
+    empty,
+    
+    syntax_error,           // value: std::string
     not_implemented,
-    deleted,
     
 // layer2
-    call,                   // call: Callee identifier, [Expression] args
-    deferred_call,          // call where the callee is an expression
-    binary_operator_apply,
+    call,                   // value: 
+    deferred_call,          // value: std::tuple<Expression*, std::vector<Expression*>>
+
+    // TODO: replace these with calls to simplify
+    binary_operator_apply,  // value: std::tuple<Callable*, Expression*, Expression*>
     unary_operator_apply,
+
+    deleted,                // value: std::monostate
+
+// misc
 };
 
 using CallExpressionValue = std::tuple<std::string, std::vector<Expression*>>;
 using CallExpressionValueDeferred = std::tuple<Expression*, std::vector<Expression*>>;
 using TermedExpressionValue = std::vector<Expression*>;
-using TermedExpressionValue = std::vector<Expression*>;
+
+// TODO: remove these
 using BinaryOperatorApplyValue = std::tuple<Callable*, Expression*, Expression*>;
 using UnaryOperatorApplyValue = std::tuple<Callable*, Expression*>;
 
@@ -87,16 +107,16 @@ struct Expression {
     CallExpressionValue& call() {
         return std::get<CallExpressionValue>(value);
     }
-    std::string& string_value() {
-        return std::get<std::string>(value);
-    }
-    BinaryOperatorApplyValue binop_apply_value() {
+    
+    const std::string& string_value() const;
+
+    BinaryOperatorApplyValue& binop_apply_value() {
         return std::get<BinaryOperatorApplyValue>(value);
     }
-    UnaryOperatorApplyValue unop_apply_value() {
+    UnaryOperatorApplyValue& unop_apply_value() {
         return std::get<UnaryOperatorApplyValue>(value);
     }
-    Callable* callable_ref() {
+    Callable* callable_ref() const {
         return std::get<Callable*>(value);
     }
 
@@ -168,12 +188,17 @@ struct Statement {
 /**
  * Callables represent either expressions or statements, with the unique ability
  * to hold types for statements. A bit convoluted but we'll see.
+ * The source location is needed on every callable that is not a built-in
+ * 
+ * NOTE: if it's anonymous, it needs a source location
  */
 class Callable {
   public:
-    Callable(CallableBody body, SourceLocation location);
+    Callable(CallableBody body, const std::string& name, std::optional<SourceLocation> location = std::nullopt);
+    Callable(CallableBody body, std::optional<SourceLocation> location); // create anonymous callable
 
-    SourceLocation location;
+    std::string name;
+    std::optional<SourceLocation> location;
     CallableBody body;
 
     // since statements don't store types, we'll have to store them here
@@ -194,7 +219,7 @@ class Scope {
     Scope(AST* ast): ast_(ast) {};
 
     std::optional<Callable*> create_identifier(const std::string& name, CallableBody body, 
-        SourceLocation location);
+        std::optional<SourceLocation> location = std::nullopt);
     std::optional<Callable*> create_identifier(const std::string& name, SourceLocation location);
 
     bool identifier_exists(const std::string& name) const;
@@ -227,9 +252,14 @@ class AST {
 
     Expression* create_expression(ExpressionType expression_type, SourceLocation location, 
         const Type& type = Void);
+
     Statement* create_statement(StatementType statement_type, SourceLocation location);
-    Callable* create_callable(CallableBody body, SourceLocation location);
-    Callable* create_callable(SourceLocation location);
+
+    // automatically creates an identifier and a global callable for the builtin
+    Callable* create_builtin(BuiltinType builtin_type, const std::string& name, const Type& type);
+
+    Callable* create_callable(CallableBody body, const std::string& name, std::optional<SourceLocation> location = std::nullopt);
+    Callable* create_callable(const std::string& name, SourceLocation location);
 
     // appends a statement to root_
     void append_top_level_statement(Statement* statement);
@@ -237,9 +267,10 @@ class AST {
 
     // container for top-level statements
     std::vector<Statement*> root_ = {};   
-    Scope globals_;
-    Scope builtins_ = { this };
-    Scope builtin_operators_ = { this };
+
+    std::unique_ptr<Scope> globals_ = std::make_unique<Scope>(this);
+    std::unique_ptr<Scope> builtin_functions_ = std::make_unique<Scope>(this);
+    std::unique_ptr<Scope> builtin_operators_ = std::make_unique<Scope>(this);
 
     bool is_valid = true;
 
@@ -255,6 +286,7 @@ class AST {
     // probably won't need that until we do the interpreter
     std::vector<std::unique_ptr<Statement>> statements_ = {};
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
+    std::vector<std::unique_ptr<Builtin>> builtins_ = {};
     std::vector<std::unique_ptr<Callable>> callables_ = {};
 };
 

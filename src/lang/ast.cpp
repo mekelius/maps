@@ -4,6 +4,17 @@
 
 namespace AST {
 
+// ----- EXPRESSION -----
+
+// TODO: clean this up
+const std::string& Expression::string_value() const {
+    if (std::holds_alternative<Callable*>(value)) {
+        // !!! this will cause crashes when lambdas come in
+        return std::get<Callable*>(value)->name;
+    }
+    return std::get<std::string>(value);
+}
+
 Statement::Statement(StatementType statement_type, SourceLocation location)
 :statement_type(statement_type), location(location) {
     switch (statement_type) {
@@ -18,6 +29,7 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
         case StatementType::expression_statement:
             break;
         case StatementType::block:
+            value = Block{};
             break;               
         case StatementType::let:
             value = Let{};
@@ -40,8 +52,12 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
 
 // ----- CALLABLE -----
 
-Callable::Callable(CallableBody body, SourceLocation location)
-:location(location), body(body) {}
+Callable::Callable(CallableBody body, const std::string& name, 
+    std::optional<SourceLocation> location)
+:body(body), name(name), location(location) {}
+
+Callable::Callable(CallableBody body, std::optional<SourceLocation> location)
+:body(body), name("anonymous callable"), location(location) {}
 
 Type Callable::get_type() const {
     switch (body.index()) {
@@ -60,6 +76,9 @@ Type Callable::get_type() const {
 
             return type_ ? *type_ : Hole;
         }
+        case 3: // Builtin
+            return std::get<Builtin*>(body)->type;
+
         default:
             assert(false && "unhandled CallableBody in CallableBody::get_type");
             return Hole;
@@ -70,13 +89,13 @@ Type Callable::get_type() const {
 // ----- SCOPE -----
 
 std::optional<Callable*> Scope::create_identifier(const std::string& name, CallableBody body,
-    SourceLocation location) {
+    std::optional<SourceLocation> location) {
 
     if (identifier_exists(name)) {
         return std::nullopt;
     }
 
-    Callable* callable = ast_->create_callable(body, location);
+    Callable* callable = ast_->create_callable(body, name, location);
     identifiers_.insert({name, callable});
     identifiers_in_order.push_back(name);
     
@@ -100,7 +119,7 @@ std::optional<Callable*> Scope::get_identifier(const std::string& name) const {
     return it->second;
 }
 
-AST::AST(): globals_(this) {}
+AST::AST() {}
 
 Expression* AST::create_expression(
     ExpressionType expression_type, SourceLocation location, const Type& type) {
@@ -127,16 +146,6 @@ Expression* AST::create_expression(
 
         case ExpressionType::deferred_call:
             expression->value = CallExpressionValueDeferred{};
-            break;
-
-        case ExpressionType::builtin_function:
-            // TODO: infer type
-            expression->value = "";
-            break;
-
-        case ExpressionType::builtin_operator:
-            // TODO: create enum of native operators
-            expression->value = "";
             break;
 
         case ExpressionType::termed_expression:
@@ -181,13 +190,34 @@ Statement* AST::create_statement(StatementType statement_type, SourceLocation lo
     return statements_.back().get();
 }
 
-Callable* AST::create_callable(CallableBody body, SourceLocation location) {
-    callables_.push_back(std::make_unique<Callable>(body, location));
+Callable* AST::create_builtin(BuiltinType builtin_type, const std::string& name, const Type& type) {
+    builtins_.push_back(std::make_unique<Builtin>(builtin_type, name, type));
+    Builtin* builtin = builtins_.back().get();
+
+    assert(!builtin_functions_->identifier_exists(name) && !builtin_operators_->identifier_exists(name)
+    && "tried to redefine an existing builtin");
+    switch (builtin_type) {
+        case BuiltinType::builtin_function:
+            return *builtin_functions_->create_identifier(name, builtin);
+
+            case BuiltinType::builtin_operator:
+            return *builtin_operators_->create_identifier(name, builtin);
+
+        default:
+            assert(false && "unhandled builtin type in create_builtin");
+            return nullptr;
+    }
+}
+
+Callable* AST::create_callable(CallableBody body, const std::string& name, 
+    std::optional<SourceLocation> location) {
+    
+    callables_.push_back(std::make_unique<Callable>(body, name, location));
     return callables_.back().get();
 }
 
-Callable* AST::create_callable(SourceLocation location) {
-    return create_callable(std::monostate{}, location);
+Callable* AST::create_callable(const std::string& name, SourceLocation location) {
+    return create_callable(std::monostate{}, name, location);
 }
 
 void AST::append_top_level_statement(Statement* statement) {
