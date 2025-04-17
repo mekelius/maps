@@ -263,6 +263,7 @@ class AST {
 
     // valueless expression types are tie, empty, syntax_error and not_implemented
     Expression* create_valueless_expression(ExpressionType expression_type, SourceLocation location);
+    Expression* create_missing_argument(const Type& type, SourceLocation location);
     
     void delete_expression(Expression* expression);
 

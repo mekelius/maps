@@ -319,8 +319,9 @@ TEST_CASE("Should handle partial application of binary operators") {
         
         auto [callee, args] = expr->call();
         CHECK(callee == op);
-        CHECK(args.size() == 1);
-        CHECK(args.at(0) == val);
+        CHECK(args.size() == 2);
+        CHECK(args.at(0)->expression_type == ExpressionType::missing_arg);
+        CHECK(args.at(1) == val);
     }
 
     SUBCASE("left") {
@@ -330,7 +331,7 @@ TEST_CASE("Should handle partial application of binary operators") {
         
         auto [callee, args] = expr->call();
         CHECK(callee == op);
-        CHECK(args.size() == 1);
+        CHECK(args.size() == 2);
         CHECK(args.at(0) == val);
     }
 }

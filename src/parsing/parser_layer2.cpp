@@ -37,10 +37,7 @@ void ParserLayer2::run() {
 TermedExpressionParser::TermedExpressionParser(AST::AST* ast, Expression* expression)
 :ast_(ast), expression_(expression) {
     expression_terms_ = &std::get<AST::TermedExpressionValue>(expression->value);
-    next_term_it_ = expression_terms_->begin();
-    
-    next_term_ = (next_term_it_ != expression_terms_->end()) ? 
-        *next_term_it_ : nullptr;    
+    next_term_it_ = expression_terms_->begin();    
 }
 
 void TermedExpressionParser::run() {
@@ -54,22 +51,32 @@ void TermedExpressionParser::run() {
 }
 
 Expression* TermedExpressionParser::get_term() {
-    current_term_ = next_term_;
-
+    AST::Expression* current_term = *next_term_it_;
     next_term_it_++;
-
-    next_term_ = (next_term_it_ < expression_terms_->end()) ? 
-        *next_term_it_ : nullptr;
-
-    return current_term_;
+    return current_term;
 }
 
 AST::Expression* TermedExpressionParser::peek() const {
-    return next_term_;
+    return *next_term_it_;
 }
+
+AST::Expression* TermedExpressionParser::current_term() const {
+    assert(!parse_stack_.empty() && "tried to read current_term from an empty parse stack");
+    return parse_stack_.back();
+}
+
 
 void TermedExpressionParser::shift() {
     parse_stack_.push_back(get_term());
+}
+
+std::optional<AST::Expression*> TermedExpressionParser::pop_term() {
+    if (parse_stack_.size() == 0)
+        return std::nullopt;
+
+    Expression* expression = parse_stack_.back();
+    parse_stack_.pop_back();
+    return expression;
 }
 
 bool TermedExpressionParser::at_expression_end() const {
@@ -104,7 +111,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
     // safe to unwrap because at_expression_end was checked above
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
-            handle_sub_termed_expression(peek());
+            handle_termed_sub_expression(peek());
             return parse_termed_expression();
 
         // terminals
@@ -148,7 +155,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
     return parse_stack_.back();
 }
 
-AST::Expression* TermedExpressionParser::handle_sub_termed_expression(AST::Expression* expression) {
+AST::Expression* TermedExpressionParser::handle_termed_sub_expression(AST::Expression* expression) {
     assert(expression->expression_type == ExpressionType::termed_expression 
         && "handle_sub_termed_expression called with non-termed expression");
 
@@ -162,13 +169,12 @@ AST::Expression* TermedExpressionParser::handle_sub_termed_expression(AST::Expre
 // ----- STATE FUNCTIONS -----
 
 void TermedExpressionParser::initial_identifier_state() {
-    if (at_expression_end()) {
+    if (at_expression_end())
         return;
-    }
 
     // if it's not a function it's treated as a value
     // i.e. the next term has to be an operator
-    if (current_term_->type.arity() == 0) {
+    if (current_term()->type.arity() == 0) {
         switch (peek()->expression_type) {
             case ExpressionType::operator_ref:
                 precedence_stack_.push_back(peek()->type.precedence());
@@ -184,7 +190,7 @@ void TermedExpressionParser::initial_identifier_state() {
 
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
-            handle_sub_termed_expression(peek());
+            handle_termed_sub_expression(peek());
             return initial_identifier_state();
 
         case GUARANTEED_VALUE:
@@ -203,14 +209,12 @@ void TermedExpressionParser::initial_identifier_state() {
 }
 
 void TermedExpressionParser::initial_value_state() {
-    if (at_expression_end()) {
-        // single values just get returned
+    if (at_expression_end())
         return;
-    }
 
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
-            handle_sub_termed_expression(peek());
+            handle_termed_sub_expression(peek());
             return initial_value_state();
 
         case ExpressionType::operator_ref:
@@ -228,34 +232,40 @@ void TermedExpressionParser::initial_value_state() {
 }
 
 void TermedExpressionParser::initial_operator_state() {
-    if (at_expression_end()) {
-        return;
-    }
+    if (at_expression_end())
+        return;        
 
-    // TODO: check arity
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
-            handle_sub_termed_expression(peek());
+            handle_termed_sub_expression(peek());
             return initial_operator_state();
 
         case GUARANTEED_VALUE: {
-            shift();
-            if (at_expression_end()) {
-                // just reduce
-                AST::Expression* rhs = parse_stack_.back();
-                parse_stack_.pop_back();
-                AST::Expression* op = parse_stack_.back();
-                parse_stack_.pop_back();
+            Expression* op = *pop_term();
+            AST::Expression* rhs = get_term();
 
-                AST::Expression* call = ast_->globals_->create_call_expression(op->reference_value(), {
-                        ast_->create_valueless_expression(AST::ExpressionType::missing_arg, op->location), 
-                        rhs },
-                    expression_->location);
 
+            // if it's an unary operator, just apply and be done with it
+            if (op->type.arity() == 1) {
+                Expression* call = ast_->globals_->
+                    create_call_expression(op->reference_value(), { rhs }, expression_->location);
+                
                 parse_stack_.push_back(call);
 
-                return;
+                return initial_value_state();
             }
+
+            // it's a binary operator being partially applied
+            AST::Expression* missing_argument = ast_->create_missing_argument(
+                op->type.function_type()->arg_types.at(0), op->location);
+
+            AST::Expression* call = 
+                ast_->globals_->create_call_expression(
+                    op->reference_value(), { missing_argument, rhs }, expression_->location);
+            
+            parse_stack_.push_back(call);
+            
+            return initial_function_state();
         }
 
         case ExpressionType::call:
@@ -268,16 +278,29 @@ void TermedExpressionParser::initial_operator_state() {
     }
 }
 
+void TermedExpressionParser::initial_function_state() {
+    if (at_expression_end()) {
+        return;
+    }
+}
+
 void TermedExpressionParser::post_binary_operator_state() {
     if (at_expression_end()) {
-        assert(false && "partial application not implemented");
-        // handle partial application
+        Expression* op = *pop_term(); // pop the operator
+        Expression* lhs = *pop_term();
+        Expression* missing_argument = ast_->create_missing_argument(
+            op->type.function_type()->arg_types.at(1), op->location);
+
+        Expression* call = ast_->globals_->create_call_expression(op->reference_value(), 
+            {lhs, missing_argument}, lhs->location);
+
+        parse_stack_.push_back(call);
         return;
     }
 
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
-            handle_sub_termed_expression(peek());
+            handle_termed_sub_expression(peek());
             return post_binary_operator_state();
 
         case ExpressionType::operator_ref:
@@ -366,14 +389,9 @@ void TermedExpressionParser::reduce_operator_left() {
     assert(parse_stack_.size() >= 3 
         && "TermedExpressionParser::reduce_operator_left_ called with parse stack size < 3");
 
-    Expression* rhs = parse_stack_.back();
-    parse_stack_.pop_back();
-
-    Expression* operator_ = parse_stack_.back();
-    parse_stack_.pop_back();
-
-    Expression* lhs = parse_stack_.back();
-    parse_stack_.pop_back();
+    Expression* rhs = *pop_term();
+    Expression* operator_ = *pop_term();
+    Expression* lhs = *pop_term();
 
     // TODO: check types here
     assert(std::holds_alternative<AST::Callable*>(operator_->value) 
@@ -401,8 +419,9 @@ bool TermedExpressionParser::is_acceptable_next_arg(AST::Callable* callee,
     return true;
 }
 
+// does it make sense to use different style of logic here?
 void TermedExpressionParser::call_expression_state() {
-    AST::Expression* callee = current_term_;
+    AST::Expression* callee = *pop_term();
     
     assert(callee->expression_type == AST::ExpressionType::reference 
         && "TermedExpressionParser called with a callee that was not a reference");
@@ -412,7 +431,7 @@ void TermedExpressionParser::call_expression_state() {
     
     // parse args
     for (int i = callee->type.arity(); i > 0; i--) {
-        AST::Expression* next = get_term();
+        shift();
 
         args.push_back(handle_arg_state(callee->callable_ref(), args));
 
@@ -422,7 +441,6 @@ void TermedExpressionParser::call_expression_state() {
         }
     }
 
-    parse_stack_.pop_back();
     AST::Expression* call_expression = ast_->globals_->create_call_expression(
         std::get<AST::Callable*>(callee->value), args, callee->location);
     
@@ -439,9 +457,9 @@ void TermedExpressionParser::call_expression_state() {
 }
 
 Expression* TermedExpressionParser::handle_arg_state(AST::Callable* callee, const std::vector<Expression*>& args) { 
-    switch (current_term_->expression_type) {
+    switch (current_term()->expression_type) {
         case ExpressionType::termed_expression:
-            handle_sub_termed_expression(current_term_);
+            handle_termed_sub_expression(current_term());
             return handle_arg_state(callee, args);
             
         case ExpressionType::operator_ref:
@@ -452,16 +470,17 @@ Expression* TermedExpressionParser::handle_arg_state(AST::Callable* callee, cons
         case GUARANTEED_VALUE:
         case ExpressionType::reference:
         case ExpressionType::call:
-            if (!is_acceptable_next_arg(callee, args, current_term_)) {
+            if (!is_acceptable_next_arg(callee, args, current_term())) {
                 // TODO: try all kinds of partial application
-                log_error(current_term_->location, "possible type-error");
+                log_error(current_term()->location, "possible type-error");
                 ast_->declare_invalid();
-                return current_term_;
+                return *pop_term();
             }
-            return current_term_;
+
+            return *pop_term();
         
         default:
             assert(false && "unhandled expression type in call_expression_state");
-            return current_term_;
+            return *pop_term();
     }
 }
