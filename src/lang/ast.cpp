@@ -6,6 +6,23 @@ namespace AST {
 
 // ----- EXPRESSION -----
 
+bool Expression::is_partial_call() const {
+    if (expression_type != ExpressionType::call)
+        return false;
+
+    auto [callee, args] = std::get<CallExpressionValue>(value);
+
+    if (args.size() < callee->get_type().arity())
+        return true;
+
+    for (auto arg: args) {
+        if (arg->expression_type == ExpressionType::missing_arg)
+            return true;
+    }
+
+    return false;
+}
+
 // TODO: clean this up
 const std::string& Expression::string_value() const {
     if (std::holds_alternative<Callable*>(value)) {

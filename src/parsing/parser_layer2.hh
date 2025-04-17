@@ -44,7 +44,7 @@ class TermedExpressionParser {
     void initial_identifier_state();
     void initial_value_state();
     void initial_operator_state();
-    void initial_function_state();
+    
     
     // binary operators
     void post_binary_operator_state();
@@ -52,12 +52,13 @@ class TermedExpressionParser {
     void reduce_operator_left();
     
     void unary_operators_state();
-
+    
     // calls/access operations
     bool is_acceptable_next_arg(AST::Callable* callee, 
-        const std::vector<AST::Expression*>& args, AST::Expression* next_arg);
-
+      const std::vector<AST::Expression*>& args, AST::Expression* next_arg);
+      
     void call_expression_state();
+    void partial_call_state();
     AST::Expression* handle_arg_state(AST::Callable* callee, const std::vector<AST::Expression*>& args);
 
     AST::AST* ast_;
