@@ -14,6 +14,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression);
 
 std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
     assert(statement && "Reverse parse encountered a nullptr statement");
+    ostream << linebreak();
 
     switch (statement->statement_type) {
         case AST::StatementType::broken:

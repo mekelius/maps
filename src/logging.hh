@@ -93,6 +93,10 @@ void log_error(SourceLocation location, const std::string& message);
 void log_info(SourceLocation location, const std::string& message, MessageType message_type);
 void log_token(SourceLocation location, const std::string& message);
 
+// returns true if log output has happened since last time this was called
+// only call this from main as a formatting aid
+bool logs_since_last_check();
+
 } // namespace Logging
 
 #endif
