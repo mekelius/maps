@@ -28,6 +28,8 @@ class TermedExpressionParser {
     bool parse_stack_reduced() const;
     
     AST::Expression* parse_termed_expression();
+
+    AST::Expression* handle_sub_termed_expression(AST::Expression* expression);
     
     // state functioms
     void initial_identifier_state();
@@ -35,7 +37,6 @@ class TermedExpressionParser {
     void initial_operator_state();
     
     // binary operators
-    void pre_binary_operator_state();
     void post_binary_operator_state();
     void compare_precedence_state();
     void reduce_operator_left();
@@ -47,7 +48,6 @@ class TermedExpressionParser {
         const std::vector<AST::Expression*>& args, AST::Expression* next_arg);
 
     void call_expression_state();
-    void arg_list_state();
 
     AST::AST* ast_;
 

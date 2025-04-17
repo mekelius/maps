@@ -101,6 +101,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
     switch (peek()->expression_type) {
         // terminals
         case ExpressionType::reference:
+            shift();
             initial_identifier_state();
             break;
 
@@ -108,10 +109,12 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         case ExpressionType::string_literal:
         case ExpressionType::numeric_literal:
         case ExpressionType::termed_expression:
+            shift();
             initial_value_state();
             break;
 
         case ExpressionType::operator_ref:
+            shift();
             initial_operator_state();
             break;
 
@@ -138,10 +141,20 @@ Expression* TermedExpressionParser::parse_termed_expression() {
     return parse_stack_.back();
 }
 
+AST::Expression* TermedExpressionParser::handle_sub_termed_expression(AST::Expression* expression) {
+    assert(expression->expression_type == ExpressionType::termed_expression 
+        && "handle_sub_termed_expression called with non-termed expression");
+
+    // TODO: pass some kind of type hint
+    TermedExpressionParser{ast_, expression}.run();
+
+    return expression;
+}
+
+
 // ----- STATE FUNCTIONS -----
 
 void TermedExpressionParser::initial_identifier_state() {
-    shift();
     if (at_expression_end()) {
         return;
     }
@@ -152,6 +165,7 @@ void TermedExpressionParser::initial_identifier_state() {
         switch (peek()->expression_type) {
             case ExpressionType::operator_ref:
                 precedence_stack_.push_back(peek()->type.precedence());
+                shift();
                 return post_binary_operator_state();                
 
             default:
@@ -162,8 +176,7 @@ void TermedExpressionParser::initial_identifier_state() {
     }
 
     switch (peek()->expression_type) {
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
+        case GUARANTEED_VALUE:
         case ExpressionType::reference:
         case ExpressionType::termed_expression:
         case ExpressionType::call:
@@ -171,6 +184,7 @@ void TermedExpressionParser::initial_identifier_state() {
 
         case ExpressionType::operator_ref:
             precedence_stack_.push_back(peek()->type.precedence());
+            shift();
             return post_binary_operator_state();
 
         default:
@@ -179,7 +193,6 @@ void TermedExpressionParser::initial_identifier_state() {
 }
 
 void TermedExpressionParser::initial_value_state() {
-    shift();
     if (at_expression_end()) {
         // single values just get returned
         return;
@@ -188,6 +201,7 @@ void TermedExpressionParser::initial_value_state() {
     switch (peek()->expression_type) {
         case ExpressionType::operator_ref:
             precedence_stack_.push_back(peek()->type.precedence());
+            shift();
             return post_binary_operator_state();
 
         default:
@@ -200,13 +214,16 @@ void TermedExpressionParser::initial_value_state() {
 }
 
 void TermedExpressionParser::initial_operator_state() {
-    shift();
     if (at_expression_end()) {
         return;
     }
 
     // TODO: check arity
     switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_sub_termed_expression(peek());
+            return initial_operator_state();
+
         case GUARANTEED_VALUE: {
             shift();
             if (at_expression_end()) {
@@ -228,7 +245,6 @@ void TermedExpressionParser::initial_operator_state() {
         }
 
         case ExpressionType::call:
-        case ExpressionType::termed_expression:
         case ExpressionType::operator_ref:
         case ExpressionType::reference:
             assert(false && "not implemented");
@@ -238,19 +254,7 @@ void TermedExpressionParser::initial_operator_state() {
     }
 }
 
-// maybe dumb?
-void TermedExpressionParser::pre_binary_operator_state() {
-    shift();
-    if (at_expression_end()) {
-        return;
-    }
-
-    // check type
-    // compare precedence
-}
-
 void TermedExpressionParser::post_binary_operator_state() {
-    shift(); // shift in the operator
     if (at_expression_end()) {
         assert(false && "partial application not implemented");
         // handle partial application
@@ -269,10 +273,11 @@ void TermedExpressionParser::post_binary_operator_state() {
             assert(false && "not implemented");
 
         case GUARANTEED_VALUE:
+            shift();
             return compare_precedence_state();
 
         case BAD_TERM:
-            assert(false && "unhandled term type in TermedExpressionParser::post_binary_operator_state");
+            assert(false && "bad term in TermedExpressionParser::post_binary_operator_state");
             break;
     }
 }
@@ -281,7 +286,6 @@ void TermedExpressionParser::post_binary_operator_state() {
 // so, we compare the precedences of the operators
 // if OP1 wins, we can reduce left, if OP2 wins we must wait (how?)
 void TermedExpressionParser::compare_precedence_state() {
-    shift(); //!!! shift in an assumed value
     if (at_expression_end()) {
         reduce_operator_left();
         precedence_stack_.pop_back();
@@ -296,6 +300,7 @@ void TermedExpressionParser::compare_precedence_state() {
         // if there's an "intermediate level" or operators, we need to handle those before returning
         if (precedence_stack_.back() < peek()->type.precedence()) {
             precedence_stack_.push_back(peek()->type.precedence());
+            shift();
             return post_binary_operator_state();
         }
         
@@ -309,6 +314,7 @@ void TermedExpressionParser::compare_precedence_state() {
     if (precedence_stack_.back() == peek()->type.precedence()) { // !!!: assuming left-associativity
         // if the precedence stays the same, just reduce and carry on
         reduce_operator_left();
+        shift();
         return post_binary_operator_state();
     }
 
@@ -317,7 +323,7 @@ void TermedExpressionParser::compare_precedence_state() {
     if (precedence_stack_.back() < peek()->type.precedence()) {
         unsigned int previous_precedence = precedence_stack_.back();
         precedence_stack_.push_back(peek()->type.precedence());
-        
+        shift();
         post_binary_operator_state();
         assert(precedence_stack_.back() == previous_precedence 
             && "post_binary_operator_state didn't return to the same precedence level");
@@ -333,6 +339,7 @@ void TermedExpressionParser::compare_precedence_state() {
             && "post_binary_operator_state didn't run until the end or a lover/equal precedence that the caller put on the precedence stack");
         
         // continue parsing
+        shift();
         return post_binary_operator_state(); /// how about the shifts here
     }
 }
@@ -363,7 +370,6 @@ void TermedExpressionParser::reduce_operator_left() {
 }
 
 void TermedExpressionParser::unary_operators_state() {
-    shift();
     if (at_expression_end()) {
         return;
     }
@@ -376,13 +382,6 @@ bool TermedExpressionParser::is_acceptable_next_arg(AST::Expression* callee,
 
     // TODO: check type
     return true;
-}
-
-void TermedExpressionParser::arg_list_state() {
-    shift();
-    if (at_expression_end()) {
-        return;
-    }
 }
 
 void TermedExpressionParser::call_expression_state() {
@@ -404,8 +403,7 @@ void TermedExpressionParser::call_expression_state() {
                 // might be unary
                 // !!! we might need to switch to peeking, unless we want to reverse
 
-            case ExpressionType::numeric_literal:
-            case ExpressionType::string_literal:
+            case GUARANTEED_VALUE:
             case ExpressionType::reference:
             case ExpressionType::call:
                 if (!is_acceptable_next_arg(callee, args, next)) {
