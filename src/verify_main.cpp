@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     // ----- PROCESS FILES -----
     bool all_succeeded = true;
     for (std::string filename: source_filenames) {
-        std::cout << separator('#') << separator(' ', filename) << "\n";
+        std::cout << separator('#') << "\n" << separator(' ', filename) << "\n\n";
         
         std::ifstream source_file{ filename, std::ifstream::in };
         
@@ -76,20 +76,40 @@ int main(int argc, char* argv[]) {
         
         StreamingLexer lexer{&source_file};
         std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
-        ParserLayer1 layer1{&lexer, pragmas.get()};
         
-        std::unique_ptr<AST::AST> ast = layer1.run();
-        std::cout << "\nlayer1 done" << std::endl;
+        std::cout << "run layer1\n\n";
+        std::unique_ptr<AST::AST> ast = ParserLayer1{&lexer, pragmas.get()}.run();
+
+        std::cout << "\n";
+        if (!ast->is_valid) {
+            std::cerr << "layer1 failed\n\n";
+            continue;
+        }
+        std::cout << "layer1 done\n\n";
+        std::cout << "run name resolution\n\n";
 
         resolve_identifiers(*ast);
 
-        ParserLayer2 layer2{ast.get(), pragmas.get()};
-        layer2.run();
-        std::cout << "layer2 done\n" << std::endl;
+        std::cout << "\n";
+        if (!ast->is_valid) {
+            std::cerr << "name resolution failed\n\n";
+            continue;
+        }
+        std::cout << "name resolution done\n\n";
+        std::cout << "run layer 2:\n\n";
 
-        std::cout << separator('-', "Parsed into") << "\n" << std::endl; 
+        ParserLayer2{ast.get(), pragmas.get()}.run();
+
+        std::cout << "\n";
+        if (!ast->is_valid) {
+            std::cerr << "layer2 failed\n\n";
+            continue;
+        }
+        std::cout << "layer2 done\n\n";
+
+        std::cout << separator('-', "Parsed into") << std::endl; 
         reverse_parse(*ast, std::cout);
-        std::cout << std::endl;
+        std::cout << "\n" << std::endl;
     }
 
     std::cout << separator();

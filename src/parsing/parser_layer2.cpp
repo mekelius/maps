@@ -132,8 +132,15 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             initial_operator_state();
             break;
 
-        default:
-            assert(false && "unhandled expressiontype in TermedExpressionParser::parse_termed_expression");
+        case BAD_TERM:
+            // TODO: make expressions print out nice
+            log_error(expression_->location, "bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)));
+            assert(false && "bad term in TermedExpressionParser::parse_termed_expression");
+    }
+
+    if (!ast_->is_valid) {
+        log_error(expression_->location, "parsing termed expression failed");
+        return ast_->create_valueless_expression(ExpressionType::syntax_error, expression_->location);
     }
 
     if (!at_expression_end()) {
@@ -208,6 +215,7 @@ void TermedExpressionParser::initial_identifier_state() {
     }
 }
 
+// current_term is a value, so next term has to be something else, or eventually reduce to a binop
 void TermedExpressionParser::initial_value_state() {
     if (at_expression_end())
         return;
@@ -222,10 +230,17 @@ void TermedExpressionParser::initial_value_state() {
             shift();
             return post_binary_operator_state();
 
-        default:
-            // TODO: make expression to_str
+        case ExpressionType::reference:
+        case ExpressionType::call:
+        case GUARANTEED_VALUE:
             log_error(peek()->location, 
-                "unexpected *something* after a value, expected an operator");
+                "unexpected value expression in termed expression, expected an operator");
+            ast_->declare_invalid();
+            return;
+
+        case BAD_TERM:
+            // TODO: make expression to_str
+            log_error(peek()->location, "bad term in initial value state");
             ast_->declare_invalid();
             return;
     }
