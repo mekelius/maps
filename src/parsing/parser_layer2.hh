@@ -44,10 +44,11 @@ class TermedExpressionParser {
     void unary_operators_state();
 
     // calls/access operations
-    bool is_acceptable_next_arg(AST::Expression* callee, 
+    bool is_acceptable_next_arg(AST::Callable* callee, 
         const std::vector<AST::Expression*>& args, AST::Expression* next_arg);
 
     void call_expression_state();
+    AST::Expression* handle_arg_state(AST::Callable* callee, const std::vector<AST::Expression*>& args);
 
     AST::AST* ast_;
 
