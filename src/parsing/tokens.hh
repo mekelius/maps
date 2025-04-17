@@ -24,17 +24,16 @@ enum class TokenType: int {
 
 class Token {
   public:
-    using Value = std::variant<std::monostate, std::string, int>;
-
-    Token(TokenType token_type, SourceLocation location, Value value = std::monostate{});
+    Token(TokenType token_type, SourceLocation location, const std::string& value = "");
 
     TokenType token_type;
     SourceLocation location;
-    Value value;
+    std::string value;
 
     // the raw string value
-    std::string string_value() const {
-        return std::get<std::string>(value);
+    // getter kept to save on changes
+    const std::string& string_value() const {
+        return value;
     }
 
     // a formatted representation of the token

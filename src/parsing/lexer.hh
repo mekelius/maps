@@ -20,7 +20,6 @@ class StreamingLexer {
     // creates a token filled with the correct line and col info
     Token create_token_(TokenType token_type);
     Token create_token_(TokenType token_type, const std::string& value);
-    Token create_token_(TokenType token_type, int value);
   
     // production rules
     Token get_token_();

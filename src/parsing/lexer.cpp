@@ -52,10 +52,6 @@ Token StreamingLexer::create_token_(TokenType type, const std::string& value) {
     return Token{type, {current_token_start_line_, current_token_start_col_}, value};
 }
 
-Token StreamingLexer::create_token_(TokenType type, int value) {
-    return Token{type, {current_token_start_line_, current_token_start_col_}, value};
-}
-
 // ----- PRODUCTION RULES -----
 
 Token StreamingLexer::get_token_() {

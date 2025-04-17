@@ -3,42 +3,8 @@
 #include "tokens.hh"
 #include "../logging.hh"
 
-Token::Token(TokenType token_type, SourceLocation location, Value value)
+Token::Token(TokenType token_type, SourceLocation location, const std::string& value)
 :token_type(token_type), location(location), value(value) {
-    switch (token_type) {
-        case TokenType::identifier: 
-        case TokenType::operator_t:
-        case TokenType::number: 
-        case TokenType::string_literal:
-        case TokenType::reserved_word:
-        case TokenType::pragma:
-            assert((std::holds_alternative<std::string>(value) || std::holds_alternative<std::monostate>(value))
-                && "Token created with wrong value type");
-            if (std::holds_alternative<std::monostate>(value))
-                value = "";
-            break;
-
-        case TokenType::indent_error_fatal:
-        case TokenType::indent_block_start: 
-        case TokenType::indent_block_end: 
-        case TokenType::eof:
-        case TokenType::curly_brace_open: 
-        case TokenType::curly_brace_close:
-        case TokenType::parenthesis_open: 
-        case TokenType::parenthesis_close:
-        case TokenType::bracket_open: 
-        case TokenType::bracket_close:
-        case TokenType::semicolon: 
-        case TokenType::comma: 
-        case TokenType::lambda:
-        case TokenType::tie:
-        case TokenType::dummy:
-            assert(std::holds_alternative<std::monostate>(value) && "Token created with wrong value type");
-            break;
-
-        default:
-            assert(false && "Unhandled token type in Token constructor");
-    }
 }
 
 std::string Token::get_string() const {
@@ -93,8 +59,9 @@ std::string Token::get_string() const {
         case TokenType::pragma:
             return "pragma: " + string_value();
 
-        default:
-            assert(false && "tokentype is lacking a string representation");
+        case TokenType::unknown:
+            assert(false && "unknown tokens shouldn't exist");
+            return "unknown token type";
     }
 }
 
