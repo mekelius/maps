@@ -85,13 +85,13 @@ Expression* TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
         log_error(expression_->location, "layer2 tried to parse an empty expresison");
         ast_->declare_invalid();
-        return ast_->create_expression(AST::ExpressionType::empty, expression_->location);
+        return ast_->create_valueless_expression(AST::ExpressionType::empty, expression_->location);
     }
 
     // safe to unwrap because at_expression_end was checked above
     switch (peek()->expression_type) {
         // terminals
-        case ExpressionType::identifier:
+        case ExpressionType::reference:
             initial_identifier_state();
             break;
 
@@ -105,11 +105,6 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         case ExpressionType::operator_ref:
             // TODO: check if unary
             shift();
-            break;
-
-        case ExpressionType::deferred_call:
-            shift();
-            // TODO: try to resolve callee
             break;
 
         case ExpressionType::tie:
@@ -175,11 +170,9 @@ void TermedExpressionParser::initial_identifier_state() {
     switch (peek()->expression_type) {
         case ExpressionType::string_literal:
         case ExpressionType::numeric_literal:
-        case ExpressionType::identifier:
+        case ExpressionType::reference:
         case ExpressionType::termed_expression:
         case ExpressionType::call:
-        case ExpressionType::deferred_call:
-        case ExpressionType::binary_operator_apply:
             return call_expression_state();
 
         case ExpressionType::tie:
@@ -255,7 +248,7 @@ void TermedExpressionParser::post_binary_operator_state() {
             break;
 
         // value
-        case ExpressionType::identifier:
+        case ExpressionType::reference:
         case ExpressionType::numeric_literal:
         case ExpressionType::string_literal:
             return compare_precedence_state();
@@ -341,9 +334,12 @@ void TermedExpressionParser::reduce_operator_left() {
     parse_stack_.pop_back();
 
     // TODO: check types here
+    assert(std::holds_alternative<AST::Callable*>(operator_->value) 
+        && "TermedExpressionParser::reduce_operator_left called with a call stack where operator didn't hold a reference to a callable");
 
-    Expression* reduced = ast_->create_expression(ExpressionType::binary_operator_apply, lhs->location);
-    reduced->value = AST::BinaryOperatorApplyValue{std::get<AST::Callable*>(operator_->value), lhs, rhs};
+    Expression* reduced = ast_->globals_->create_call_expression(
+        std::get<AST::Callable*>(operator_->value), {lhs, rhs}, lhs->location);
+    reduced->value = AST::CallExpressionValue{std::get<AST::Callable*>(operator_->value), std::vector<AST::Expression*>{lhs, rhs}};
 
     parse_stack_.push_back(reduced);
 }
@@ -374,14 +370,14 @@ void TermedExpressionParser::arg_list_state() {
 void TermedExpressionParser::call_expression_state() {
     AST::Expression* callee = current_term_;
     
-    // at this point the type should be set by name_resolution (or inference?)
-    AST::Type callee_type = current_term_->type;
-    assert(callee_type.arity() > 0 && "call_expression_state cassed with arity 0");
+    assert(callee->expression_type == AST::ExpressionType::reference 
+        && "TermedExpressionParser called with a callee that was not a reference");
+    assert(callee->type.arity() > 0 && "call_expression_state cassed with arity 0");
 
     std::vector<AST::Expression*> args;
     
     // parse args
-    for (int i = callee_type.arity(); i > 0; i--) {
+    for (int i = callee->type.arity(); i > 0; i--) {
         AST::Expression* next = get_term();
 
         switch (next->expression_type) {
@@ -397,8 +393,7 @@ void TermedExpressionParser::call_expression_state() {
 
             case ExpressionType::numeric_literal:
             case ExpressionType::string_literal:
-            case ExpressionType::binary_operator_apply:
-            case ExpressionType::identifier:
+            case ExpressionType::reference:
             case ExpressionType::call:
                 if (!is_acceptable_next_arg(callee, args, next)) {
                     // TODO: try all kinds of partial application
@@ -420,9 +415,8 @@ void TermedExpressionParser::call_expression_state() {
     }
 
     parse_stack_.pop_back();
-    AST::Expression* call_expression = ast_->create_expression(
-        ExpressionType::call, {callee->location});
-    call_expression->value = AST::CallExpressionValue{callee->string_value(), args};
+    AST::Expression* call_expression = ast_->globals_->create_call_expression(
+        std::get<AST::Callable*>(callee->value), args, callee->location);
     
     // determine the type
     if (args.size() == callee->type.arity()) {

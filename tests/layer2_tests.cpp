@@ -15,26 +15,27 @@ inline std::tuple<AST::Expression*, AST::Callable*> create_operator_helper(AST::
     AST::Type type = AST::create_binary_operator_type(AST::Void, AST::Number, AST::Number, precedence);
     AST::Callable* op_callable = ast.create_builtin(AST::BuiltinType::builtin_operator, op_string, type);
 
-    AST::Expression* op_ref = ast.create_expression(AST::ExpressionType::operator_ref, {0,0});
-    op_ref->value = op_callable;
-    op_ref->type = op_callable->get_type();
+    AST::Expression* op_ref = ast.create_operator_ref(op_callable, {0,0});
 
     return {op_ref, op_callable};
 }
 
 // takes a parsed binop expression tree and traverses it in preorder
 void traverse_pre_order(AST::Expression* tree, std::ostream& output) {
-    auto [op, lhs, rhs] = tree->binop_apply_value();
+    auto [op, args] = tree->call();
+
+    Expression* lhs = args.at(0);
+    Expression* rhs = args.at(1);
 
     output << op->name;
 
-    if (lhs->expression_type == AST::ExpressionType::binary_operator_apply) {
+    if (lhs->expression_type == AST::ExpressionType::call) {
         traverse_pre_order(lhs, output);
     } else {
         output << lhs->string_value();
     }
 
-    if (rhs->expression_type == AST::ExpressionType::binary_operator_apply) {
+    if (rhs->expression_type == AST::ExpressionType::call) {
         traverse_pre_order(rhs, output);
     } else {
         output << rhs->string_value();
@@ -68,13 +69,12 @@ void prime_terms(auto expr, const std::string& input, auto op1_ref, auto op2_ref
 TEST_CASE("TermedExpressionParser should replace a single value term with that value") {
     AST::AST ast{};
 
-    Expression* expr = ast.create_expression(ExpressionType::termed_expression, {0,0});
+    Expression* expr = ast.create_termed_expression({}, {0,0});
 
     REQUIRE(expr->terms().size() == 0);
 
     SUBCASE("String value") {
-        Expression* value = ast.create_expression(ExpressionType::string_literal, {0,0});
-        value->value = "TEST_STRING:oasrpkorsapok";
+        Expression* value = ast.create_string_literal("TEST_STRING:oasrpkorsapok", {0,0});
         expr->terms().push_back(value);
         TermedExpressionParser{&ast, expr}.run();
 
@@ -83,8 +83,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
     }
 
     SUBCASE("Number value") {
-        Expression* value = ast.create_expression(ExpressionType::numeric_literal, {0,0});
-        value->value = "234.52";
+        Expression* value = ast.create_numeric_literal("234.52", {0,0});
         expr->terms().push_back(value);
         TermedExpressionParser{&ast, expr}.run();
 
@@ -95,7 +94,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
 
 TEST_CASE("TermedExpressionParser should replace an empty termed expression with ExpressionType::empty") {
     AST::AST ast{};
-    Expression* expr = ast.create_expression(ExpressionType::termed_expression, {0,0});
+    Expression* expr = ast.create_termed_expression({}, {0,0});
     TermedExpressionParser{&ast, expr}.run();
 
     CHECK(expr->expression_type == ExpressionType::empty);
@@ -103,12 +102,10 @@ TEST_CASE("TermedExpressionParser should replace an empty termed expression with
 
 TEST_CASE("TermedExpressionParser should handle binop expressions") {
     AST::AST ast{};
-    Expression* expr = ast.create_expression(ExpressionType::termed_expression, {0,0});
+    Expression* expr = ast.create_termed_expression({}, {0,0});
 
-    Expression* val1 = ast.create_expression(ExpressionType::numeric_literal, {0,0});
-    val1->value = "23";
-    Expression* val2 = ast.create_expression(ExpressionType::numeric_literal, {0,0});
-    val2->value = "12";
+    Expression* val1 = ast.create_numeric_literal("23", {0,0});
+    Expression* val2 = ast.create_numeric_literal("12", {0,0});
 
     // create the operator
     auto [op1_ref, op1] = create_operator_helper(ast, "+");
@@ -120,9 +117,13 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
     SUBCASE("Simple expression") {
         TermedExpressionParser{&ast, expr}.run();
 
-        CHECK(expr->expression_type == ExpressionType::binary_operator_apply);
+        CHECK(expr->expression_type == ExpressionType::call);
         // NOTE: the operator_ref should be unwrapped
-        CHECK(std::tie(op1, val1, val2) == expr->binop_apply_value());
+
+        auto [op, args] = expr->call();
+        CHECK(op == op1);
+        CHECK(args.at(0) == val1);
+        CHECK(args.at(1) == val2);
     }
 
     SUBCASE("should handle higher precedence first") {
@@ -130,21 +131,26 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         auto [op2_ref, op2] = create_operator_helper(ast, "*", 1);
         expr->terms().push_back(op2_ref);
 
-        Expression* val3 = ast.create_expression(ExpressionType::numeric_literal, {0,0});
-        val3->value = "235";
+        Expression* val3 = ast.create_numeric_literal("235", {0,0});
         expr->terms().push_back(val3);
 
         TermedExpressionParser{&ast, expr}.run();
 
-        CHECK(expr->expression_type == ExpressionType::binary_operator_apply);
-        auto [outer_op, outer_lhs, outer_rhs] = expr->binop_apply_value();
+        CHECK(expr->expression_type == ExpressionType::call);
+        auto [outer_op, outer_args] = expr->call();
+
+        auto outer_lhs = outer_args.at(0);
+        auto outer_rhs = outer_args.at(1);
 
         CHECK(outer_op == op2);
         CHECK(outer_rhs == val3);
 
         // check the lhs
-        CHECK(outer_lhs->expression_type == ExpressionType::binary_operator_apply);
-        auto [inner_op, inner_lhs, inner_rhs] = outer_lhs->binop_apply_value();
+        CHECK(outer_lhs->expression_type == ExpressionType::call);
+        auto [inner_op, inner_args] = outer_lhs->call();
+
+        auto inner_lhs = inner_args.at(0);
+        auto inner_rhs = inner_args.at(1);
 
         CHECK(inner_op == op1);
         CHECK(inner_lhs == val1);
@@ -156,21 +162,26 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         auto [op2_ref, op2] = create_operator_helper(ast, "*", 999);
         expr->terms().push_back(op2_ref);
 
-        Expression* val3 = ast.create_expression(ExpressionType::numeric_literal, {0,0});
-        val3->value = "235";
+        Expression* val3 = ast.create_numeric_literal("235", {0,0});
+
         expr->terms().push_back(val3);
 
         TermedExpressionParser{&ast, expr}.run();
 
-        CHECK(expr->expression_type == ExpressionType::binary_operator_apply);
-        auto [outer_op, outer_lhs, outer_rhs] = expr->binop_apply_value();
+        CHECK(expr->expression_type == ExpressionType::call);
+        auto [outer_op, args] = expr->call();
+
+        auto outer_lhs = args.at(0);
+        auto outer_rhs = args.at(1);
 
         CHECK(outer_op == op1);
         CHECK(outer_lhs == val1);
 
         // check the lhs
-        CHECK(outer_rhs->expression_type == ExpressionType::binary_operator_apply);
-        auto [inner_op, inner_lhs, inner_rhs] = outer_rhs->binop_apply_value();
+        CHECK(outer_rhs->expression_type == ExpressionType::call);
+        auto [inner_op, inner_args] = outer_rhs->call();
+        auto inner_lhs = inner_args.at(0);
+        auto inner_rhs = inner_args.at(1);
 
         CHECK(inner_op == op2);
         CHECK(inner_lhs == val2);
@@ -180,13 +191,12 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
 
 TEST_CASE ("should handle more complex expressions") {
     AST::AST ast{};
-    Expression* expr = ast.create_expression(ExpressionType::termed_expression, {0,0});
+    Expression* expr = ast.create_termed_expression({}, {0,0});
 
     auto [op1_ref, op1] = create_operator_helper(ast, "1", 1);
     auto [op2_ref, op2] = create_operator_helper(ast, "2", 2);
     auto [op3_ref, op3] = create_operator_helper(ast, "3", 3);
-    Expression* val = ast.create_expression(ExpressionType::numeric_literal, {0,0});
-    val->value = "v";
+    Expression* val = ast.create_numeric_literal("v", {0,0});
 
     REQUIRE(expr->terms().size() == 0);
 
@@ -219,18 +229,18 @@ TEST_CASE ("should handle more complex expressions") {
 
 TEST_CASE("TermedExpressionParser should handle haskell-style call expressions") {
     AST::AST ast{};
-    Expression* expr = ast.create_expression(ExpressionType::termed_expression, {0,0});
-    
+    Expression* expr = ast.create_termed_expression({}, {0,0});
     
     SUBCASE("1 arg") {    
         AST::Type function_type = AST::create_function_type(AST::Void, {AST::String});
 
         Callable* function = ast.create_builtin(BuiltinType::builtin_function, "test_f", function_type);
-        Expression* id = ast.create_expression(ExpressionType::identifier, {0,0});
+        Expression* id = ast.globals_->create_reference_expression(function, {0,0});
         id->value = function;    
         id->type = function_type;
 
-        Expression* arg1 = ast.create_expression(ExpressionType::string_literal, {0,0});
+        Expression* arg1 = ast.create_string_literal("", {0,0});
+
 
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
@@ -239,7 +249,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         
         CHECK(expr->expression_type == ExpressionType::call);
         auto [callee, args] = expr->call();
-        CHECK(callee == "test_f");
+        CHECK(callee->name == "test_f");
         CHECK(args.size() == 1);
         CHECK(args.at(0) == arg1);
     }
@@ -249,14 +259,14 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
             {AST::String, AST::String, AST::String, AST::String});
         
         Callable* function = ast.create_builtin(BuiltinType::builtin_function, "test_f", function_type);
-        Expression* id = ast.create_expression(ExpressionType::identifier, {0,0});
+        Expression* id = ast.globals_->create_reference_expression(function, {0,0});
         id->value = function;    
         id->type = function_type;
     
-        Expression* arg1 = ast.create_expression(ExpressionType::string_literal, {0,0});
-        Expression* arg2 = ast.create_expression(ExpressionType::string_literal, {0,0});
-        Expression* arg3 = ast.create_expression(ExpressionType::string_literal, {0,0});
-        Expression* arg4 = ast.create_expression(ExpressionType::string_literal, {0,0});
+        Expression* arg1 = ast.create_string_literal("", {0,0});
+        Expression* arg2 = ast.create_string_literal("", {0,0});
+        Expression* arg3 = ast.create_string_literal("", {0,0});
+        Expression* arg4 = ast.create_string_literal("", {0,0});
 
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
@@ -268,7 +278,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         
         CHECK(expr->expression_type == ExpressionType::call);
         auto [callee, args] = expr->call();
-        CHECK(callee == "test_f");
+        CHECK(callee->name == "test_f");
         CHECK(args.size() == 4);
         CHECK(args.at(0) == arg1);
         CHECK(args.at(1) == arg2);
@@ -281,11 +291,11 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         AST::Type function_type = AST::create_function_type(AST::Number, {AST::String});
         
         Callable* function = ast.create_builtin(BuiltinType::builtin_function, "test_f", function_type);
-        Expression* id = ast.create_expression(ExpressionType::identifier, {0,0});
-        id->value = function;    
+        Expression* id = ast.globals_->create_reference_expression(function, {0,0});
+        id->value = function;
         id->type = function_type;
 
-        Expression* arg1 = ast.create_expression(ExpressionType::string_literal, {0,0});
+        Expression* arg1 = ast.create_string_literal("", {0,0});
 
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);

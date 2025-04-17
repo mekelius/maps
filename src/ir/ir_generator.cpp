@@ -40,10 +40,10 @@ Function* IR_Generator::function_declaration(const std::string& name, FunctionTy
 Value* IR_Generator::handle_call(AST::Expression& expression) {
     auto [callee, args] = expression.call();
 
-    std::optional<FunctionCallee> function = get_function(callee);
+    std::optional<FunctionCallee> function = get_function(callee->name);
 
     if (!function) {
-        fail("attempt to call unknown function: \"" + callee + "\"");
+        fail("attempt to call unknown function: \"" + callee->name + "\"");
         return nullptr;
     }
 
@@ -183,7 +183,7 @@ bool IR_Generator::run(AST::AST& ast, std::optional<Pragma::Pragmas*> pragmas) {
         set_pragmas(*pragmas);
 
     // global definitions
-    for (std::string name: ast.globals_->identifiers_in_order) {
+    for (std::string name: ast.globals_->identifiers_in_order_) {
         std::optional<AST::Callable*> callable = ast.globals_->get_identifier(name);
         assert(callable && "nonexistent name in ast.globals_.identifiers_in_order");
 

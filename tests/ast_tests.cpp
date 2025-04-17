@@ -22,9 +22,7 @@ TEST_CASE("Operator_ref:s should pass their type correctly") {
     AST::Callable* op = ast.create_builtin(BuiltinType::builtin_operator, "*", 
         AST::create_binary_operator_type(AST::Void, AST::Number, AST::Number, PRECEDENCE));
 
-    AST::Expression* op_ref = ast.create_expression(AST::ExpressionType::operator_ref, {0,0});
-    op_ref->value = op;
-    op_ref->type = op->get_type();
+    AST::Expression* op_ref = ast.create_operator_ref(op, {0,0});
     
     CHECK(op_ref->type.precedence() == PRECEDENCE);
 }

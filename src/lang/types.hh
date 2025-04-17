@@ -59,6 +59,7 @@ struct Type {
     ~Type() = default;
 
     bool is_complex() const;   
+    bool is_operator() const;
     unsigned int arity() const;
     unsigned int precedence() const;
     FunctionTypeComplex* function_type() const {
@@ -185,6 +186,14 @@ static TypeTemplate Operator_ {
     DeferredBool::maybe,
     DeferredBool::maybe,
 };
+
+static TypeTemplate Absurd_ {
+    "Absurd",
+    false,
+    DeferredBool::false_,
+    DeferredBool::false_,
+};
+static const Type Absurd = { &Absurd_ };
 
 } // namespace AST
 #endif

@@ -48,10 +48,11 @@ class ParserLayer1 {
 
     // mark down the location for logging purposes
     void expression_start();
+    void expression_end();
+
     void statement_start();
 
     // creates an expression using ast_, marking the location as the current_expression_start_
-    AST::Expression* create_expression(AST::ExpressionType expression_type);
     AST::Statement* create_statement(AST::StatementType statement_type);
 
     void handle_pragma();
