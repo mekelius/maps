@@ -197,9 +197,9 @@ class Callable {
     Callable(CallableBody body, const std::string& name, std::optional<SourceLocation> location = std::nullopt);
     Callable(CallableBody body, std::optional<SourceLocation> location); // create anonymous callable
 
+    CallableBody body;
     std::string name;
     std::optional<SourceLocation> location;
-    CallableBody body;
 
     // since statements don't store types, we'll have to store them here
     // if the body is an expression, the type will just mirror it's type

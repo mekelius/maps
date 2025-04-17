@@ -34,11 +34,14 @@ public:
 
     bool run(AST::AST& ast, std::optional<Pragma::Pragmas*> pragmas = std::nullopt);
 
-    TypeMap types_;
-
+    // TODO: move to use logging
+    std::ostream* errs_;
+    
     std::unique_ptr<llvm::LLVMContext> context_;
     std::unique_ptr<llvm::Module> module_;
     std::unique_ptr<llvm::IRBuilder<>> builder_;
+
+    TypeMap types_;
 private:
     llvm::Value* handle_callable(AST::Callable& callable);
     llvm::Value* handle_expression(AST::Expression& expression);
@@ -52,8 +55,6 @@ private:
     std::optional<llvm::FunctionCallee> get_function(const std::string& name) const;
     void start_main();
 
-    // TODO: move to use logging
-    std::ostream* errs_;
 
     std::unordered_map<std::string, llvm::FunctionCallee> functions_map_;
 

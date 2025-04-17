@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(Maps)
 
-add_compile_options(-Wall -Wextra)
+add_compile_options(-Wall -Wextra -Werror -Wno-error=unused-parameter -Wno-error=unused-but-set-variable -Wno-error=unused-variable)
 
 # ------------------- MAPSC PARSING -------------------
 
