@@ -88,25 +88,6 @@ Type Callable::get_type() const {
 
 // ----- SCOPE -----
 
-std::optional<Callable*> Scope::create_identifier(const std::string& name, CallableBody body,
-    std::optional<SourceLocation> location) {
-
-    if (identifier_exists(name)) {
-        return std::nullopt;
-    }
-
-    Callable* callable = ast_->create_callable(body, name, location);
-    identifiers_.insert({name, callable});
-    identifiers_in_order.push_back(name);
-    
-    return callable;
-}
-
-std::optional<Callable*> Scope::create_identifier(const std::string& name, SourceLocation location) {
-    return create_identifier(name, std::monostate{}, location);
-}
-
-
 bool Scope::identifier_exists(const std::string& name) const {
     return identifiers_.find(name) != identifiers_.end();
 }
@@ -119,75 +100,110 @@ std::optional<Callable*> Scope::get_identifier(const std::string& name) const {
     return it->second;
 }
 
+std::optional<Callable*> Scope::create_callable(const std::string& name, CallableBody body,
+    std::optional<SourceLocation> location) {
+
+    if (identifier_exists(name)) {
+        return std::nullopt;
+    }
+
+    Callable* callable = ast_->create_callable(body, name, location);
+    identifiers_.insert({name, callable});
+    identifiers_in_order_.push_back(name);
+    
+    return callable;
+}
+
+std::optional<Callable*> Scope::create_callable(const std::string& name, SourceLocation location) {
+    return create_callable(name, std::monostate{}, location);
+}
+
+std::optional<Expression*> Scope::create_reference_expression(const std::string& name, SourceLocation location) {
+    std::optional<Callable*> callable = get_identifier(name);
+
+    if (! callable)
+        return std::nullopt;
+
+    return create_reference_expression(*callable, location);
+}
+
+Expression* Scope::create_reference_expression(Callable* callable, SourceLocation location) {
+    return ast_->create_expression(ExpressionType::reference, callable, callable->get_type(), location);
+}
+
+std::optional<Expression*> Scope::create_call_expression(
+    const std::string& callee_name, std::vector<Expression*> args, SourceLocation location /*, expected return type?*/) {
+    
+    std::optional<Callable*> callee = get_identifier(callee_name);
+    
+    if (!callee)
+        return std::nullopt;
+
+    return create_call_expression(*callee, args, location);
+}
+
+Expression* Scope::create_call_expression(Callable* callee, std::vector<Expression*> args, 
+        SourceLocation location /*, expected return type?*/) {
+    return ast_->create_expression(ExpressionType::call, CallExpressionValue{callee, args}, callee->get_type(), 
+        location);
+}
+
+// ----- AST -----
+
 AST::AST() {}
 
-Expression* AST::create_expression(
-    ExpressionType expression_type, SourceLocation location, const Type& type) {
-    
-    expressions_.push_back(std::make_unique<Expression>(expression_type, location, type));
-    Expression* expression = expressions_.back().get();
+Expression* AST::create_string_literal(const std::string& value, SourceLocation location) {
+    return create_expression(ExpressionType::string_literal, value, String, location);
+}
 
-    switch (expression_type) {
-        case ExpressionType::string_literal:
-            if (expression->type == Hole)
-                expression->type = String;
-            expression->value = "";
-            break;
+Expression* AST::create_numeric_literal(const std::string& value, SourceLocation location) {
+    return create_expression(ExpressionType::numeric_literal, value, NumberLiteral, location);
+}
 
-        case ExpressionType::numeric_literal:
-            if (expression->type == Hole)
-                expression->type = NumberLiteral;
-            expression->value = "";
-            break;
-
-        case ExpressionType::call:
-            expression->value = CallExpressionValue{};
-            break;
-
-        case ExpressionType::deferred_call:
-            expression->value = CallExpressionValueDeferred{};
-            break;
-
-        case ExpressionType::termed_expression:
-            expression->value = TermedExpressionValue{};
-            break;
-
-        case ExpressionType::unresolved_identifier:
-        case ExpressionType::unresolved_operator:
-        case ExpressionType::empty:
-        case ExpressionType::syntax_error:
-        case ExpressionType::not_implemented:
-        case ExpressionType::identifier:
-            expression->value = "";
-            break;
-        
-        case ExpressionType::operator_ref:
-            expression->value = nullptr;
-            break;
-
-        case ExpressionType::tie:
-        case ExpressionType::deleted:
-            expression->value = std::monostate{};
-            break;
-            
-        case ExpressionType::binary_operator_apply:
-            expression->value = BinaryOperatorApplyValue{};
-            break;
-        
-        case ExpressionType::unary_operator_apply:
-            expression->value = UnaryOperatorApplyValue{};
-            break;
-            
-        default:
-            assert(false && "unhandled expression type in AST::create_expression");
-            break;
-    }
+Expression* AST::create_identifier(const std::string& value, SourceLocation location) {
+    Expression* expression = create_expression(ExpressionType::identifier, value, Hole, location);
+    unresolved_identifiers_and_operators.push_back(expression);
     return expression;
+}
+Expression* AST::create_operator(const std::string& value, SourceLocation location) {
+    Expression* expression = create_expression(ExpressionType::operator_e, value, Hole, location);
+    unresolved_identifiers_and_operators.push_back(expression);
+    return expression;
+}
+
+Expression* AST::create_termed_expression(std::vector<Expression*>&& terms, SourceLocation location) {
+    return create_expression(ExpressionType::termed_expression, terms, Hole, location);
+}
+
+std::optional<Expression*> AST::create_operator_ref(const std::string& name, SourceLocation location) {
+    // TODO: check user_defined operators as well
+    std::optional<Callable*> callable = builtin_operators_->get_identifier(name);
+    
+    if (!callable)
+        return std::nullopt;
+    
+    return create_operator_ref(*callable, location);
+}
+Expression* AST::create_operator_ref(Callable* callable, SourceLocation location) {
+    return create_expression(ExpressionType::operator_ref, callable, callable->get_type(), location);
+}
+
+// valueless expression types are tie, empty, syntax_error and not_implemented
+Expression* AST::create_valueless_expression(ExpressionType expression_type, SourceLocation location) {
+    return create_expression(expression_type, std::monostate{}, Absurd, location);
+}
+
+void AST::delete_expression(Expression* expression) {
+    expression->expression_type = ExpressionType::deleted;
 }
 
 Statement* AST::create_statement(StatementType statement_type, SourceLocation location) {
     statements_.push_back(std::make_unique<Statement>(statement_type, location));
     return statements_.back().get();
+}
+
+void AST::append_top_level_statement(Statement* statement) {
+    root_.push_back(statement);
 }
 
 Callable* AST::create_builtin(BuiltinType builtin_type, const std::string& name, const Type& type) {
@@ -198,15 +214,26 @@ Callable* AST::create_builtin(BuiltinType builtin_type, const std::string& name,
     && "tried to redefine an existing builtin");
     switch (builtin_type) {
         case BuiltinType::builtin_function:
-            return *builtin_functions_->create_identifier(name, builtin);
+            return *builtin_functions_->create_callable(name, builtin);
 
             case BuiltinType::builtin_operator:
-            return *builtin_operators_->create_identifier(name, builtin);
+            return *builtin_operators_->create_callable(name, builtin);
 
         default:
             assert(false && "unhandled builtin type in create_builtin");
             return nullptr;
     }
+}
+
+Expression* AST::create_expression(ExpressionType expression_type, 
+    ExpressionValue value, const Type& type, SourceLocation location) {        
+
+    expressions_.push_back(std::make_unique<Expression>(expression_type, location, type));
+    Expression* expression = expressions_.back().get();
+
+    expression->value = value;
+
+    return expression;
 }
 
 Callable* AST::create_callable(CallableBody body, const std::string& name, 
@@ -219,10 +246,5 @@ Callable* AST::create_callable(CallableBody body, const std::string& name,
 Callable* AST::create_callable(const std::string& name, SourceLocation location) {
     return create_callable(std::monostate{}, name, location);
 }
-
-void AST::append_top_level_statement(Statement* statement) {
-    root_.push_back(statement);
-}
-
 
 } // namespace AST

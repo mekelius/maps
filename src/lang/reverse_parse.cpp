@@ -87,19 +87,6 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::numeric_literal:
             return ostream << std::get<std::string>(expression->value);
 
-        case AST::ExpressionType::call: {
-            auto [callee, args] = expression->call();
-            ostream << callee << '(';
-            
-            bool first_arg = true;
-            for (AST::Expression* arg_expression: args) {
-                ostream << (first_arg ? "" : ", ") << arg_expression;
-                first_arg = false;
-            }            
-
-            return ostream << ')';
-        }
-
         case AST::ExpressionType::termed_expression: {
             indent_stack++;
             ostream << linebreak();
@@ -121,7 +108,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::operator_ref:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*operator-ref:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
         
-        case AST::ExpressionType::identifier:
+        case AST::ExpressionType::reference:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*identifier:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
 
         case AST::ExpressionType::not_implemented:
@@ -130,14 +117,11 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::tie:
             return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;
 
-        case AST::ExpressionType::unresolved_identifier:
+        case AST::ExpressionType::identifier:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved identifier:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
             
-        case AST::ExpressionType::unresolved_operator:
+        case AST::ExpressionType::operator_e:
             return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved operator:*/ " + expression->string_value() : expression->string_value() );
-
-        case AST::ExpressionType::deferred_call:
-            return ostream << "Expression type deferred call not implemented in reverse parser";
 
         case AST::ExpressionType::empty:
             return ostream << "(/*empty expression*/)";
@@ -145,17 +129,34 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         case AST::ExpressionType::syntax_error:
             return ostream << "@SYNTAX ERROR@";
 
-        // Layer2:
-        case AST::ExpressionType::binary_operator_apply: {
-            auto [op, lhs, rhs] = expression->binop_apply_value();
-            return ostream << "( " << lhs << " " << op << " " << rhs << " )";
-        }
+
+        case AST::ExpressionType::call: {
+            auto [callee, args] = expression->call();
+
+            // print as an operator expression
+            if (callee->get_type().is_operator() && args.size() <= 2) {
+                switch (args.size()) {
+                    case 2:
+                        return ostream << "( " << args.at(0) << " " << callee << " " << args.at(1) << " )";
+
+                    case 1:
+                        return ostream << "( " << callee << args.at(0) << " )";
+                   
+                    case 0:
+                        return ostream << "(" << callee << ")";
+                }
+            }
+
+            ostream << callee->name << '(';
             
-        case AST::ExpressionType::unary_operator_apply: {
-            auto [op, value] = expression->unop_apply_value();
-            return ostream << "( " << op << value << " )";
+            bool first_arg = true;
+            for (AST::Expression* arg_expression: args) {
+                ostream << (first_arg ? "" : ", ") << arg_expression;
+                first_arg = false;
+            }            
+
+            return ostream << ')';
         }
-           
         default:
             return ostream << "Expression type not implemented in reverse parser:" << static_cast<int>(expression->expression_type);
     }

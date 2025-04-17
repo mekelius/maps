@@ -2,16 +2,16 @@
 
 using Logging::log_error, Logging::log_info;
 
-
+// Replaces all identifiers and operators with references to the correct callables
 void resolve_identifiers(AST::AST& ast) {
     for (AST::Expression* expression: ast.unresolved_identifiers_and_operators) {
         switch (expression->expression_type) {
-            case AST::ExpressionType::unresolved_identifier:
+            case AST::ExpressionType::identifier:
                 // assert(ast_->builtins_.identifier_exists(expression->string_value()) 
                 //     && "Builtin identifier passed to layer2");
                 resolve_identifier(ast, expression);
                 break;
-            case AST::ExpressionType::unresolved_operator:
+            case AST::ExpressionType::operator_e:
                 resolve_operator(ast, expression);
                 break;
 
@@ -24,12 +24,15 @@ void resolve_identifiers(AST::AST& ast) {
     ast.unresolved_identifiers_and_operators = {};
 }
 
+// this should be scope's responsibility
 void resolve_identifier(AST::AST& ast, AST::Expression* expression) {
+    // check builtins
     std::optional<AST::Callable*> builtin = ast.builtin_functions_->get_identifier(expression->string_value());
     if (builtin) {
         log_info(expression->location, "Parsed built-in", Logging::MessageType::parser_debug_terminal);
-        expression->expression_type = AST::ExpressionType::identifier;
+        expression->expression_type = AST::ExpressionType::reference;
         expression->type = (*builtin)->get_type();
+        expression->value = *builtin;
         return;
     }
 
@@ -41,8 +44,9 @@ void resolve_identifier(AST::AST& ast, AST::Expression* expression) {
         return;
     }
 
-    expression->expression_type = AST::ExpressionType::identifier;
+    expression->expression_type = AST::ExpressionType::reference;
     expression->type = (*callable)->get_type();
+    expression->value = *callable;
     return;
 }
 

@@ -19,6 +19,13 @@ bool Type::is_complex() const {
     return !std::holds_alternative<std::monostate>(complex);
 }
 
+bool Type::is_operator() const {
+    if (!is_complex())
+        return false;
+
+    return function_type()->is_operator;
+}
+
 Type::Type(TypeTemplate* type_template): type_template(type_template) {
     complex = std::monostate{};
 }

@@ -126,7 +126,7 @@ void ParserLayer1::create_identifier(const std::string& name, SourceLocation loc
 void ParserLayer1::create_identifier(const std::string& name,
     AST::CallableBody body, SourceLocation location) {
     log_info("created identifier" + name, Logging::MessageType::parser_debug_identifier);
-    ast_->globals_->create_identifier(name, body, location);
+    ast_->globals_->create_callable(name, body, location);
 }
 
 std::optional<AST::Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
@@ -146,13 +146,8 @@ void ParserLayer1::statement_start() {
 
 // creates an expression using ast_, marking the location as the current_expression_start_
 // or if it's not set, the current token location
-AST::Expression* ParserLayer1::create_expression(AST::ExpressionType expression_type) {
-    if (current_expression_start_.empty())
-        return ast_->create_expression(expression_type, current_token().location);
-
-    AST::Expression* expression = ast_->create_expression(expression_type, current_expression_start_.back());
+void ParserLayer1::expression_end() {
     current_expression_start_.pop_back();
-    return expression;
 }
 
 // creates a statement using ast_, marking the location as the current_statement_start_
@@ -495,8 +490,12 @@ AST::Statement* ParserLayer1::parse_return_statement() {
 
 AST::Expression* ParserLayer1::parse_expression() {
     switch (current_token().token_type) {
-        case TokenType::eof:
-            return create_expression(AST::ExpressionType::syntax_error);
+        case TokenType::eof: {
+            AST::Expression* expression = ast_->create_valueless_expression(
+                AST::ExpressionType::syntax_error, current_expression_start_.back());
+            expression_end();
+            return expression;
+        }
 
         case TokenType::identifier: {
             Token next_token = peek();
@@ -564,7 +563,9 @@ AST::Expression* ParserLayer1::parse_expression() {
             if (current_token().string_value() != "let") {
                 declare_invalid();
                 log_error("unknown " + current_token().get_string());
-                AST::Expression* expression = create_expression(AST::ExpressionType::syntax_error);
+                AST::Expression* expression = ast_->create_valueless_expression(
+                    AST::ExpressionType::syntax_error, current_expression_start_.back());
+                expression_end();
                 expression->value = "unknown " + current_token().get_string();
                 
                 get_token();
@@ -572,7 +573,9 @@ AST::Expression* ParserLayer1::parse_expression() {
             }
             declare_invalid();
             log_error("Scoped let not yet implemented");
-            AST::Expression* expression = create_expression(AST::ExpressionType::syntax_error);
+            AST::Expression* expression = ast_->create_valueless_expression(
+                AST::ExpressionType::syntax_error, current_expression_start_.back());
+            expression_end();
             expression->value = "Scoped let not yet implemented";
             
             get_token();
@@ -582,7 +585,8 @@ AST::Expression* ParserLayer1::parse_expression() {
         default:
             declare_invalid();
             log_error("unexpected " + current_token().get_string() + ", at the start of an expression");
-            AST::Expression* expression = create_expression(AST::ExpressionType::syntax_error);
+            AST::Expression* expression = ast_->create_valueless_expression(AST::ExpressionType::syntax_error, current_expression_start_.back());
+            expression_end();
             expression->value = "unexpected " + current_token().get_string() + ", at the start of an expression";
 
             get_token();
@@ -592,7 +596,8 @@ AST::Expression* ParserLayer1::parse_expression() {
 
 // expects to be called with the first term as current
 AST::Expression* ParserLayer1::parse_termed_expression() {
-    AST::Expression* expression = create_expression(AST::ExpressionType::termed_expression);
+    expression_start();
+    AST::Expression* expression = ast_->create_termed_expression({}, current_token().location);
 
     expression->terms().push_back(parse_term());
 
@@ -626,9 +631,11 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
                 continue;
 
             default:
+                assert(false && "unhandled tokentype in ParserLayer1::parse_termed_expression");
                 declare_invalid();
                 log_error("unexpected: " + current_token().get_string() + ", in termed expression");
-                AST::Expression* term = create_expression(AST::ExpressionType::not_implemented);
+                AST::Expression* term = ast_->create_valueless_expression(
+                    AST::ExpressionType::not_implemented, current_token().location);
                 term->value = current_token().get_string();
                 expression->terms().push_back(term);
                 
@@ -638,6 +645,7 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
     ast_->unparsed_termed_expressions.push_back(expression);
 
     log_info("finished parsing termed expression from " + expression->location.to_string(), MessageType::parser_debug);
+    expression_end();
     return expression;
 
 }
@@ -645,8 +653,11 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
 AST::Expression* ParserLayer1::parse_access_expression() {
     // TODO: eat until the closing character
     expression_start();
+    AST::Expression* expression = ast_->create_valueless_expression(
+        AST::ExpressionType::not_implemented, current_token().location);
     get_token();
-    return create_expression(AST::ExpressionType::not_implemented);
+    expression_end();
+    return expression;
 }
 
 // expects to be called with the opening parenthese as the current_token_
@@ -657,8 +668,10 @@ AST::Expression* ParserLayer1::parse_parenthesized_expression() {
     if (current_token().token_type == TokenType::parenthesis_close) {
         declare_invalid();
         log_error("Empty parentheses in an expression");
+        AST::Expression* expression = ast_->create_valueless_expression(AST::ExpressionType::syntax_error, current_token().location);
         get_token();
-        return create_expression(AST::ExpressionType::syntax_error);
+        expression_end();
+        return expression;
     }
 
     AST::Expression* expression = parse_expression();
@@ -674,17 +687,20 @@ AST::Expression* ParserLayer1::parse_parenthesized_expression() {
 
 AST::Expression* ParserLayer1::parse_mapping_literal() {
     expression_start();
+    AST::Expression* expression = ast_->create_valueless_expression(AST::ExpressionType::not_implemented, 
+        current_token().location);
     get_token();
     // eat until the closing character
 
     log_info("parsed mapping literal (not implemented)", MessageType::parser_debug);
 
-    return create_expression(AST::ExpressionType::not_implemented);
+    expression_end();
+    return expression;
 }
 
 AST::Expression* ParserLayer1::handle_string_literal() {
-    auto expression = create_expression(AST::ExpressionType::string_literal);
-    std::get<std::string>(expression->value) = current_token().string_value();
+    AST::Expression* expression = ast_->create_string_literal(current_token().string_value(), 
+        current_token().location);
 
     get_token();
     get_token(); // eat closing '"'
@@ -694,23 +710,22 @@ AST::Expression* ParserLayer1::handle_string_literal() {
 }
 
 AST::Expression* ParserLayer1::handle_numeric_literal() {
-    AST::Expression* expression = create_expression(AST::ExpressionType::numeric_literal);
-    std::get<std::string>(expression->value) = current_token().string_value();
+    AST::Expression* expression = ast_->create_numeric_literal(current_token().string_value(), 
+        current_token().location);
     
     get_token();
-
+        
     log_info("parsed numeric literal", MessageType::parser_debug_terminal);
     return expression;
 }
 
 AST::Expression* ParserLayer1::handle_identifier() {
-    AST::Expression* expression = create_expression(AST::ExpressionType::unresolved_identifier);
-    ast_->unresolved_identifiers_and_operators.push_back(expression);
-    log_info("parsed unresolved identifier", MessageType::parser_debug_terminal);
-
-    std::get<std::string>(expression->value) = current_token().string_value();
-
+    AST::Expression* expression = ast_->create_identifier(current_token().string_value(), 
+        current_token().location);
+   
     get_token();
+    
+    log_info("parsed unresolved identifier", MessageType::parser_debug_terminal);
     return expression;
 }
 
@@ -725,10 +740,12 @@ AST::Expression* ParserLayer1::parse_term() {
         case TokenType::number:
             return handle_numeric_literal();
 
-        case TokenType::tie:
-            expression_start();
+        case TokenType::tie: {
+            AST::Expression* expression = ast_->create_valueless_expression(AST::ExpressionType::tie, 
+                current_token().location);
             get_token();
-            return create_expression(AST::ExpressionType::tie);
+            return expression;   
+        }
 
         case TokenType::parenthesis_open: 
             return parse_parenthesized_expression();
@@ -741,9 +758,8 @@ AST::Expression* ParserLayer1::parse_term() {
             return parse_expression();
             
         case TokenType::operator_t: {
-            AST::Expression* expression = create_expression(AST::ExpressionType::unresolved_operator);
-            ast_->unresolved_identifiers_and_operators.push_back(expression);
-            std::get<std::string>(expression->value) = current_token().string_value();
+            AST::Expression* expression = ast_->create_operator(current_token().string_value(), 
+                current_token().location);
             get_token();
             return expression;
         }

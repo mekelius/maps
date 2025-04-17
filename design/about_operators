@@ -1,0 +1,7 @@
+Some points about operators:
+    Any function should be infix without infix markings, i.e. an operator
+    There should also be infix marking, is `` too ugly?
+    Should operators be scoped, or at least namespaced? We must avoid haskell's Vector.!! weirdness
+        Is ad hoc overloading sufficient for this
+    Currently operators are global scoped
+        There is a bunch of weirdness related to scoped operators, like precedence etc.
