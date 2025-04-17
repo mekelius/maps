@@ -305,3 +305,32 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         CHECK(expr->type == AST::Number);
     }
 }
+
+TEST_CASE("Should handle partial application of binary operators") {
+    AST::AST ast{};
+
+    auto [op_ref, op] = create_operator_helper(ast, "-");
+    auto val = ast.create_numeric_literal("34", {0,0});
+
+    SUBCASE("right") {
+        Expression* expr = ast.create_termed_expression({op_ref, val}, {0,0});
+        
+        TermedExpressionParser{&ast, expr}.run();
+        
+        auto [callee, args] = expr->call();
+        CHECK(callee == op);
+        CHECK(args.size() == 1);
+        CHECK(args.at(0) == val);
+    }
+
+    SUBCASE("left") {
+        Expression* expr = ast.create_termed_expression({val, op_ref}, {0,0});
+        
+        TermedExpressionParser{&ast, expr}.run();
+        
+        auto [callee, args] = expr->call();
+        CHECK(callee == op);
+        CHECK(args.size() == 1);
+        CHECK(args.at(0) == val);
+    }
+}

@@ -595,17 +595,35 @@ AST::Expression* ParserLayer1::parse_expression() {
 }
 
 // expects to be called with the first term as current
-AST::Expression* ParserLayer1::parse_termed_expression() {
+// tied expression = no whitespace
+AST::Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     expression_start();
     AST::Expression* expression = ast_->create_termed_expression({}, current_token().location);
 
-    expression->terms().push_back(parse_term());
-
     log_info("start parsing termed expression", MessageType::parser_debug);
+
+    expression->terms().push_back(parse_term(in_tied_expression));
 
     bool done = false;
     while (!done) {
+        // in tied expressions, every term must be followed by a tie
+        // if not, we are done
+        if(in_tied_expression) {
+            if (current_token().token_type != TokenType::tie) {
+                done = true;
+                break;
+            } else {
+                get_token(); // eat the tie
+            }
+        }
+
         switch (current_token().token_type) {
+            // ties create a new sub-expression, unless we are already in one
+            case TokenType::tie:
+                assert(false && "somehow a tie leaked into the termed expression loop");
+                get_token();
+                break;
+
             case TokenType::eof:
             case TokenType::indent_block_end:
             case TokenType::semicolon:
@@ -618,17 +636,16 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
             case TokenType::parenthesis_open:
             case TokenType::bracket_open:
             case TokenType::curly_brace_open:
-            case TokenType::tie:
-                expression->terms().push_back(parse_term());
-                continue;
+                expression->terms().push_back(parse_term(in_tied_expression));
+                break;
 
             case TokenType::string_literal:
             case TokenType::number:
             case TokenType::identifier:
             case TokenType::operator_t:
             case TokenType::indent_block_start:
-                expression->terms().push_back(parse_term());
-                continue;
+                expression->terms().push_back(parse_term(in_tied_expression));
+                break;
 
             default:
                 assert(false && "unhandled tokentype in ParserLayer1::parse_termed_expression");
@@ -647,7 +664,6 @@ AST::Expression* ParserLayer1::parse_termed_expression() {
     log_info("finished parsing termed expression from " + expression->location.to_string(), MessageType::parser_debug);
     expression_end();
     return expression;
-
 }
 
 AST::Expression* ParserLayer1::parse_access_expression() {
@@ -720,7 +736,7 @@ AST::Expression* ParserLayer1::handle_numeric_literal() {
 }
 
 AST::Expression* ParserLayer1::handle_identifier() {
-    AST::Expression* expression = ast_->create_identifier(current_token().string_value(), 
+    AST::Expression* expression = ast_->create_identifier_expression(current_token().string_value(), 
         current_token().location);
    
     get_token();
@@ -730,7 +746,12 @@ AST::Expression* ParserLayer1::handle_identifier() {
 }
 
 // Expects not to be called if the current token is not parseable into a term
-AST::Expression* ParserLayer1::parse_term() {
+AST::Expression* ParserLayer1::parse_term(bool is_tied) {
+    // if we see a tie, go down into a tied expression if not already in one
+    if (peek().token_type == TokenType::tie && !is_tied) {
+        return parse_termed_expression(true);
+    }
+
     switch (current_token().token_type) {
         case TokenType::identifier:
             // TODO: revamp access expressions
@@ -758,7 +779,7 @@ AST::Expression* ParserLayer1::parse_term() {
             return parse_expression();
             
         case TokenType::operator_t: {
-            AST::Expression* expression = ast_->create_operator(current_token().string_value(), 
+            AST::Expression* expression = ast_->create_operator_expression(current_token().string_value(), 
                 current_token().location);
             get_token();
             return expression;

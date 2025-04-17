@@ -115,6 +115,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return ostream << "Expression type not implemented in parser: " + expression->string_value();
 
         case AST::ExpressionType::tie:
+            assert(false && "somehow a tie got through to reverse parse");
             return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;
 
         case AST::ExpressionType::identifier:

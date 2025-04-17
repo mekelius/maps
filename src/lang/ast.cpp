@@ -160,12 +160,12 @@ Expression* AST::create_numeric_literal(const std::string& value, SourceLocation
     return create_expression(ExpressionType::numeric_literal, value, NumberLiteral, location);
 }
 
-Expression* AST::create_identifier(const std::string& value, SourceLocation location) {
+Expression* AST::create_identifier_expression(const std::string& value, SourceLocation location) {
     Expression* expression = create_expression(ExpressionType::identifier, value, Hole, location);
     unresolved_identifiers_and_operators.push_back(expression);
     return expression;
 }
-Expression* AST::create_operator(const std::string& value, SourceLocation location) {
+Expression* AST::create_operator_expression(const std::string& value, SourceLocation location) {
     Expression* expression = create_expression(ExpressionType::operator_e, value, Hole, location);
     unresolved_identifiers_and_operators.push_back(expression);
     return expression;
@@ -216,7 +216,7 @@ Callable* AST::create_builtin(BuiltinType builtin_type, const std::string& name,
         case BuiltinType::builtin_function:
             return *builtin_functions_->create_callable(name, builtin);
 
-            case BuiltinType::builtin_operator:
+        case BuiltinType::builtin_operator:
             return *builtin_operators_->create_callable(name, builtin);
 
         default:
