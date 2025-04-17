@@ -12,6 +12,8 @@ LogLevel Settings::current_loglevel = LogLevel::default_;
 std::ostream* Settings::ostream;
 std::ofstream* Settings::tokens_ofstream;
 
+bool log_check_flag = false;
+
 void LogLevel::init(LogLevel log_level) {
     Settings::set_loglevel(log_level);
 
@@ -32,6 +34,8 @@ void log_error(SourceLocation location, const std::string& message) {
     if (!Settings::current_loglevel.has_message_type(MessageType::error))
         return;
 
+    log_check_flag = true;
+
     *Settings::ostream
         << location.to_string() << line_col_padding(location.to_string().size()) 
         << "error: " << message << "\n";
@@ -43,21 +47,35 @@ void log_info(SourceLocation location, const std::string& message, MessageType m
     if (!Settings::current_loglevel.has_message_type(message_type))
         return;
 
+    log_check_flag = true;
+
     *Settings::ostream
         << location.to_string() << line_col_padding(location.to_string().size()) 
         << "info:  " << message << '\n';
 }
 
 void log_token(SourceLocation location, const std::string& message) {
-    if (Settings::ostream && Settings::current_loglevel.has_message_type(MessageType::lexer_debug_token))
+    if (Settings::ostream && Settings::current_loglevel.has_message_type(MessageType::lexer_debug_token)) {
+        log_check_flag = true;
+
+        *Settings::ostream
+            << location.to_string() << line_col_padding(location.to_string().size()) 
+           << "token: " << message << '\n';
+    }
+
+    if (Settings::tokens_ofstream) {
+        log_check_flag = true;
+
         *Settings::ostream
             << location.to_string() << line_col_padding(location.to_string().size()) 
             << "token: " << message << '\n';
+    }
+}
 
-    if (Settings::tokens_ofstream)
-        *Settings::ostream
-        << location.to_string() << line_col_padding(location.to_string().size()) 
-        << "token: " << message << '\n';
+bool logs_since_last_check() {
+    bool value = log_check_flag;
+    log_check_flag = false;
+    return value;
 }
 
 } //namespace logging

@@ -25,7 +25,7 @@ std::string separator(char character = '-', const std::string& title = "") {
 }
 
 int main(int argc, char* argv[]) {
-    using Logging::LogLevel;
+    using Logging::LogLevel, Logging::logs_since_last_check;
     Logging::init_logging(&std::cout);
 
     if (argc < 2) {
@@ -80,7 +80,8 @@ int main(int argc, char* argv[]) {
         std::cout << "run layer1\n\n";
         std::unique_ptr<AST::AST> ast = ParserLayer1{&lexer, pragmas.get()}.run();
 
-        std::cout << "\n";
+        if (logs_since_last_check()) 
+            std::cout << "\n";
         if (!ast->is_valid) {
             std::cerr << "layer1 failed\n\n";
             continue;
@@ -90,24 +91,26 @@ int main(int argc, char* argv[]) {
 
         resolve_identifiers(*ast);
 
-        std::cout << "\n";
+        if(logs_since_last_check()) 
+            std::cout << "\n";
         if (!ast->is_valid) {
             std::cerr << "name resolution failed\n\n";
             continue;
         }
         std::cout << "name resolution done\n\n";
-        std::cout << "run layer 2:\n\n";
+        std::cout << "run layer 2\n\n";
 
         ParserLayer2{ast.get(), pragmas.get()}.run();
 
-        std::cout << "\n";
+        if(logs_since_last_check()) 
+            std::cout << "\n";
         if (!ast->is_valid) {
             std::cerr << "layer2 failed\n\n";
             continue;
         }
         std::cout << "layer2 done\n\n";
 
-        std::cout << separator('-', "Parsed into") << std::endl; 
+        std::cout << separator('-', "Parsed into"); 
         reverse_parse(*ast, std::cout);
         std::cout << "\n" << std::endl;
     }
