@@ -98,18 +98,15 @@ struct Expression {
     TermedExpressionValue& terms() {
         return std::get<TermedExpressionValue>(value);
     }
-    CallExpressionValue& call() {
+    CallExpressionValue& call_value() {
         return std::get<CallExpressionValue>(value);
     }
-    Callable* reference_value() {
+    Callable* reference_value() const {
         return std::get<Callable*>(value);
     }
-    
-    const std::string& string_value() const;
+    bool is_partial_call() const;
 
-    Callable* callable_ref() const {
-        return std::get<Callable*>(value);
-    }
+    const std::string& string_value() const;
 
     friend bool operator==(const Expression& lhs, const Expression& rhs) {
         return std::tie(

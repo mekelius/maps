@@ -38,7 +38,7 @@ Function* IR_Generator::function_declaration(const std::string& name, FunctionTy
 }
 
 Value* IR_Generator::handle_call(AST::Expression& expression) {
-    auto [callee, args] = expression.call();
+    auto [callee, args] = expression.call_value();
 
     std::optional<FunctionCallee> function = get_function(callee->name);
 

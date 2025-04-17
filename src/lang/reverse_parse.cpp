@@ -139,19 +139,19 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return ostream << "@SYNTAX ERROR@";
 
         case AST::ExpressionType::call: {
-            auto [callee, args] = expression->call();
+            auto [callee, args] = expression->call_value();
 
             // print as an operator expression
             if (callee->get_type().is_operator() && args.size() <= 2) {
                 switch (args.size()) {
                     case 2:
-                        return ostream << "( " << args.at(0) << " " << callee << " " << args.at(1) << " )";
+                        return ostream << "( " << args.at(0) << " " << callee->name << " " << args.at(1) << " )";
 
                     case 1:
-                        return ostream << "( " << callee << args.at(0) << " )";
+                        return ostream << "( " << callee->name << args.at(0) << " )";
                    
                     case 0:
-                        return ostream << "(" << callee << ")";
+                        return ostream << "(" << callee->name << ")";
                 }
             }
 

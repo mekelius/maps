@@ -270,6 +270,7 @@ void TermedExpressionParser::initial_operator_state() {
                 return initial_value_state();
             }
 
+            // TODO: handle precedence here
             // it's a binary operator being partially applied
             AST::Expression* missing_argument = ast_->create_missing_argument(
                 op->type.function_type()->arg_types.at(0), op->location);
@@ -279,8 +280,7 @@ void TermedExpressionParser::initial_operator_state() {
                     op->reference_value(), { missing_argument, rhs }, expression_->location);
             
             parse_stack_.push_back(call);
-            
-            return initial_function_state();
+            return;
         }
 
         case ExpressionType::call:
@@ -290,12 +290,6 @@ void TermedExpressionParser::initial_operator_state() {
 
         case BAD_TERM:
             assert(false && "bad term encountered in TermedExpressoinParser");
-    }
-}
-
-void TermedExpressionParser::initial_function_state() {
-    if (at_expression_end()) {
-        return;
     }
 }
 
@@ -322,11 +316,28 @@ void TermedExpressionParser::post_binary_operator_state() {
             // assert that it's unary
             break;
 
-        // value
-        case ExpressionType::call:
         case ExpressionType::reference:
-            assert(false && "not implemented");
+            shift();
+            // if the reference is to a function, go ahead and try to apply it first
+            if (current_term()->reference_value()->get_type().arity() > 0) {
+                call_expression_state();
+            }
+            return compare_precedence_state();
 
+        case ExpressionType::call: {
+            shift();
+            
+            // if we have a complete call, we can treat it as a value
+            // if the call is partial, try to complete it first
+            // NOTE: partial call_state could also return a partial call, in which case
+            //       we can try to apply the operator onto that
+            if (current_term()->is_partial_call()) {
+                partial_call_state();
+            }
+            
+            return compare_precedence_state();
+        }
+            
         case GUARANTEED_VALUE:
             shift();
             return compare_precedence_state();
@@ -445,10 +456,10 @@ void TermedExpressionParser::call_expression_state() {
     std::vector<AST::Expression*> args;
     
     // parse args
-    for (int i = callee->type.arity(); i > 0; i--) {
+    for (unsigned int i = 0; i < callee->type.arity(); i++) {
         shift();
 
-        args.push_back(handle_arg_state(callee->callable_ref(), args));
+        args.push_back(handle_arg_state(callee->reference_value(), args));
 
         if (at_expression_end()) {
             // accept partial application here
@@ -469,6 +480,38 @@ void TermedExpressionParser::call_expression_state() {
     }
 
     parse_stack_.push_back(call_expression);
+}
+
+void TermedExpressionParser::partial_call_state() {
+    if (at_expression_end())
+        return;
+
+    Expression* original = current_term(); // for the assertion at the bottom
+
+    auto& [callee, args] = current_term()->call_value();
+
+    // parse args
+    for (unsigned int i = 0; i < callee->get_type().arity(); i++) {
+        if (at_expression_end()) {
+            return;
+        }
+        // handle missing args left in args list
+        if (i < args.size()) {
+            if (args.at(i)->expression_type == ExpressionType::missing_arg) {
+                shift();
+                Expression* new_arg = handle_arg_state(callee, args);
+                ast_->delete_expression(args.at(i));
+                args.at(i) = new_arg;
+            }
+            continue;
+        }
+
+        shift();
+        args.push_back(handle_arg_state(callee, args));
+    }
+    // expression should already be the one on top
+    assert(current_term() == original && "partial_call_state didn't maintain the current_term");
+    return;
 }
 
 Expression* TermedExpressionParser::handle_arg_state(AST::Callable* callee, const std::vector<Expression*>& args) { 

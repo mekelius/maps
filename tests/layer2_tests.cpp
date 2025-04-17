@@ -22,7 +22,7 @@ inline std::tuple<AST::Expression*, AST::Callable*> create_operator_helper(AST::
 
 // takes a parsed binop expression tree and traverses it in preorder
 void traverse_pre_order(AST::Expression* tree, std::ostream& output) {
-    auto [op, args] = tree->call();
+    auto [op, args] = tree->call_value();
 
     Expression* lhs = args.at(0);
     Expression* rhs = args.at(1);
@@ -120,7 +120,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         CHECK(expr->expression_type == ExpressionType::call);
         // NOTE: the operator_ref should be unwrapped
 
-        auto [op, args] = expr->call();
+        auto [op, args] = expr->call_value();
         CHECK(op == op1);
         CHECK(args.at(0) == val1);
         CHECK(args.at(1) == val2);
@@ -137,7 +137,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         TermedExpressionParser{&ast, expr}.run();
 
         CHECK(expr->expression_type == ExpressionType::call);
-        auto [outer_op, outer_args] = expr->call();
+        auto [outer_op, outer_args] = expr->call_value();
 
         auto outer_lhs = outer_args.at(0);
         auto outer_rhs = outer_args.at(1);
@@ -147,7 +147,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
 
         // check the lhs
         CHECK(outer_lhs->expression_type == ExpressionType::call);
-        auto [inner_op, inner_args] = outer_lhs->call();
+        auto [inner_op, inner_args] = outer_lhs->call_value();
 
         auto inner_lhs = inner_args.at(0);
         auto inner_rhs = inner_args.at(1);
@@ -169,7 +169,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         TermedExpressionParser{&ast, expr}.run();
 
         CHECK(expr->expression_type == ExpressionType::call);
-        auto [outer_op, args] = expr->call();
+        auto [outer_op, args] = expr->call_value();
 
         auto outer_lhs = args.at(0);
         auto outer_rhs = args.at(1);
@@ -179,7 +179,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
 
         // check the lhs
         CHECK(outer_rhs->expression_type == ExpressionType::call);
-        auto [inner_op, inner_args] = outer_rhs->call();
+        auto [inner_op, inner_args] = outer_rhs->call_value();
         auto inner_lhs = inner_args.at(0);
         auto inner_rhs = inner_args.at(1);
 
@@ -248,7 +248,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         TermedExpressionParser{&ast, expr}.run();
         
         CHECK(expr->expression_type == ExpressionType::call);
-        auto [callee, args] = expr->call();
+        auto [callee, args] = expr->call_value();
         CHECK(callee->name == "test_f");
         CHECK(args.size() == 1);
         CHECK(args.at(0) == arg1);
@@ -277,7 +277,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         TermedExpressionParser{&ast, expr}.run();
         
         CHECK(expr->expression_type == ExpressionType::call);
-        auto [callee, args] = expr->call();
+        auto [callee, args] = expr->call_value();
         CHECK(callee->name == "test_f");
         CHECK(args.size() == 4);
         CHECK(args.at(0) == arg1);
@@ -317,7 +317,7 @@ TEST_CASE("Should handle partial application of binary operators") {
         
         TermedExpressionParser{&ast, expr}.run();
         
-        auto [callee, args] = expr->call();
+        auto [callee, args] = expr->call_value();
         CHECK(callee == op);
         CHECK(args.size() == 2);
         CHECK(args.at(0)->expression_type == ExpressionType::missing_arg);
@@ -329,7 +329,7 @@ TEST_CASE("Should handle partial application of binary operators") {
         
         TermedExpressionParser{&ast, expr}.run();
         
-        auto [callee, args] = expr->call();
+        auto [callee, args] = expr->call_value();
         CHECK(callee == op);
         CHECK(args.size() == 2);
         CHECK(args.at(0) == val);
