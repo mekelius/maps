@@ -21,6 +21,10 @@ ParserLayer2::ParserLayer2(AST::AST* ast, Pragma::Pragmas* pragmas)
 
 void ParserLayer2::run() {
     for (Expression* expression: ast_->unparsed_termed_expressions) {
+        // some expressions might be parsed early as sub-expressions
+        if (expression->expression_type != ExpressionType::termed_expression)
+            continue;
+        
         SourceLocation original_location = expression->location;
 
         TermedExpressionParser{ast_, expression}.run();
@@ -99,6 +103,10 @@ Expression* TermedExpressionParser::parse_termed_expression() {
 
     // safe to unwrap because at_expression_end was checked above
     switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_sub_termed_expression(peek());
+            return parse_termed_expression();
+
         // terminals
         case ExpressionType::reference:
             shift();
@@ -108,7 +116,6 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         case ExpressionType::call:
         case ExpressionType::string_literal:
         case ExpressionType::numeric_literal:
-        case ExpressionType::termed_expression:
             shift();
             initial_value_state();
             break;
@@ -176,9 +183,12 @@ void TermedExpressionParser::initial_identifier_state() {
     }
 
     switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_sub_termed_expression(peek());
+            return initial_identifier_state();
+
         case GUARANTEED_VALUE:
         case ExpressionType::reference:
-        case ExpressionType::termed_expression:
         case ExpressionType::call:
             return call_expression_state();
 
@@ -199,6 +209,10 @@ void TermedExpressionParser::initial_value_state() {
     }
 
     switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_sub_termed_expression(peek());
+            return initial_value_state();
+
         case ExpressionType::operator_ref:
             precedence_stack_.push_back(peek()->type.precedence());
             shift();
@@ -262,13 +276,16 @@ void TermedExpressionParser::post_binary_operator_state() {
     }
 
     switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_sub_termed_expression(peek());
+            return post_binary_operator_state();
+
         case ExpressionType::operator_ref:
             // assert that it's unary
             break;
 
         // value
         case ExpressionType::call:
-        case ExpressionType::termed_expression:
         case ExpressionType::reference:
             assert(false && "not implemented");
 
@@ -375,9 +392,9 @@ void TermedExpressionParser::unary_operators_state() {
     }
 }
 
-bool TermedExpressionParser::is_acceptable_next_arg(AST::Expression* callee, 
+bool TermedExpressionParser::is_acceptable_next_arg(AST::Callable* callee, 
     const std::vector<AST::Expression*>& args, AST::Expression* next_arg) {
-    if (args.size() >= callee->type.arity())
+    if (args.size() >= callee->get_type().arity())
         return false;
 
     // TODO: check type
@@ -397,27 +414,7 @@ void TermedExpressionParser::call_expression_state() {
     for (int i = callee->type.arity(); i > 0; i--) {
         AST::Expression* next = get_term();
 
-        switch (next->expression_type) {
-            case ExpressionType::operator_ref:
-                // abort, partial application
-                // might be unary
-                // !!! we might need to switch to peeking, unless we want to reverse
-
-            case GUARANTEED_VALUE:
-            case ExpressionType::reference:
-            case ExpressionType::call:
-                if (!is_acceptable_next_arg(callee, args, next)) {
-                    // TODO: try all kinds of partial application
-                    log_error(next->location, "possible type-error");
-                    ast_->declare_invalid();
-                    return;
-                }
-                args.push_back(next);
-                break;
-            
-            default:
-                assert(false && "unhandled expression type in call_expression_state");
-        }
+        args.push_back(handle_arg_state(callee->callable_ref(), args));
 
         if (at_expression_end()) {
             // accept partial application here
@@ -439,4 +436,32 @@ void TermedExpressionParser::call_expression_state() {
     }
 
     parse_stack_.push_back(call_expression);
+}
+
+Expression* TermedExpressionParser::handle_arg_state(AST::Callable* callee, const std::vector<Expression*>& args) { 
+    switch (current_term_->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_sub_termed_expression(current_term_);
+            return handle_arg_state(callee, args);
+            
+        case ExpressionType::operator_ref:
+            // abort, partial application
+            // might be unary
+            // !!! we might need to switch to peeking, unless we want to reverse
+
+        case GUARANTEED_VALUE:
+        case ExpressionType::reference:
+        case ExpressionType::call:
+            if (!is_acceptable_next_arg(callee, args, current_term_)) {
+                // TODO: try all kinds of partial application
+                log_error(current_term_->location, "possible type-error");
+                ast_->declare_invalid();
+                return current_term_;
+            }
+            return current_term_;
+        
+        default:
+            assert(false && "unhandled expression type in call_expression_state");
+            return current_term_;
+    }
 }
