@@ -155,6 +155,42 @@ void TermedExpressionParser::initial_identifier_state() {
         return;
     }
 
+    // if it's not a function it's treated as a value
+    // i.e. the next term has to be an operator (or a tie)
+    if (current_term_->type.arity() == 0) {
+        switch (peek()->expression_type) {
+            case ExpressionType::operator_ref:
+                precedence_stack_.push_back(peek()->type.precedence());
+                return post_binary_operator_state();                
+
+            case ExpressionType::tie:
+                return parse_tied_operator();
+
+            default:
+                log_error(peek()->location, "unexpected non-operator in termed expression");
+                ast_->declare_invalid();
+                return;
+        }
+    }
+
+    switch (peek()->expression_type) {
+        case ExpressionType::string_literal:
+        case ExpressionType::numeric_literal:
+        case ExpressionType::identifier:
+        case ExpressionType::termed_expression:
+        case ExpressionType::call:
+        case ExpressionType::deferred_call:
+        case ExpressionType::binary_operator_apply:
+            return call_expression_state();
+
+        case ExpressionType::tie:
+            parse_tied_operator();
+            break;
+
+        case ExpressionType::operator_ref:
+            precedence_stack_.push_back(peek()->type.precedence());
+            return post_binary_operator_state();
+    }
 }
 
 void TermedExpressionParser::initial_value_state() {
@@ -174,7 +210,8 @@ void TermedExpressionParser::initial_value_state() {
 
         default:
             // TODO: make expression to_str
-            log_error(peek()->location, "unexpected *something* after a value, expected an operator");
+            log_error(peek()->location, 
+                "unexpected *something* after a value, expected an operator");
             ast_->declare_invalid();
             return;
     }
@@ -205,7 +242,7 @@ void TermedExpressionParser::pre_binary_operator_state() {
 void TermedExpressionParser::post_binary_operator_state() {
     shift(); // shift in the operator
     if (at_expression_end()) {
-        assert(false && "partial application not pmplemented");
+        assert(false && "partial application not implemented");
         // handle partial application
         return;
     }
@@ -306,6 +343,22 @@ void TermedExpressionParser::reduce_operator_left() {
     parse_stack_.push_back(reduced);
 }
 
+void TermedExpressionParser::unary_operators_state() {
+    shift();
+    if (at_expression_end()) {
+        return;
+    }
+}
+
+bool TermedExpressionParser::is_acceptable_next_arg(AST::Expression* callee, 
+    const std::vector<AST::Expression*>& args, AST::Expression* next_arg) {
+    if (args.size() >= callee->type.arity())
+        return false;
+
+    // TODO: check type
+    return true;
+}
+
 void TermedExpressionParser::arg_list_state() {
     shift();
     if (at_expression_end()) {
@@ -313,9 +366,70 @@ void TermedExpressionParser::arg_list_state() {
     }
 }
 
-void TermedExpressionParser::unary_operators_state() {
-    shift();
-    if (at_expression_end()) {
-        return;
+void TermedExpressionParser::call_expression_state() {
+    AST::Expression* callee = current_term_;
+    
+    // at this point the type should be set by name_resolution (or inference?)
+    AST::Type callee_type = current_term_->type;
+    assert(callee_type.arity() > 0 && "call_expression_state cassed with arity 0");
+
+    std::vector<AST::Expression*> args;
+    
+    // parse args
+    for (int i = callee_type.arity(); i > 0; i--) {
+        AST::Expression* next = get_term();
+
+        switch (next->expression_type) {
+            case ExpressionType::tie:
+                assert(false && "ties not implemented yet");
+                parse_tied_operator();
+                break;
+
+            case ExpressionType::operator_ref:
+                // abort, partial application
+                // might be unary
+                // !!! we might need to switch to peeking, unless we want to reverse
+
+            case ExpressionType::numeric_literal:
+            case ExpressionType::string_literal:
+            case ExpressionType::binary_operator_apply:
+            case ExpressionType::identifier:
+            case ExpressionType::call:
+                if (!is_acceptable_next_arg(callee, args, next)) {
+                    // TODO: try all kinds of partial application
+                    log_error(next->location, "possible type-error");
+                    ast_->declare_invalid();
+                    return;
+                }
+                args.push_back(next);
+                break;
+            
+            default:
+                assert(false && "unhandled expression type in call_expression_state");
+        }
+
+        if (at_expression_end()) {
+            // accept partial application here
+            break;
+        }
     }
+
+    parse_stack_.pop_back();
+    AST::Expression* call_expression = ast_->create_expression(
+        ExpressionType::call, {callee->location});
+    call_expression->value = AST::CallExpressionValue{callee->string_value(), args};
+    
+    // determine the type
+    if (args.size() == callee->type.arity()) {
+        assert(std::holds_alternative<std::unique_ptr<AST::FunctionTypeComplex>>(callee->type.complex) 
+            && "non-function type callee in call_expression_state");
+        call_expression->type = callee->type.function_type()->return_type;
+    } else {
+        // TODO: partial application type
+    }
+
+    parse_stack_.push_back(call_expression);
+}
+
+AST::Expression* TermedExpressionParser::parse_call_expression() {
 }

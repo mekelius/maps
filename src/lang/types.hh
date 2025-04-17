@@ -61,6 +61,9 @@ struct Type {
     bool is_complex() const;   
     unsigned int arity() const;
     unsigned int precedence() const;
+    FunctionTypeComplex* function_type() const {
+        return std::get<std::unique_ptr<FunctionTypeComplex>>(complex).get();
+    }
 
     std::string_view name() const { return type_template->name; }
     bool is_native() const { return type_template->is_native; }
