@@ -14,7 +14,6 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression);
 
 std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
     assert(statement && "Reverse parse encountered a nullptr statement");
-    ostream << linebreak();
 
     switch (statement->statement_type) {
         case AST::StatementType::broken:
@@ -106,10 +105,14 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
         }
 
         case AST::ExpressionType::operator_ref:
-            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*operator-ref:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
+            if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+                ostream << "/*operator-ref:*/ ";
+            return ostream << std::get<std::string>(expression->value);
         
         case AST::ExpressionType::reference:
-            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*identifier:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
+            if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+                ostream << "/*identifier:*/ ";
+            return ostream << expression->reference_value()->name;
 
         case AST::ExpressionType::not_implemented:
             return ostream << "Expression type not implemented in parser: " + expression->string_value();
@@ -119,17 +122,20 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;
 
         case AST::ExpressionType::identifier:
-            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved identifier:*/ " + std::get<std::string>(expression->value) : std::get<std::string>(expression->value) );
+            if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+                ostream << "/*unresolved identifier:*/ ";
+            return ostream << std::get<std::string>(expression->value);
             
         case AST::ExpressionType::operator_e:
-            return ostream << ( REVERSE_PARSE_INCLUDE_DEBUG_INFO ? "/*unresolved operator:*/ " + expression->string_value() : expression->string_value() );
+            if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+                ostream << "/*unresolved identifier:*/ ";
+            return ostream << expression->string_value();
 
         case AST::ExpressionType::empty:
             return ostream << "(/*empty expression*/)";
 
         case AST::ExpressionType::syntax_error:
             return ostream << "@SYNTAX ERROR@";
-
 
         case AST::ExpressionType::call: {
             auto [callee, args] = expression->call();
