@@ -28,14 +28,13 @@ class TermedExpressionParser {
     bool parse_stack_reduced() const;
     
     AST::Expression* parse_termed_expression();
-    void parse_tied_operator();
     
     // state functioms
     void initial_identifier_state();
     void initial_value_state();
+    void initial_operator_state();
     
     // binary operators
-    void initial_operator_state();
     void pre_binary_operator_state();
     void post_binary_operator_state();
     void compare_precedence_state();

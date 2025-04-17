@@ -6,6 +6,15 @@
 using Logging::log_error, Logging::log_info;
 using AST::ExpressionType, AST::Expression;
 
+// Expression types that are not allowed here
+// NOTE: Empty is allowed at top-level
+#define BAD_TERM ExpressionType::identifier: case ExpressionType::operator_e: case ExpressionType::deleted: case ExpressionType::missing_arg: case ExpressionType::syntax_error: case ExpressionType::not_implemented: case ExpressionType::empty: case ExpressionType::tie
+
+// Expression types guaranteed to be simple values
+#define GUARANTEED_VALUE ExpressionType::string_literal: case ExpressionType::numeric_literal
+
+#define POTENTIAL_FUNCTION ExpressionType::call: case ExpressionType::reference: case ExpressionType::termed_expression
+
 ParserLayer2::ParserLayer2(AST::AST* ast, Pragma::Pragmas* pragmas)
 : ast_(ast), pragmas_(pragmas) {
 }
@@ -103,13 +112,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             break;
 
         case ExpressionType::operator_ref:
-            // TODO: check if unary
-            shift();
-            break;
-
-        case ExpressionType::tie:
-            log_error(expression_->location, "unexpected tie in termed expression");
-            ast_->declare_invalid();
+            initial_operator_state();
             break;
 
         default:
@@ -135,12 +138,6 @@ Expression* TermedExpressionParser::parse_termed_expression() {
     return parse_stack_.back();
 }
 
-void TermedExpressionParser::parse_tied_operator() {
-    log_error(expression_->location, "parse_tied_operator not implemented");
-    ast_->declare_invalid();
-}
-
-
 // ----- STATE FUNCTIONS -----
 
 void TermedExpressionParser::initial_identifier_state() {
@@ -150,15 +147,12 @@ void TermedExpressionParser::initial_identifier_state() {
     }
 
     // if it's not a function it's treated as a value
-    // i.e. the next term has to be an operator (or a tie)
+    // i.e. the next term has to be an operator
     if (current_term_->type.arity() == 0) {
         switch (peek()->expression_type) {
             case ExpressionType::operator_ref:
                 precedence_stack_.push_back(peek()->type.precedence());
                 return post_binary_operator_state();                
-
-            case ExpressionType::tie:
-                return parse_tied_operator();
 
             default:
                 log_error(peek()->location, "unexpected non-operator in termed expression");
@@ -174,10 +168,6 @@ void TermedExpressionParser::initial_identifier_state() {
         case ExpressionType::termed_expression:
         case ExpressionType::call:
             return call_expression_state();
-
-        case ExpressionType::tie:
-            parse_tied_operator();
-            break;
 
         case ExpressionType::operator_ref:
             precedence_stack_.push_back(peek()->type.precedence());
@@ -196,9 +186,6 @@ void TermedExpressionParser::initial_value_state() {
     }
 
     switch (peek()->expression_type) {
-        case ExpressionType::tie:
-            return parse_tied_operator();
-
         case ExpressionType::operator_ref:
             precedence_stack_.push_back(peek()->type.precedence());
             return post_binary_operator_state();
@@ -215,11 +202,40 @@ void TermedExpressionParser::initial_value_state() {
 void TermedExpressionParser::initial_operator_state() {
     shift();
     if (at_expression_end()) {
-        // might be partial application or postfix unary
         return;
     }
 
-    // check arity
+    // TODO: check arity
+    switch (peek()->expression_type) {
+        case GUARANTEED_VALUE: {
+            shift();
+            if (at_expression_end()) {
+                // just reduce
+                AST::Expression* rhs = parse_stack_.back();
+                parse_stack_.pop_back();
+                AST::Expression* op = parse_stack_.back();
+                parse_stack_.pop_back();
+
+                AST::Expression* call = ast_->globals_->create_call_expression(op->reference_value(), {
+                        ast_->create_valueless_expression(AST::ExpressionType::missing_arg, op->location), 
+                        rhs },
+                    expression_->location);
+
+                parse_stack_.push_back(call);
+
+                return;
+            }
+        }
+
+        case ExpressionType::call:
+        case ExpressionType::termed_expression:
+        case ExpressionType::operator_ref:
+        case ExpressionType::reference:
+            assert(false && "not implemented");
+
+        case BAD_TERM:
+            assert(false && "bad term encountered in TermedExpressoinParser");
+    }
 }
 
 // maybe dumb?
@@ -229,7 +245,6 @@ void TermedExpressionParser::pre_binary_operator_state() {
         return;
     }
 
-    
     // check type
     // compare precedence
 }
@@ -248,15 +263,18 @@ void TermedExpressionParser::post_binary_operator_state() {
             break;
 
         // value
+        case ExpressionType::call:
+        case ExpressionType::termed_expression:
         case ExpressionType::reference:
-        case ExpressionType::numeric_literal:
-        case ExpressionType::string_literal:
+            assert(false && "not implemented");
+
+        case GUARANTEED_VALUE:
             return compare_precedence_state();
 
-        default:
+        case BAD_TERM:
             assert(false && "unhandled term type in TermedExpressionParser::post_binary_operator_state");
+            break;
     }
-
 }
 
 // stack state: REDUCED_TREE OP1 VAL | input state: OP2(?)
@@ -381,11 +399,6 @@ void TermedExpressionParser::call_expression_state() {
         AST::Expression* next = get_term();
 
         switch (next->expression_type) {
-            case ExpressionType::tie:
-                assert(false && "ties not implemented yet");
-                parse_tied_operator();
-                break;
-
             case ExpressionType::operator_ref:
                 // abort, partial application
                 // might be unary

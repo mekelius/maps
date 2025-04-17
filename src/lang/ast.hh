@@ -49,8 +49,8 @@ enum class ExpressionType {
     identifier,             // value: string
     operator_e,
     
-    reference,
-    operator_ref,           // value: Callable*
+    reference,              // value: Callable*
+    operator_ref,           
 
     termed_expression,      // value: std::vector<Expression*>
 
@@ -63,6 +63,7 @@ enum class ExpressionType {
 // layer2
     call,                   // value: 
     // deferred_call,          // value: std::tuple<Expression*, std::vector<Expression*>>
+    missing_arg,
 
     // TODO: replace these with calls to simplify
 
@@ -99,6 +100,9 @@ struct Expression {
     }
     CallExpressionValue& call() {
         return std::get<CallExpressionValue>(value);
+    }
+    Callable* reference_value() {
+        return std::get<Callable*>(value);
     }
     
     const std::string& string_value() const;
@@ -249,8 +253,8 @@ class AST {
     Expression* create_numeric_literal(const std::string& value, SourceLocation location);
     
     // These automatically add the identifier into unresolved list as a convenience
-    Expression* create_identifier(const std::string& value, SourceLocation location);
-    Expression* create_operator(const std::string& value, SourceLocation location);
+    Expression* create_identifier_expression(const std::string& value, SourceLocation location);
+    Expression* create_operator_expression(const std::string& value, SourceLocation location);
 
     Expression* create_termed_expression(std::vector<Expression*>&& terms, SourceLocation location);
 

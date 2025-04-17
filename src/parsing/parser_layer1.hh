@@ -69,8 +69,8 @@ class ParserLayer1 {
 
     AST::Expression* parse_expression();
 
-    AST::Expression* parse_termed_expression();
-    AST::Expression* parse_term();
+    AST::Expression* parse_termed_expression(bool is_tied = false);
+    AST::Expression* parse_term(bool is_tied = false);
     // the token has to be an identifier. The caller must also be certain that this is a call expression
     // i.e. call this only when the current token is an identifier as well
     // AST::Expression* parse_call_expression(const std::string& callee);
