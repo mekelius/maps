@@ -1,0 +1,2 @@
+operator >>= = binary 5:
+    "eyyy"

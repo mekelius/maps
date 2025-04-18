@@ -47,10 +47,13 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
             break;
         case StatementType::block:
             value = Block{};
-            break;               
+            break;  
         case StatementType::let:
             value = Let{};
-            break;                 
+            break;
+        case StatementType::operator_s:
+            value = Operator{};
+            break;
         case StatementType::assignment:
             break;          
         case StatementType::return_:
@@ -102,6 +105,36 @@ Type Callable::get_type() const {
     }
 }
 
+// !!! this feels pretty sus, manipulating state with way too many layers of indirection
+void Callable::set_type(const Type& type) {
+    switch (body.index()) {
+        case 0: // uninitialized
+            type_ = std::make_optional<Type>(type);
+            return;
+        
+        case 1: // expression
+            std::get<Expression*>(body)->type = type;
+            return;
+
+        case 2: { // statement
+            Statement* statement = std::get<Statement*>(body);
+
+            if (statement->statement_type == StatementType::expression_statement) {
+                std::get<Expression*>(statement->value)->type = type;
+                return;
+            } 
+
+            type_ = std::make_optional<Type>(type);
+            return;
+        }
+        case 3: // Cannot set type of a builtin
+            assert(false && "tried to set_type of a builtin callable");
+            return;
+
+        default:
+            assert(false && "unhandled CallableBody in CallableBody::set_type");
+    }
+}
 
 // ----- SCOPE -----
 
@@ -133,6 +166,36 @@ std::optional<Callable*> Scope::create_callable(const std::string& name, Callabl
 
 std::optional<Callable*> Scope::create_callable(const std::string& name, SourceLocation location) {
     return create_callable(name, std::monostate{}, location);
+}
+
+std::optional<Callable*> Scope::create_binary_operator(const std::string& name, CallableBody body, 
+    unsigned int precedence, Associativity associativity, SourceLocation location) {
+
+    if (identifier_exists(name))
+        return std::nullopt;
+
+    Type type = create_binary_operator_type(Hole, Hole, Hole, precedence, associativity);
+
+    Callable* callable = *create_callable(name, body, location);
+    // !!! this is pretty hacky
+    callable->set_type(type);
+
+    return callable;
+}
+
+std::optional<Callable*> Scope::create_unary_operator(const std::string& name, CallableBody body, Fixity fixity, 
+    SourceLocation location) {
+
+    if (identifier_exists(name))
+        return std::nullopt;
+
+    Type type = create_unary_operator_type(Hole, Hole, fixity);
+    
+    Callable* callable = *create_callable(name, body, location);
+    // !!! this is pretty hacky
+    callable->set_type(type);
+
+    return callable;
 }
 
 std::optional<Expression*> Scope::create_reference_expression(const std::string& name, SourceLocation location) {

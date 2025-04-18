@@ -200,6 +200,14 @@ void ParserLayer1::handle_pragma() {
 
 // --------- STATEMENTS --------
 
+AST::Statement* ParserLayer1::broken_statement_helper(const std::string& message) {
+    log_error(message);
+    declare_invalid();
+    AST::Statement* statement = create_statement(AST::StatementType::broken);
+    reset_to_top_level();
+    return statement;
+}
+
 void ParserLayer1::parse_top_level_statement() {
     AST::Statement* statement;
 
@@ -248,6 +256,9 @@ AST::Statement* ParserLayer1::parse_statement() {
             log_info("scoping not yet implemented");
             if (current_token().string_value() == "let")
                 return parse_let_statement();
+
+            if (current_token().string_value() == "operator")
+                return parse_operator_statement();
             
             assert(false && "Unhandled reserved word in Parser::parse_top_level_statement");
             
@@ -383,6 +394,89 @@ AST::Statement* ParserLayer1::parse_let_statement() {
             log_error("unexpected token: " + current_token().get_string() + " in let statement");
             reset_to_top_level();
             return create_statement(AST::StatementType::broken);
+    }
+}
+
+AST::Statement* ParserLayer1::parse_operator_statement() {
+    statement_start();
+
+    switch (get_token().token_type) {
+        case TokenType::operator_t: {
+            std::string op = current_token().string_value();
+
+            if (ast_->builtin_operators_->identifier_exists(op)) 
+                return broken_statement_helper("attempting to redefine built-in operator: " + op);
+
+            if (ast_->globals_->identifier_exists(op))
+                return broken_statement_helper("attempting to redefine user-defined operator: " + op);
+
+            get_token();
+
+            if (!is_assignment_operator(current_token()))
+                return broken_statement_helper(
+                    "unexpected token: " + current_token().get_string() + " in operator statement, expected \"=\"");
+
+            get_token();
+
+            if (current_token().token_type != TokenType::reserved_word || (current_token().string_value() != "unary" && current_token().string_value() != "binary"))
+                    return broken_statement_helper(
+                        "unexpected token: " + current_token().get_string() + " in operator statement, expected \"unary|binary\"");
+
+            unsigned int arity = current_token().string_value() == "binary" ? 2 : 1;
+
+            get_token();
+
+            // UNARY OPERATOR
+            if (arity == 1) {
+                if (current_token().token_type != TokenType::reserved_word || (current_token().string_value() != "prefix" && current_token().string_value() != "postfix"))
+                    return broken_statement_helper("unexpected token: " + current_token().get_string() + " in unary operator statement, expected \"prefix|postfix\"");
+
+                AST::Fixity fixity = current_token().get_string() == "prefix" ? AST::Fixity::prefix : AST::Fixity::postfix;
+
+                get_token(); // eat the fixity specifier
+
+                AST::CallableBody body;
+                if (is_block_starter(current_token())) {
+                    body = parse_block_statement();
+                } else {
+                    body = parse_expression();
+                }
+
+                AST::Statement* statement = create_statement(AST::StatementType::operator_s);
+                statement->value = AST::Operator{op, 1, body};
+
+                ast_->globals_->create_unary_operator(op, body, fixity, statement->location);
+                log_info("parsed let statement", MessageType::parser_debug);
+                return statement;   
+            }
+
+            // BINARY OPERATOR
+            if (current_token().token_type != TokenType::number)
+                return broken_statement_helper("unexpected token: " + current_token().get_string() + " in unary operator statement, expected precedence specifier(positive integer)");
+
+            unsigned int precedence = std::stoi(current_token().string_value());
+            if (precedence >= AST::MAX_OPERATOR_PRECEDENCE)
+                return broken_statement_helper("max operator precedence is " + std::to_string(AST::MAX_OPERATOR_PRECEDENCE));
+
+            get_token(); // eat the precedence specifier
+
+            AST::CallableBody body;
+            if (is_block_starter(current_token())) {
+                body = parse_block_statement();
+            } else {
+                body = parse_expression();
+            }
+
+            AST::Statement* statement = create_statement(AST::StatementType::operator_s);
+            statement->value = AST::Operator{op, 2, body};
+
+            ast_->globals_->create_binary_operator(op, body, precedence, AST::Associativity::left, statement->location);
+            log_info("parsed let statement", MessageType::parser_debug);
+            return statement;   
+
+        }
+        default:
+            return broken_statement_helper("unexpected token: " + current_token().get_string() + " in operator statement");            
     }
 }
 
@@ -648,7 +742,6 @@ AST::Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) 
                 break;
 
             default:
-                assert(false && "unhandled tokentype in ParserLayer1::parse_termed_expression");
                 declare_invalid();
                 log_error("unexpected: " + current_token().get_string() + ", in termed expression");
                 AST::Expression* term = ast_->create_valueless_expression(

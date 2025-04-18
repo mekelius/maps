@@ -124,12 +124,19 @@ struct Expression {
 };
 
 // ----- STATEMENTS -----
-struct Let{
+struct Let {
     std::string identifier; 
     CallableBody body;
 };
 
-struct Assignment{
+struct Operator {
+    std::string op;
+    unsigned int arity;
+    CallableBody body;
+    // include the specifiers
+};
+
+struct Assignment {
     std::string identifier; 
     CallableBody body;
 };
@@ -143,6 +150,7 @@ enum class StatementType {
     expression_statement,   // statement consisting of a single expression
     block,
     let,
+    operator_s,
     assignment,
     return_,
     // if,
@@ -161,6 +169,7 @@ using StatementValue = std::variant<
     Expression*,
 
     Let,
+    Operator,
     Assignment,
     Block
 >;
@@ -192,7 +201,7 @@ class Callable {
     // since statements don't store types, we'll have to store them here
     // if the body is an expression, the type will just mirror it's type
     Type get_type() const;
-    void set_type(Type& type);
+    void set_type(const Type& type);
 
   private:
     std::optional<Type> type_;
@@ -212,6 +221,12 @@ class Scope {
     std::optional<Callable*> create_callable(const std::string& name, CallableBody body, 
         std::optional<SourceLocation> location = std::nullopt);
     std::optional<Callable*> create_callable(const std::string& name, SourceLocation location);
+
+    std::optional<Callable*> create_binary_operator(const std::string& name, CallableBody body, 
+        unsigned int precedence, Associativity associativity, SourceLocation location);
+
+    std::optional<Callable*> create_unary_operator(const std::string& name, CallableBody body,
+        Fixity fixity, SourceLocation location);
 
     std::optional<Expression*> create_reference_expression(const std::string& name, SourceLocation location);
     Expression* create_reference_expression(Callable* callable, SourceLocation location);

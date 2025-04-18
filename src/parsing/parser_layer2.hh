@@ -9,9 +9,6 @@
 
 #include "../lang/ast.hh"
 
-constexpr unsigned int MAX_OPERATOR_PRECEDENCE = 1000;
-constexpr unsigned int MIN_OPERATOR_PRECEDENCE = 0;
-
 class TermedExpressionParser {
   public:
     TermedExpressionParser(AST::AST* ast, AST::Expression* expression);
@@ -68,7 +65,7 @@ class TermedExpressionParser {
     std::vector<AST::Expression*>::iterator next_term_it_;
 
     std::vector<AST::Expression*> parse_stack_ = {};
-    std::vector<unsigned int> precedence_stack_ = {MIN_OPERATOR_PRECEDENCE};
+    std::vector<unsigned int> precedence_stack_ = {AST::MIN_OPERATOR_PRECEDENCE};
 };
 
 // basically a small wrapper that creates TermedExpressionParser for each unparsed termed expression
