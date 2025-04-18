@@ -10,6 +10,9 @@
 
 namespace AST {
 
+constexpr unsigned int MAX_OPERATOR_PRECEDENCE = 1000;
+constexpr unsigned int MIN_OPERATOR_PRECEDENCE = 0;
+
 // class for booleans we may or may not know yet
 enum class DeferredBool {
     true_,
@@ -89,7 +92,6 @@ struct FunctionTypeComplex {
     bool is_operator = false;
     Fixity fixity = Fixity::prefix;
     unsigned int precedence = 999;
-    bool is_arithmetic_operator = false;
     Associativity associativity = Associativity::none;
 
     unsigned int arity() const {
@@ -108,8 +110,8 @@ inline bool operator==(const FunctionTypeComplex& lhs, const FunctionTypeComplex
 
 Type create_function_type(const Type& return_type, const std::vector<Type>& arg_types);
 Type create_binary_operator_type(const Type& return_type, const Type& lhs, const Type& rhs, 
-    unsigned int precedence, bool is_arithmetic = false, 
-    Associativity associativity = Associativity::none);
+    unsigned int precedence, Associativity associativity = Associativity::none);
+Type create_unary_operator_type(const Type& return_type, const Type& arg_type, Fixity fixity);
 
 // caller needs to be sure that type is an operator type
 unsigned int get_precedence(const Type& type);

@@ -61,6 +61,17 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
             // ostream << return type
             break;
         }
+
+        case AST::StatementType::operator_s: {
+            auto [name, arity, body] = std::get<AST::Operator>(statement->value);
+
+            ostream << "operator " << name << " = "
+                    << (arity == 2 ? "binary" : "unary")
+                    << " something something:"
+                    << linebreak()
+                    << "body here";
+            break;
+        }
         
         case AST::StatementType::assignment: {
             auto [name, body] = std::get<AST::Assignment>(statement->value);

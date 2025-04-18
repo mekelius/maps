@@ -13,7 +13,7 @@
 constexpr std::string_view OPERATOR_GLYPHS = "+-*/^=!?:|<>.$&€£@¬§¤";
 
 // OPT: roll these into a single enum
-constexpr std::array<std::string_view, 36> RESERVED_WORDS = {
+constexpr std::array<std::string_view, 42> RESERVED_WORDS = {
     "if", "else",
     "for", "while", "do",
     "return",
@@ -26,6 +26,7 @@ constexpr std::array<std::string_view, 36> RESERVED_WORDS = {
     "is", "typeof", "derives", "from",
     "extern",
     "async", "await", "maybe", "value", "fail", // might be builtins
+    "operator", "unary", "binary", "prefix", "infix", "postfix"
 };
 
 constexpr inline bool is_operator_glyph(char glyph) {

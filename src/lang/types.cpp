@@ -83,10 +83,16 @@ Type create_function_type(const Type& return_type, const std::vector<Type>& arg_
 }
 
 Type create_binary_operator_type(const Type& return_type, const Type& lhs_type, 
-    const Type& rhs_type, unsigned int precedence, bool is_arithmetic, Associativity associativity) {
+    const Type& rhs_type, unsigned int precedence, Associativity associativity) {
     Type type = Type{ &Function_ };
     type.complex = std::make_unique<FunctionTypeComplex>(return_type, std::vector<Type>{lhs_type, rhs_type},
-        true, Fixity::infix, precedence, is_arithmetic, associativity);
+        true, Fixity::infix, precedence, associativity);
+    return type;
+
+}
+Type create_unary_operator_type(const Type& return_type, const Type& arg_type, Fixity fixity) {
+    Type type = Type{ &Function_ };
+    type.complex = std::make_unique<FunctionTypeComplex>(return_type, std::vector<Type>{arg_type}, true, fixity);
     return type;
 }
 

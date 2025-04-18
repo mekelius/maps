@@ -57,12 +57,15 @@ class ParserLayer1 {
 
     void handle_pragma();
 
+    AST::Statement* broken_statement_helper(const std::string& message);
+
     void parse_top_level_statement();
     AST::Statement* parse_non_global_statement();
     AST::Statement* parse_statement();
 
     AST::Statement* parse_expression_statement();
     AST::Statement* parse_let_statement();
+    AST::Statement* parse_operator_statement();
     AST::Statement* parse_assignment_statement();
     AST::Statement* parse_return_statement();
     AST::Statement* parse_block_statement();
