@@ -33,6 +33,7 @@ enum class MessageType: unsigned int {
 
 class LogLevel {
   public:
+    static LogLevel nothing;
     static LogLevel quiet;
     static LogLevel default_;
     static LogLevel debug;

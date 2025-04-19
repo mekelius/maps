@@ -23,6 +23,19 @@ bool Expression::is_partial_call() const {
     return false;
 }
 
+bool Expression::is_reduced_value() const {
+    switch (expression_type) {
+        case ExpressionType::string_literal:
+        case ExpressionType::numeric_literal:
+        case ExpressionType::reference:
+        case ExpressionType::call:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 // TODO: clean this up
 const std::string& Expression::string_value() const {
     if (std::holds_alternative<Callable*>(value)) {

@@ -26,6 +26,10 @@ bool Type::is_operator() const {
     return function_type()->is_operator;
 }
 
+bool Type::is_function() const {
+    return (arity() > 0);
+}
+
 Type::Type(TypeTemplate* type_template): type_template(type_template) {
     complex = std::monostate{};
 }

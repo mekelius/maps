@@ -2,6 +2,7 @@
 
 namespace Logging {
 
+LogLevel LogLevel::nothing;
 LogLevel LogLevel::quiet;
 LogLevel LogLevel::default_;
 LogLevel LogLevel::debug;
@@ -14,18 +15,22 @@ std::ofstream* Settings::tokens_ofstream;
 
 bool log_check_flag = false;
 
-void LogLevel::init(LogLevel log_level) {
-    Settings::set_loglevel(log_level);
-
+void LogLevel::init(LogLevel log_level) {    
+    for (auto it = LogLevel::nothing.message_types.begin(); it != LogLevel::nothing.message_types.end(); it++) {
+        *it = false;
+    }
+    
     LogLevel::quiet.set_message_type(MessageType::general_info, false);
-
+    
     for (auto it = LogLevel::everything.message_types.begin(); it != LogLevel::everything.message_types.end(); it++) {
         *it = true;
     }
-
+    
     LogLevel::debug.set_message_type(MessageType::parser_debug, true);
     LogLevel::debug.set_message_type(MessageType::parser_debug_identifier, true);
     LogLevel::debug.set_message_type(MessageType::pragma_debug, true);
+
+    Settings::set_loglevel(log_level);
 }
 
 void log_error(SourceLocation location, const std::string& message) {
@@ -60,7 +65,7 @@ void log_token(SourceLocation location, const std::string& message) {
 
         *Settings::ostream
             << location.to_string() << line_col_padding(location.to_string().size()) 
-           << "token: " << message << '\n';
+            << "token: " << message << '\n';
     }
 
     if (Settings::tokens_ofstream) {

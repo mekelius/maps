@@ -105,6 +105,7 @@ struct Expression {
         return std::get<Callable*>(value);
     }
     bool is_partial_call() const;
+    bool is_reduced_value() const;
 
     const std::string& string_value() const;
 
@@ -191,7 +192,8 @@ struct Statement {
  */
 class Callable {
   public:
-    Callable(CallableBody body, const std::string& name, std::optional<SourceLocation> location = std::nullopt);
+    Callable(CallableBody body, const std::string& name, 
+        std::optional<SourceLocation> location = std::nullopt);
     Callable(CallableBody body, std::optional<SourceLocation> location); // create anonymous callable
 
     CallableBody body;

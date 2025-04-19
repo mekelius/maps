@@ -91,3 +91,13 @@ add_executable(parsing_unit_tests
 
 target_link_libraries(parsing_unit_tests parsing)
 target_include_directories(parsing_unit_tests SYSTEM PRIVATE doctest)
+
+
+# ----------------- IR GEN UNIT_TESTS -----------------
+
+add_executable(ir_gen_unit_tests
+    tests/tests_main.cpp
+)
+
+target_link_libraries(ir_gen_unit_tests parsing ir_gen)
+target_include_directories(ir_gen_unit_tests SYSTEM PRIVATE doctest)

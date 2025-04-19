@@ -1,5 +1,6 @@
 #include "ir_types.hh"
-#include "llvm/IR/DerivedTypes.h"
+
+using std::optional, std::nullopt, std::vector;
 
 namespace IR {
 
@@ -14,7 +15,7 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
     void_t = llvm::Type::getVoidTy(context);
 }
 
-std::optional<llvm::Type*> TypeMap::convert_type(const AST::Type* type) const {
+std::optional<llvm::Type*> TypeMap::convert_type(const AST::Type& type) const {
     // auto it = type_map_.find(type->name);
     // if (it == type_map_.end())
     //     return std::nullopt;
@@ -23,5 +24,23 @@ std::optional<llvm::Type*> TypeMap::convert_type(const AST::Type* type) const {
     return {};
 }
 
+std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const AST::Type& return_type, const std::vector<AST::Type>& arg_types) const {
+    optional<llvm::Type*> llvm_return_type = convert_type(return_type);
+    
+    if(!llvm_return_type)
+        return nullopt;
+    
+    vector<llvm::Type*> llvm_arg_types{};
+
+    for (auto arg_type: arg_types) {
+        optional<llvm::Type*> llvm_arg_type = convert_type(arg_type);
+        if (!llvm_arg_type)
+            return nullopt;
+
+        llvm_arg_types.push_back(*llvm_arg_type);
+    }
+
+    return llvm::FunctionType::get(*llvm_return_type, llvm_arg_types, false);
+}
 
 } // namespace IR

@@ -3,6 +3,7 @@
 
 #include <optional>
 
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/LLVMContext.h"
 
@@ -23,7 +24,9 @@ class TypeMap {
     llvm::Type* double_t;
     llvm::Type* void_t;
 
-    std::optional<llvm::Type*> convert_type(const AST::Type*) const;
+    std::optional<llvm::Type*> convert_type(const AST::Type& type) const;
+    std::optional<llvm::FunctionType*> convert_function_type(const AST::Type& return_type, 
+        const std::vector<AST::Type>& arg_types) const;
 };
 
 }

@@ -63,6 +63,7 @@ struct Type {
 
     bool is_complex() const;   
     bool is_operator() const;
+    bool is_function() const;
     unsigned int arity() const;
     unsigned int precedence() const;
     FunctionTypeComplex* function_type() const {
