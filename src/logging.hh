@@ -90,7 +90,11 @@ inline void init_logging(std::ostream* ostream, LogLevel& log_level = LogLevel::
     Settings::set_ostream(ostream);
 }
 
+
+void log_error(const std::string& message, const std::string& location_string = "");
 void log_error(SourceLocation location, const std::string& message);
+
+void log_info(const std::string& message, MessageType message_type, const std::string& location_string = "");
 void log_info(SourceLocation location, const std::string& message, MessageType message_type);
 void log_token(SourceLocation location, const std::string& message);
 

@@ -200,5 +200,5 @@ std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body) {
 }
 
 void reverse_parse(AST::AST& ast, std::ostream& ostream) {
-    ostream << ast.root_;
+    ostream << ast.root_->body;
 }

@@ -23,10 +23,13 @@ class TypeMap {
     llvm::Type* char_array_ptr_t;
     llvm::Type* double_t;
     llvm::Type* void_t;
+    llvm::FunctionType* repl_wrapper_signature;
+    llvm::FunctionType* cmain_signature;
 
     std::optional<llvm::Type*> convert_type(const AST::Type& type) const;
     std::optional<llvm::FunctionType*> convert_function_type(const AST::Type& return_type, 
         const std::vector<AST::Type>& arg_types) const;
+    std::optional<llvm::FunctionType*> convert_function_type(const AST::Type& type) const;
 };
 
 }

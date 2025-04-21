@@ -12,6 +12,6 @@
 #include "../lang/pragmas.hh"
 
 std::tuple<std::unique_ptr<AST::AST>, std::unique_ptr<Pragma::Pragmas>>
-    parse_source(std::istream& source_is);
+    parse_source(std::istream& source_is, bool in_repl = false);
 
 #endif

@@ -11,8 +11,12 @@ void insert_builtins(IR::IR_Generator& generator) {
     llvm::Function* sprintf_ = generator.function_declaration("sprintf", 
         llvm::FunctionType::get(generator.types_.void_t, {generator.types_.char_array_13_t, generator.types_.char_array_13_t, generator.types_.double_t}, true));
         
-    // TODO: write print in c
-    llvm::Function* print = puts;
+    // TODO: write print
+    llvm::Function* print = generator.function_definition("print", 
+        llvm::FunctionType::get(generator.types_.void_t, {generator.types_.char_array_ptr_t}, false));
+
+    generator.builder_->CreateCall(puts, print->getArg(0));
+    generator.builder_->CreateRetVoid();
 }
 
 } // namespace IR

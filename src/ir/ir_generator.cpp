@@ -17,7 +17,7 @@
 #include "ir_builtins.hh"
 
 using llvm::LLVMContext;
-using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if;
+using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;
 using Logging::log_error, Logging::log_info;
 using AST::Expression, AST::Statement, AST::Callable, AST::ExpressionType, AST::StatementType;
 using Pragma::Pragmas;
@@ -39,23 +39,8 @@ bool IR_Generator::run(const AST::AST& ast, Pragma::Pragmas* pragmas) {
         set_pragmas(pragmas);
 
     // global definitions
-    for (std::string name: ast.globals_->identifiers_in_order_) {
-        std::optional<AST::Callable*> callable = ast.globals_->get_identifier(name);
-        assert(callable && "nonexistent name in ast.globals_.identifiers_in_order");
-
-        handle_global_definition(**callable);
-    }
-
+    handle_global_functions(ast);
     // check if global eval context
-    if (!holds_alternative<std::monostate>(ast.root_)) {
-        start_main();
-
-        if (Statement* const * root = get_if<Statement*>(&ast.root_)) {
-            handle_statement(**root);
-        } else if (Expression* const * root = get_if<Expression*>(&ast.root_)) {
-            handle_expression(**root);
-        }
-    }
     
     // fix main to have the correct type
     // std::optional<AST::Callable*> main = ast->globals_->get_identifier("main");
@@ -71,7 +56,14 @@ bool IR_Generator::run(const AST::AST& ast, Pragma::Pragmas* pragmas) {
 }
 
 bool IR_Generator::repl_run(const AST::AST& ast, Pragma::Pragmas* pragmas) {
-    run(ast, pragmas);
+    if (pragmas)
+        set_pragmas(pragmas);
+
+    if (!handle_global_functions(ast))
+        return false;
+
+    if (!handle_top_level_execution(ast, true))
+        return false;
 
     return true;
 }
@@ -95,8 +87,8 @@ llvm::Function* IR_Generator::function_definition(const std::string& name, llvm:
     llvm::Function::LinkageTypes linkage) {
 
     llvm::Function* function = llvm::Function::Create(type, linkage, name, module_);
-    functions_map_.insert({name, {type, function}});
-    llvm::BasicBlock* body = llvm::BasicBlock::Create(*context_, "entry", function);
+    insert_function(name, type, function);
+    llvm::BasicBlock* body = llvm::BasicBlock::Create(*context_, "", function);
     builder_->SetInsertPoint(body);
     return function;
 }
@@ -105,7 +97,7 @@ llvm::Function* IR_Generator::function_declaration(const std::string& name, llvm
     llvm::Function::LinkageTypes linkage) {
     
     llvm::Function* function = llvm::Function::Create(type, linkage, name, module_);
-    functions_map_.insert({name, {type, function}});
+    insert_function(name, type, function);
     return function;
 }
 
@@ -132,6 +124,49 @@ optional<llvm::Value*> IR_Generator::global_constant(const Callable& callable) {
     return nullopt;
 }
 
+std::optional<llvm::FunctionCallee> IR_Generator::get_function(const std::string& name, llvm::FunctionType* function_type) const {
+    auto outer_it = functions_->find(name);
+
+    if (outer_it == functions_->end())
+        return nullopt;
+
+    // if function type wasn't given, check if there's only one
+    if (!function_type) {
+        if (outer_it->second->size() == 1)
+            return outer_it->second->begin()->second;
+
+        return nullopt;
+    }
+
+    auto inner_map = outer_it->second.get();
+    auto inner_it = inner_map->find(function_type);
+
+    if (inner_it == inner_map->end())
+        return nullopt;
+
+    return inner_it->second;
+}
+
+bool IR_Generator::insert_function(const std::string& name, llvm::FunctionType* type, llvm::Function* function) {
+    using inner_map_t = std::unordered_map<llvm::FunctionType*, llvm::FunctionCallee>;
+    auto outer_it = functions_->find(name);
+
+    if (outer_it == functions_->end()) {
+        functions_->insert({name, make_unique<inner_map_t>()});
+        functions_->at(name)->insert({type, {type, function}});
+        return true;
+    }
+
+    auto inner_map = outer_it->second.get();
+    if (inner_map->find(type) != inner_map->end()) {
+        fail("tried to insert a function overload that already exists");
+        return false;
+    }
+
+    inner_map->insert({type, {type, function}});
+    return true;
+}
+
 optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expression) const {
     if (expression.type == AST::String)
         return builder_->CreateGlobalString(expression.string_value());
@@ -156,6 +191,81 @@ optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& e
 
 // --------- HANDLERS ---------
 
+bool IR_Generator::handle_global_functions(const AST::AST& ast) {
+    for (std::string name: ast.globals_->identifiers_in_order_) {
+        std::optional<AST::Callable*> callable = ast.globals_->get_identifier(name);
+        assert(callable && "nonexistent name in ast.globals_.identifiers_in_order");
+
+        if (!handle_global_definition(**callable))
+            return false;
+    }
+
+    return true;
+}
+
+optional<llvm::Function*> IR_Generator::handle_top_level_execution(const AST::AST& ast, bool in_repl) {
+    if (holds_alternative<std::monostate>(ast.root_->body))
+        return nullopt;
+
+    llvm::Function* top_level_function;
+
+    if (in_repl) {
+        top_level_function = function_definition(static_cast<std::string>(REPL_WRAPPER_NAME), types_.repl_wrapper_signature);
+    } else {
+        top_level_function = function_definition("main", types_.cmain_signature);
+    }
+    
+    if (Statement* const * statement = get_if<Statement*>(&ast.root_->body)) {
+        // auto str = builder_->CreateGlobalString("asd");
+
+        // auto print = get_function("print");
+
+        // builder_->CreateCall(*print, str);
+        // builder_->CreateRetVoid();
+        // return top_level_function;
+
+        switch ((*statement)->statement_type) {
+            case StatementType::block:
+                handle_block(**statement, true);
+                break;
+
+            case StatementType::expression_statement:
+                assert(false && "not implemented");
+                return nullopt;
+
+            default:
+                assert(false && "unexpected statement type as top-level statement");
+                fail("unexpected statement type as top-level statement");
+                return nullopt;
+        }
+        
+        builder_->CreateRetVoid();
+        return top_level_function;
+
+    } else if (Expression* const * expression = get_if<Expression*>(&ast.root_->body)) {
+        optional<llvm::Value*> expression_value = handle_expression(**expression);
+
+        if (!expression_value) {
+            fail("codegen for top-level expression failed");
+            return nullopt;
+        }
+
+        optional<llvm::FunctionCallee> print = 
+            get_function("print", llvm::FunctionType::get(types_.void_t, {(*expression_value)->getType()}, false));
+            
+        if (!print) {
+            fail("no print function for top level expression");
+            return nullopt;
+        }
+
+        builder_->CreateCall(*print, *expression_value);
+        return top_level_function;
+    }
+
+    assert(false && "unhandled callable type in handle_top_level");
+    return nullopt;
+}
+
 bool IR_Generator::handle_global_definition(const AST::Callable& callable) {
     if (!callable.get_type().is_function()) {
         return global_constant(callable).has_value();
@@ -170,21 +280,13 @@ llvm::Value* IR_Generator::handle_callable(const Callable& callable) {
     return nullptr; //!!!
 }
 
-optional<llvm::Value*> IR_Generator::handle_statement(const Statement& statement) {
+bool IR_Generator::handle_statement(const Statement& statement) {
     switch (statement.statement_type) {
-        case StatementType::block: {
-            llvm::BasicBlock* block = llvm::BasicBlock::Create(*context_);
-            builder_->SetInsertPoint(block);
-
-            for (const Statement* sub_statement: get<AST::Block>(statement.value)) {
-                handle_statement(*sub_statement);
-            }
-            
-            return block;
-        }
+        case StatementType::block: 
+            return handle_block(statement);
 
         case StatementType::expression_statement:
-            return handle_expression(*get<AST::Expression*>(statement.value));
+            return static_cast<bool>(handle_expression(*get<AST::Expression*>(statement.value)));
 
         case StatementType::return_: {
             optional<llvm::Value*> value = handle_expression(*get<Expression*>(statement.value));
@@ -198,14 +300,65 @@ optional<llvm::Value*> IR_Generator::handle_statement(const Statement& statement
             assert(false && "not implemented");
 
         case IGNORED_STATEMENT_TYPE:
-            return nullopt;
+            return false;
 
         case BAD_STATEMENT_TYPE:
             // TODO: print statements nice
             fail("Bad statement in handle_statement: ");
             assert(false && "bad statement got through to IR_Generator");
-            return nullopt;
+            return false;
     }
+}
+
+bool IR_Generator::handle_block(const Statement& statement, bool repl_top_level) {
+    assert(statement.statement_type == StatementType::block && 
+        "IR_Generator::handle_block called with a statement that wasn't a block");
+
+    for (const Statement* sub_statement: get<AST::Block>(statement.value)) {
+        switch (sub_statement->statement_type) {
+            case StatementType::expression_statement:
+                if (!handle_expression_statement(*sub_statement, repl_top_level))
+                    return false;
+                break;
+
+            case StatementType::block:
+                if (!handle_block(*sub_statement, repl_top_level))
+                    return false;
+                break;
+
+            default:
+                if (!handle_statement(*sub_statement))
+                    return false;
+                break;
+        }
+    }
+    
+    return true;
+}
+
+std::optional<llvm::Value*> IR_Generator::handle_expression_statement(const AST::Statement& statement, bool repl_top_level) {
+    assert(statement.statement_type == StatementType::expression_statement && 
+        "IR_Generator::handle_expression_statement called with non-expression statement");
+
+    optional<llvm::Value*> value = handle_expression(*get<Expression*>(statement.value));
+
+    if (!value)
+        return nullopt;
+
+    if (!repl_top_level)
+        return value;
+
+    optional<llvm::FunctionCallee> print = 
+        get_function("print", llvm::FunctionType::get(types_.void_t, {(*value)->getType()}, false));
+
+    if (!print) {
+        fail("no print function for top level expression");
+        return nullopt;
+    }
+
+    builder_->CreateCall(*print, *value);
+
+    return value;
 }
 
 optional<llvm::Value*> IR_Generator::handle_expression(const Expression& expression) {
@@ -216,6 +369,10 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
 
         case ExpressionType::string_literal:
             return handle_string_literal(expression);
+            break;
+
+        case ExpressionType::numeric_literal:
+            return convert_numeric_literal(expression);
             break;
 
         // case ExpressionType::native_operator:
@@ -234,6 +391,8 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
 
         default:
             *errs_ << "error during codegen: encountered unhandled expression type\n";
+            errs_->flush();
+
             has_failed_ = true;
             return nullopt;
     }
@@ -300,6 +459,7 @@ llvm::GlobalVariable* IR_Generator::handle_string_literal(const Expression& expr
 void IR_Generator::fail(const std::string& message) {
     has_failed_ = true;
     *errs_ << "error during codegen: " << message << "\n";
+    errs_->flush();
 }
 
 bool IR_Generator::function_name_is_ok(const std::string& name) {
@@ -308,20 +468,6 @@ bool IR_Generator::function_name_is_ok(const std::string& name) {
         name != "puts" &&
         name != "sprintf"
     );
-}
-
-std::optional<llvm::FunctionCallee> IR_Generator::get_function(const std::string& name) const {
-    auto it = functions_map_.find(name);
-    if (it == functions_map_.end())
-        return {};
-
-    return it->second;
-}
-
-void IR_Generator::start_main() {
-    // create the main function
-    function_definition("main", 
-        llvm::FunctionType::get(types_.int_t, {types_.int_t, types_.char_array_ptr_t}, false));
 }
 
 } // namespace IR

@@ -243,7 +243,9 @@ Expression* Scope::create_call_expression(Callable* callee, std::vector<Expressi
 
 // ----- AST -----
 
-AST::AST() {}
+AST::AST() {
+    root_ = create_callable("root", {0,0});
+}
 
 Expression* AST::create_string_literal(const std::string& value, SourceLocation location) {
     return create_expression(ExpressionType::string_literal, value, String, location);
@@ -319,7 +321,7 @@ Callable* AST::create_builtin(BuiltinType builtin_type, const std::string& name,
 }
 
 void AST::set_root(CallableBody root) {
-    root_ = root;
+    root_->body = root;
 }
 
 Expression* AST::create_expression(ExpressionType expression_type, 

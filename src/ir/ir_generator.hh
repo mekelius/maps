@@ -12,6 +12,8 @@
 
 #include "ir_types.hh"
 
+constexpr std::string_view REPL_WRAPPER_NAME = "repl_wrapper";
+
 namespace IR {
 
 // Helper class that holds the module, context, etc. for IR generation
@@ -24,6 +26,8 @@ public:
     }
 
     bool run(const AST::AST& ast, Pragma::Pragmas* pragmas = nullptr);
+
+    // version of run that always processes top-level statements, and wraps them in print calls
     bool repl_run(const AST::AST& ast, Pragma::Pragmas* pragmas = nullptr);
     bool print_ir_to_file(const std::string& filename);
     
@@ -41,13 +45,24 @@ private:
     llvm::Function* function_declaration(const std::string& name, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
+    // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
+    std::optional<llvm::FunctionCallee> get_function(const std::string& name, llvm::FunctionType* function_type = nullptr) const;
+    bool insert_function(const std::string& name, llvm::FunctionType* type, llvm::Function* function);
+
     std::optional<llvm::Value*> global_constant(const AST::Callable& callable);
     std::optional<llvm::Value*> convert_literal(const AST::Expression& expression) const;
     std::optional<llvm::Value*> convert_numeric_literal(const AST::Expression& expression) const;
 
+    std::optional<llvm::Function*> handle_top_level_execution(const AST::AST& ast, bool in_repl);
+    bool handle_global_functions(const AST::AST& ast);
     bool handle_global_definition(const AST::Callable& callable);
     llvm::Value* handle_callable(const AST::Callable& callable);
-    std::optional<llvm::Value*> handle_statement(const AST::Statement& statement);
+    bool handle_statement(const AST::Statement& statement);
+
+    // if repl_top_level is true, wraps every expression-statement in the block into a print call for the appropriate print function
+    bool handle_block(const AST::Statement& statement, bool repl_top_level = false);
+    std::optional<llvm::Value*> handle_expression_statement(const AST::Statement& statement, bool repl_top_level = false);
+
     std::optional<llvm::Value*> handle_expression(const AST::Expression& expression);
     std::optional<llvm::Function*> handle_function(const AST::Callable& callable);
 
@@ -56,14 +71,14 @@ private:
     
     void fail(const std::string& message);
     bool function_name_is_ok(const std::string& name);
-    std::optional<llvm::FunctionCallee> get_function(const std::string& name) const;
-    void start_main();
 
     friend void insert_builtins(IR_Generator& generator);
 
-    std::unordered_map<std::string, llvm::FunctionCallee> functions_map_;
-
     Pragma::Pragmas* current_pragmas_;
+    std::unique_ptr<std::unordered_map<std::string, std::unique_ptr<std::unordered_map<llvm::FunctionType*, llvm::FunctionCallee>>>> 
+        functions_ = 
+            std::make_unique<std::unordered_map<std::string, std::unique_ptr<std::unordered_map<llvm::FunctionType*, llvm::FunctionCallee>>>>();
+
     bool has_failed_ = false;
 };
 

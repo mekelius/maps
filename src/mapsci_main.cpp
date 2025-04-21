@@ -25,6 +25,7 @@
 #include "lang/pragmas.hh"
 #include "parsing/full_parse.hh"
 #include "ir/ir_generator.hh"
+#include "lang/reverse_parse.hh"
 
 using std::unique_ptr, std::make_unique;
 using Logging::LogLevel;
@@ -48,26 +49,38 @@ public:
         jit_ = std::move(*jit);
     }
 
-    // llvm::orc::ResourceTracker* compile_and_run_with_ro(llvm::Module& module) {
+    // llvm::orc::ResourceTracker* compile_and_run_with_rt(llvm::Module& module) {
     //     auto resource_tracker = jit_->getMainJITDylib().createResourceTracker();
     // }
 
-    template<typename T>
-    std::optional<T> compile_and_run(const std::string& name, std::unique_ptr<llvm::Module> module) {
+    bool compile_and_run(const std::string& name, std::unique_ptr<llvm::Module> module) {
         if (auto err = jit_->addIRModule(llvm::orc::ThreadSafeModule{std::move(module), *context_})) {
             *error_stream_ << err << '\n';
-            return std::nullopt;
+            error_stream_->flush();
+            return false;
         }
     
         auto f1_sym = jit_->lookup(name);
         if (!f1_sym) {
             *error_stream_ << f1_sym.takeError() << '\n';
-            return std::nullopt;
+            error_stream_->flush();
+            return false;
         }
     
-        auto *f1_ptr = f1_sym->toPtr<T(*)()>();
-        
-        return f1_ptr();
+        // excecute the compiled function
+        auto *f1_ptr = f1_sym->toPtr<void(*)()>();
+        f1_ptr();
+
+        return true;
+    }
+
+    // resets everything in the jitDYlib
+    void reset() {
+        auto error = jit_->getMainJITDylib().clear();
+        if (error) {
+            *error_stream_ << error;
+            error_stream_->flush();
+        }
     }
 
     bool is_good = true;
@@ -115,19 +128,36 @@ public:
             
             unique_ptr<AST::AST> ast;
             std::stringstream input_s{input};
-            std::tie(ast, pragmas_) = parse_source(input_s);
+            std::tie(ast, pragmas_) = parse_source(input_s, true);
 
-            // std::cout << eval(*ast);
+            if (options_.print_reverse_parse) {
+                std::cout << "parsed into:\n";
+                reverse_parse(*ast, std::cout);           
+                std::cout << "\n" << std::endl;
+            }
+
+            eval(*ast);
         }
     }
 
     void eval(const AST::AST& ast) {
+        jit_->reset();
+
         unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
-        IR::IR_Generator{context_, module_.get(), error_stream_}.repl_run(ast, pragmas_.get());
+        unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), error_stream_);
 
-        module_->dump();
+        insert_builtins(*generator);
+        generator->repl_run(ast, pragmas_.get());
 
-        jit_->compile_and_run<std::string>(ast.entry_point_->name, std::move(module_));
+        if (options_.print_ir) {
+            std::cerr << "---IR DUMP---:\n\n";
+            module_->dump();
+            std::cerr << "\n---IR END---\n";
+        }
+
+        if (options_.eval) {
+            jit_->compile_and_run(static_cast<std::string>(REPL_WRAPPER_NAME), std::move(module_));
+        }
     }
 
     void run_command(const std::string& command) {
@@ -144,7 +174,6 @@ private:
     bool running_ = true;
     bool is_good_ = true;
 
-    
     llvm::LLVMContext* context_;
     JIT_Manager* jit_;
     llvm::raw_ostream* error_stream_;
@@ -155,6 +184,11 @@ private:
 int main(int argc, char* argv[]) {
     std::vector<std::string> args = {argv + 1, argc + argv};
     std::vector<std::string> source_filenames{};
+
+    REPL::Options repl_options;
+    repl_options.eval = true;
+    repl_options.print_ir = true;
+    repl_options.print_reverse_parse = true;
 
     for (std::string arg: args) {
         if (arg == "-t" || arg == "--tokens") {
@@ -177,15 +211,15 @@ int main(int argc, char* argv[]) {
     Logging::init_logging(&std::cerr);
     llvm::raw_os_ostream error_stream{std::cerr};
 
-    // InitializeAllTargetInfos();
-    // InitializeAllTargets();
-    // InitializeAllTargetMCs();
-    // InitializeAllAsmParsers();
-    // InitializeAllAsmPrinters();
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
 
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-    llvm::InitializeNativeTargetAsmParser();
+    // llvm::InitializeNativeTarget();
+    // llvm::InitializeNativeTargetAsmPrinter();
+    // llvm::InitializeNativeTargetAsmParser();
 
         
     auto ts_context = make_unique<llvm::orc::ThreadSafeContext>(make_unique<llvm::LLVMContext>());
@@ -195,7 +229,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    REPL{&jit, ts_context->getContext(), &error_stream}.run();
+    REPL{&jit, ts_context->getContext(), &error_stream, repl_options}.run();
     
     return EXIT_SUCCESS;
 }

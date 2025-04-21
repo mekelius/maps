@@ -9,12 +9,12 @@
 
 using std::tuple, std::unique_ptr, Pragma::Pragmas;
 
-tuple<unique_ptr<AST::AST>, unique_ptr<Pragmas>> parse_source(std::istream& source_is) {    
+tuple<unique_ptr<AST::AST>, unique_ptr<Pragmas>> parse_source(std::istream& source_is, bool in_repl) {    
     std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
     
     StreamingLexer lexer{&source_is};
 
-    std::unique_ptr<AST::AST> ast = ParserLayer1{&lexer, pragmas.get()}.run();
+    std::unique_ptr<AST::AST> ast = ParserLayer1{&lexer, pragmas.get(), in_repl}.run();
     resolve_identifiers(*ast);
     ParserLayer2{ast.get(), pragmas.get()}.run();
 

@@ -22,8 +22,8 @@ using Logging::MessageType;
 
 // ----- PUBLIC METHODS -----
 
-ParserLayer1::ParserLayer1(StreamingLexer* lexer, Pragma::Pragmas* pragmas):
-lexer_(lexer), pragmas_(pragmas) {
+ParserLayer1::ParserLayer1(StreamingLexer* lexer, Pragma::Pragmas* pragmas, bool in_repl):
+lexer_(lexer), pragmas_(pragmas), in_repl_(in_repl) {
     ast_ = std::make_unique<AST::AST>();
     get_token();
     get_token();
@@ -225,8 +225,9 @@ void ParserLayer1::parse_top_level_statement() {
         default:
             // TODO: check pragmas for top-level statement types
             statement = parse_statement();
-            if (statement->statement_type != AST::StatementType::empty && pragmas_->check_flag_value("top-level evaluation", statement->location)) {            
-                std::get<AST::Block>(std::get<AST::Statement*>(ast_->root_)->value).push_back(statement);
+            if (statement->statement_type != AST::StatementType::empty && 
+                (pragmas_->check_flag_value("top-level evaluation", statement->location) || in_repl_)) {            
+                std::get<AST::Block>(std::get<AST::Statement*>(ast_->root_->body)->value).push_back(statement);
             }
             return;
     }

@@ -4,6 +4,7 @@ using std::optional, std::nullopt, std::vector;
 
 namespace IR {
 
+// TODO: store these somewhere
 TypeMap::TypeMap(llvm::LLVMContext& context) {
     // get some types
     char_t = llvm::Type::getInt8Ty(context);
@@ -13,6 +14,9 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
     int_t = llvm::Type::getInt64Ty(context);
     double_t = llvm::Type::getDoubleTy(context);
     void_t = llvm::Type::getVoidTy(context);
+    repl_wrapper_signature = llvm::FunctionType::get(void_t, false);
+
+    cmain_signature = llvm::FunctionType::get(int_t, {int_t, char_array_ptr_t}, false);
 }
 
 std::optional<llvm::Type*> TypeMap::convert_type(const AST::Type& type) const {
@@ -41,6 +45,13 @@ std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const AST::Typ
     }
 
     return llvm::FunctionType::get(*llvm_return_type, llvm_arg_types, false);
+}
+
+std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const AST::Type& type) const {
+    if (!type.is_function())
+        return nullopt;
+
+    return convert_function_type(type.function_type()->return_type, type.function_type()->arg_types);
 }
 
 } // namespace IR

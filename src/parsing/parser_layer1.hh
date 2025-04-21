@@ -16,7 +16,7 @@
 // First attempt at a parser. Parses tokens directly into the llvm context
 class ParserLayer1 {
   public:
-    ParserLayer1(StreamingLexer* lexer, Pragma::Pragmas* pragmas);
+    ParserLayer1(StreamingLexer* lexer, Pragma::Pragmas* pragmas, bool in_repl = false);
     
     std::unique_ptr<AST::AST> run();
   private:
@@ -102,6 +102,8 @@ class ParserLayer1 {
 
     std::vector<SourceLocation> current_expression_start_;
     std::vector<SourceLocation> current_statement_start_;
+
+    bool in_repl_ = false;
 
     // these are automatically incremented and decremented by the get_token()
     unsigned int indent_level_ = 0;

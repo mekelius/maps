@@ -292,7 +292,7 @@ class AST {
 
     // container for top-level statements
     void set_root(CallableBody root);
-    CallableBody root_;
+    Callable* root_;
     Callable* entry_point_;
 
     std::unique_ptr<Scope> globals_ = std::make_unique<Scope>(this);
