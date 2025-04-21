@@ -4,6 +4,15 @@
 #include <variant>
 #include <sstream>
 
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
+
+#include "llvm/IR/Verifier.h"
+
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Constants.h"
+
 #include "../lang/ast.hh"
 #include "ir_builtins.hh"
 
@@ -13,19 +22,19 @@ using Logging::log_error, Logging::log_info;
 using AST::Expression, AST::Statement, AST::Callable, AST::ExpressionType, AST::StatementType;
 using Pragma::Pragmas;
 
+#define BAD_STATEMENT_TYPE StatementType::broken: case StatementType::illegal
+#define IGNORED_STATEMENT_TYPE StatementType::operator_s: case StatementType::empty
+
 namespace IR {
 
 // ----- IR Generation -----
 
-IR_Generator::IR_Generator(const std::string& module_name, std::ostream* info_stream)
-:errs_(info_stream), context_(std::make_unique<LLVMContext>()), types_({*context_}) {
-    module_ = std::make_unique<llvm::Module>(module_name, *context_);
+IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, llvm::raw_ostream* error_stream)
+:errs_(error_stream), context_(context), module_(module), types_({*context_}) {
     builder_ = std::make_unique<llvm::IRBuilder<>>(*context_);
-
-    insert_builtins(*this);
 }
 
-bool IR_Generator::run(AST::AST& ast, Pragma::Pragmas* pragmas) {
+bool IR_Generator::run(const AST::AST& ast, Pragma::Pragmas* pragmas) {
     if (pragmas)
         set_pragmas(pragmas);
 
@@ -38,25 +47,15 @@ bool IR_Generator::run(AST::AST& ast, Pragma::Pragmas* pragmas) {
     }
 
     // check if global eval context
-    if (true /*pragma global eval context*/) {
-        for (AST::Statement* statement: ast.root_) {
-            switch (statement->statement_type) {
-                // let statements are hoisted
-                case StatementType::let:
-                    break;
+    if (!holds_alternative<std::monostate>(ast.root_)) {
+        start_main();
 
-                case StatementType::assignment:
-                case StatementType::expression_statement:
-                case StatementType::return_:
-                    // run it if true
-                    break;
-
-                default:
-                    assert(false && "uhandled statement type encountered in genererate_ir");
-            }
+        if (Statement* const * root = get_if<Statement*>(&ast.root_)) {
+            handle_statement(**root);
+        } else if (Expression* const * root = get_if<Expression*>(&ast.root_)) {
+            handle_expression(**root);
         }
     }
-    // start_main();
     
     // fix main to have the correct type
     // std::optional<AST::Callable*> main = ast->globals_->get_identifier("main");
@@ -71,13 +70,31 @@ bool IR_Generator::run(AST::AST& ast, Pragma::Pragmas* pragmas) {
     return !has_failed_;
 }
 
+bool IR_Generator::repl_run(const AST::AST& ast, Pragma::Pragmas* pragmas) {
+    run(ast, pragmas);
+
+    return true;
+}
+
+
+bool IR_Generator::print_ir_to_file(const std::string& filename) {
+    // prepare the stream
+    std::error_code error_code; //??? what to do with this?
+    llvm::raw_fd_ostream ostream{filename, error_code, llvm::sys::fs::OF_None};
+
+    module_->print(ostream, nullptr);
+    ostream.flush();
+
+    return true;
+}
+
 
 // --------- HELPERS ---------
 
 llvm::Function* IR_Generator::function_definition(const std::string& name, llvm::FunctionType* type, 
     llvm::Function::LinkageTypes linkage) {
 
-    llvm::Function* function = llvm::Function::Create(type, linkage, name, module_.get());
+    llvm::Function* function = llvm::Function::Create(type, linkage, name, module_);
     functions_map_.insert({name, {type, function}});
     llvm::BasicBlock* body = llvm::BasicBlock::Create(*context_, "entry", function);
     builder_->SetInsertPoint(body);
@@ -87,7 +104,7 @@ llvm::Function* IR_Generator::function_definition(const std::string& name, llvm:
 llvm::Function* IR_Generator::function_declaration(const std::string& name, llvm::FunctionType* type, 
     llvm::Function::LinkageTypes linkage) {
     
-    llvm::Function* function = llvm::Function::Create(type, linkage, name, module_.get());
+    llvm::Function* function = llvm::Function::Create(type, linkage, name, module_);
     functions_map_.insert({name, {type, function}});
     return function;
 }
@@ -148,33 +165,79 @@ bool IR_Generator::handle_global_definition(const AST::Callable& callable) {
     return true;
 }
 
-llvm::Value* IR_Generator::handle_call(const Expression& expression) {
-    auto [callee, args] = get<AST::CallExpressionValue>(expression.value);
-
-    std::optional<llvm::FunctionCallee> function = get_function(callee->name);
-
-    if (!function) {
-        fail("attempt to call unknown function: \"" + callee->name + "\"");
-        return nullptr;
-    }
-
-    // handle args
-    std::vector<llvm::Value*> arg_values = {};
-
-    for (Expression* arg_expr : args) {
-        // OK instead of these null values we should panic here
-        llvm::Value* value = handle_expression(*arg_expr);
-        if (value)
-            arg_values.push_back(value);
-    }
-
-    return builder_->CreateCall(*function, arg_values);
+llvm::Value* IR_Generator::handle_callable(const Callable& callable) {
+    assert(false && "not implemented");
+    return nullptr; //!!!
 }
 
-llvm::GlobalVariable* IR_Generator::handle_string_literal(const Expression& expression) {
-    return builder_->CreateGlobalString(expression.string_value());
+optional<llvm::Value*> IR_Generator::handle_statement(const Statement& statement) {
+    switch (statement.statement_type) {
+        case StatementType::block: {
+            llvm::BasicBlock* block = llvm::BasicBlock::Create(*context_);
+            builder_->SetInsertPoint(block);
+
+            for (const Statement* sub_statement: get<AST::Block>(statement.value)) {
+                handle_statement(*sub_statement);
+            }
+            
+            return block;
+        }
+
+        case StatementType::expression_statement:
+            return handle_expression(*get<AST::Expression*>(statement.value));
+
+        case StatementType::return_: {
+            optional<llvm::Value*> value = handle_expression(*get<Expression*>(statement.value));
+            if (!value)
+                fail("Missing value while createing return statement");
+            return builder_->CreateRet(*value);
+        }
+
+        case StatementType::let:
+        case StatementType::assignment:
+            assert(false && "not implemented");
+
+        case IGNORED_STATEMENT_TYPE:
+            return nullopt;
+
+        case BAD_STATEMENT_TYPE:
+            // TODO: print statements nice
+            fail("Bad statement in handle_statement: ");
+            assert(false && "bad statement got through to IR_Generator");
+            return nullopt;
+    }
 }
 
+optional<llvm::Value*> IR_Generator::handle_expression(const Expression& expression) {
+    switch (expression.expression_type) {
+        case ExpressionType::call:
+            return handle_call(expression);
+            break;
+
+        case ExpressionType::string_literal:
+            return handle_string_literal(expression);
+            break;
+
+        // case ExpressionType::native_operator:
+        //     handle_native_operator(expression);
+        //     break;
+
+        // case ExpressionType::function_body:
+        //     *errs_ << "error during codegen: encountered function_body without a callable wrapper\n";
+        //     has_failed_ = true;
+        //     return nullptr;
+
+        // case ExpressionType::callable_expression:
+        //     *errs_ << "error during codegen: encountered callable_expression\n";
+        //     has_failed_ = true;
+        //     return nullptr;
+
+        default:
+            *errs_ << "error during codegen: encountered unhandled expression type\n";
+            has_failed_ = true;
+            return nullopt;
+    }
+}
 
 std::optional<llvm::Function*> IR_Generator::handle_function(const AST::Callable& callable) {
     assert(callable.get_type().is_function() && "IR_Generator::handle function called with a non-function callable");
@@ -207,35 +270,31 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const AST::Callable
     return function;
 }
 
-llvm::Value* IR_Generator::handle_expression(const Expression& expression) {
-    switch (expression.expression_type) {
-        case ExpressionType::call:
-            return handle_call(expression);
-            break;
 
-        case ExpressionType::string_literal:
-            return handle_string_literal(expression);
-            break;
+llvm::Value* IR_Generator::handle_call(const Expression& expression) {
+    auto [callee, args] = get<AST::CallExpressionValue>(expression.value);
 
-        // case ExpressionType::native_operator:
-        //     handle_native_operator(expression);
-        //     break;
+    std::optional<llvm::FunctionCallee> function = get_function(callee->name);
 
-        // case ExpressionType::function_body:
-        //     *errs_ << "error during codegen: encountered function_body without a callable wrapper\n";
-        //     has_failed_ = true;
-        //     return nullptr;
-
-        // case ExpressionType::callable_expression:
-        //     *errs_ << "error during codegen: encountered callable_expression\n";
-        //     has_failed_ = true;
-        //     return nullptr;
-
-        default:
-            *errs_ << "error during codegen: encountered unhandled expression type\n";
-            has_failed_ = true;
-            return nullptr;
+    if (!function) {
+        fail("attempt to call unknown function: \"" + callee->name + "\"");
+        return nullptr;
     }
+
+    // handle args
+    std::vector<llvm::Value*> arg_values = {};
+
+    for (Expression* arg_expr : args) {
+        optional<llvm::Value*> value = handle_expression(*arg_expr);
+        if (value)
+            arg_values.push_back(*value);
+    }
+
+    return builder_->CreateCall(*function, arg_values);
+}
+
+llvm::GlobalVariable* IR_Generator::handle_string_literal(const Expression& expression) {
+    return builder_->CreateGlobalString(expression.string_value());
 }
 
 void IR_Generator::fail(const std::string& message) {

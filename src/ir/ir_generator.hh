@@ -1,13 +1,9 @@
 #ifndef __IR_GEN_HH
 #define __IR_GEN_HH
 
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/Constants.h"
 #include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/Verifier.h"
 
 #include <ostream>
 
@@ -21,19 +17,21 @@ namespace IR {
 // Helper class that holds the module, context, etc. for IR generation
 class IR_Generator {
 public:
-    IR_Generator(const std::string& module_name, std::ostream* info_stream);
+    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, llvm::raw_ostream* error_stream);
 
     void set_pragmas(Pragma::Pragmas* pragmas) {
         current_pragmas_ = pragmas;
     }
 
-    bool run(AST::AST& ast, Pragma::Pragmas* pragmas = nullptr);
-
-    // TODO: move to use logging
-    std::ostream* errs_;
+    bool run(const AST::AST& ast, Pragma::Pragmas* pragmas = nullptr);
+    bool repl_run(const AST::AST& ast, Pragma::Pragmas* pragmas = nullptr);
+    bool print_ir_to_file(const std::string& filename);
     
-    std::unique_ptr<llvm::LLVMContext> context_;
-    std::unique_ptr<llvm::Module> module_;
+    // TODO: move to use logging
+    llvm::raw_ostream* errs_;
+    
+    llvm::LLVMContext* context_;
+    llvm::Module* module_;
     std::unique_ptr<llvm::IRBuilder<>> builder_;
 
     TypeMap types_;
@@ -49,10 +47,11 @@ private:
 
     bool handle_global_definition(const AST::Callable& callable);
     llvm::Value* handle_callable(const AST::Callable& callable);
-    llvm::Value* handle_expression(const AST::Expression& expression);
-    llvm::Value* handle_statement(const AST::Statement& statement);
-    llvm::Value* handle_call(const AST::Expression& call);
+    std::optional<llvm::Value*> handle_statement(const AST::Statement& statement);
+    std::optional<llvm::Value*> handle_expression(const AST::Expression& expression);
     std::optional<llvm::Function*> handle_function(const AST::Callable& callable);
+
+    llvm::Value* handle_call(const AST::Expression& call);
     llvm::GlobalVariable* handle_string_literal(const AST::Expression& str);
     
     void fail(const std::string& message);

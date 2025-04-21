@@ -5,10 +5,15 @@ set(CMAKE_CXX_COMPILER "clang++-19")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-
 project(Maps)
 
-add_compile_options(-Wall -Wextra -Werror -Wno-error=unused-parameter -Wno-error=unused-but-set-variable -Wno-error=unused-variable)
+add_compile_options(-Wall -Wextra -Werror 
+    -Wno-error=unused-parameter 
+    -Wno-error=unused-but-set-variable 
+    -Wno-error=unused-variable
+    -Wno-error=unused-private-field
+)
+
 
 # ------------------- MAPSC PARSING -------------------
 
@@ -32,7 +37,6 @@ add_library(parsing OBJECT
 add_library(ir_gen OBJECT
     src/ir/ir_generator.cpp
     src/ir/ir_builtins.cpp
-    src/ir/ir_output.cpp
     src/ir/ir_types.cpp
 )
 
@@ -44,6 +48,7 @@ target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 add_executable(mapsc
     src/mapsc_main.cpp
+    src/ir/obj_output.cpp
 )
 
 target_link_libraries(mapsc parsing ir_gen -lLLVM-19)
@@ -91,13 +96,3 @@ add_executable(parsing_unit_tests
 
 target_link_libraries(parsing_unit_tests parsing)
 target_include_directories(parsing_unit_tests SYSTEM PRIVATE doctest)
-
-
-# ----------------- IR GEN UNIT_TESTS -----------------
-
-add_executable(ir_gen_unit_tests
-    tests/tests_main.cpp
-)
-
-target_link_libraries(ir_gen_unit_tests parsing ir_gen)
-target_include_directories(ir_gen_unit_tests SYSTEM PRIVATE doctest)

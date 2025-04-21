@@ -200,7 +200,5 @@ std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body) {
 }
 
 void reverse_parse(AST::AST& ast, std::ostream& ostream) {
-    for (auto statement: ast.root_) {
-        ostream << statement;
-    }
+    ostream << ast.root_;
 }

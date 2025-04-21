@@ -31,6 +31,8 @@ lexer_(lexer), pragmas_(pragmas) {
 
 std::unique_ptr<AST::AST> ParserLayer1::run() {    
     init_builtins(*ast_);
+    AST::Statement* root = ast_->create_statement(AST::StatementType::block, {0,0});
+    ast_->set_root(root);
 
     while (current_token().token_type != TokenType::eof) {
         int prev_buf_slot = which_buf_slot_; // a bit of a hack, an easy way to do the assertion below
@@ -223,8 +225,9 @@ void ParserLayer1::parse_top_level_statement() {
         default:
             // TODO: check pragmas for top-level statement types
             statement = parse_statement();
-            if (statement->statement_type != AST::StatementType::empty)            
-                ast_->append_top_level_statement(statement);
+            if (statement->statement_type != AST::StatementType::empty && pragmas_->check_flag_value("top-level evaluation", statement->location)) {            
+                std::get<AST::Block>(std::get<AST::Statement*>(ast_->root_)->value).push_back(statement);
+            }
             return;
     }
 }

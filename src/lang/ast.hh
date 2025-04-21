@@ -285,16 +285,15 @@ class AST {
     //  ----- CREATING OTHER THINGS -----
     Statement* create_statement(StatementType statement_type, SourceLocation location);
     
-    // appends a statement to root_
-    void append_top_level_statement(Statement* statement);
-    
     // automatically creates an identifier and a global callable for the builtin
     Callable* create_builtin(BuiltinType builtin_type, const std::string& name, const Type& type);
 
     void declare_invalid() { is_valid = false; };
 
     // container for top-level statements
-    std::vector<Statement*> root_ = {};   
+    void set_root(CallableBody root);
+    CallableBody root_;
+    Callable* entry_point_;
 
     std::unique_ptr<Scope> globals_ = std::make_unique<Scope>(this);
     std::unique_ptr<Scope> builtin_functions_ = std::make_unique<Scope>(this);

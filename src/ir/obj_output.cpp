@@ -1,25 +1,43 @@
-#include "ir_output.hh"
+#include "obj_output.hh"
+
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
+
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Target/TargetOptions.h"
+#include "llvm/TargetParser/Host.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/MC/TargetRegistry.h"
+
+#include "llvm/IR/LegacyPassManager.h"
+
 
 using namespace llvm;
 
-bool init_llvm() {
+bool init_llvm_target() {
+    // TODO: how to detect failure
+
     InitializeAllTargetInfos();
     InitializeAllTargets();
     InitializeAllTargetMCs();
     InitializeAllAsmParsers();
-    InitializeAllAsmPrinters();    
+    InitializeAllAsmPrinters();
+
+    // InitializeNativeTarget();
+    // InitializeNativeTargetAsmPrinter();
+    // InitializeNativeTargetAsmParser();
 
     return true;
 }
 
-bool generate_object_file(const std::string& filename, Module* module_) {
+bool generate_object_file(const std::string& filename, Module& module_, std::ostream& errs) {
     // check if we have a target
     auto target_triple = sys::getDefaultTargetTriple();
     std::string error;
     auto target = TargetRegistry::lookupTarget(target_triple, error);
     
     if (!target) {
-        std::cout << "No target: " << error << std::endl;
+        errs << "No target: " << error << std::endl;
         return false;
     }
     
@@ -36,27 +54,16 @@ bool generate_object_file(const std::string& filename, Module* module_) {
     legacy::PassManager pass;
 
     if (target_machine->addPassesToEmitFile(pass, output, nullptr, CodeGenFileType::ObjectFile)) {
-        std::cerr << "Couldn't generate object file for target machine" << std::endl;
+        errs << "Couldn't generate object file for target machine" << std::endl;
         return false;
     }
 
-    module_->setDataLayout(target_machine->createDataLayout());
-    module_->setTargetTriple(target_triple);
+    module_.setDataLayout(target_machine->createDataLayout());
+    module_.setTargetTriple(target_triple);
 
     // output the file
-    pass.run(*module_);
+    pass.run(module_);
     output.flush();
-
-    return true;
-}
-
-bool print_ir_to_file(const std::string& filename, Module* module_) {
-    // prepare the stream
-    std::error_code error_code; //??? what to do with this?
-    raw_fd_ostream ostream{filename, error_code, sys::fs::OF_None};
-
-    module_->print(ostream, nullptr);
-    ostream.flush();
 
     return true;
 }

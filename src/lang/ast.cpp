@@ -299,10 +299,6 @@ Statement* AST::create_statement(StatementType statement_type, SourceLocation lo
     return statements_.back().get();
 }
 
-void AST::append_top_level_statement(Statement* statement) {
-    root_.push_back(statement);
-}
-
 Callable* AST::create_builtin(BuiltinType builtin_type, const std::string& name, const Type& type) {
     builtins_.push_back(std::make_unique<Builtin>(builtin_type, name, type));
     Builtin* builtin = builtins_.back().get();
@@ -320,6 +316,10 @@ Callable* AST::create_builtin(BuiltinType builtin_type, const std::string& name,
             assert(false && "unhandled builtin type in create_builtin");
             return nullptr;
     }
+}
+
+void AST::set_root(CallableBody root) {
+    root_ = root;
 }
 
 Expression* AST::create_expression(ExpressionType expression_type, 

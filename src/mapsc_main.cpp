@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include "llvm/IR/Module.h"
+#include "llvm/Support/raw_os_ostream.h"
 
 #include "logging.hh"
 
@@ -20,7 +21,8 @@
 #include "parsing/full_parse.hh"
 
 #include "ir/ir_generator.hh"
-#include "ir/ir_output.hh"
+#include "ir/ir_builtins.hh"
+#include "ir/obj_output.hh"
 
 // TODO: handle multiple inputfiles
 constexpr std::string_view USAGE = "USAGE: testc inputfile [-o filename] [-ir filename]";
@@ -29,6 +31,8 @@ constexpr std::string_view DEFAULT_MODULE_NAME = "module";
 
 constexpr std::string_view DEFAULT_OBJ_FILE_PATH = "out.o";
 constexpr std::string_view DEFAULT_IR_FILE_PATH = "out.ll";
+
+using std::unique_ptr, std::make_unique;
 
 struct CL_Options {
     std::vector<std::string> input_file_paths = {};
@@ -83,6 +87,7 @@ std::optional<CL_Options> parse_cl_args(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     Logging::init_logging(&std::cerr);
+    llvm::raw_os_ostream error_stream{std::cerr};
 
     std::optional<CL_Options> cl_options = parse_cl_args(argc, argv);
 
@@ -122,17 +127,19 @@ int main(int argc, char** argv) {
     std::cerr << "Initializing llvm module and target" << std::endl;
 
     // ----- initialize llvm -----
-    if (!init_llvm()) {
-        std::cerr << "Couldn't initialize llvm, exiting" << std::endl;
-        return EXIT_FAILURE;
-    }
+    
+    init_llvm_target();
 
-    IR::IR_Generator ir_gen_helper{static_cast<std::string>(DEFAULT_MODULE_NAME), &std::cerr};
+    unique_ptr<llvm::LLVMContext> context = make_unique<llvm::LLVMContext>();
+    unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context);
+
+    IR::IR_Generator ir_generator{context.get(), module_.get(), &error_stream};
+    insert_builtins(ir_generator);
     
     // ----- run codegen -----
     std::cerr << "Running codegen..." << std::endl;
 
-    if (!ir_gen_helper.run(*ast)) {
+    if (!ir_generator.run(*ast)) {
         std::cerr << "Codegen failed, exiting" << std::endl;
         return EXIT_FAILURE;
     }
@@ -141,10 +148,9 @@ int main(int argc, char** argv) {
     
     // ----- produce output -----
     
-    llvm::Module* module_ = ir_gen_helper.module_.get();
     if (cl_options->ir_file) {
         std::cerr << "outputting ir to " << cl_options->ir_file_path << std::endl;
-        print_ir_to_file(cl_options->ir_file_path, module_);
+        ir_generator.print_ir_to_file(cl_options->ir_file_path);
     }
 
     if (cl_options->print_ir) {
@@ -155,7 +161,7 @@ int main(int argc, char** argv) {
 
     if (cl_options->object_file) {
         std::cerr << "outputting object file to " << cl_options->object_file_path << std::endl;
-        generate_object_file(cl_options->object_file_path, module_);
+        generate_object_file(cl_options->object_file_path, *module_, std::cerr);
     }
     
     std::cerr << "done" << std::endl;

@@ -18,13 +18,13 @@ struct Flag {
     bool default_value;
 };
 
-constexpr Flag global_evaluation_context{"global evaluation context", false};
+constexpr Flag top_level_evaluation_context{"top-level evaluation", false};
 constexpr Flag mutable_global_variables{"mutable global variables", false};
 
 }
 
 constexpr std::array<Flags::Flag, 2> flags{
-    Flags::global_evaluation_context,
+    Flags::top_level_evaluation_context,
     Flags::mutable_global_variables
 };
 
