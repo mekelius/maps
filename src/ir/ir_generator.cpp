@@ -13,7 +13,10 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Constants.h"
 
+#include "../logging.hh"
+
 #include "../lang/ast.hh"
+
 #include "ir_builtins.hh"
 
 using llvm::LLVMContext;

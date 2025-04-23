@@ -8,6 +8,7 @@
  */
 
 #include <variant>
+#include <cassert>
 
 #include "../logging.hh"
 #include "../source.hh"

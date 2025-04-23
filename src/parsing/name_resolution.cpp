@@ -1,5 +1,9 @@
 #include "name_resolution.hh"
 
+#include <cassert>
+
+#include "../logging.hh"
+
 using Logging::log_error, Logging::log_info;
 
 // Replaces all identifiers and operators with references to the correct callables

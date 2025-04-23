@@ -2,267 +2,23 @@
 #define __AST_HH
 
 #include <vector>
-#include <unordered_map>
-#include <tuple>
 #include <string>
 #include <memory>
-#include <string_view>
 #include <optional>
-#include <cassert>
-#include <variant>
 
-#include "pragmas.hh"
 #include "types.hh"
-#include "../logging.hh"
+#include "ast_node.hh"
+#include "scope.hh"
 
 namespace AST {
-
-class AST;
-struct Expression;
-struct Statement;
-struct Builtin;
-class Callable;
-
-using CallableBody = std::variant<std::monostate, Expression*, Statement*, Builtin*>;
-
-// ----- BUILTINS -----
-
-enum class BuiltinType {
-    builtin_function,
-    builtin_operator,
-};
-
-struct Builtin {
-    BuiltinType builtin_type;
-    std::string name;
-    Type type;
-};
-
-// ----- EXPRESSIONS -----
-
-// NOTE: references and calls are created by scopes, rest are created by AST
-enum class ExpressionType {
-// layer1
-    string_literal = 0,     // value: string
-    numeric_literal,
-    
-    identifier,             // value: string
-    operator_e,
-    
-    reference,              // value: Callable*
-    operator_ref,           
-
-    termed_expression,      // value: std::vector<Expression*>
-
-    tie,                    // value: std::monostate
-    empty,
-    
-    syntax_error,           // value: std::string
-    not_implemented,
-    
-// layer2
-    call,                   // value: 
-    // deferred_call,          // value: std::tuple<Expression*, std::vector<Expression*>>
-    missing_arg,
-
-    // TODO: replace these with calls to simplify
-
-    deleted,                // value: std::monostate
-
-// misc
-};
-
-using CallExpressionValue = std::tuple<Callable*, std::vector<Expression*>>;
-// using CallExpressionValueDeferred = std::tuple<Expression*, std::vector<Expression*>>;
-using TermedExpressionValue = std::vector<Expression*>;
-
-using ExpressionValue = std::variant<
-    std::monostate,
-    std::string,
-    CallExpressionValue,
-    // CallExpressionValueDeferred,
-    TermedExpressionValue,
-    Callable*                       // for references to operators and functions
->;
-
-struct Expression {
-    // TODO: move initializing expression values from AST::create_expression
-    Expression(ExpressionType expr_type, SourceLocation location, const Type& type): 
-    expression_type(expr_type), location(location), type(type) {};
-    
-    ExpressionType expression_type;
-    SourceLocation location;
-    Type type = Hole;
-    ExpressionValue value;
-
-    TermedExpressionValue& terms() {
-        return std::get<TermedExpressionValue>(value);
-    }
-    CallExpressionValue& call_value() {
-        return std::get<CallExpressionValue>(value);
-    }
-    Callable* reference_value() const {
-        return std::get<Callable*>(value);
-    }
-    bool is_partial_call() const;
-    bool is_reduced_value() const;
-
-    const std::string& string_value() const;
-
-    friend bool operator==(const Expression& lhs, const Expression& rhs) {
-        return std::tie(
-            lhs.expression_type,
-            lhs.location,
-            lhs.type,
-            lhs.value
-        ) == std::tie(
-            rhs.expression_type,
-            rhs.location,
-            rhs.type,
-            rhs.value
-        );
-    }
-};
-
-// ----- STATEMENTS -----
-struct Let {
-    std::string identifier; 
-    CallableBody body;
-};
-
-struct Operator {
-    std::string op;
-    unsigned int arity;
-    CallableBody body;
-    // include the specifiers
-};
-
-struct Assignment {
-    std::string identifier; 
-    CallableBody body;
-};
-
-using Block = std::vector<Statement*>;
-
-enum class StatementType {
-    broken,                 // parsing failed
-    illegal,                // well formed but illegal statements
-    empty,
-    expression_statement,   // statement consisting of a single expression
-    block,
-    let,
-    operator_s,
-    assignment,
-    return_,
-    // if,
-    // else,
-    // for,
-    // for_id,
-    // do_while,
-    // do_for,
-    // while/until,
-    // switch,
-};
-
-using StatementValue = std::variant<
-    std::monostate,
-    std::string,
-    Expression*,
-
-    Let,
-    Operator,
-    Assignment,
-    Block
->;
-
-struct Statement {
-    Statement(StatementType statement_type, SourceLocation location);
-    
-    StatementType statement_type;
-    SourceLocation location;
-    StatementValue value;
-};
-
-/**
- * Callables represent either expressions or statements, with the unique ability
- * to hold types for statements. A bit convoluted but we'll see.
- * The source location is needed on every callable that is not a built-in
- * 
- * NOTE: if it's anonymous, it needs a source location
- */
-class Callable {
-  public:
-    Callable(CallableBody body, const std::string& name, 
-        std::optional<SourceLocation> location = std::nullopt);
-    Callable(CallableBody body, std::optional<SourceLocation> location); // create anonymous callable
-
-    CallableBody body;
-    std::string name;
-    std::optional<SourceLocation> location;
-
-    // since statements don't store types, we'll have to store them here
-    // if the body is an expression, the type will just mirror it's type
-    Type get_type() const;
-    void set_type(const Type& type);
-
-  private:
-    std::optional<Type> type_;
-};
-
-/**
- * Scopes contain names bound to callables
- * Note that it is the AST that owns the callables, but they can be created through the scope
- */
-class Scope {
-  public:
-    Scope(AST* ast): ast_(ast) {};
-
-    bool identifier_exists(const std::string& name) const;
-    std::optional<Callable*> get_identifier(const std::string& name) const;
-
-    std::optional<Callable*> create_callable(const std::string& name, CallableBody body, 
-        std::optional<SourceLocation> location = std::nullopt);
-    std::optional<Callable*> create_callable(const std::string& name, SourceLocation location);
-
-    std::optional<Callable*> create_binary_operator(const std::string& name, CallableBody body, 
-        unsigned int precedence, Associativity associativity, SourceLocation location);
-
-    std::optional<Callable*> create_unary_operator(const std::string& name, CallableBody body,
-        Fixity fixity, SourceLocation location);
-
-    std::optional<Expression*> create_reference_expression(const std::string& name, SourceLocation location);
-    Expression* create_reference_expression(Callable* callable, SourceLocation location);
-
-    std::optional<Expression*> create_call_expression(
-        const std::string& callee_name, std::vector<Expression*> args, SourceLocation location /*, expected return type?*/);
-    Expression* create_call_expression(Callable* callee, std::vector<Expression*> args, 
-        SourceLocation location /*, expected return type?*/);
-
-    std::vector<std::string> identifiers_in_order_ = {};
-  private:
-    std::unordered_map<std::string, Callable*> identifiers_;
-    AST* ast_;
-};
-
-// TODO: expand mind enough for contexts
-// context where statements can exist
-// class Context {
-//   public:
-//     enum Type {
-//         local,
-//         global,
-//         global_eval, // global context where evaluation is allowed 
-//     };
-
-//     Context::Type context_type = local;
-//     std::optional<Scope> scope = std::nullopt;
-// };
 
 class AST {
   public:
     AST();
+    void set_root(CallableBody root);
+    void declare_invalid() { is_valid = false; };
 
-    // ----- CREATING EXPRESSIONS -----
+    // ----- CREATING (AND DELETING) EXPRESSIONS -----
     Expression* create_string_literal(const std::string& value, SourceLocation location);
     Expression* create_numeric_literal(const std::string& value, SourceLocation location);
     
@@ -288,10 +44,7 @@ class AST {
     // automatically creates an identifier and a global callable for the builtin
     Callable* create_builtin(BuiltinType builtin_type, const std::string& name, const Type& type);
 
-    void declare_invalid() { is_valid = false; };
-
     // container for top-level statements
-    void set_root(CallableBody root);
     Callable* root_;
     Callable* entry_point_;
 
@@ -301,7 +54,7 @@ class AST {
 
     bool is_valid = true;
 
-    // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't 
+    // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
     // need to walk the tree to find them
     std::vector<Expression*> unresolved_identifiers_and_operators = {};
     std::vector<Expression*> unparsed_termed_expressions = {};

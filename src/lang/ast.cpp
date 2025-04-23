@@ -4,248 +4,15 @@
 
 namespace AST {
 
-// ----- EXPRESSION -----
-
-bool Expression::is_partial_call() const {
-    if (expression_type != ExpressionType::call)
-        return false;
-
-    auto [callee, args] = std::get<CallExpressionValue>(value);
-
-    if (args.size() < callee->get_type().arity())
-        return true;
-
-    for (auto arg: args) {
-        if (arg->expression_type == ExpressionType::missing_arg)
-            return true;
-    }
-
-    return false;
-}
-
-bool Expression::is_reduced_value() const {
-    switch (expression_type) {
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
-        case ExpressionType::reference:
-        case ExpressionType::call:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-// TODO: clean this up
-const std::string& Expression::string_value() const {
-    if (std::holds_alternative<Callable*>(value)) {
-        // !!! this will cause crashes when lambdas come in
-        return std::get<Callable*>(value)->name;
-    }
-    return std::get<std::string>(value);
-}
-
-Statement::Statement(StatementType statement_type, SourceLocation location)
-:statement_type(statement_type), location(location) {
-    switch (statement_type) {
-        case StatementType::broken:
-        case StatementType::illegal:
-            value = static_cast<std::string>("");
-            break;
-        case StatementType::empty:
-            value = std::monostate{};
-            break;               
-
-        case StatementType::expression_statement:
-            break;
-        case StatementType::block:
-            value = Block{};
-            break;  
-        case StatementType::let:
-            value = Let{};
-            break;
-        case StatementType::operator_s:
-            value = Operator{};
-            break;
-        case StatementType::assignment:
-            break;          
-        case StatementType::return_:
-            break;             
-        //case StatementType::if:break;
-        //case StatementType::else:break;
-        //case StatementType::for:break;
-        //case StatementType::for_id:break;
-        //case StatementType::do_while:break;
-        //case StatementType::do_for:break;
-        //case StatementType::while/until: break;
-        //case StatementType::switch:break;
-    }
-}
-
-
-// ----- CALLABLE -----
-
-Callable::Callable(CallableBody body, const std::string& name, 
-    std::optional<SourceLocation> location)
-:body(body), name(name), location(location) {}
-
-Callable::Callable(CallableBody body, std::optional<SourceLocation> location)
-:body(body), name("anonymous callable"), location(location) {}
-
-Type Callable::get_type() const {
-    switch (body.index()) {
-        case 0: // uninitialized
-            return type_ ? *type_ : Hole;
-        
-        case 1: // expression
-            return std::get<Expression*>(body)->type;
-
-        case 2: { // statement
-            Statement* statement = std::get<Statement*>(body);
-
-            if (statement->statement_type == StatementType::expression_statement) {
-                return std::get<Expression*>(statement->value)->type;
-            } 
-
-            return type_ ? *type_ : Hole;
-        }
-        case 3: // Builtin
-            return std::get<Builtin*>(body)->type;
-
-        default:
-            assert(false && "unhandled CallableBody in CallableBody::get_type");
-            return Hole;
-    }
-}
-
-// !!! this feels pretty sus, manipulating state with way too many layers of indirection
-void Callable::set_type(const Type& type) {
-    switch (body.index()) {
-        case 0: // uninitialized
-            type_ = std::make_optional<Type>(type);
-            return;
-        
-        case 1: // expression
-            std::get<Expression*>(body)->type = type;
-            return;
-
-        case 2: { // statement
-            Statement* statement = std::get<Statement*>(body);
-
-            if (statement->statement_type == StatementType::expression_statement) {
-                std::get<Expression*>(statement->value)->type = type;
-                return;
-            } 
-
-            type_ = std::make_optional<Type>(type);
-            return;
-        }
-        case 3: // Cannot set type of a builtin
-            assert(false && "tried to set_type of a builtin callable");
-            return;
-
-        default:
-            assert(false && "unhandled CallableBody in CallableBody::set_type");
-    }
-}
-
-// ----- SCOPE -----
-
-bool Scope::identifier_exists(const std::string& name) const {
-    return identifiers_.find(name) != identifiers_.end();
-}
-
-std::optional<Callable*> Scope::get_identifier(const std::string& name) const {
-    auto it = identifiers_.find(name);
-    if (it == identifiers_.end())
-        return {};
-
-    return it->second;
-}
-
-std::optional<Callable*> Scope::create_callable(const std::string& name, CallableBody body,
-    std::optional<SourceLocation> location) {
-
-    if (identifier_exists(name)) {
-        return std::nullopt;
-    }
-
-    Callable* callable = ast_->create_callable(body, name, location);
-    identifiers_.insert({name, callable});
-    identifiers_in_order_.push_back(name);
-    
-    return callable;
-}
-
-std::optional<Callable*> Scope::create_callable(const std::string& name, SourceLocation location) {
-    return create_callable(name, std::monostate{}, location);
-}
-
-std::optional<Callable*> Scope::create_binary_operator(const std::string& name, CallableBody body, 
-    unsigned int precedence, Associativity associativity, SourceLocation location) {
-
-    if (identifier_exists(name))
-        return std::nullopt;
-
-    Type type = create_binary_operator_type(Hole, Hole, Hole, precedence, associativity);
-
-    Callable* callable = *create_callable(name, body, location);
-    // !!! this is pretty hacky
-    callable->set_type(type);
-
-    return callable;
-}
-
-std::optional<Callable*> Scope::create_unary_operator(const std::string& name, CallableBody body, Fixity fixity, 
-    SourceLocation location) {
-
-    if (identifier_exists(name))
-        return std::nullopt;
-
-    Type type = create_unary_operator_type(Hole, Hole, fixity);
-    
-    Callable* callable = *create_callable(name, body, location);
-    // !!! this is pretty hacky
-    callable->set_type(type);
-
-    return callable;
-}
-
-std::optional<Expression*> Scope::create_reference_expression(const std::string& name, SourceLocation location) {
-    std::optional<Callable*> callable = get_identifier(name);
-
-    if (! callable)
-        return std::nullopt;
-
-    return create_reference_expression(*callable, location);
-}
-
-Expression* Scope::create_reference_expression(Callable* callable, SourceLocation location) {
-    return ast_->create_expression(ExpressionType::reference, callable, callable->get_type(), location);
-}
-
-std::optional<Expression*> Scope::create_call_expression(
-    const std::string& callee_name, std::vector<Expression*> args, SourceLocation location /*, expected return type?*/) {
-    
-    std::optional<Callable*> callee = get_identifier(callee_name);
-    
-    if (!callee)
-        return std::nullopt;
-
-    return create_call_expression(*callee, args, location);
-}
-
-Expression* Scope::create_call_expression(Callable* callee, std::vector<Expression*> args, 
-        SourceLocation location /*, expected return type?*/) {
-    return ast_->create_expression(ExpressionType::call, CallExpressionValue{callee, args}, callee->get_type(), 
-        location);
-}
-
-// ----- AST -----
-
 AST::AST() {
     root_ = create_callable("root", {0,0});
 }
+
+void AST::set_root(CallableBody root) {
+    root_->body = root;
+}
+
+// ---------- CREATING (AND DELETING) EXPRESSIONS ----------
 
 Expression* AST::create_string_literal(const std::string& value, SourceLocation location) {
     return create_expression(ExpressionType::string_literal, value, String, location);
@@ -291,10 +58,11 @@ Expression* AST::create_missing_argument(const Type& type, SourceLocation locati
     return create_expression(ExpressionType::missing_arg, std::monostate{}, type, location);
 }
 
-
 void AST::delete_expression(Expression* expression) {
     expression->expression_type = ExpressionType::deleted;
 }
+
+// ---------- CREATING OTHER THINGS ----------
 
 Statement* AST::create_statement(StatementType statement_type, SourceLocation location) {
     statements_.push_back(std::make_unique<Statement>(statement_type, location));
@@ -320,9 +88,8 @@ Callable* AST::create_builtin(BuiltinType builtin_type, const std::string& name,
     }
 }
 
-void AST::set_root(CallableBody root) {
-    root_->body = root;
-}
+
+// --------- PRIVATE NODE MANAGEMENT ---------
 
 Expression* AST::create_expression(ExpressionType expression_type, 
     ExpressionValue value, const Type& type, SourceLocation location) {        

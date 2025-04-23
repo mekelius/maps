@@ -13,7 +13,6 @@
 #include "lang/reverse_parse.hh"
 
 #include "logging.hh"
-#include "lang/pragmas.hh"
 #include "parsing/full_parse.hh"
 
 

@@ -28,6 +28,15 @@ void init_builtin_operators(AST::AST& ast) {
 void init_builtin_callables(AST::AST& ast) {
     using AST::BuiltinType;
 
-    ast.create_builtin(BuiltinType::builtin_function, "print", 
+    ast.create_builtin(BuiltinType::builtin_function, "print",
         AST::create_function_type(AST::Void, {AST::String}));
+
+    ast.create_builtin(BuiltinType::builtin_function, "print",
+        AST::create_function_type(AST::Void, {AST::Int}));
+
+    ast.create_builtin(BuiltinType::builtin_function, "print",
+        AST::create_function_type(AST::Void, {AST::Float}));
+
+    ast.create_builtin(BuiltinType::builtin_function, "print",
+        AST::create_function_type(AST::Void, {AST::Boolean}));
 }

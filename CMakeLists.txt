@@ -27,6 +27,8 @@ add_library(maps_builtins SHARED
 add_library(parsing OBJECT
     src/logging.cpp
     src/lang/ast.cpp
+    src/lang/ast_node.cpp
+    src/lang/scope.cpp
     src/lang/types.cpp
     src/lang/pragmas.cpp
     src/lang/builtins.cpp

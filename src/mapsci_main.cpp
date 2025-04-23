@@ -10,6 +10,9 @@
 
 #include "llvm/Support/TargetSelect.h"
 
+#include "logging.hh"
+
+#include "lang/pragmas.hh"
 #include "repl.hh"
 
 using std::unique_ptr, std::make_unique;
