@@ -71,6 +71,7 @@ target_compile_options(mapsc PRIVATE
 
 add_executable(mapsci
     src/mapsci_main.cpp
+    src/repl.cpp
     src/lang/reverse_parse.cpp
 )
 

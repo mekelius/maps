@@ -152,7 +152,7 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, 
     auto inner_it = inner_map->find(function_type.function_type()->hashable_signature());
 
     if (inner_it == inner_map->end()) {
-        log_error("funciton lookup from FunctionStore failed: function \"" + name + "\" has not been specialed for signature \"" + function_type.to_string() + "\"");
+        log_error("function \"" + name + "\" has not been specialized for type \"" + function_type.to_string() + "\"");
         return nullopt;
     }
 

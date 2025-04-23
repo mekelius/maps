@@ -12,9 +12,9 @@
 
 #include "ir_types.hh"
 
-constexpr std::string_view REPL_WRAPPER_NAME = "repl_wrapper";
-
 namespace IR {
+
+constexpr std::string_view REPL_WRAPPER_NAME = "repl_wrapper";
 
 class FunctionStore {
     using Signature = AST::FunctionTypeComplex::HashableSignature;
