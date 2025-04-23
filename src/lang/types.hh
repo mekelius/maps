@@ -61,7 +61,9 @@ struct Type {
 
     ~Type() = default;
 
-    bool is_complex() const;   
+    std::string to_string() const;
+
+    bool is_complex() const;
     bool is_operator() const;
     bool is_function() const;
     unsigned int arity() const;
@@ -85,15 +87,29 @@ inline bool operator!=(const Type& lhs, const Type& rhs) {
     return !(lhs == rhs);
 }
 
+
 // !! this struct has way too much stuff
 // maybe inheritance is the way
 struct FunctionTypeComplex {
+    // this is what is used as the basis for function specialization
+    using HashableSignature = std::string;
+
     Type return_type;
     std::vector<Type> arg_types;
     bool is_operator = false;
     Fixity fixity = Fixity::prefix;
     unsigned int precedence = 999;
     Associativity associativity = Associativity::none;
+
+    // DO NOTE!: string representation is (currently) used as the basis for function overload specialization
+    // IF YOU CREATE TYPES THAT HAVE IDENTICAL STRINGS THEIR FUNCTIONS WILL COLLIDE
+    std::string to_string() const;
+
+    // just a synonym for to_string at the moment
+    // TODO: memoize this
+    HashableSignature hashable_signature() const {
+        return to_string();
+    }
 
     unsigned int arity() const {
         return arg_types.size();
@@ -126,6 +142,14 @@ static TypeTemplate Int_ {
     DeferredBool::true_,
 };
 static const Type Int = { &Int_ };
+
+static TypeTemplate Float_ {
+    "Float",
+    true,
+    DeferredBool::true_,
+    DeferredBool::true_,
+};
+static const Type Float = { &Float_ };
 
 static TypeTemplate Boolean_ {
     "Boolean",

@@ -16,6 +16,21 @@ constexpr std::string_view REPL_WRAPPER_NAME = "repl_wrapper";
 
 namespace IR {
 
+class FunctionStore {
+    using Signature = AST::FunctionTypeComplex::HashableSignature;
+
+public:
+    // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
+    std::optional<llvm::FunctionCallee> get(const std::string& name, const AST::Type& ast_type) const;
+    bool insert(const std::string& name, const AST::Type& ast_type, llvm::FunctionCallee function_callee);
+
+private:
+    using InnerMapType = std::unordered_map<Signature, llvm::FunctionCallee>;
+
+    std::unordered_map<std::string, std::unique_ptr<InnerMapType>>
+        functions_ = std::unordered_map<std::string, std::unique_ptr<InnerMapType>>();
+};
+
 // Helper class that holds the module, context, etc. for IR generation
 class IR_Generator {
 public:
@@ -40,14 +55,10 @@ public:
 
     TypeMap types_;
 private:
-    llvm::Function* function_definition(const std::string& name, llvm::FunctionType* type, 
+    std::optional<llvm::Function*> function_definition(const std::string& name, const AST::Type& ast_type, llvm::FunctionType* llvm_type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
-    llvm::Function* function_declaration(const std::string& name, llvm::FunctionType* type, 
+    std::optional<llvm::Function*> function_declaration(const std::string& name, const AST::Type& ast_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
-
-    // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
-    std::optional<llvm::FunctionCallee> get_function(const std::string& name, llvm::FunctionType* function_type = nullptr) const;
-    bool insert_function(const std::string& name, llvm::FunctionType* type, llvm::Function* function);
 
     std::optional<llvm::Value*> global_constant(const AST::Callable& callable);
     std::optional<llvm::Value*> convert_literal(const AST::Expression& expression) const;
@@ -70,16 +81,13 @@ private:
     llvm::GlobalVariable* handle_string_literal(const AST::Expression& str);
     
     void fail(const std::string& message);
-    bool function_name_is_ok(const std::string& name);
-
-    friend void insert_builtins(IR_Generator& generator);
 
     Pragma::Pragmas* current_pragmas_;
-    std::unique_ptr<std::unordered_map<std::string, std::unique_ptr<std::unordered_map<llvm::FunctionType*, llvm::FunctionCallee>>>> 
-        functions_ = 
-            std::make_unique<std::unordered_map<std::string, std::unique_ptr<std::unordered_map<llvm::FunctionType*, llvm::FunctionCallee>>>>();
-
+    
     bool has_failed_ = false;
+    std::unique_ptr<FunctionStore> function_store_ = std::make_unique<FunctionStore>();
+
+    friend bool insert_builtins(IR::IR_Generator& generator);
 };
 
 } // namespace IR

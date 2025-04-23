@@ -23,6 +23,7 @@ class TypeMap {
     llvm::Type* char_array_ptr_t;
     llvm::Type* double_t;
     llvm::Type* void_t;
+    llvm::Type* boolean_t;
     llvm::FunctionType* repl_wrapper_signature;
     llvm::FunctionType* cmain_signature;
 

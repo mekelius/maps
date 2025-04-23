@@ -14,6 +14,8 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
     int_t = llvm::Type::getInt64Ty(context);
     double_t = llvm::Type::getDoubleTy(context);
     void_t = llvm::Type::getVoidTy(context);
+    boolean_t = llvm::Type::getInt1Ty(context);
+
     repl_wrapper_signature = llvm::FunctionType::get(void_t, false);
 
     cmain_signature = llvm::FunctionType::get(int_t, {int_t, char_array_ptr_t}, false);

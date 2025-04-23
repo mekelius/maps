@@ -83,21 +83,39 @@ bool IR_Generator::print_ir_to_file(const std::string& filename) {
 
 // --------- HELPERS ---------
 
-llvm::Function* IR_Generator::function_definition(const std::string& name, llvm::FunctionType* type, 
+// creates the internal name for a function based on arg types
+std::string create_internal_name(const std::string& name, const AST::Type& ast_type) {
+    std::string internal_name = name;
+
+    // prepend arg names
+    for (AST::Type& arg_type: ast_type.function_type()->arg_types) {
+        internal_name += "_" + static_cast<std::string>(arg_type.name());
+    }
+
+    return internal_name;
+}
+
+optional<llvm::Function*> IR_Generator::function_definition(const std::string& name, const AST::Type& ast_type, llvm::FunctionType* llvm_type, 
     llvm::Function::LinkageTypes linkage) {
 
-    llvm::Function* function = llvm::Function::Create(type, linkage, name, module_);
-    insert_function(name, type, function);
+    if (!ast_type.is_function()) {
+        log_error("IR::Generator::function_definition called with a non-function type: " + ast_type.to_string());
+        assert(false && "IR_Generator::function_definition called with non-function ast type");
+        return nullopt;
+    }
+
+    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, create_internal_name(name, ast_type), module_);
+    function_store_->insert(name, ast_type, {llvm_type, function});
     llvm::BasicBlock* body = llvm::BasicBlock::Create(*context_, "", function);
     builder_->SetInsertPoint(body);
     return function;
 }
 
-llvm::Function* IR_Generator::function_declaration(const std::string& name, llvm::FunctionType* type, 
+optional<llvm::Function*> IR_Generator::function_declaration(const std::string& name, const AST::Type& ast_type, llvm::FunctionType* llvm_type, 
     llvm::Function::LinkageTypes linkage) {
     
-    llvm::Function* function = llvm::Function::Create(type, linkage, name, module_);
-    insert_function(name, type, function);
+    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, create_internal_name(name, ast_type), module_);
+    function_store_->insert(name, ast_type, function);
     return function;
 }
 
@@ -124,46 +142,41 @@ optional<llvm::Value*> IR_Generator::global_constant(const Callable& callable) {
     return nullopt;
 }
 
-std::optional<llvm::FunctionCallee> IR_Generator::get_function(const std::string& name, llvm::FunctionType* function_type) const {
-    auto outer_it = functions_->find(name);
+std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, const AST::Type& function_type) const {
+    auto outer_it = functions_.find(name);
 
-    if (outer_it == functions_->end())
+    if (outer_it == functions_.end())
         return nullopt;
-
-    // if function type wasn't given, check if there's only one
-    if (!function_type) {
-        if (outer_it->second->size() == 1)
-            return outer_it->second->begin()->second;
-
-        return nullopt;
-    }
 
     auto inner_map = outer_it->second.get();
-    auto inner_it = inner_map->find(function_type);
+    auto inner_it = inner_map->find(function_type.function_type()->hashable_signature());
 
-    if (inner_it == inner_map->end())
+    if (inner_it == inner_map->end()) {
+        log_error("funciton lookup from FunctionStore failed: function \"" + name + "\" has not been specialed for signature \"" + function_type.to_string() + "\"");
         return nullopt;
+    }
 
     return inner_it->second;
 }
 
-bool IR_Generator::insert_function(const std::string& name, llvm::FunctionType* type, llvm::Function* function) {
-    using inner_map_t = std::unordered_map<llvm::FunctionType*, llvm::FunctionCallee>;
-    auto outer_it = functions_->find(name);
+bool FunctionStore::insert(const std::string& name, const AST::Type& ast_type, llvm::FunctionCallee function_callee) {    
+    auto signature = ast_type.function_type()->hashable_signature();
 
-    if (outer_it == functions_->end()) {
-        functions_->insert({name, make_unique<inner_map_t>()});
-        functions_->at(name)->insert({type, {type, function}});
+    auto outer_it = functions_.find(name);
+
+    if (outer_it == functions_.end()) {
+        functions_.insert({name, make_unique<InnerMapType>()});
+        functions_.at(name)->insert({signature, function_callee});
         return true;
     }
 
     auto inner_map = outer_it->second.get();
-    if (inner_map->find(type) != inner_map->end()) {
-        fail("tried to insert a function overload that already exists");
+    if (inner_map->find(signature) != inner_map->end()) {
+        log_error("tried to insert a function overload that already exists");
         return false;
     }
 
-    inner_map->insert({type, {type, function}});
+    inner_map->insert({signature, function_callee});
     return true;
 }
 
@@ -207,12 +220,14 @@ optional<llvm::Function*> IR_Generator::handle_top_level_execution(const AST::AS
     if (holds_alternative<std::monostate>(ast.root_->body))
         return nullopt;
 
-    llvm::Function* top_level_function;
+    optional<llvm::Function*> top_level_function;
 
     if (in_repl) {
-        top_level_function = function_definition(static_cast<std::string>(REPL_WRAPPER_NAME), types_.repl_wrapper_signature);
+        top_level_function = function_definition(static_cast<std::string>(REPL_WRAPPER_NAME), 
+            AST::create_function_type(AST::Void, {}), types_.repl_wrapper_signature);
     } else {
-        top_level_function = function_definition("main", types_.cmain_signature);
+        // TODO: do array types and enable cl args
+        top_level_function = function_definition("main", AST::create_function_type(AST::Int, {}), types_.cmain_signature);
     }
     
     if (Statement* const * statement = get_if<Statement*>(&ast.root_->body)) {
@@ -251,7 +266,7 @@ optional<llvm::Function*> IR_Generator::handle_top_level_execution(const AST::AS
         }
 
         optional<llvm::FunctionCallee> print = 
-            get_function("print", llvm::FunctionType::get(types_.void_t, {(*expression_value)->getType()}, false));
+            function_store_->get("print", AST::create_function_type(AST::Void, {(*expression)->type}));
             
         if (!print) {
             fail("no print function for top level expression");
@@ -340,7 +355,8 @@ std::optional<llvm::Value*> IR_Generator::handle_expression_statement(const AST:
     assert(statement.statement_type == StatementType::expression_statement && 
         "IR_Generator::handle_expression_statement called with non-expression statement");
 
-    optional<llvm::Value*> value = handle_expression(*get<Expression*>(statement.value));
+    AST::Expression* expression = get<Expression*>(statement.value);
+    optional<llvm::Value*> value = handle_expression(*expression);
 
     if (!value)
         return nullopt;
@@ -349,7 +365,7 @@ std::optional<llvm::Value*> IR_Generator::handle_expression_statement(const AST:
         return value;
 
     optional<llvm::FunctionCallee> print = 
-        get_function("print", llvm::FunctionType::get(types_.void_t, {(*value)->getType()}, false));
+        function_store_->get("print", AST::create_function_type(AST::Void, {expression->type}));
 
     if (!print) {
         fail("no print function for top level expression");
@@ -412,12 +428,10 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const AST::Callable
         return nullopt;
     }
 
-    if (!function_name_is_ok(callable.name)) {
-        fail("invalid function name \"" + callable.name + "\" (likely conflicts with a builtin or an internal name)");
-        return nullopt;
-    }
+    optional<llvm::Function*> function = function_definition(callable.name, callable.get_type(), *signature);
 
-    llvm::Function* function = function_definition(callable.name, *signature);
+    if (!function)
+        return nullopt;
 
     // if (AST::Statement** statement = std::get_if<AST::Statement*>(&callable.body)) {
     //     return handle_statement(**statement);
@@ -433,7 +447,7 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const AST::Callable
 llvm::Value* IR_Generator::handle_call(const Expression& expression) {
     auto [callee, args] = get<AST::CallExpressionValue>(expression.value);
 
-    std::optional<llvm::FunctionCallee> function = get_function(callee->name);
+    std::optional<llvm::FunctionCallee> function = function_store_->get(callee->name, callee->get_type());
 
     if (!function) {
         fail("attempt to call unknown function: \"" + callee->name + "\"");
@@ -460,14 +474,6 @@ void IR_Generator::fail(const std::string& message) {
     has_failed_ = true;
     *errs_ << "error during codegen: " << message << "\n";
     errs_->flush();
-}
-
-bool IR_Generator::function_name_is_ok(const std::string& name) {
-    return (
-        name != "print" &&
-        name != "puts" &&
-        name != "sprintf"
-    );
 }
 
 } // namespace IR

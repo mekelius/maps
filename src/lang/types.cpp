@@ -3,6 +3,8 @@
 
 namespace AST {
 
+using std::unique_ptr, std::make_unique;
+
 unsigned int Type::arity() const {
     if (const auto function_type = std::get_if<std::unique_ptr<FunctionTypeComplex>>(&complex))
         return (*function_type)->arity();
@@ -27,7 +29,7 @@ bool Type::is_operator() const {
 }
 
 bool Type::is_function() const {
-    return (arity() > 0);
+    return std::holds_alternative<unique_ptr<FunctionTypeComplex>>(complex);
 }
 
 Type::Type(TypeTemplate* type_template): type_template(type_template) {
@@ -37,6 +39,32 @@ Type::Type(TypeTemplate* type_template): type_template(type_template) {
 // copy constructor
 Type::Type(const Type& rhs) {
     *this = rhs;
+}
+
+// todo: memoize this on the type
+std::string Type::to_string() const {
+    if (!is_function())
+        return static_cast<std::string>(name());
+
+    return function_type()->to_string();
+}
+
+std::string FunctionTypeComplex::to_string() const {
+    // TODO: check pureness here
+    if (arity() == 0) {
+        return "Void -> " + return_type.to_string();
+    }
+
+    std::string output = "";
+
+    for (const Type& arg: arg_types) {
+        output += arg.to_string();
+        output += " -> ";
+    }
+
+    output += return_type.to_string();
+
+    return output;
 }
 
 Type& Type::operator=(const Type& rhs) {

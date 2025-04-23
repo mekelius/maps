@@ -14,6 +14,13 @@ add_compile_options(-Wall -Wextra -Werror
     -Wno-error=unused-private-field
 )
 
+# ------------------- MAPSC BUILTINS ------------------
+
+add_library(maps_builtins SHARED
+    maps_builtins/maps_builtins.h
+    maps_builtins/maps_builtins.c
+)
+
 
 # ------------------- MAPSC PARSING -------------------
 
@@ -51,7 +58,7 @@ add_executable(mapsc
     src/ir/obj_output.cpp
 )
 
-target_link_libraries(mapsc parsing ir_gen -lLLVM-19)
+target_link_libraries(mapsc parsing ir_gen maps_builtins -lLLVM-19)
 target_include_directories(mapsc SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 target_compile_options(mapsc PRIVATE 
@@ -67,7 +74,7 @@ add_executable(mapsci
     src/lang/reverse_parse.cpp
 )
 
-target_link_libraries(mapsci parsing ir_gen -lLLVM-19)
+target_link_libraries(mapsci parsing ir_gen maps_builtins -lLLVM-19)
 target_include_directories(mapsci SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 target_compile_options(mapsci PRIVATE 

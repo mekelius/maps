@@ -14,7 +14,7 @@ struct Builtins {
 };
 
 // declares builtins and external functions used by them
-void insert_builtins(IR_Generator& generator);
+bool insert_builtins(IR_Generator& generator);
 
 } // namespace IR
 
