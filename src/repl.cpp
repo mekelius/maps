@@ -138,7 +138,7 @@ void REPL::run_command(const std::string& command) {
         command == ":e"     || 
         command == ":exit"  || 
         command == ":c"     ||
-        command == ":close"     
+        command == ":close"   
     ) running_ = false;
 }
            

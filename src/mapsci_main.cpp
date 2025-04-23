@@ -15,20 +15,19 @@
 using std::unique_ptr, std::make_unique;
 using Logging::LogLevel;
 
-constexpr std::string_view USAGE = "USAGE: testci [source_file...]";
+constexpr std::string_view USAGE = "\nUSAGE: mapsci [options]\n\noptions:\n  --parser-debug | -q | --quiet | -e | --everything\n  --ir | --print-ir\n  --no-eval\n  --parsed | --print-parsed\n  -h | --help\n";
 
 int main(int argc, char* argv[]) {
     std::vector<std::string> args = {argv + 1, argc + argv};
     std::vector<std::string> source_filenames{};
 
     REPL::Options repl_options;
-    repl_options.eval = true;
-    repl_options.print_ir = true;
-    repl_options.print_reverse_parse = true;
 
     for (std::string arg: args) {
         if (arg == "-t" || arg == "--tokens") {
             // lexer_ostream = &std::cout;
+            std::cerr << "ERROR: dumping tokens not implemented, exiting" << std::endl;
+            return EXIT_FAILURE;
 
         } else if (arg == "--parser-debug") {
             Logging::Settings::set_loglevel(LogLevel::debug);
@@ -39,7 +38,22 @@ int main(int argc, char* argv[]) {
         } else if (arg == "-e" || arg == "--everything") {
             Logging::Settings::set_loglevel(LogLevel::everything);
 
+        } else if (arg == "--ir" || "--print-ir" || "--dump-ir") {
+            repl_options.print_ir = true;
+
+        } else if(arg == "--no-eval") {
+            repl_options.eval = false;
+
+        } else if(arg == "--parsed" || arg == "--print-parsed" || arg == "--reverse-parse") {
+            repl_options.print_reverse_parse = true;
+
+        } else if(arg == "-h" || arg == "--help" || arg == "--usage") {
+            std::cout << USAGE << std::endl;
+            return EXIT_SUCCESS;
+
         } else {
+            std::cerr << "ERROR: interpreting source files not implemented: use mapsc to compile to binary instead, exiting" << std::endl;
+            return EXIT_FAILURE;
             source_filenames.push_back(arg);
         }
     }
