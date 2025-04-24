@@ -7,13 +7,14 @@
 #include <optional>
 
 #include "types.hh"
+#include "type_defs.hh"
 #include "ast_node.hh"
 #include "scope.hh"
 
-namespace AST {
+namespace Maps {
 
 class AST {
-  public:
+public:
     AST();
     void set_root(CallableBody root);
     void declare_invalid() { is_valid = false; };
@@ -59,7 +60,7 @@ class AST {
     std::vector<Expression*> unresolved_identifiers_and_operators = {};
     std::vector<Expression*> unparsed_termed_expressions = {};
     
-  private:
+private:
     friend Scope; // scope is allowed to call create_expression directly to create call expressions
     Expression* create_expression(ExpressionType expression_type, 
         ExpressionValue value, const Type& type, SourceLocation location);
@@ -76,8 +77,10 @@ class AST {
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
     std::vector<std::unique_ptr<Builtin>> builtins_ = {};
     std::vector<std::unique_ptr<Callable>> callables_ = {};
+
+    TypeRegistry types_ = {};
 };
 
-} // namespace AST
+} // namespace Maps
 
 #endif

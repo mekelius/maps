@@ -97,7 +97,7 @@ void REPL::run() {
             continue;
         }
         
-        unique_ptr<AST::AST> ast;
+        unique_ptr<Maps::AST> ast;
         std::stringstream input_s{input};
         std::tie(ast, pragmas_) = parse_source(input_s, true);
 
@@ -111,7 +111,7 @@ void REPL::run() {
     }
 }
     
-void REPL::eval(const AST::AST& ast) {
+void REPL::eval(const Maps::AST& ast) {
     jit_->reset();
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);

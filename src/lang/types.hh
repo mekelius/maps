@@ -8,7 +8,7 @@
 #include <string_view>
 #include <memory>
 
-namespace AST {
+namespace Maps {
 
 constexpr unsigned int MAX_OPERATOR_PRECEDENCE = 1000;
 constexpr unsigned int MIN_OPERATOR_PRECEDENCE = 0;
@@ -87,7 +87,6 @@ inline bool operator!=(const Type& lhs, const Type& rhs) {
     return !(lhs == rhs);
 }
 
-
 // !! this struct has way too much stuff
 // maybe inheritance is the way
 struct FunctionTypeComplex {
@@ -133,94 +132,13 @@ Type create_unary_operator_type(const Type& return_type, const Type& arg_type, F
 // caller needs to be sure that type is an operator type
 unsigned int get_precedence(const Type& type);
 
-// ----- SIMPLE TYPES -----
 
-static TypeTemplate Int_ {
-    "Int",
-    true,
-    DeferredBool::true_,
-    DeferredBool::true_,
-};
-static const Type Int = { &Int_ };
-
-static TypeTemplate Float_ {
-    "Float",
-    true,
-    DeferredBool::true_,
-    DeferredBool::true_,
-};
-static const Type Float = { &Float_ };
-
-static TypeTemplate Boolean_ {
-    "Boolean",
-    true,
-    DeferredBool::false_,
-    DeferredBool::false_,
-};
-static const Type Boolean = { &Boolean_ };
-
-static TypeTemplate String_ {
-    "String",
-    true,
-    DeferredBool::false_,
-    DeferredBool::false_,
-};
-static const Type String = { &String_};
-
-static TypeTemplate Void_ {
-    "Void",
-    true,
-    DeferredBool::false_,
-    DeferredBool::false_,
-};
-static const Type Void = { &Void_ };
-
-static TypeTemplate Hole_ {
-    "Hole",
-    false,
-    DeferredBool::maybe,
-    DeferredBool::maybe,
-};
-static const Type Hole = { &Hole_ };
-
-static TypeTemplate Number_ {
-    "Number",
-    false,
-    DeferredBool::true_,
-    DeferredBool::maybe,
-};
-static const Type Number = { &Number_ };
-
-// a number who's type hasn't yet been determined
-static TypeTemplate NumberLiteral_ {
-    "NumberLiteral",
-    false,
-    DeferredBool::true_,
-    DeferredBool::maybe,
-};
-static const Type NumberLiteral = { &NumberLiteral_};
-
-static TypeTemplate Function_ {
-    "Function",
-    false,
-    DeferredBool::maybe,
-    DeferredBool::maybe,
+// class for holding the shared type information such as traits
+class TypeRegistry {
+    public:
+    
+    private:
 };
 
-static TypeTemplate Operator_ {
-    "Operator",
-    false,
-    DeferredBool::maybe,
-    DeferredBool::maybe,
-};
-
-static TypeTemplate Absurd_ {
-    "Absurd",
-    false,
-    DeferredBool::false_,
-    DeferredBool::false_,
-};
-static const Type Absurd = { &Absurd_ };
-
-} // namespace AST
+} // namespace Maps
 #endif

@@ -9,7 +9,7 @@
 #include "../source.hh"
 #include "ast_node.hh"
 
-namespace AST {
+namespace Maps {
 
 class AST;
 

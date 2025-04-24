@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
         std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
         
         std::cout << "run layer1\n\n";
-        std::unique_ptr<AST::AST> ast = ParserLayer1{&lexer, pragmas.get()}.run();
+        std::unique_ptr<Maps::AST> ast = ParserLayer1{&lexer, pragmas.get()}.run();
 
         if (logs_since_last_check()) 
             std::cout << "\n";

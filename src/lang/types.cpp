@@ -1,7 +1,8 @@
 #include "types.hh"
+#include "type_defs.hh"
 #include <cassert>
 
-namespace AST {
+namespace Maps {
 
 using std::unique_ptr, std::make_unique;
 

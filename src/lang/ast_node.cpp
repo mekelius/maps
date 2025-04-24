@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace AST {
+namespace Maps {
 
 // ----- EXPRESSION -----
 

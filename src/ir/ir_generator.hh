@@ -17,12 +17,12 @@ namespace IR {
 constexpr std::string_view REPL_WRAPPER_NAME = "repl_wrapper";
 
 class FunctionStore {
-    using Signature = AST::FunctionTypeComplex::HashableSignature;
+    using Signature = Maps::FunctionTypeComplex::HashableSignature;
 
 public:
     // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
-    std::optional<llvm::FunctionCallee> get(const std::string& name, const AST::Type& ast_type) const;
-    bool insert(const std::string& name, const AST::Type& ast_type, llvm::FunctionCallee function_callee);
+    std::optional<llvm::FunctionCallee> get(const std::string& name, const Maps::Type& ast_type) const;
+    bool insert(const std::string& name, const Maps::Type& ast_type, llvm::FunctionCallee function_callee);
 
 private:
     using InnerMapType = std::unordered_map<Signature, llvm::FunctionCallee>;
@@ -40,10 +40,10 @@ public:
         current_pragmas_ = pragmas;
     }
 
-    bool run(const AST::AST& ast, Pragma::Pragmas* pragmas = nullptr);
+    bool run(const Maps::AST& ast, Pragma::Pragmas* pragmas = nullptr);
 
     // version of run that always processes top-level statements, and wraps them in print calls
-    bool repl_run(const AST::AST& ast, Pragma::Pragmas* pragmas = nullptr);
+    bool repl_run(const Maps::AST& ast, Pragma::Pragmas* pragmas = nullptr);
     bool print_ir_to_file(const std::string& filename);
     
     // TODO: move to use logging
@@ -55,30 +55,30 @@ public:
 
     TypeMap types_;
 private:
-    std::optional<llvm::Function*> function_definition(const std::string& name, const AST::Type& ast_type, llvm::FunctionType* llvm_type, 
+    std::optional<llvm::Function*> function_definition(const std::string& name, const Maps::Type& ast_type, llvm::FunctionType* llvm_type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
-    std::optional<llvm::Function*> function_declaration(const std::string& name, const AST::Type& ast_type, llvm::FunctionType* type, 
+    std::optional<llvm::Function*> function_declaration(const std::string& name, const Maps::Type& ast_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
-    std::optional<llvm::Value*> global_constant(const AST::Callable& callable);
-    std::optional<llvm::Value*> convert_literal(const AST::Expression& expression) const;
-    std::optional<llvm::Value*> convert_numeric_literal(const AST::Expression& expression) const;
+    std::optional<llvm::Value*> global_constant(const Maps::Callable& callable);
+    std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression) const;
+    std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression) const;
 
-    std::optional<llvm::Function*> handle_top_level_execution(const AST::AST& ast, bool in_repl);
-    bool handle_global_functions(const AST::AST& ast);
-    bool handle_global_definition(const AST::Callable& callable);
-    llvm::Value* handle_callable(const AST::Callable& callable);
-    bool handle_statement(const AST::Statement& statement);
+    std::optional<llvm::Function*> handle_top_level_execution(const Maps::AST& ast, bool in_repl);
+    bool handle_global_functions(const Maps::AST& ast);
+    bool handle_global_definition(const Maps::Callable& callable);
+    llvm::Value* handle_callable(const Maps::Callable& callable);
+    bool handle_statement(const Maps::Statement& statement);
 
     // if repl_top_level is true, wraps every expression-statement in the block into a print call for the appropriate print function
-    bool handle_block(const AST::Statement& statement, bool repl_top_level = false);
-    std::optional<llvm::Value*> handle_expression_statement(const AST::Statement& statement, bool repl_top_level = false);
+    bool handle_block(const Maps::Statement& statement, bool repl_top_level = false);
+    std::optional<llvm::Value*> handle_expression_statement(const Maps::Statement& statement, bool repl_top_level = false);
 
-    std::optional<llvm::Value*> handle_expression(const AST::Expression& expression);
-    std::optional<llvm::Function*> handle_function(const AST::Callable& callable);
+    std::optional<llvm::Value*> handle_expression(const Maps::Expression& expression);
+    std::optional<llvm::Function*> handle_function(const Maps::Callable& callable);
 
-    llvm::Value* handle_call(const AST::Expression& call);
-    llvm::GlobalVariable* handle_string_literal(const AST::Expression& str);
+    llvm::Value* handle_call(const Maps::Expression& call);
+    llvm::GlobalVariable* handle_string_literal(const Maps::Expression& str);
     
     void fail(const std::string& message);
 

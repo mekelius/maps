@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace AST {
+namespace Maps {
 
 AST::AST() {
     root_ = create_callable("root", {0,0});

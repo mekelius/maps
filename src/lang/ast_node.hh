@@ -4,9 +4,9 @@
 #include <string>
 
 #include "../source.hh"
-#include "types.hh"
+#include "type_defs.hh"
 
-namespace AST {
+namespace Maps {
 
 // ----- BUILTINS -----
 
@@ -215,6 +215,6 @@ struct Statement {
 //     std::optional<Scope> scope = std::nullopt;
 // };
 
-}
+} // namespace Maps
 
 #endif

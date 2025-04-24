@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     
     std::cerr << "Parsing source file(s)...\n";
 
-    std::unique_ptr<AST::AST> ast;
+    std::unique_ptr<Maps::AST> ast;
     std::unique_ptr<Pragma::Pragmas> pragmas;
 
     std::tie(ast, pragmas) = parse_source(source_is);

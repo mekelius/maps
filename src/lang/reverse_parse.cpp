@@ -9,33 +9,33 @@ std::string linebreak() {
     return "\n" + std::string(indent_stack * REVERSE_PARSE_INDENT_WIDTH, ' ');
 }
 
-std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body);
-std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression);
+std::ostream& operator<<(std::ostream& ostream, Maps::CallableBody body);
+std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression);
 
-std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
+std::ostream& operator<<(std::ostream& ostream, Maps::Statement* statement) {
     assert(statement && "Reverse parse encountered a nullptr statement");
     ostream << linebreak();
 
     switch (statement->statement_type) {
-        case AST::StatementType::broken:
+        case Maps::StatementType::broken:
             ostream << "@broken statement@";
             break;
-        case AST::StatementType::illegal:
+        case Maps::StatementType::illegal:
             ostream << "@illegal statement@";
             break;
-        case AST::StatementType::empty:
+        case Maps::StatementType::empty:
             break;
 
-        case AST::StatementType::expression_statement:
-            ostream << std::get<AST::Expression*>(statement->value);
+        case Maps::StatementType::expression_statement:
+            ostream << std::get<Maps::Expression*>(statement->value);
             break;
 
-        case AST::StatementType::block: {
+        case Maps::StatementType::block: {
             ostream << '{';
             indent_stack++;
 
-            for (AST::Statement* substatement: 
-                    std::get<AST::Block>(statement->value)) {
+            for (Maps::Statement* substatement: 
+                    std::get<Maps::Block>(statement->value)) {
                 ostream << substatement;
             }
 
@@ -44,8 +44,8 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
             break;
         }
 
-        case AST::StatementType::let: {
-            auto [name, body] = std::get<AST::Let>(statement->value);
+        case Maps::StatementType::let: {
+            auto [name, body] = std::get<Maps::Let>(statement->value);
             // assume top level identifiers are created by let-statements
             ostream << "let " << name;
             
@@ -62,8 +62,8 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
             break;
         }
 
-        case AST::StatementType::operator_s: {
-            auto [name, arity, body] = std::get<AST::Operator>(statement->value);
+        case Maps::StatementType::operator_s: {
+            auto [name, arity, body] = std::get<Maps::Operator>(statement->value);
 
             ostream << "operator " << name << " = "
                     << (arity == 2 ? "binary" : "unary")
@@ -73,38 +73,38 @@ std::ostream& operator<<(std::ostream& ostream, AST::Statement* statement) {
             break;
         }
         
-        case AST::StatementType::assignment: {
-            auto [name, body] = std::get<AST::Assignment>(statement->value);
+        case Maps::StatementType::assignment: {
+            auto [name, body] = std::get<Maps::Assignment>(statement->value);
             ostream << name << " = " << body;
             break;
         }
 
-        case AST::StatementType::return_:
+        case Maps::StatementType::return_:
             ostream << "return" 
-                    << std::get<AST::Expression*>(statement->value);
+                    << std::get<Maps::Expression*>(statement->value);
             break;
     }
 
     return ostream << ';';
 }
 
-std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
+std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
     assert(expression && "Reverse parse encountered a nullptr expression");
 
     switch (expression->expression_type) {
-        case AST::ExpressionType::string_literal:
+        case Maps::ExpressionType::string_literal:
             return ostream << "\"" << std::get<std::string>(expression->value) << "\"";
         
-        case AST::ExpressionType::numeric_literal:
+        case Maps::ExpressionType::numeric_literal:
             return ostream << std::get<std::string>(expression->value);
 
-        case AST::ExpressionType::termed_expression: {
+        case Maps::ExpressionType::termed_expression: {
             indent_stack++;
             ostream << linebreak();
 
             bool pad_left = false;
-            for (AST::Expression* term: expression->terms()) {
-                if (term->expression_type == AST::ExpressionType::tie) {
+            for (Maps::Expression* term: expression->terms()) {
+                if (term->expression_type == Maps::ExpressionType::tie) {
                     pad_left = false;
                 } else {
                     ostream << (pad_left ? " " : "") << term;
@@ -116,40 +116,40 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             return ostream;
         }
 
-        case AST::ExpressionType::operator_ref:
+        case Maps::ExpressionType::operator_ref:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
                 ostream << "/*operator-ref:*/ ";
             return ostream << std::get<std::string>(expression->value);
         
-        case AST::ExpressionType::reference:
+        case Maps::ExpressionType::reference:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
                 ostream << "/*identifier:*/ ";
             return ostream << expression->reference_value()->name;
 
-        case AST::ExpressionType::not_implemented:
+        case Maps::ExpressionType::not_implemented:
             return ostream << "Expression type not implemented in parser: " + expression->string_value();
 
-        case AST::ExpressionType::tie:
+        case Maps::ExpressionType::tie:
             assert(false && "somehow a tie got through to reverse parse");
             return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;
 
-        case AST::ExpressionType::identifier:
+        case Maps::ExpressionType::identifier:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
                 ostream << "/*unresolved identifier:*/ ";
             return ostream << std::get<std::string>(expression->value);
             
-        case AST::ExpressionType::operator_e:
+        case Maps::ExpressionType::operator_e:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
                 ostream << "/*unresolved identifier:*/ ";
             return ostream << expression->string_value();
 
-        case AST::ExpressionType::empty:
+        case Maps::ExpressionType::empty:
             return ostream << "(/*empty expression*/)";
 
-        case AST::ExpressionType::syntax_error:
+        case Maps::ExpressionType::syntax_error:
             return ostream << "@SYNTAX ERROR@";
 
-        case AST::ExpressionType::call: {
+        case Maps::ExpressionType::call: {
             auto [callee, args] = expression->call_value();
 
             // print as an operator expression
@@ -169,7 +169,7 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
             ostream << callee->name << '(';
             
             bool first_arg = true;
-            for (AST::Expression* arg_expression: args) {
+            for (Maps::Expression* arg_expression: args) {
                 ostream << (first_arg ? "" : ", ") << arg_expression;
                 first_arg = false;
             }            
@@ -182,16 +182,16 @@ std::ostream& operator<<(std::ostream& ostream, AST::Expression* expression) {
 }
 
 // reverse-parse expression into the stream
-std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body) {
+std::ostream& operator<<(std::ostream& ostream, Maps::CallableBody body) {
     switch (body.index()) {
         case 0:
             return ostream << "@empty callable body@";
 
         case 1: // expression
-            return ostream << std::get<AST::Expression*>(body);
+            return ostream << std::get<Maps::Expression*>(body);
 
         case 2: // statement
-            return ostream << std::get<AST::Statement*>(body);
+            return ostream << std::get<Maps::Statement*>(body);
 
         default:
             assert(false && "unhandled callable body type in reverse_parse");
@@ -199,6 +199,6 @@ std::ostream& operator<<(std::ostream& ostream, AST::CallableBody body) {
     }
 }
 
-void reverse_parse(AST::AST& ast, std::ostream& ostream) {
+void reverse_parse(Maps::AST& ast, std::ostream& ostream) {
     ostream << ast.root_->body;
 }

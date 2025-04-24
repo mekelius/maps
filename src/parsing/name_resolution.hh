@@ -3,8 +3,8 @@
 
 #include "../lang/ast.hh"
 
-void resolve_identifiers(AST::AST& ast);
-void resolve_identifier(AST::AST& ast, AST::Expression* expression);
-void resolve_operator(AST::AST& ast, AST::Expression* expression);
+void resolve_identifiers(Maps::AST& ast);
+void resolve_identifier(Maps::AST& ast, Maps::Expression* expression);
+void resolve_operator(Maps::AST& ast, Maps::Expression* expression);
 
 #endif

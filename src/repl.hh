@@ -45,7 +45,7 @@ public:
     void run();
     
 private:    
-    void eval(const AST::AST& ast);
+    void eval(const Maps::AST& ast);
     void run_command(const std::string& command);
 
     bool running_ = true;

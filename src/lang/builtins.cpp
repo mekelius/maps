@@ -3,40 +3,40 @@
 #include "ast.hh"
 #include "types.hh"
 
-void init_builtins(AST::AST& ast) {
+void init_builtins(Maps::AST& ast) {
     init_builtin_callables(ast);
     init_builtin_operators(ast);
 }
 
-void init_builtin_operators(AST::AST& ast) {
-    using AST::BuiltinType;
+void init_builtin_operators(Maps::AST& ast) {
+    using Maps::BuiltinType;
 
     ast.create_builtin(BuiltinType::builtin_operator, "+",
-        AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, 1, AST::Associativity::both));
+        Maps::create_binary_operator_type(Maps::Number, Maps::Number, Maps::Number, 1, Maps::Associativity::both));
 
     ast.create_builtin(BuiltinType::builtin_operator, "-", 
-        AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, 1, AST::Associativity::left));
+        Maps::create_binary_operator_type(Maps::Number, Maps::Number, Maps::Number, 1, Maps::Associativity::left));
 
     ast.create_builtin(BuiltinType::builtin_operator, "*", 
-        AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, 2, AST::Associativity::both));
+        Maps::create_binary_operator_type(Maps::Number, Maps::Number, Maps::Number, 2, Maps::Associativity::both));
 
     // TODO: subset types here
     ast.create_builtin(BuiltinType::builtin_operator, "/", 
-        AST::create_binary_operator_type(AST::Number, AST::Number, AST::Number, 3, AST::Associativity::left));
+        Maps::create_binary_operator_type(Maps::Number, Maps::Number, Maps::Number, 3, Maps::Associativity::left));
 }
 
-void init_builtin_callables(AST::AST& ast) {
-    using AST::BuiltinType;
+void init_builtin_callables(Maps::AST& ast) {
+    using Maps::BuiltinType;
 
     ast.create_builtin(BuiltinType::builtin_function, "print",
-        AST::create_function_type(AST::Void, {AST::String}));
+        Maps::create_function_type(Maps::Void, {Maps::String}));
 
     ast.create_builtin(BuiltinType::builtin_function, "print",
-        AST::create_function_type(AST::Void, {AST::Int}));
+        Maps::create_function_type(Maps::Void, {Maps::Int}));
 
     ast.create_builtin(BuiltinType::builtin_function, "print",
-        AST::create_function_type(AST::Void, {AST::Float}));
+        Maps::create_function_type(Maps::Void, {Maps::Float}));
 
     ast.create_builtin(BuiltinType::builtin_function, "print",
-        AST::create_function_type(AST::Void, {AST::Boolean}));
+        Maps::create_function_type(Maps::Void, {Maps::Boolean}));
 }

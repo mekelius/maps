@@ -27,10 +27,10 @@ class TypeMap {
     llvm::FunctionType* repl_wrapper_signature;
     llvm::FunctionType* cmain_signature;
 
-    std::optional<llvm::Type*> convert_type(const AST::Type& type) const;
-    std::optional<llvm::FunctionType*> convert_function_type(const AST::Type& return_type, 
-        const std::vector<AST::Type>& arg_types) const;
-    std::optional<llvm::FunctionType*> convert_function_type(const AST::Type& type) const;
+    std::optional<llvm::Type*> convert_type(const Maps::Type& type) const;
+    std::optional<llvm::FunctionType*> convert_function_type(const Maps::Type& return_type, 
+        const std::vector<Maps::Type>& arg_types) const;
+    std::optional<llvm::FunctionType*> convert_function_type(const Maps::Type& type) const;
 };
 
 }

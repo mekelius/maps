@@ -2,7 +2,7 @@
 
 #include "ast.hh"
 
-namespace AST {
+namespace Maps {
 
 bool Scope::identifier_exists(const std::string& name) const {
     return identifiers_.find(name) != identifiers_.end();
