@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 #include <memory>
+#include <unordered_map>
 
 namespace Maps {
 
@@ -20,10 +21,14 @@ enum class DeferredBool {
     maybe,
 };
 
-// is this even a word
-enum class Fixity {
+enum class BinaryFixity {
     prefix,
     infix,
+    postfix,
+};
+
+enum class UnaryFixity {
+    prefix,
     postfix,
 };
 
@@ -34,7 +39,7 @@ enum class Associativity {
     none,
 };
 
-struct FunctionTypeComplex;
+class FunctionTypeComplex;
 
 using TypeComplex = std::variant<std::monostate, std::unique_ptr<FunctionTypeComplex>>;
 
@@ -47,11 +52,17 @@ struct TypeTemplate {
     const bool is_type_alias = false;
 };
 
-struct Type {
+class Type {    
+public:
+    using HashableSignature = std::string;
+    using ID = unsigned int;
+
     TypeTemplate* type_template;
     TypeComplex complex = std::monostate{};
 
-    Type(TypeTemplate* type_template);
+    Type(ID id, TypeTemplate* type_template);
+
+    // copy constructor
     Type(const Type& rhs);
     Type& operator=(const Type& other);
 
@@ -78,6 +89,8 @@ struct Type {
     DeferredBool is_integral() const { return type_template->is_integral; }
     bool is_user_defined() const { return type_template->is_user_defined; }
     bool is_type_alias() const { return type_template->is_type_alias; }
+
+    ID id;
 };
 
 // currently simple types are only compared based on their name 
@@ -89,16 +102,18 @@ inline bool operator!=(const Type& lhs, const Type& rhs) {
 
 // !! this struct has way too much stuff
 // maybe inheritance is the way
-struct FunctionTypeComplex {
+class FunctionTypeComplex {
+public:
     // this is what is used as the basis for function specialization
     using HashableSignature = std::string;
 
-    Type return_type;
-    std::vector<Type> arg_types;
+    const Type* return_type;
+    std::vector<const Type*> arg_types;
     bool is_operator = false;
-    Fixity fixity = Fixity::prefix;
+    BinaryFixity fixity = BinaryFixity::prefix;
     unsigned int precedence = 999;
     Associativity associativity = Associativity::none;
+    bool is_pure = false;
 
     // DO NOTE!: string representation is (currently) used as the basis for function overload specialization
     // IF YOU CREATE TYPES THAT HAVE IDENTICAL STRINGS THEIR FUNCTIONS WILL COLLIDE
@@ -124,20 +139,59 @@ inline bool operator==(const FunctionTypeComplex& lhs, const FunctionTypeComplex
     return lhs.arg_types == rhs.arg_types;  
 }
 
-Type create_function_type(const Type& return_type, const std::vector<Type>& arg_types);
-Type create_binary_operator_type(const Type& return_type, const Type& lhs, const Type& rhs, 
-    unsigned int precedence, Associativity associativity = Associativity::none);
-Type create_unary_operator_type(const Type& return_type, const Type& arg_type, Fixity fixity);
-
 // caller needs to be sure that type is an operator type
 unsigned int get_precedence(const Type& type);
 
 
 // class for holding the shared type information such as traits
+// See identifying_types text file for better description
 class TypeRegistry {
-    public:
+public:
+    TypeRegistry();
+
+    std::optional<const Type*> create_type(const std::string& identifier, const TypeTemplate& template_);
     
-    private:
+    std::optional<const Type*> get(const std::string& identifier);
+    const Type* get_unsafe(const std::string& identifier);
+
+    const Type* get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
+        bool pure = true);
+    const Type* get_unary_operator_type(const Type& arg_type, const Type& return_type, 
+        UnaryFixity fixity = UnaryFixity::prefix, bool pure = true);
+    const Type* get_binary_operator_type(const Type& return_type, const Type& lhs, const Type& rhs, 
+        unsigned int precedence, Associativity associativity = Associativity::left, bool pure = true);
+
+    const Type* create_opaque_alias(std::string name, const Type* type);
+    const Type* create_transparent_alias(std::string name, const Type* type);
+
+    Type::HashableSignature make_function_signature(const Type& return_type, const std::vector<const Type*>& arg_types, 
+        bool is_pure = true) const;
+    Type::HashableSignature make_unary_operator_signature(const Type& arg_type, const Type& return_type, 
+        bool is_pure = true) const;
+    Type::HashableSignature make_binary_operator_signature(const Type& return_type, const Type& lhs, const Type& rhs, 
+        bool is_pure = true) const;
+
+    const Type* create_function_type(const Type::HashableSignature& signature, const Type& return_type, 
+        const std::vector<const Type*>& arg_types, bool is_pure = true);
+    const Type* create_unary_operator_type(const Type::HashableSignature& signature, const Type& arg_type, 
+        const Type& return_type, UnaryFixity fixity = UnaryFixity::prefix, bool is_pure = true);
+    const Type* create_binary_operator_type(const Type::HashableSignature& signature, const Type& return_type, 
+        const Type& lhs, const Type& rhs, unsigned int precedence, Associativity associativity = Associativity::left,
+        bool is_pure = true);
+
+private:
+    Type::ID get_id() {
+        return ++next_id_;
+    }
+
+    std::unordered_map<std::string, const Type*> types_by_identifier_;
+    std::unordered_map<Type::HashableSignature, const Type*> types_by_structure_;
+    std::vector<const Type*> types_by_id_;
+
+    // we need two different vectors, since the builtin types need to be accessable by id as well
+    std::vector<std::unique_ptr<Type>> types_;
+
+    Type::ID next_id_;             
 };
 
 } // namespace Maps

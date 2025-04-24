@@ -8,7 +8,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "../lang/pragmas.hh"
+#include "../lang/pragma.hh"
 #include "../lang/ast.hh"
 #include "../logging.hh"
 

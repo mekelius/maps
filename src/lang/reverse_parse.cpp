@@ -153,7 +153,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
             auto [callee, args] = expression->call_value();
 
             // print as an operator expression
-            if (callee->get_type().is_operator() && args.size() <= 2) {
+            if (callee->get_type()->is_operator() && args.size() <= 2) {
                 switch (args.size()) {
                     case 2:
                         return ostream << "( " << args.at(0) << " " << callee->name << " " << args.at(1) << " )";

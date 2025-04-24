@@ -47,7 +47,7 @@ std::optional<Expression*> AST::create_operator_ref(const std::string& name, Sou
     return create_operator_ref(*callable, location);
 }
 Expression* AST::create_operator_ref(Callable* callable, SourceLocation location) {
-    return create_expression(ExpressionType::operator_ref, callable, callable->get_type(), location);
+    return create_expression(ExpressionType::operator_ref, callable, *callable->get_type(), location);
 }
 
 // valueless expression types are tie, empty, syntax_error and not_implemented
@@ -70,11 +70,13 @@ Statement* AST::create_statement(StatementType statement_type, SourceLocation lo
 }
 
 Callable* AST::create_builtin(BuiltinType builtin_type, const std::string& name, const Type& type) {
-    builtins_.push_back(std::make_unique<Builtin>(builtin_type, name, type));
+    builtins_.push_back(std::make_unique<Builtin>(builtin_type, name, &type));
     Builtin* builtin = builtins_.back().get();
 
     assert(!builtin_functions_->identifier_exists(name) && !builtin_operators_->identifier_exists(name)
-    && "tried to redefine an existing builtin");
+        && "tried to redefine an existing builtin");
+    
+    // TODO: get rid of this
     switch (builtin_type) {
         case BuiltinType::builtin_function:
             return *builtin_functions_->create_callable(name, builtin);

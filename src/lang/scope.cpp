@@ -40,26 +40,26 @@ std::optional<Callable*> Scope::create_binary_operator(const std::string& name, 
     if (identifier_exists(name))
         return std::nullopt;
 
-    Type type = create_binary_operator_type(Hole, Hole, Hole, precedence, associativity);
+    const Type* type = ast_->types_->get_binary_operator_type(Hole, Hole, Hole, precedence, associativity);
 
     Callable* callable = *create_callable(name, body, location);
     // !!! this is pretty hacky
-    callable->set_type(type);
+    callable->set_type(*type);
 
     return callable;
 }
 
-std::optional<Callable*> Scope::create_unary_operator(const std::string& name, CallableBody body, Fixity fixity, 
+std::optional<Callable*> Scope::create_unary_operator(const std::string& name, CallableBody body, UnaryFixity fixity, 
     SourceLocation location) {
 
     if (identifier_exists(name))
         return std::nullopt;
 
-    Type type = create_unary_operator_type(Hole, Hole, fixity);
+    const Type* type = ast_->types_->get_unary_operator_type(Hole, Hole, fixity);
     
     Callable* callable = *create_callable(name, body, location);
     // !!! this is pretty hacky
-    callable->set_type(type);
+    callable->set_type(*type);
 
     return callable;
 }
@@ -74,7 +74,7 @@ std::optional<Expression*> Scope::create_reference_expression(const std::string&
 }
 
 Expression* Scope::create_reference_expression(Callable* callable, SourceLocation location) {
-    return ast_->create_expression(ExpressionType::reference, callable, callable->get_type(), location);
+    return ast_->create_expression(ExpressionType::reference, callable, *callable->get_type(), location);
 }
 
 std::optional<Expression*> Scope::create_call_expression(
@@ -90,7 +90,7 @@ std::optional<Expression*> Scope::create_call_expression(
 
 Expression* Scope::create_call_expression(Callable* callee, std::vector<Expression*> args, 
         SourceLocation location /*, expected return type?*/) {
-    return ast_->create_expression(ExpressionType::call, CallExpressionValue{callee, args}, callee->get_type(), 
+    return ast_->create_expression(ExpressionType::call, CallExpressionValue{callee, args}, *callee->get_type(), 
         location);
 }
 

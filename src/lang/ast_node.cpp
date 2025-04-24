@@ -12,7 +12,7 @@ bool Expression::is_partial_call() const {
 
     auto [callee, args] = std::get<CallExpressionValue>(value);
 
-    if (args.size() < callee->get_type().arity())
+    if (args.size() < callee->get_type()->arity())
         return true;
 
     for (auto arg: args) {
@@ -92,10 +92,10 @@ Callable::Callable(CallableBody body, const std::string& name,
 Callable::Callable(CallableBody body, std::optional<SourceLocation> location)
 :body(body), name("anonymous callable"), location(location) {}
 
-Type Callable::get_type() const {
+const Type* Callable::get_type() const {
     switch (body.index()) {
         case 0: // uninitialized
-            return type_ ? *type_ : Hole;
+            return type_ ? *type_ : &Hole;
         
         case 1: // expression
             return std::get<Expression*>(body)->type;
@@ -107,14 +107,14 @@ Type Callable::get_type() const {
                 return std::get<Expression*>(statement->value)->type;
             } 
 
-            return type_ ? *type_ : Hole;
+            return type_ ? *type_ : &Hole;
         }
         case 3: // Builtin
             return std::get<Builtin*>(body)->type;
 
         default:
             assert(false && "unhandled CallableBody in CallableBody::get_type");
-            return Hole;
+            return &Hole;
     }
 }
 
@@ -122,22 +122,22 @@ Type Callable::get_type() const {
 void Callable::set_type(const Type& type) {
     switch (body.index()) {
         case 0: // uninitialized
-            type_ = std::make_optional<Type>(type);
+            type_ = std::make_optional<const Type*>(&type);
             return;
         
         case 1: // expression
-            std::get<Expression*>(body)->type = type;
+            std::get<Expression*>(body)->type = &type;
             return;
 
         case 2: { // statement
             Statement* statement = std::get<Statement*>(body);
 
             if (statement->statement_type == StatementType::expression_statement) {
-                std::get<Expression*>(statement->value)->type = type;
+                std::get<Expression*>(statement->value)->type = &type;
                 return;
             } 
 
-            type_ = std::make_optional<Type>(type);
+            type_ = std::make_optional<const Type *>(&type);
             return;
         }
         case 3: // Cannot set type of a builtin

@@ -184,10 +184,10 @@ void TermedExpressionParser::initial_identifier_state() {
 
     // if it's not a function it's treated as a value
     // i.e. the next term has to be an operator
-    if (current_term()->type.arity() == 0) {
+    if (current_term()->type->arity() == 0) {
         switch (peek()->expression_type) {
             case ExpressionType::operator_ref:
-                precedence_stack_.push_back(peek()->type.precedence());
+                precedence_stack_.push_back(peek()->type->precedence());
                 shift();
                 return post_binary_operator_state();                
 
@@ -209,7 +209,7 @@ void TermedExpressionParser::initial_identifier_state() {
             return call_expression_state();
 
         case ExpressionType::operator_ref:
-            precedence_stack_.push_back(peek()->type.precedence());
+            precedence_stack_.push_back(peek()->type->precedence());
             shift();
             return post_binary_operator_state();
 
@@ -229,7 +229,7 @@ void TermedExpressionParser::initial_value_state() {
             return initial_value_state();
 
         case ExpressionType::operator_ref:
-            precedence_stack_.push_back(peek()->type.precedence());
+            precedence_stack_.push_back(peek()->type->precedence());
             shift();
             return post_binary_operator_state();
 
@@ -264,7 +264,7 @@ void TermedExpressionParser::initial_operator_state() {
 
 
             // if it's an unary operator, just apply and be done with it
-            if (op->type.arity() == 1) {
+            if (op->type->arity() == 1) {
                 Expression* call = ast_->globals_->
                     create_call_expression(op->reference_value(), { rhs }, expression_->location);
                 
@@ -276,7 +276,7 @@ void TermedExpressionParser::initial_operator_state() {
             // TODO: handle precedence here
             // it's a binary operator being partially applied
             Maps::Expression* missing_argument = ast_->create_missing_argument(
-                op->type.function_type()->arg_types.at(0), op->location);
+                *op->type->function_type()->arg_types.at(0), op->location);
 
             Maps::Expression* call = 
                 ast_->globals_->create_call_expression(
@@ -301,7 +301,7 @@ void TermedExpressionParser::post_binary_operator_state() {
         Expression* op = *pop_term(); // pop the operator
         Expression* lhs = *pop_term();
         Expression* missing_argument = ast_->create_missing_argument(
-            op->type.function_type()->arg_types.at(1), op->location);
+            *op->type->function_type()->arg_types.at(1), op->location);
 
         Expression* call = ast_->globals_->create_call_expression(op->reference_value(), 
             {lhs, missing_argument}, lhs->location);
@@ -322,7 +322,7 @@ void TermedExpressionParser::post_binary_operator_state() {
         case ExpressionType::reference:
             shift();
             // if the reference is to a function, go ahead and try to apply it first
-            if (current_term()->reference_value()->get_type().arity() > 0) {
+            if (current_term()->reference_value()->get_type()->arity() > 0) {
                 call_expression_state();
             }
             return compare_precedence_state();
@@ -362,13 +362,13 @@ void TermedExpressionParser::compare_precedence_state() {
     }
 
     // precedence goes down => one or more "closing parenthesis" required
-    if (precedence_stack_.back() > peek()->type.precedence()) {
+    if (precedence_stack_.back() > peek()->type->precedence()) {
         reduce_operator_left();
         precedence_stack_.pop_back();
         
         // if there's an "intermediate level" or operators, we need to handle those before returning
-        if (precedence_stack_.back() < peek()->type.precedence()) {
-            precedence_stack_.push_back(peek()->type.precedence());
+        if (precedence_stack_.back() < peek()->type->precedence()) {
+            precedence_stack_.push_back(peek()->type->precedence());
             shift();
             return post_binary_operator_state();
         }
@@ -380,7 +380,7 @@ void TermedExpressionParser::compare_precedence_state() {
     assert(peek()->expression_type == ExpressionType::operator_ref
         && "compare_precedence_state called with not an operator ref next");
 
-    if (precedence_stack_.back() == peek()->type.precedence()) { // !!!: assuming left-associativity
+    if (precedence_stack_.back() == peek()->type->precedence()) { // !!!: assuming left-associativity
         // if the precedence stays the same, just reduce and carry on
         reduce_operator_left();
         shift();
@@ -389,9 +389,9 @@ void TermedExpressionParser::compare_precedence_state() {
 
     // if the precedence goes up, push it into the stack and run post_binary_op_state with the new precedence stack
     // once it returns, there should be a nice reduced rhs on the parse_stack_
-    if (precedence_stack_.back() < peek()->type.precedence()) {
+    if (precedence_stack_.back() < peek()->type->precedence()) {
         unsigned int previous_precedence = precedence_stack_.back();
-        precedence_stack_.push_back(peek()->type.precedence());
+        precedence_stack_.push_back(peek()->type->precedence());
         shift();
         post_binary_operator_state();
         assert(precedence_stack_.back() == previous_precedence 
@@ -404,7 +404,7 @@ void TermedExpressionParser::compare_precedence_state() {
             return;
         }
 
-        assert(peek()->type.precedence() >= precedence_stack_.back() 
+        assert(peek()->type->precedence() >= precedence_stack_.back() 
             && "post_binary_operator_state didn't run until the end or a lover/equal precedence that the caller put on the precedence stack");
         
         // continue parsing
@@ -441,7 +441,7 @@ void TermedExpressionParser::unary_operators_state() {
 
 bool TermedExpressionParser::is_acceptable_next_arg(Maps::Callable* callee, 
     const std::vector<Maps::Expression*>& args, Maps::Expression* next_arg) {
-    if (args.size() >= callee->get_type().arity())
+    if (args.size() >= callee->get_type()->arity())
         return false;
 
     // TODO: check type
@@ -454,12 +454,12 @@ void TermedExpressionParser::call_expression_state() {
     
     assert(callee->expression_type == Maps::ExpressionType::reference 
         && "TermedExpressionParser called with a callee that was not a reference");
-    assert(callee->type.arity() > 0 && "call_expression_state cassed with arity 0");
+    assert(callee->type->arity() > 0 && "call_expression_state cassed with arity 0");
 
     std::vector<Maps::Expression*> args;
     
     // parse args
-    for (unsigned int i = 0; i < callee->type.arity(); i++) {
+    for (unsigned int i = 0; i < callee->type->arity(); i++) {
         shift();
 
         args.push_back(handle_arg_state(callee->reference_value(), args));
@@ -474,10 +474,10 @@ void TermedExpressionParser::call_expression_state() {
         std::get<Maps::Callable*>(callee->value), args, callee->location);
     
     // determine the type
-    if (args.size() == callee->type.arity()) {
-        assert(std::holds_alternative<std::unique_ptr<Maps::FunctionTypeComplex>>(callee->type.complex) 
+    if (args.size() == callee->type->arity()) {
+        assert(std::holds_alternative<std::unique_ptr<Maps::FunctionTypeComplex>>(callee->type->complex) 
             && "non-function type callee in call_expression_state");
-        call_expression->type = callee->type.function_type()->return_type;
+        call_expression->type = callee->type->function_type()->return_type;
     } else {
         // TODO: partial application type
     }
@@ -494,7 +494,7 @@ void TermedExpressionParser::partial_call_state() {
     auto& [callee, args] = current_term()->call_value();
 
     // parse args
-    for (unsigned int i = 0; i < callee->get_type().arity(); i++) {
+    for (unsigned int i = 0; i < callee->get_type()->arity(); i++) {
         if (at_expression_end()) {
             return;
         }

@@ -1,7 +1,7 @@
 #include <cassert>
 
 #include "../logging.hh"
-#include "pragmas.hh"
+#include "pragma.hh"
 
 namespace Pragma {
 

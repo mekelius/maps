@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "../lang/ast.hh"
-#include "../lang/pragmas.hh"
+#include "../lang/pragma.hh"
 
 std::tuple<std::unique_ptr<Maps::AST>, std::unique_ptr<Pragma::Pragmas>>
     parse_source(std::istream& source_is, bool in_repl = false);

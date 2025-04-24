@@ -8,7 +8,7 @@
 #include <ostream>
 
 #include "../lang/ast.hh"
-#include "../lang/pragmas.hh"
+#include "../lang/pragma.hh"
 
 #include "ir_types.hh"
 
@@ -36,9 +36,8 @@ class IR_Generator {
 public:
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, llvm::raw_ostream* error_stream);
 
-    void set_pragmas(Pragma::Pragmas* pragmas) {
-        current_pragmas_ = pragmas;
-    }
+    void set_pragmas(Pragma::Pragmas* pragmas) { current_pragmas_ = pragmas; }
+    void set_maps_types(Maps::TypeRegistry* maps_types) { maps_types_ = maps_types; }
 
     bool run(const Maps::AST& ast, Pragma::Pragmas* pragmas = nullptr);
 
@@ -83,6 +82,7 @@ private:
     void fail(const std::string& message);
 
     Pragma::Pragmas* current_pragmas_;
+    Maps::TypeRegistry* maps_types_;
     
     bool has_failed_ = false;
     std::unique_ptr<FunctionStore> function_store_ = std::make_unique<FunctionStore>();

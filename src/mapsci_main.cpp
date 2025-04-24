@@ -12,7 +12,7 @@
 
 #include "logging.hh"
 
-#include "lang/pragmas.hh"
+#include "lang/pragma.hh"
 #include "repl.hh"
 
 using std::unique_ptr, std::make_unique;

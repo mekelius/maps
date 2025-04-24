@@ -37,7 +37,8 @@ Int port
 
 // or inside an isomorphism context
 [PortNumber ~= Int]{
-
+    let x = Int
+    x = port
 }
 
 

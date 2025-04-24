@@ -18,7 +18,7 @@ enum class BuiltinType {
 struct Builtin {
     BuiltinType builtin_type;
     std::string name;
-    Type type;
+    const Type* type;
 };
 
 struct Expression;
@@ -49,11 +49,11 @@ public:
 
     // since statements don't store types, we'll have to store them here
     // if the body is an expression, the type will just mirror it's type
-    Type get_type() const;
+    const Type* get_type() const;
     void set_type(const Type& type);
 
 private:
-    std::optional<Type> type_;
+    std::optional<const Type*> type_;
 };
 
 // ----- EXPRESSIONS -----
@@ -106,11 +106,11 @@ using ExpressionValue = std::variant<
 struct Expression {
     // TODO: move initializing expression values from AST::create_expression
     Expression(ExpressionType expr_type, SourceLocation location, const Type& type): 
-    expression_type(expr_type), location(location), type(type) {};
+        expression_type(expr_type), location(location), type(&type) {};
     
     ExpressionType expression_type;
     SourceLocation location;
-    Type type = Hole;
+    const Type* type;
     ExpressionValue value;
 
     TermedExpressionValue& terms() {

@@ -5,7 +5,7 @@
 #include <optional>
 #include <variant>
 
-#include "types.hh"
+#include "type.hh"
 #include "../source.hh"
 #include "ast_node.hh"
 
@@ -32,7 +32,7 @@ public:
         unsigned int precedence, Associativity associativity, SourceLocation location);
 
     std::optional<Callable*> create_unary_operator(const std::string& name, CallableBody body,
-        Fixity fixity, SourceLocation location);
+        UnaryFixity fixity, SourceLocation location);
 
     std::optional<Expression*> create_reference_expression(const std::string& name, SourceLocation location);
     Expression* create_reference_expression(Callable* callable, SourceLocation location);

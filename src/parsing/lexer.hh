@@ -6,7 +6,7 @@
 #include <array>
 #include <vector>
 
-#include "tokens.hh"
+#include "token.hh"
 
 class StreamingLexer {
   public:

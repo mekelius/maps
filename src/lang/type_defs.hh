@@ -1,51 +1,19 @@
 #ifndef __TYPE_DEFS_HH
 #define __TYPE_DEFS_HH
 
-#include "types.hh"
+#include <array>
+
+#include "type.hh"
 
 namespace Maps {
 
-// ----- SIMPLE TYPES -----
-
-static TypeTemplate Int_ {
-    "Int",
-    true,
-    DeferredBool::true_,
-    DeferredBool::true_,
-};
-static const Type Int = { &Int_ };
-
-static TypeTemplate Float_ {
-    "Float",
-    true,
-    DeferredBool::true_,
-    DeferredBool::true_,
-};
-static const Type Float = { &Float_ };
-
-static TypeTemplate Boolean_ {
-    "Boolean",
-    true,
+static TypeTemplate Absurd_ {
+    "Absurd",
+    false,
     DeferredBool::false_,
     DeferredBool::false_,
 };
-static const Type Boolean = { &Boolean_ };
-
-static TypeTemplate String_ {
-    "String",
-    true,
-    DeferredBool::false_,
-    DeferredBool::false_,
-};
-static const Type String = { &String_};
-
-static TypeTemplate Void_ {
-    "Void",
-    true,
-    DeferredBool::false_,
-    DeferredBool::false_,
-};
-static const Type Void = { &Void_ };
+static const Type Absurd = { 0, &Absurd_ };
 
 static TypeTemplate Hole_ {
     "Hole",
@@ -53,7 +21,48 @@ static TypeTemplate Hole_ {
     DeferredBool::maybe,
     DeferredBool::maybe,
 };
-static const Type Hole = { &Hole_ };
+static const Type Hole = { 1, &Hole_ };
+
+static TypeTemplate Void_ {
+    "Void",
+    true,
+    DeferredBool::false_,
+    DeferredBool::false_,
+};
+static const Type Void = { 2, &Void_ };
+
+
+static TypeTemplate Boolean_ {
+    "Boolean",
+    true,
+    DeferredBool::false_,
+    DeferredBool::false_,
+};
+static const Type Boolean = { 3, &Boolean_ };
+
+static TypeTemplate Int_ {
+    "Int",
+    true,
+    DeferredBool::true_,
+    DeferredBool::true_,
+};
+static const Type Int = { 4, &Int_ };
+
+static TypeTemplate Float_ {
+    "Float",
+    true,
+    DeferredBool::true_,
+    DeferredBool::true_,
+};
+static const Type Float = { 5, &Float_ };
+
+static TypeTemplate String_ {
+    "String",
+    true,
+    DeferredBool::false_,
+    DeferredBool::false_,
+};
+static const Type String = { 6, &String_};
 
 static TypeTemplate Number_ {
     "Number",
@@ -61,7 +70,7 @@ static TypeTemplate Number_ {
     DeferredBool::true_,
     DeferredBool::maybe,
 };
-static const Type Number = { &Number_ };
+static const Type Number = { 7, &Number_ };
 
 // a number who's type hasn't yet been determined
 static TypeTemplate NumberLiteral_ {
@@ -70,7 +79,20 @@ static TypeTemplate NumberLiteral_ {
     DeferredBool::true_,
     DeferredBool::maybe,
 };
-static const Type NumberLiteral = { &NumberLiteral_};
+static const Type NumberLiteral = { 8, &NumberLiteral_};
+
+static const std::array<const Type*, 9> BUILTIN_TYPES = {
+    &Absurd, 
+    &Hole, 
+    &Void, 
+    &Boolean, 
+    &Int, 
+    &Float, 
+    &String, 
+    &Number, 
+    &NumberLiteral
+};
+
 
 static TypeTemplate Function_ {
     "Function",
@@ -85,14 +107,6 @@ static TypeTemplate Operator_ {
     DeferredBool::maybe,
     DeferredBool::maybe,
 };
-
-static TypeTemplate Absurd_ {
-    "Absurd",
-    false,
-    DeferredBool::false_,
-    DeferredBool::false_,
-};
-static const Type Absurd = { &Absurd_ };
 
 } // namespace Maps
 

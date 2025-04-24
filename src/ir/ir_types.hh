@@ -29,7 +29,7 @@ class TypeMap {
 
     std::optional<llvm::Type*> convert_type(const Maps::Type& type) const;
     std::optional<llvm::FunctionType*> convert_function_type(const Maps::Type& return_type, 
-        const std::vector<Maps::Type>& arg_types) const;
+        const std::vector<const Maps::Type*>& arg_types) const;
     std::optional<llvm::FunctionType*> convert_function_type(const Maps::Type& type) const;
 };
 

@@ -29,10 +29,10 @@ add_library(parsing OBJECT
     src/lang/ast.cpp
     src/lang/ast_node.cpp
     src/lang/scope.cpp
-    src/lang/types.cpp
-    src/lang/pragmas.cpp
+    src/lang/type.cpp
+    src/lang/pragma.cpp
     src/lang/builtins.cpp
-    src/parsing/tokens.cpp
+    src/parsing/token.cpp
     src/parsing/lexer.cpp
     src/parsing/parser_layer1.cpp
     src/parsing/parser_layer2.cpp

@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "tokens.hh"
+#include "token.hh"
 #include "../logging.hh"
 
 Token::Token(TokenType token_type, SourceLocation location, const std::string& value)

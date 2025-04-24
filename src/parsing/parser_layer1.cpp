@@ -15,7 +15,7 @@
 
 #include "../lang/builtins.hh"
 
-#include "tokens.hh"
+#include "token.hh"
 #include "parser_layer1.hh"
 
 using Logging::LogLevel;
@@ -436,7 +436,7 @@ Maps::Statement* ParserLayer1::parse_operator_statement() {
                 if (current_token().token_type != TokenType::reserved_word || (current_token().string_value() != "prefix" && current_token().string_value() != "postfix"))
                     return broken_statement_helper("unexpected token: " + current_token().get_string() + " in unary operator statement, expected \"prefix|postfix\"");
 
-                Maps::Fixity fixity = current_token().get_string() == "prefix" ? Maps::Fixity::prefix : Maps::Fixity::postfix;
+                Maps::UnaryFixity fixity = current_token().get_string() == "prefix" ? Maps::UnaryFixity::prefix : Maps::UnaryFixity::postfix;
 
                 get_token(); // eat the fixity specifier
 

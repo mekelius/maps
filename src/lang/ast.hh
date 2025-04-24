@@ -6,7 +6,7 @@
 #include <memory>
 #include <optional>
 
-#include "types.hh"
+#include "type.hh"
 #include "type_defs.hh"
 #include "ast_node.hh"
 #include "scope.hh"
@@ -54,6 +54,7 @@ public:
     std::unique_ptr<Scope> builtin_operators_ = std::make_unique<Scope>(this);
 
     bool is_valid = true;
+    std::unique_ptr<TypeRegistry> types_ = std::make_unique<TypeRegistry>();
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
     // need to walk the tree to find them
@@ -77,8 +78,6 @@ private:
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
     std::vector<std::unique_ptr<Builtin>> builtins_ = {};
     std::vector<std::unique_ptr<Callable>> callables_ = {};
-
-    TypeRegistry types_ = {};
 };
 
 } // namespace Maps

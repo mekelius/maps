@@ -7,7 +7,7 @@
  *  - parsing mapping literals i.e. lists, enums, dictionaries etc.
  */
 
-#include "../lang/pragmas.hh"
+#include "../lang/pragma.hh"
 #include "../lang/ast.hh"
 
 class TermedExpressionParser {

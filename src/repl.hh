@@ -7,7 +7,7 @@
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 
-#include "lang/pragmas.hh"
+#include "lang/pragma.hh"
 #include "lang/ast.hh"
 
 class JIT_Manager {
