@@ -35,9 +35,13 @@ using CallableBody = std::variant<std::monostate, Expression*, Statement*, Built
  */
 class Callable {
 public:
-    Callable(CallableBody body, const std::string& name, 
+    Callable(CallableBody body, const std::string& name,
         std::optional<SourceLocation> location = std::nullopt);
     Callable(CallableBody body, std::optional<SourceLocation> location); // create anonymous callable
+
+    Callable(const Callable& other) = default;
+    Callable& operator=(const Callable& other) = default;
+    virtual ~Callable() = default;
 
     CallableBody body;
     std::string name;
@@ -51,7 +55,6 @@ public:
 private:
     std::optional<Type> type_;
 };
-  
 
 // ----- EXPRESSIONS -----
 

@@ -2,7 +2,6 @@
 
 #include "../logging.hh"
 
-#include "../lang/pragmas.hh"
 
 #include "parser_layer2.hh"
 #include "name_resolution.hh"

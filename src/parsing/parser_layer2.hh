@@ -7,6 +7,7 @@
  *  - parsing mapping literals i.e. lists, enums, dictionaries etc.
  */
 
+#include "../lang/pragmas.hh"
 #include "../lang/ast.hh"
 
 class TermedExpressionParser {
@@ -41,7 +42,6 @@ class TermedExpressionParser {
     void initial_identifier_state();
     void initial_value_state();
     void initial_operator_state();
-    
     
     // binary operators
     void post_binary_operator_state();

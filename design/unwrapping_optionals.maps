@@ -30,7 +30,7 @@ let example4 = HttpResponse response ~> UserData?: {
 
 // line-end real-estate allows for adding context information to optionals failing
 let example4 = Number x -> Number y -> Number?: ?{
-    let intermediate1 = sqrt(x)                         #?DEV stderr( stacktrace() + "arg x < 0" ) 
+    let intermediate1 = sqrt(x)                         #?DEV stderr( stacktrace() + "arg x < 0" )  
     let intermediate2 = sqrt(y)                         #?DEV stderr( stacktrace() + "arg y < 0" )
 
     return x + y

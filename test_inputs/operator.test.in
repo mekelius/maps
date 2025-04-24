@@ -1,2 +1,4 @@
-operator >>= = binary 5:
-    "eyyy"
+operator >>=:
+    binary, precedence 5
+    
+    let _ >>= _ = "eyyy"

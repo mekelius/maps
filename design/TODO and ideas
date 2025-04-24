@@ -20,6 +20,7 @@ Enum mapping types should be iterable, how to do that?
     meaning you can loop through all the values in the enum
 
 ideas:
+    - ad hoc function overloading might cause some mistakes, maybe add some sort of decoration to enable it?
     - allow (x == y == z == 34 != h) as a special case. It's very intuitive
     - use << as append to list maybe (we have ; for monadic discard)
     - maybe we can diff the code to last git version to know what changed and produce better error messages
@@ -40,6 +41,9 @@ ideas:
         - the compiler would pick a single internal representation for all of them
         - is that what haskell does?
             - could be kinda confusing
+    - how about types acting as constrains on traits bottom-up
+        type TypeA:
+            callable TypeA::method1
 
 inpurity and purity, strictness, laziness
     - {}-access denotes lazy access

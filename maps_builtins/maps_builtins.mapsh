@@ -1,0 +1,8 @@
+// mapsh indicates a header. Not usually needed for other than libraries
+
+let print = external {
+    Boolean ~> IO
+    String ~> IO
+    Float ~> IO
+    Int ~> IO
+}

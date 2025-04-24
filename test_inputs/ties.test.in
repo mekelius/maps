@@ -1,7 +1,8 @@
 @script
 
-operator ! = unary prefix:
-    +5
+operator !
+    unary prefix
+        +5
 
 let infixi
 let x = 5

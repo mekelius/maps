@@ -1,0 +1,47 @@
+// create types like so
+
+type TypeA
+
+// type aliases are created with let
+alias TypeA = Int
+
+// this is a transparent alias
+let a = TypeA
+
+@type of a is Int@ // true
+
+
+// creating an opaque wrapper can be done with
+type PortNumber = { Int }
+
+// then wrapping a variable can be done implicitly or explicitly
+let a = Int
+let port = PortNumber{a}
+port = {3}
+
+// even implicit conversion is ok if the type is known (how to enforce this stuff in prcatice?)
+port = 7
+
+
+
+// Unwrapping doesn't happen implicitly
+let x = Int 
+x = port            // TypeError
+
+// unwrapping can be done with generic unary unwrapper
+let x = Int
+x = *port
+
+// using an explicit conversion
+Int port
+
+// or inside an isomorphism context
+[PortNumber ~= Int]{
+
+}
+
+
+// creating AST:s, needs generic syntax, maybe like so?
+
+type Pair = (lhs, rhs) // named markers
+type Pair = Type -> Type + Type
