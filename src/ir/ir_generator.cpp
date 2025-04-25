@@ -32,19 +32,15 @@ namespace IR {
 
 // ----- IR Generation -----
 
-IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, llvm::raw_ostream* error_stream)
-:errs_(error_stream), context_(context), module_(module), types_({*context_}) {
+IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, Pragma::Pragmas& pragmas, llvm::raw_ostream* error_stream)
+:errs_(error_stream), context_(context), module_(module), types_({*context_}), pragmas_(&pragmas), 
+ast_(&ast), maps_types_(ast.types_.get()) {
     builder_ = std::make_unique<llvm::IRBuilder<>>(*context_);
 }
 
-bool IR_Generator::run(const Maps::AST& ast, Pragma::Pragmas* pragmas) {
-    // TODO: move these to the constructor
-    set_maps_types(ast.types_.get());
-    if (pragmas)
-        set_pragmas(pragmas);
-
+bool IR_Generator::run() {
     // global definitions
-    handle_global_functions(ast);
+    handle_global_functions();
     // check if global eval context
     
     // fix main to have the correct type
@@ -60,16 +56,11 @@ bool IR_Generator::run(const Maps::AST& ast, Pragma::Pragmas* pragmas) {
     return !has_failed_;
 }
 
-bool IR_Generator::repl_run(const Maps::AST& ast, Pragma::Pragmas* pragmas) {
-    // TODO: move these to the constructor
-    set_maps_types(ast.types_.get());
-    if (pragmas)
-        set_pragmas(pragmas);
-
-    if (!handle_global_functions(ast))
+bool IR_Generator::repl_run() {
+    if (!handle_global_functions())
         return false;
 
-    if (!handle_top_level_execution(ast, true))
+    if (!handle_top_level_execution(true))
         return false;
 
     return true;
@@ -211,9 +202,9 @@ optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& e
 
 // --------- HANDLERS ---------
 
-bool IR_Generator::handle_global_functions(const Maps::AST& ast) {
-    for (std::string name: ast.globals_->identifiers_in_order_) {
-        std::optional<Maps::Callable*> callable = ast.globals_->get_identifier(name);
+bool IR_Generator::handle_global_functions() {
+    for (std::string name: ast_->globals_->identifiers_in_order_) {
+        std::optional<Maps::Callable*> callable = ast_->globals_->get_identifier(name);
         assert(callable && "nonexistent name in ast.globals_.identifiers_in_order");
 
         if (!handle_global_definition(**callable))
@@ -223,21 +214,21 @@ bool IR_Generator::handle_global_functions(const Maps::AST& ast) {
     return true;
 }
 
-optional<llvm::Function*> IR_Generator::handle_top_level_execution(const Maps::AST& ast, bool in_repl) {
-    if (holds_alternative<std::monostate>(ast.root_->body))
+optional<llvm::Function*> IR_Generator::handle_top_level_execution(bool in_repl) {
+    if (holds_alternative<std::monostate>(ast_->root_->body))
         return nullopt;
 
     optional<llvm::Function*> top_level_function;
 
     if (in_repl) {
         top_level_function = function_definition(static_cast<std::string>(REPL_WRAPPER_NAME), 
-            *ast.types_->get_function_type(Maps::Void, {}), types_.repl_wrapper_signature);
+            *ast_->types_->get_function_type(Maps::Void, {}), types_.repl_wrapper_signature);
     } else {
         // TODO: do array types and enable cl args
-        top_level_function = function_definition("main", *ast.types_->get_function_type(Maps::Int, {}), types_.cmain_signature);
+        top_level_function = function_definition("main", *ast_->types_->get_function_type(Maps::Int, {}), types_.cmain_signature);
     }
     
-    if (Statement* const * statement = get_if<Statement*>(&ast.root_->body)) {
+    if (Statement* const * statement = get_if<Statement*>(&ast_->root_->body)) {
         // auto str = builder_->CreateGlobalString("asd");
 
         // auto print = get_function("print");
@@ -264,7 +255,7 @@ optional<llvm::Function*> IR_Generator::handle_top_level_execution(const Maps::A
         builder_->CreateRetVoid();
         return top_level_function;
 
-    } else if (Expression* const * expression = get_if<Expression*>(&ast.root_->body)) {
+    } else if (Expression* const * expression = get_if<Expression*>(&ast_->root_->body)) {
         optional<llvm::Value*> expression_value = handle_expression(**expression);
 
         if (!expression_value) {
@@ -273,7 +264,7 @@ optional<llvm::Function*> IR_Generator::handle_top_level_execution(const Maps::A
         }
 
         optional<llvm::FunctionCallee> print = 
-            function_store_->get("print", *ast.types_->get_function_type(Maps::Void, {(*expression)->type}));
+            function_store_->get("print", *ast_->types_->get_function_type(Maps::Void, {(*expression)->type}));
             
         if (!print) {
             fail("no print function for top level expression");
@@ -424,7 +415,7 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
 std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callable& callable) {
     assert(callable.get_type()->is_function() && "IR_Generator::handle function called with a non-function callable");
 
-    auto [return_type_, arg_types_, _1] 
+    auto [return_type_, arg_types_, _1]
         = *callable.get_type()->function_type();
 
     optional<llvm::FunctionType*> signature = types_.convert_function_type(*return_type_, arg_types_);

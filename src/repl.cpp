@@ -115,10 +115,11 @@ void REPL::eval(const Maps::AST& ast) {
     jit_->reset();
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
-    unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), error_stream_);
+    unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), 
+        ast, *pragmas_, error_stream_);
 
     insert_builtins(*generator);
-    generator->repl_run(ast, pragmas_.get());
+    generator->repl_run();
 
     if (options_.print_ir) {
         std::cerr << "---IR DUMP---:\n\n";

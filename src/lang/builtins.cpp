@@ -27,12 +27,12 @@ void init_builtin_callables(Maps::AST& ast) {
     ast.create_builtin("print",
         *ast.types_->get_function_type(Maps::Void, {&Maps::String}));
 
-    ast.create_builtin("print",
-        *ast.types_->get_function_type(Maps::Void, {&Maps::Int}));
+    // ast.create_builtin("print",
+    //     *ast.types_->get_function_type(Maps::Void, {&Maps::Int}));
 
-    ast.create_builtin("print",
-        *ast.types_->get_function_type(Maps::Void, {&Maps::Float}));
+    // ast.create_builtin("print",
+    //     *ast.types_->get_function_type(Maps::Void, {&Maps::Float}));
 
-    ast.create_builtin("print",
-        *ast.types_->get_function_type(Maps::Void, {&Maps::Boolean}));
+    // ast.create_builtin("print",
+    //     *ast.types_->get_function_type(Maps::Void, {&Maps::Boolean}));
 }

@@ -34,15 +34,13 @@ private:
 // Helper class that holds the module, context, etc. for IR generation
 class IR_Generator {
 public:
-    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, llvm::raw_ostream* error_stream);
+    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
+        Pragma::Pragmas& pragmas, llvm::raw_ostream* error_stream);
 
-    void set_pragmas(Pragma::Pragmas* pragmas) { current_pragmas_ = pragmas; }
-    void set_maps_types(Maps::TypeRegistry* maps_types) { maps_types_ = maps_types; }
-
-    bool run(const Maps::AST& ast, Pragma::Pragmas* pragmas = nullptr);
+    bool run();
 
     // version of run that always processes top-level statements, and wraps them in print calls
-    bool repl_run(const Maps::AST& ast, Pragma::Pragmas* pragmas = nullptr);
+    bool repl_run();
     bool print_ir_to_file(const std::string& filename);
     
     // TODO: move to use logging
@@ -63,8 +61,8 @@ private:
     std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression) const;
     std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression) const;
 
-    std::optional<llvm::Function*> handle_top_level_execution(const Maps::AST& ast, bool in_repl);
-    bool handle_global_functions(const Maps::AST& ast);
+    std::optional<llvm::Function*> handle_top_level_execution(bool in_repl);
+    bool handle_global_functions();
     bool handle_global_definition(const Maps::Callable& callable);
     llvm::Value* handle_callable(const Maps::Callable& callable);
     bool handle_statement(const Maps::Statement& statement);
@@ -81,7 +79,8 @@ private:
     
     void fail(const std::string& message);
 
-    Pragma::Pragmas* current_pragmas_;
+    Pragma::Pragmas* pragmas_;
+    const Maps::AST* ast_;
     Maps::TypeRegistry* maps_types_;
     
     bool has_failed_ = false;

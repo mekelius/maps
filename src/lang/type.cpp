@@ -116,7 +116,8 @@ optional<const Type*> TypeRegistry::get(const std::string& identifier) {
     return it->second;
 }
 
-const Type* TypeRegistry::get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, bool is_pure) {
+const Type* TypeRegistry::get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
+    bool is_pure) {
 
     Type::HashableSignature signature = make_function_signature(return_type, arg_types, is_pure);
     auto existing_it = types_by_structure_.find(signature);
@@ -140,11 +141,11 @@ const Type* TypeRegistry::create_transparent_alias(std::string name, const Type*
 Type::HashableSignature TypeRegistry::make_function_signature(const Type& return_type, const std::vector<const Type*>& arg_types, 
     bool is_pure) const {
 
-    // nullary pure function is just a value
+    // // nullary pure function is just a value
     if (arg_types.size() == 0 && is_pure)
         return std::to_string(return_type.id);
 
-    // nullary impure function gets the special type =>return_type
+    // // nullary impure function gets the special type =>return_type
     if (arg_types.size() == 0)
         return "=>" + std::to_string(return_type.id);
          

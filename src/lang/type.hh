@@ -142,12 +142,12 @@ private:
         return ++next_id_;
     }
 
-    std::unordered_map<std::string, const Type*> types_by_identifier_;
-    std::unordered_map<Type::HashableSignature, const Type*> types_by_structure_;
-    std::vector<const Type*> types_by_id_;
+    std::unordered_map<std::string, const Type*> types_by_identifier_ = {};
+    std::unordered_map<Type::HashableSignature, const Type*> types_by_structure_ = {};
+    std::vector<const Type*> types_by_id_ = {};
 
     // we need two different vectors, since the builtin types need to be accessable by id as well
-    std::vector<std::unique_ptr<Type>> types_;
+    std::vector<std::unique_ptr<Type>> types_ = {};
 
     Type::ID next_id_;             
 };
