@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
             continue;
         }
         
-        StreamingLexer lexer{&source_file};
+        Lexer lexer{&source_file};
         std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
         
         std::cout << "run layer1\n\n";

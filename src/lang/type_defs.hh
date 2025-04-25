@@ -93,16 +93,8 @@ static const std::array<const Type*, 9> BUILTIN_TYPES = {
     &NumberLiteral
 };
 
-
 static TypeTemplate Function_ {
     "Function",
-    false,
-    DeferredBool::maybe,
-    DeferredBool::maybe,
-};
-
-static TypeTemplate Operator_ {
-    "Operator",
     false,
     DeferredBool::maybe,
     DeferredBool::maybe,

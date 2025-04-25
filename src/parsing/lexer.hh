@@ -8,31 +8,31 @@
 
 #include "token.hh"
 
-class StreamingLexer {
-  public:
-    StreamingLexer(std::istream* source_is);
+class Lexer {
+public:
+    Lexer(std::istream* source_is);
 
     // extracts the next token from the stream
     Token get_token();
 
-  private:
+private:
     char read_char();
     // creates a token filled with the correct line and col info
-    Token create_token_(TokenType token_type);
-    Token create_token_(TokenType token_type, const std::string& value);
+    Token create_token(TokenType token_type);
+    Token create_token(TokenType token_type, const std::string& value);
   
     // production rules
     Token get_token_();
-    Token read_operator_();
-    Token read_identifier_();
-    Token read_numeric_literal_();
-    Token read_string_literal_();
+    Token read_identifier();
+    Token read_operator();
+    Token read_numeric_literal();
+    Token read_string_literal();
     Token read_tie_();
-    Token read_linebreak_();
+    Token read_linebreak();
     Token read_pragma();
 
-    Token collapsed_semicolon_token_();
-    void read_and_ignore_comment_();
+    Token collapsed_semicolon_token();
+    void read_and_ignore_comment();
 
     char current_char_ = '\00'; // this null will be read and discarded during the constructor 
     bool tie_possible_ = false; // ties mark a lack of whitespace between operators, values and identifiers

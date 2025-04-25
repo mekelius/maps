@@ -11,12 +11,12 @@
 #include "../lang/ast.hh"
 
 class TermedExpressionParser {
-  public:
+public:
     TermedExpressionParser(Maps::AST* ast, Maps::Expression* expression);
     // parses the expression in-place
     void run();
 
-  private:  
+private:  
     // advances the input stream without putting the term on the parse stack
     Maps::Expression* get_term();
         
@@ -75,11 +75,11 @@ class TermedExpressionParser {
 // basically a small wrapper that creates TermedExpressionParser for each unparsed termed expression
 // in the ast and runs them
 class ParserLayer2 {
-  public:
+public:
     ParserLayer2(Maps::AST* ast, Pragma::Pragmas* pragmas);
     void run();
 
-  private:
+private:
     // Selects a termed expression to parse. That expressions terms become the tokenstream
     void select_expression(Maps::Expression* expression);
     Maps::AST* ast_;

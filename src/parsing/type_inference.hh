@@ -5,8 +5,6 @@
 
 namespace Maps {
 
-bool final_reify(AST& ast);
-
 } // namespace Maps
 
 #endif

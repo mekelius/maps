@@ -10,12 +10,12 @@
 #include "../lang/words.hh"
 
 // ----- Public methods -----
-StreamingLexer::StreamingLexer(std::istream* source_is)
+Lexer::Lexer(std::istream* source_is)
 :source_is_(source_is) {
     read_char();
 }
 
-Token StreamingLexer::get_token() {
+Token Lexer::get_token() {
     Token token = get_token_();
 
     Logging::log_token(prev_token_.location, prev_token_.get_string());
@@ -30,7 +30,7 @@ Token StreamingLexer::get_token() {
 // ----- Private methods -----
 
 // Read a character from the input stream
-char StreamingLexer::read_char() {
+char Lexer::read_char() {
     if (current_char_ == '\n') {
         current_col_ = 1;
         current_line_++;
@@ -44,22 +44,20 @@ char StreamingLexer::read_char() {
     return current_char_ != '\r' ? current_char_ : read_char();
 }
 
-Token StreamingLexer::create_token_(TokenType type) {
+Token Lexer::create_token(TokenType type) {
     return Token{type, {current_token_start_line_, current_token_start_col_}};
 }
 
-Token StreamingLexer::create_token_(TokenType type, const std::string& value) {
+Token Lexer::create_token(TokenType type, const std::string& value) {
     return Token{type, {current_token_start_line_, current_token_start_col_}, value};
 }
 
 // ----- PRODUCTION RULES -----
 
-Token StreamingLexer::get_token_() {
+Token Lexer::get_token_() {
     if (indents_to_close_ > 0) {
         indents_to_close_--;
-        return create_token_(
-            TokenType::indent_block_end
-        );
+        return create_token(TokenType::indent_block_end);
     }
 
     current_token_start_col_ = current_col_;
@@ -68,17 +66,17 @@ Token StreamingLexer::get_token_() {
     buffer_ = {};
 
     if (source_is_->eof())
-        return create_token_(TokenType::eof);
+        return create_token(TokenType::eof);
 
     switch (current_char_) {
         case EOF:
-            return create_token_(TokenType::eof);
+            return create_token(TokenType::eof);
 
         // handle string literals
         // TODO: handle '
         // TODO: string interpolation
         case '\"':
-            return read_string_literal_();
+            return read_string_literal();
 
         // handle whitespace
         case ' ':
@@ -96,110 +94,98 @@ Token StreamingLexer::get_token_() {
             // TODO: just use peek
             if (current_char_ != '/' && current_char_ != '*') {
                 buffer_.sputc('/');
-                return read_operator_();
+                return read_operator();
             }
 
-            read_and_ignore_comment_();
+            read_and_ignore_comment();
             return get_token_();
 
             // handle operator
-            return read_operator_();
+            return read_operator();
 
         case '(':
             if (tie_possible_) {
                 tie_possible_ = false;
-                return create_token_(TokenType::tie);
+                return create_token(TokenType::tie);
             }
             read_char();
-            return create_token_(TokenType::parenthesis_open);
+            return create_token(TokenType::parenthesis_open);
 
         case '[':
             read_char();
             if (tie_possible_) {
                 tie_possible_ = false;
-                return create_token_(TokenType::tie);
+                return create_token(TokenType::tie);
             }
             read_char();
-            return create_token_(TokenType::bracket_close);
+            return create_token(TokenType::bracket_close);
 
         case '{':
             if (tie_possible_) {
                 tie_possible_ = false;
-                return create_token_(TokenType::tie);
+                return create_token(TokenType::tie);
             }
             read_char();
-            return create_token_(TokenType::curly_brace_open);
+            return create_token(TokenType::curly_brace_open);
 
         case ')':
             read_char();
-            return create_token_(TokenType::parenthesis_close);
+            return create_token(TokenType::parenthesis_close);
         case ']':
             read_char();
-            return create_token_(TokenType::bracket_close);
+            return create_token(TokenType::bracket_close);
         case '}':
             read_char();
-            return create_token_(TokenType::curly_brace_close);
+            return create_token(TokenType::curly_brace_close);
         case ',':
             read_char();
-            return create_token_(TokenType::comma);
+            return create_token(TokenType::comma);
         case '\\':
             read_char();
-            return create_token_(TokenType::lambda);
+            return create_token(TokenType::lambda);
         
         case '\n':
-            return read_linebreak_();
+            return read_linebreak();
 
         case ';':
             while(read_char() == ';' && !source_is_->eof());
-            return collapsed_semicolon_token_();
+            return collapsed_semicolon_token();
+
+        case '_':
+            return read_identifier();
 
         default:
             // handle identifiers
             // TODO: handle suffixes
-            if (std::isalpha(current_char_) || current_char_ == '_')
-                return read_identifier_();
+            if (std::isalpha(current_char_)) {
+                // type identifiers can't be tied
+                if (!islower(current_char_))
+                    tie_possible_ = false;
+
+                return read_identifier();
+            }
 
             // handle numerics
             // TODO: how to support spaces in numerics?
             // TODO: hex and oct
             if (std::iswdigit(current_char_))
-                return read_numeric_literal_();
+                return read_numeric_literal();
 
             // handle operators
             if (is_operator_glyph(current_char_))
-                return read_operator_();
+                return read_operator();
 
             // unknown token
             assert(false && "unhandled token type in StreamingLexer::get_token_()");
             read_char();
-            return create_token_(TokenType::unknown);
+            return create_token(TokenType::unknown);
     }
 }
 
-Token StreamingLexer::read_operator_() {
+Token Lexer::read_identifier() {
     if (tie_possible_) {
         tie_possible_ = false;
-        return create_token_(TokenType::tie);
-    }
-
-    // cannot reset the buffer, since there might be an initial '/' there
-    while (is_operator_glyph(current_char_)) {
-        buffer_.sputc(current_char_);
-        read_char();
-        if (source_is_->eof())
-            return create_token_(TokenType::eof);
-    }
-
-    return create_token_(
-        TokenType::operator_t,
-        buffer_.str()
-    );
-}
-
-Token StreamingLexer::read_identifier_() {
-    if (tie_possible_) {
-        tie_possible_ = false;
-        return create_token_(TokenType::tie);
+        return create_token(TokenType::tie);
     }
 
     buffer_ = {};
@@ -212,23 +198,36 @@ Token StreamingLexer::read_identifier_() {
     }
 
     std::string value = buffer_.str();
-    if (is_reserved_word(value)) {
-        return create_token_(
-            TokenType::reserved_word,
-            value
-        );
-    }
+    if (is_reserved_word(value))
+        return create_token(TokenType::reserved_word, value);
 
-    return create_token_(
-        TokenType::identifier,
-        value
-    );
+    if (std::isupper(value.at(0)))
+        return create_token(TokenType::type_identifier, value);
+
+    return create_token(TokenType::identifier, value);
 }
 
-Token StreamingLexer::read_string_literal_() {
+Token Lexer::read_operator() {
     if (tie_possible_) {
         tie_possible_ = false;
-        return create_token_(TokenType::tie);
+        return create_token(TokenType::tie);
+    }
+
+    // cannot reset the buffer, since there might be an initial '/' there
+    while (is_operator_glyph(current_char_)) {
+        buffer_.sputc(current_char_);
+        read_char();
+        if (source_is_->eof())
+            return create_token(TokenType::eof);
+    }
+
+    return create_token(TokenType::operator_t, buffer_.str());
+}
+
+Token Lexer::read_string_literal() {
+    if (tie_possible_) {
+        tie_possible_ = false;
+        return create_token(TokenType::tie);
     }
 
     buffer_ = {};
@@ -238,16 +237,13 @@ Token StreamingLexer::read_string_literal_() {
     }
 
     read_char(); // eat the closing "
-    return create_token_(
-        TokenType::string_literal,
-        buffer_.str()
-    );
+    return create_token(TokenType::string_literal, buffer_.str());
 }
 
-Token StreamingLexer::read_numeric_literal_() {
+Token Lexer::read_numeric_literal() {
     if (tie_possible_) {
         tie_possible_ = false;
-        return create_token_(TokenType::tie);
+        return create_token(TokenType::tie);
     }
 
     do {
@@ -255,13 +251,10 @@ Token StreamingLexer::read_numeric_literal_() {
         read_char();
     } while ((std::iswdigit(current_char_) || current_char_ == '.') && !source_is_->eof());
 
-    return create_token_(
-        TokenType::number,
-        buffer_.str()
-    );
+    return create_token(TokenType::number, buffer_.str());
 }
 
-Token StreamingLexer::read_linebreak_() {
+Token Lexer::read_linebreak() {
     unsigned int current_indent = indent_stack_.back();
     
     // eat empty lines
@@ -277,7 +270,7 @@ Token StreamingLexer::read_linebreak_() {
 
     // in case of another newline just start again
     if (current_char_ == '\n' && !source_is_->eof())
-        return read_linebreak_();
+        return read_linebreak();
 
     // deal with possible comments
     if (current_char_ == '/') {
@@ -285,20 +278,20 @@ Token StreamingLexer::read_linebreak_() {
         // it's a comment
         if (peeked_char == '/' || peeked_char == '*') {
             read_char(); // read_and_ignore comment expects us to reat the initial '/'
-            read_and_ignore_comment_();
+            read_and_ignore_comment();
             // !!!: multi-line comments will mess with indentation here
-            return read_linebreak_();
+            return read_linebreak();
         }
     }
 
     // if the indent didn't change, just insert a semicolon
     if (next_line_indent == current_indent) 
-        return collapsed_semicolon_token_();
+        return collapsed_semicolon_token();
 
     // if the indent increased, start a new level
     if (next_line_indent > current_indent) {
         indent_stack_.push_back(next_line_indent);
-        return create_token_(TokenType::indent_block_start);
+        return create_token(TokenType::indent_block_start);
     }
 
     // if the indent decreased, enter indent closing mode
@@ -313,19 +306,14 @@ Token StreamingLexer::read_linebreak_() {
     //       and give a warning otherwise
     // The problem is: which way do we default or should we start a new block?
     // All options seem like possible causes for confusion
-    if (next_line_indent != indent_stack_.back()) {
-        return create_token_(
-            TokenType::indent_error_fatal
-        );
-    }
+    if (next_line_indent != indent_stack_.back())
+        return create_token(TokenType::indent_error_fatal);
 
     indents_to_close_--;
-    return create_token_(
-        TokenType::indent_block_end
-    );
+    return create_token(TokenType::indent_block_end);
 }
 
-Token StreamingLexer::read_pragma() {
+Token Lexer::read_pragma() {
     buffer_ = {};
 
     // eat initial whitespace
@@ -337,14 +325,11 @@ Token StreamingLexer::read_pragma() {
     }
 
     read_char(); // eat the closing \n
-    return create_token_(
-        TokenType::pragma,
-        buffer_.str()
-    );
+    return create_token(TokenType::pragma, buffer_.str());
 }
 
 // Reduce redundant semicolons
-Token StreamingLexer::collapsed_semicolon_token_() {
+Token Lexer::collapsed_semicolon_token() {
     switch (prev_token_.token_type) {
         case TokenType::indent_block_start:
         case TokenType::indent_block_end:
@@ -353,13 +338,13 @@ Token StreamingLexer::collapsed_semicolon_token_() {
             return get_token_();
         
         default:
-            return create_token_(TokenType::semicolon);
+            return create_token(TokenType::semicolon);
     }
 }
 
 // when calling this, the caller must eat the first '/' of the comment
 // the caller is also responsible for checking that current_char_ is either '/' or '*'
-void StreamingLexer::read_and_ignore_comment_() {
+void Lexer::read_and_ignore_comment() {
     // single-line comment
     if (current_char_ == '/') {
         while (read_char() != '\n') {

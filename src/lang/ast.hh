@@ -13,11 +13,20 @@
 
 namespace Maps {
 
+// template<class T>
+// concept AST_Visitor = requires(T t) {
+//     {t.visit_expression()} -> bool;
+//     {t.visit_statement()} -> bool;
+// };
+
 class AST {
 public:
     AST();
     void set_root(CallableBody root);
     void declare_invalid() { is_valid = false; };
+
+    // template<Visitor T>
+    // bool visit_nodes(T);
 
     // ----- CREATING (AND DELETING) EXPRESSIONS -----
     Expression* create_string_literal(const std::string& value, SourceLocation location);

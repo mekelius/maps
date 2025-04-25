@@ -23,7 +23,7 @@ using Logging::MessageType;
 
 // ----- PUBLIC METHODS -----
 
-ParserLayer1::ParserLayer1(StreamingLexer* lexer, Pragma::Pragmas* pragmas, bool in_repl):
+ParserLayer1::ParserLayer1(Lexer* lexer, Pragma::Pragmas* pragmas, bool in_repl):
 lexer_(lexer), pragmas_(pragmas), in_repl_(in_repl) {
     ast_ = std::make_unique<Maps::AST>();
     get_token();

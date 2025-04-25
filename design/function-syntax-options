@@ -23,4 +23,5 @@ type name(type, type) {
 
 our style:
 
-fn name
+let name = Type param -> Type param -> Type return:
+    return = param + param

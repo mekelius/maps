@@ -43,6 +43,8 @@ public:
     std::optional<SourceLocation> location;
     std::optional<Operator*> operator_props;
 
+    std::optional<const Type*> declared_type;
+
     // since statements don't store types, we'll have to store them here
     // if the body is an expression, the type will just mirror it's type
     const Type* get_type() const;
@@ -108,9 +110,11 @@ struct Expression {
     Expression(ExpressionType expr_type, SourceLocation location, const Type& type): 
         expression_type(expr_type), location(location), type(&type) {};
     
-    ExpressionType expression_type;
+    ExpressionType expression_type; 
     SourceLocation location;
-    const Type* type;
+
+    const Type* type; // this is the inferred "de facto"-one
+    std::optional<const Type*> declared_type;
     ExpressionValue value;
 
     TermedExpressionValue& terms() {

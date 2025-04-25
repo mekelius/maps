@@ -16,11 +16,11 @@
 
 // First attempt at a parser. Parses tokens directly into the llvm context
 class ParserLayer1 {
-  public:
-    ParserLayer1(StreamingLexer* lexer, Pragma::Pragmas* pragmas, bool in_repl = false);
+public:
+    ParserLayer1(Lexer* lexer, Pragma::Pragmas* pragmas, bool in_repl = false);
     
     std::unique_ptr<Maps::AST> run();
-  private:
+private:
     // gets the next token from the lexer and stores it in current_token_
     Token get_token();
     Token current_token() const;
@@ -94,7 +94,7 @@ class ParserLayer1 {
 
     void reset_to_top_level();
     
-    StreamingLexer* lexer_;
+    Lexer* lexer_;
     std::unique_ptr<Maps::AST> ast_;
     Pragma::Pragmas* pragmas_;
     

@@ -16,6 +16,8 @@ std::string Token::get_string() const {
 
         case TokenType::identifier:
             return "identifier: " + string_value();
+        case TokenType::type_identifier:
+            return "type identifier: " + string_value();
         case TokenType::operator_t:
             return "operator: " + string_value();
     
@@ -122,6 +124,7 @@ bool is_block_starter(const Token& token) {
 }
 
 bool is_tieable_token(const Token& token) {
+    // ? should type identifiers be tieable?
     return (
         token.token_type == TokenType::operator_t     ||
         token.token_type == TokenType::identifier     ||

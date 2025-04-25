@@ -8,7 +8,7 @@
 
 enum class TokenType: int {
     eof,
-    identifier, operator_t,
+    identifier, type_identifier, operator_t,
     number, string_literal,
     reserved_word,
     indent_block_start, indent_block_end, indent_error_fatal,
@@ -22,8 +22,7 @@ enum class TokenType: int {
     unknown // unhandled, means a bug
 };
 
-class Token {
-  public:
+struct Token {
     Token(TokenType token_type, SourceLocation location, const std::string& value = "");
 
     TokenType token_type;

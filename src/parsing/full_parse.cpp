@@ -12,7 +12,7 @@ using std::tuple, std::unique_ptr, Pragma::Pragmas;
 tuple<unique_ptr<Maps::AST>, unique_ptr<Pragmas>> parse_source(std::istream& source_is, bool in_repl) {    
     std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
     
-    StreamingLexer lexer{&source_is};
+    Lexer lexer{&source_is};
 
     std::unique_ptr<Maps::AST> ast = ParserLayer1{&lexer, pragmas.get(), in_repl}.run();
     resolve_identifiers(*ast);
