@@ -149,6 +149,7 @@ Type::HashableSignature TypeRegistry::make_function_signature(const Type& return
     if (arg_types.size() == 0)
         return "=>" + std::to_string(return_type.id);
          
+
     std::string signature = "";
     bool first = true;
     for (auto arg_type: arg_types) {

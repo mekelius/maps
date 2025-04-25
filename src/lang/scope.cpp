@@ -25,7 +25,7 @@ std::optional<Callable*> Scope::create_callable(const std::string& name, Callabl
 
     Callable* callable = ast_->create_callable(body, name, location);
     identifiers_.insert({name, callable});
-    identifiers_in_order_.push_back(name);
+    identifiers_in_order_.push_back({name, callable});
     
     return callable;
 }

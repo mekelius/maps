@@ -133,13 +133,13 @@ int main(int argc, char** argv) {
     unique_ptr<llvm::LLVMContext> context = make_unique<llvm::LLVMContext>();
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context);
 
-    IR::IR_Generator ir_generator{context.get(), module_.get(), &error_stream};
+    IR::IR_Generator ir_generator{context.get(), module_.get(), *ast, *pragmas, &error_stream};
     insert_builtins(ir_generator);
     
     // ----- run codegen -----
     std::cerr << "Running codegen..." << std::endl;
 
-    if (!ir_generator.run(*ast)) {
+    if (!ir_generator.run()) {
         std::cerr << "Codegen failed, exiting" << std::endl;
         return EXIT_FAILURE;
     }

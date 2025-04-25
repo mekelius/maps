@@ -42,7 +42,8 @@ public:
     Expression* create_call_expression(Callable* callee, std::vector<Expression*> args, 
         SourceLocation location /*, expected return type?*/);
 
-    std::vector<std::string> identifiers_in_order_ = {};
+    std::vector<std::pair<std::string, Callable*>> identifiers_in_order_ = {};
+
 private:
     std::unordered_map<std::string, Callable*> identifiers_;
     AST* ast_;

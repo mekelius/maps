@@ -21,7 +21,6 @@ add_library(maps_builtins SHARED
     maps_builtins/maps_builtins.c
 )
 
-
 # ------------------- MAPSC PARSING -------------------
 
 add_library(parsing OBJECT
@@ -37,9 +36,9 @@ add_library(parsing OBJECT
     src/parsing/parser_layer1.cpp
     src/parsing/parser_layer2.cpp
     src/parsing/name_resolution.cpp
+    src/parsing/type_inference.cpp
     src/parsing/full_parse.cpp
 )
-
 
 # ---------------------- IR_GEN ------------------------
 
@@ -51,7 +50,6 @@ add_library(ir_gen OBJECT
 
 target_link_libraries(ir_gen parsing -lLLVM-19)
 target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
-
 
 # ----------------------- MAPSC ------------------------
 
@@ -67,7 +65,6 @@ target_compile_options(mapsc PRIVATE
     -fno-exceptions -funwind-tables 
     -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
 )
-
 
 # ----------------------- MAPSCi -----------------------
 
@@ -85,7 +82,6 @@ target_compile_options(mapsci PRIVATE
     -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
 )
 
-
 # -------------------- VERIFY MAPSC --------------------
 
 add_executable(verify_mapsc
@@ -94,7 +90,6 @@ add_executable(verify_mapsc
 )
 
 target_link_libraries(verify_mapsc parsing)
-
 
 # ----------------- PARSING UNIT_TESTS -----------------
 

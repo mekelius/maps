@@ -30,7 +30,9 @@ std::optional<llvm::Type*> TypeMap::convert_type(const Maps::Type& type) const {
     return {};
 }
 
-std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Type& return_type, const std::vector<const Maps::Type*>& arg_types) const {
+std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Type& return_type, 
+    const std::vector<const Maps::Type*>& arg_types) const {
+    
     optional<llvm::Type*> llvm_return_type = convert_type(return_type);
     
     if(!llvm_return_type)

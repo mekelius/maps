@@ -32,7 +32,8 @@ namespace IR {
 
 // ----- IR Generation -----
 
-IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, Pragma::Pragmas& pragmas, llvm::raw_ostream* error_stream)
+IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
+    Pragma::Pragmas& pragmas, llvm::raw_ostream* error_stream)
 :errs_(error_stream), context_(context), module_(module), types_({*context_}), pragmas_(&pragmas), 
 ast_(&ast), maps_types_(ast.types_.get()) {
     builder_ = std::make_unique<llvm::IRBuilder<>>(*context_);
@@ -66,7 +67,6 @@ bool IR_Generator::repl_run() {
     return true;
 }
 
-
 bool IR_Generator::print_ir_to_file(const std::string& filename) {
     // prepare the stream
     std::error_code error_code; //??? what to do with this?
@@ -93,8 +93,8 @@ std::string create_internal_name(const std::string& name, const Maps::Type& ast_
     return internal_name;
 }
 
-optional<llvm::Function*> IR_Generator::function_definition(const std::string& name, const Maps::Type& ast_type, llvm::FunctionType* llvm_type, 
-    llvm::Function::LinkageTypes linkage) {
+optional<llvm::Function*> IR_Generator::function_definition(const std::string& name, 
+    const Maps::Type& ast_type, llvm::FunctionType* llvm_type, llvm::Function::LinkageTypes linkage) {
 
     if (!ast_type.is_function()) {
         log_error("IR::Generator::function_definition called with a non-function type: " + ast_type.to_string());
@@ -102,17 +102,21 @@ optional<llvm::Function*> IR_Generator::function_definition(const std::string& n
         return nullopt;
     }
 
-    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, create_internal_name(name, ast_type), module_);
+    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, 
+        create_internal_name(name, ast_type), module_);
     function_store_->insert(name, ast_type, {llvm_type, function});
     llvm::BasicBlock* body = llvm::BasicBlock::Create(*context_, "", function);
     builder_->SetInsertPoint(body);
     return function;
 }
 
-optional<llvm::Function*> IR_Generator::function_declaration(const std::string& name, const Maps::Type& ast_type, llvm::FunctionType* llvm_type, 
+optional<llvm::Function*> IR_Generator::function_declaration(const std::string& name, 
+    const Maps::Type& ast_type, llvm::FunctionType* llvm_type, 
+    
     llvm::Function::LinkageTypes linkage) {
     
-    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, create_internal_name(name, ast_type), module_);
+    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, 
+        create_internal_name(name, ast_type), module_);
     function_store_->insert(name, ast_type, function);
     return function;
 }
@@ -140,7 +144,9 @@ optional<llvm::Value*> IR_Generator::global_constant(const Callable& callable) {
     return nullopt;
 }
 
-std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, const Maps::Type& function_type) const {
+std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, 
+    const Maps::Type& function_type) const {
+    
     auto outer_it = functions_.find(name);
 
     if (outer_it == functions_.end())
@@ -150,14 +156,17 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, 
     auto inner_it = inner_map->find(function_type.function_type()->hashable_signature());
 
     if (inner_it == inner_map->end()) {
-        log_error("function \"" + name + "\" has not been specialized for type \"" + function_type.to_string() + "\"");
+        log_error("function \"" + name + "\" has not been specialized for type \"" + 
+            function_type.to_string() + "\"");
         return nullopt;
     }
 
     return inner_it->second;
 }
 
-bool FunctionStore::insert(const std::string& name, const Maps::Type& ast_type, llvm::FunctionCallee function_callee) {    
+bool FunctionStore::insert(const std::string& name, const Maps::Type& ast_type, 
+    llvm::FunctionCallee function_callee) {    
+    
     auto signature = ast_type.function_type()->hashable_signature();
 
     auto outer_it = functions_.find(name);
@@ -203,14 +212,11 @@ optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& e
 // --------- HANDLERS ---------
 
 bool IR_Generator::handle_global_functions() {
-    for (std::string name: ast_->globals_->identifiers_in_order_) {
-        std::optional<Maps::Callable*> callable = ast_->globals_->get_identifier(name);
-        assert(callable && "nonexistent name in ast.globals_.identifiers_in_order");
-
-        if (!handle_global_definition(**callable))
+    for (auto [_1, callable]: ast_->globals_->identifiers_in_order_) {
+        if (!handle_global_definition(*callable))
             return false;
     }
-
+    
     return true;
 }
 
@@ -225,7 +231,8 @@ optional<llvm::Function*> IR_Generator::handle_top_level_execution(bool in_repl)
             *ast_->types_->get_function_type(Maps::Void, {}), types_.repl_wrapper_signature);
     } else {
         // TODO: do array types and enable cl args
-        top_level_function = function_definition("main", *ast_->types_->get_function_type(Maps::Int, {}), types_.cmain_signature);
+        top_level_function = function_definition("main", *ast_->types_->get_function_type(Maps::Int, {}), 
+            types_.cmain_signature);
     }
     
     if (Statement* const * statement = get_if<Statement*>(&ast_->root_->body)) {
@@ -349,7 +356,9 @@ bool IR_Generator::handle_block(const Statement& statement, bool repl_top_level)
     return true;
 }
 
-std::optional<llvm::Value*> IR_Generator::handle_expression_statement(const Maps::Statement& statement, bool repl_top_level) {
+std::optional<llvm::Value*> IR_Generator::handle_expression_statement(const Maps::Statement& statement, 
+    bool repl_top_level) {
+    
     assert(statement.statement_type == StatementType::expression_statement && 
         "IR_Generator::handle_expression_statement called with non-expression statement");
 
@@ -413,7 +422,8 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
 }
 
 std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callable& callable) {
-    assert(callable.get_type()->is_function() && "IR_Generator::handle function called with a non-function callable");
+    assert(callable.get_type()->is_function() && 
+        "IR_Generator::handle function called with a non-function callable");
 
     auto [return_type_, arg_types_, _1]
         = *callable.get_type()->function_type();
@@ -421,7 +431,8 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callabl
     optional<llvm::FunctionType*> signature = types_.convert_function_type(*return_type_, arg_types_);
 
     if (!signature) {
-        assert(callable.location && "in IR_Generator::handle_function: callable missing location, did it try to handle a builtin");
+        assert(callable.location && 
+            "in IR_Generator::handle_function: callable missing location, did it try to handle a builtin");
         Logging::log_error(*callable.location, "unable to convert type signature for " + callable.name);
         return nullopt;
     }
@@ -440,7 +451,6 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callabl
     
     return function;
 }
-
 
 llvm::Value* IR_Generator::handle_call(const Expression& expression) {
     auto [callee, args] = get<Maps::CallExpressionValue>(expression.value);

@@ -38,7 +38,6 @@ public:
     
     void delete_expression(Expression* expression);
 
-
     //  ----- CREATING OTHER THINGS -----
     Statement* create_statement(StatementType statement_type, SourceLocation location);
     
@@ -51,7 +50,6 @@ public:
 
     // container for top-level statements
     Callable* root_;
-    Callable* entry_point_;
 
     std::unique_ptr<Scope> globals_ = std::make_unique<Scope>(this);
     std::unique_ptr<Scope> builtins_scope_ = std::make_unique<Scope>(this);

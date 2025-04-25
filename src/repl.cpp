@@ -101,13 +101,18 @@ void REPL::run() {
         std::stringstream input_s{input};
         std::tie(ast, pragmas_) = parse_source(input_s, true);
 
+        if (!ast->is_valid) {
+            Logging::log_error("parsing failed");
+        }
+
         if (options_.print_reverse_parse) {
             std::cout << "parsed into:\n";
             reverse_parse(*ast, std::cout);           
             std::cout << "\n" << std::endl;
         }
 
-        eval(*ast);
+        if (ast->is_valid)
+            eval(*ast);
     }
 }
     
