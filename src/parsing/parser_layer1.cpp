@@ -409,7 +409,7 @@ Maps::Statement* ParserLayer1::parse_operator_statement() {
         case TokenType::operator_t: {
             std::string op = current_token().string_value();
 
-            if (ast_->builtin_operators_->identifier_exists(op)) 
+            if (ast_->builtins_scope_->identifier_exists(op)) 
                 return broken_statement_helper("attempting to redefine built-in operator: " + op);
 
             if (ast_->globals_->identifier_exists(op))
@@ -436,7 +436,9 @@ Maps::Statement* ParserLayer1::parse_operator_statement() {
                 if (current_token().token_type != TokenType::reserved_word || (current_token().string_value() != "prefix" && current_token().string_value() != "postfix"))
                     return broken_statement_helper("unexpected token: " + current_token().get_string() + " in unary operator statement, expected \"prefix|postfix\"");
 
-                Maps::UnaryFixity fixity = current_token().get_string() == "prefix" ? Maps::UnaryFixity::prefix : Maps::UnaryFixity::postfix;
+                assert(current_token().get_string() == "prefix" && "postfix operators not implemented");
+                // Maps::UnaryFixity fixity = current_token().get_string() == "prefix" ? Maps::UnaryFixity::prefix : Maps::UnaryFixity::postfix;
+                Maps::UnaryFixity fixity = Maps::UnaryFixity::prefix;
 
                 get_token(); // eat the fixity specifier
 
@@ -448,7 +450,7 @@ Maps::Statement* ParserLayer1::parse_operator_statement() {
                 }
 
                 Maps::Statement* statement = create_statement(Maps::StatementType::operator_s);
-                statement->value = Maps::Operator{op, 1, body};
+                statement->value = Maps::OperatorStatementValue{op, 1, body};
 
                 ast_->globals_->create_unary_operator(op, body, fixity, statement->location);
                 log_info("parsed let statement", MessageType::parser_debug);
@@ -473,7 +475,7 @@ Maps::Statement* ParserLayer1::parse_operator_statement() {
             }
 
             Maps::Statement* statement = create_statement(Maps::StatementType::operator_s);
-            statement->value = Maps::Operator{op, 2, body};
+            statement->value = Maps::OperatorStatementValue{op, 2, body};
 
             ast_->globals_->create_binary_operator(op, body, precedence, Maps::Associativity::left, statement->location);
             log_info("parsed let statement", MessageType::parser_debug);

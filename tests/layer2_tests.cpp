@@ -5,15 +5,15 @@
 #include "../src/lang/ast.hh"
 #include "../src/parsing/parser_layer2.hh"
 
-using Maps::Expression, Maps::ExpressionType, Maps::Callable, Maps::BuiltinType;
+using Maps::Expression, Maps::ExpressionType, Maps::Callable;
 
 // --------------- HELPERS ---------------
 
 inline std::tuple<Maps::Expression*, Maps::Callable*> create_operator_helper(Maps::AST& ast, 
     const std::string& op_string, unsigned int precedence = 500) {
 
-    const Maps::Type* type = ast.types_->get_binary_operator_type(Maps::Void, Maps::Number, Maps::Number, precedence);
-    Maps::Callable* op_callable = ast.create_builtin(Maps::BuiltinType::builtin_operator, op_string, *type);
+    const Maps::Type* type = ast.types_->get_function_type(Maps::Void, {&Maps::Number, &Maps::Number});
+    Maps::Callable* op_callable = ast.create_builtin_binary_operator(op_string, *type, precedence);
 
     Maps::Expression* op_ref = ast.create_operator_ref(op_callable, {0,0});
 
@@ -202,7 +202,7 @@ TEST_CASE ("should handle more complex expressions") {
 
     SUBCASE("1 2 1") {
         std::string input = "1 2 1";
-        auto expected_pre_order = "11v2vvv";
+        std::string expected_pre_order = "11v2vvv";
         
         prime_terms(expr, input, op1_ref, op2_ref, op3_ref, val);
 
@@ -215,7 +215,7 @@ TEST_CASE ("should handle more complex expressions") {
 
     SUBCASE("1 2 2 2 1 2 2 2 3 3 2 2 1") {
         std::string input = "1 2 2 2 1 2 2 2 3 3 2 2 1";
-        auto expected_pre_order = "111v222vvvv22222vvv33vvvvvv";
+        std::string expected_pre_order = "111v222vvvv22222vvv33vvvvvv";
         
         prime_terms(expr, input, op1_ref, op2_ref, op3_ref, val);
 
@@ -234,7 +234,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     SUBCASE("1 arg") {    
         const Maps::Type* function_type = ast.types_->get_function_type(Maps::Void, {&Maps::String});
 
-        Callable* function = ast.create_builtin(BuiltinType::builtin_function, "test_f", *function_type);
+        Callable* function = ast.create_builtin("test_f", *function_type);
         Expression* id = ast.globals_->create_reference_expression(function, {0,0});
         id->value = function;    
         id->type = function_type;
@@ -258,7 +258,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Maps::Type* function_type = ast.types_->get_function_type(Maps::Void, 
             {&Maps::String, &Maps::String, &Maps::String, &Maps::String});
         
-        Callable* function = ast.create_builtin(BuiltinType::builtin_function, "test_f", *function_type);
+        Callable* function = ast.create_builtin("test_f", *function_type);
         Expression* id = ast.globals_->create_reference_expression(function, {0,0});
         id->value = function;    
         id->type = function_type;
@@ -290,7 +290,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
 
         const Maps::Type* function_type = ast.types_->get_function_type(Maps::Number, {&Maps::String});
         
-        Callable* function = ast.create_builtin(BuiltinType::builtin_function, "test_f", *function_type);
+        Callable* function = ast.create_builtin("test_f", *function_type);
         Expression* id = ast.globals_->create_reference_expression(function, {0,0});
         id->value = function;
         id->type = function_type;

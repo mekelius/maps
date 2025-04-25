@@ -28,8 +28,8 @@ public:
         std::optional<SourceLocation> location = std::nullopt);
     std::optional<Callable*> create_callable(const std::string& name, SourceLocation location);
 
-    std::optional<Callable*> create_binary_operator(const std::string& name, CallableBody body, 
-        unsigned int precedence, Associativity associativity, SourceLocation location);
+    std::optional<Callable*> create_binary_operator(const std::string& name, CallableBody body,
+        Precedence precedence, Associativity associativity, SourceLocation location);
 
     std::optional<Callable*> create_unary_operator(const std::string& name, CallableBody body,
         UnaryFixity fixity, SourceLocation location);

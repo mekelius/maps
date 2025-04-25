@@ -424,7 +424,7 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
 std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callable& callable) {
     assert(callable.get_type()->is_function() && "IR_Generator::handle function called with a non-function callable");
 
-    auto [return_type_, arg_types_, _1, _2, _3, _4, _5] 
+    auto [return_type_, arg_types_, _1] 
         = *callable.get_type()->function_type();
 
     optional<llvm::FunctionType*> signature = types_.convert_function_type(*return_type_, arg_types_);

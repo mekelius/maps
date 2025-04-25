@@ -43,15 +43,18 @@ public:
     Statement* create_statement(StatementType statement_type, SourceLocation location);
     
     // automatically creates an identifier and a global callable for the builtin
-    Callable* create_builtin(BuiltinType builtin_type, const std::string& name, const Type& type);
+    Callable* create_builtin(const std::string& name, const Type& type);
+    Callable* create_builtin_binary_operator(const std::string& name, const Type& type, Precedence precedence, 
+        Associativity Associativity = Associativity::left);
+    Callable* create_builtin_unary_operator(const std::string& name, const Type& type, 
+        UnaryFixity fixity = UnaryFixity::prefix);
 
     // container for top-level statements
     Callable* root_;
     Callable* entry_point_;
 
     std::unique_ptr<Scope> globals_ = std::make_unique<Scope>(this);
-    std::unique_ptr<Scope> builtin_functions_ = std::make_unique<Scope>(this);
-    std::unique_ptr<Scope> builtin_operators_ = std::make_unique<Scope>(this);
+    std::unique_ptr<Scope> builtins_scope_ = std::make_unique<Scope>(this);
 
     bool is_valid = true;
     std::unique_ptr<TypeRegistry> types_ = std::make_unique<TypeRegistry>();
@@ -66,8 +69,11 @@ private:
     Expression* create_expression(ExpressionType expression_type, 
         ExpressionValue value, const Type& type, SourceLocation location);
 
-    Callable* create_callable(CallableBody body, const std::string& name, std::optional<SourceLocation> location = std::nullopt);
+    Callable* create_callable(CallableBody body, const std::string& name, 
+        std::optional<SourceLocation> location = std::nullopt);
     Callable* create_callable(const std::string& name, SourceLocation location);
+
+    Operator* create_operator(const Operator&& operator_props);
 
     // currently these guys, once created, stay in memory forever
     // we could create a way to sweep them by having some sort of "alive"-flag
@@ -78,6 +84,7 @@ private:
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
     std::vector<std::unique_ptr<Builtin>> builtins_ = {};
     std::vector<std::unique_ptr<Callable>> callables_ = {};
+    std::vector<std::unique_ptr<Operator>> operators_ = {};
 };
 
 } // namespace Maps

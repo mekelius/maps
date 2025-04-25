@@ -31,7 +31,7 @@ void resolve_identifiers(Maps::AST& ast) {
 // this should be scope's responsibility
 void resolve_identifier(Maps::AST& ast, Maps::Expression* expression) {
     // check builtins
-    std::optional<Maps::Callable*> builtin = ast.builtin_functions_->get_identifier(expression->string_value());
+    std::optional<Maps::Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
     if (builtin) {
         log_info(expression->location, "Parsed built-in", Logging::MessageType::parser_debug_terminal);
         expression->expression_type = Maps::ExpressionType::reference;
@@ -55,8 +55,10 @@ void resolve_identifier(Maps::AST& ast, Maps::Expression* expression) {
 }
 
 void resolve_operator(Maps::AST& ast, Maps::Expression* expression) {
-    std::optional<Maps::Callable*> builtin = ast.builtin_operators_->get_identifier(expression->string_value());
+    std::optional<Maps::Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
     if (builtin) {
+        assert((*builtin)->is_operator() && "during name resolution: encountered a builtin operator_e that pointed to not an operator");
+
         log_info(expression->location, "Parsed built-in operator", Logging::MessageType::parser_debug_terminal);
         expression->expression_type = Maps::ExpressionType::operator_ref;
         expression->value = *builtin;

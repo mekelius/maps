@@ -25,6 +25,10 @@ class TermedExpressionParser {
     // caller must be sure that the parse_stack isn't empty
     Maps::Expression* current_term() const;
 
+    // helper to get the precedence of an operator on top of the stack
+    // caller must check that there is an operator at the top of the stack
+    Maps::Precedence peek_precedence() const;
+
     // advances the input stream by one and pushes the term onto the parse stack
     void shift();
 

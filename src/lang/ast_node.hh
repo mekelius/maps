@@ -5,18 +5,13 @@
 
 #include "../source.hh"
 #include "type_defs.hh"
+#include "operator.hh"
 
 namespace Maps {
 
 // ----- BUILTINS -----
 
-enum class BuiltinType {
-    builtin_function,
-    builtin_operator,
-};
-
 struct Builtin {
-    BuiltinType builtin_type;
     std::string name;
     const Type* type;
 };
@@ -27,8 +22,8 @@ struct Statement;
 using CallableBody = std::variant<std::monostate, Expression*, Statement*, Builtin*>;
 
 /**
- * Callables represent either expressions or statements, with the unique ability
- * to hold types for statements. A bit convoluted but we'll see.
+ * Callables represent either expressions or statements, along with extra info like
+ * holding types for statements. A bit convoluted but we'll see.
  * The source location is needed on every callable that is not a built-in
  * 
  * NOTE: if it's anonymous, it needs a source location
@@ -41,17 +36,22 @@ public:
 
     Callable(const Callable& other) = default;
     Callable& operator=(const Callable& other) = default;
-    virtual ~Callable() = default;
+    ~Callable() = default;
 
     CallableBody body;
     std::string name;
     std::optional<SourceLocation> location;
+    std::optional<Operator*> operator_props;
 
     // since statements don't store types, we'll have to store them here
     // if the body is an expression, the type will just mirror it's type
     const Type* get_type() const;
     void set_type(const Type& type);
 
+    // checks if the name is an operator style name
+    bool is_operator() const;
+    bool is_binary_operator() const;
+    bool is_unary_operator() const;
 private:
     std::optional<const Type*> type_;
 };
@@ -68,7 +68,7 @@ enum class ExpressionType {
     operator_e,
     
     reference,              // value: Callable*
-    operator_ref,           
+    operator_ref,
 
     termed_expression,      // value: std::vector<Expression*>
 
@@ -148,7 +148,7 @@ struct Let {
     CallableBody body;
 };
 
-struct Operator {
+struct OperatorStatementValue {
     std::string op;
     unsigned int arity;
     CallableBody body;
@@ -188,7 +188,7 @@ using StatementValue = std::variant<
     Expression*,
 
     Let,
-    Operator,
+    OperatorStatementValue,
     Assignment,
     Block
 >;

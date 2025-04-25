@@ -166,7 +166,6 @@ Token StreamingLexer::get_token_() {
                 return read_numeric_literal_();
 
             // handle operators
-            // TODO: move into a case expression
             if (is_operator_glyph(current_char_))
                 return read_operator_();
 

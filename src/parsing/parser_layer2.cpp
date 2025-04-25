@@ -2,12 +2,11 @@
 
 #include "../logging.hh"
 
-
 #include "parser_layer2.hh"
 #include "name_resolution.hh"
 
 using Logging::log_error, Logging::log_info;
-using Maps::ExpressionType, Maps::Expression;
+using Maps::ExpressionType, Maps::Expression, Maps::Precedence;
 
 // Expression types that are not allowed here
 // NOTE: Empty is allowed at top-level
@@ -60,12 +59,23 @@ Expression* TermedExpressionParser::get_term() {
 }
 
 Maps::Expression* TermedExpressionParser::peek() const {
+    assert(next_term_it_ != expression_terms_->end() && "peek called with no termas left");
     return *next_term_it_;
 }
 
 Maps::Expression* TermedExpressionParser::current_term() const {
     assert(!parse_stack_.empty() && "tried to read current_term from an empty parse stack");
     return parse_stack_.back();
+}
+
+Maps::Precedence TermedExpressionParser::peek_precedence() const {
+    assert(peek()->expression_type == ExpressionType::operator_ref && 
+        "TermedExpressionParser::peek_precedence called with not an operator on top of the stack");
+
+    assert(peek()->reference_value()->is_binary_operator() && 
+        "TermedExpressionParser::peek_precedence encountered an operator ref that was not a binary operator");
+
+    return (*peek()->reference_value()->operator_props)->precedence;
 }
 
 
@@ -187,7 +197,7 @@ void TermedExpressionParser::initial_identifier_state() {
     if (current_term()->type->arity() == 0) {
         switch (peek()->expression_type) {
             case ExpressionType::operator_ref:
-                precedence_stack_.push_back(peek()->type->precedence());
+                precedence_stack_.push_back(peek_precedence());
                 shift();
                 return post_binary_operator_state();                
 
@@ -209,7 +219,7 @@ void TermedExpressionParser::initial_identifier_state() {
             return call_expression_state();
 
         case ExpressionType::operator_ref:
-            precedence_stack_.push_back(peek()->type->precedence());
+            precedence_stack_.push_back(peek_precedence());
             shift();
             return post_binary_operator_state();
 
@@ -229,7 +239,7 @@ void TermedExpressionParser::initial_value_state() {
             return initial_value_state();
 
         case ExpressionType::operator_ref:
-            precedence_stack_.push_back(peek()->type->precedence());
+            precedence_stack_.push_back(peek_precedence());
             shift();
             return post_binary_operator_state();
 
@@ -362,13 +372,15 @@ void TermedExpressionParser::compare_precedence_state() {
     }
 
     // precedence goes down => one or more "closing parenthesis" required
-    if (precedence_stack_.back() > peek()->type->precedence()) {
+    Precedence next_precedence = peek_precedence();
+
+    if (precedence_stack_.back() > next_precedence) {
         reduce_operator_left();
         precedence_stack_.pop_back();
         
         // if there's an "intermediate level" or operators, we need to handle those before returning
-        if (precedence_stack_.back() < peek()->type->precedence()) {
-            precedence_stack_.push_back(peek()->type->precedence());
+        if (precedence_stack_.back() < next_precedence) {
+            precedence_stack_.push_back(next_precedence);
             shift();
             return post_binary_operator_state();
         }
@@ -380,7 +392,7 @@ void TermedExpressionParser::compare_precedence_state() {
     assert(peek()->expression_type == ExpressionType::operator_ref
         && "compare_precedence_state called with not an operator ref next");
 
-    if (precedence_stack_.back() == peek()->type->precedence()) { // !!!: assuming left-associativity
+    if (precedence_stack_.back() == next_precedence) { // !!!: assuming left-associativity
         // if the precedence stays the same, just reduce and carry on
         reduce_operator_left();
         shift();
@@ -389,9 +401,9 @@ void TermedExpressionParser::compare_precedence_state() {
 
     // if the precedence goes up, push it into the stack and run post_binary_op_state with the new precedence stack
     // once it returns, there should be a nice reduced rhs on the parse_stack_
-    if (precedence_stack_.back() < peek()->type->precedence()) {
+    if (precedence_stack_.back() < next_precedence) {
         unsigned int previous_precedence = precedence_stack_.back();
-        precedence_stack_.push_back(peek()->type->precedence());
+        precedence_stack_.push_back(next_precedence);
         shift();
         post_binary_operator_state();
         assert(precedence_stack_.back() == previous_precedence 
@@ -404,7 +416,7 @@ void TermedExpressionParser::compare_precedence_state() {
             return;
         }
 
-        assert(peek()->type->precedence() >= precedence_stack_.back() 
+        assert(peek_precedence() >= precedence_stack_.back() 
             && "post_binary_operator_state didn't run until the end or a lover/equal precedence that the caller put on the precedence stack");
         
         // continue parsing

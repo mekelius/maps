@@ -11,32 +11,11 @@
 
 namespace Maps {
 
-constexpr unsigned int MAX_OPERATOR_PRECEDENCE = 1000;
-constexpr unsigned int MIN_OPERATOR_PRECEDENCE = 0;
-
 // class for booleans we may or may not know yet
 enum class DeferredBool {
     true_,
     false_,
     maybe,
-};
-
-enum class BinaryFixity {
-    prefix,
-    infix,
-    postfix,
-};
-
-enum class UnaryFixity {
-    prefix,
-    postfix,
-};
-
-enum class Associativity {
-    left,
-    right,
-    both,
-    none,
 };
 
 class FunctionTypeComplex;
@@ -75,10 +54,9 @@ public:
     std::string to_string() const;
 
     bool is_complex() const;
-    bool is_operator() const;
     bool is_function() const;
     unsigned int arity() const;
-    unsigned int precedence() const;
+
     FunctionTypeComplex* function_type() const {
         return std::get<std::unique_ptr<FunctionTypeComplex>>(complex).get();
     }
@@ -109,10 +87,6 @@ public:
 
     const Type* return_type;
     std::vector<const Type*> arg_types;
-    bool is_operator = false;
-    BinaryFixity fixity = BinaryFixity::prefix;
-    unsigned int precedence = 999;
-    Associativity associativity = Associativity::none;
     bool is_pure = false;
 
     // DO NOTE!: string representation is (currently) used as the basis for function overload specialization
@@ -130,9 +104,6 @@ public:
     }
 };
 inline bool operator==(const FunctionTypeComplex& lhs, const FunctionTypeComplex& rhs) {
-    if (lhs.is_operator != rhs.is_operator)
-        return false;
-
     if (lhs.return_type != rhs.return_type)
         return false;
 
@@ -156,28 +127,15 @@ public:
 
     const Type* get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
         bool pure = true);
-    const Type* get_unary_operator_type(const Type& arg_type, const Type& return_type, 
-        UnaryFixity fixity = UnaryFixity::prefix, bool pure = true);
-    const Type* get_binary_operator_type(const Type& return_type, const Type& lhs, const Type& rhs, 
-        unsigned int precedence, Associativity associativity = Associativity::left, bool pure = true);
 
     const Type* create_opaque_alias(std::string name, const Type* type);
     const Type* create_transparent_alias(std::string name, const Type* type);
 
     Type::HashableSignature make_function_signature(const Type& return_type, const std::vector<const Type*>& arg_types, 
         bool is_pure = true) const;
-    Type::HashableSignature make_unary_operator_signature(const Type& arg_type, const Type& return_type, 
-        bool is_pure = true) const;
-    Type::HashableSignature make_binary_operator_signature(const Type& return_type, const Type& lhs, const Type& rhs, 
-        bool is_pure = true) const;
 
     const Type* create_function_type(const Type::HashableSignature& signature, const Type& return_type, 
         const std::vector<const Type*>& arg_types, bool is_pure = true);
-    const Type* create_unary_operator_type(const Type::HashableSignature& signature, const Type& arg_type, 
-        const Type& return_type, UnaryFixity fixity = UnaryFixity::prefix, bool is_pure = true);
-    const Type* create_binary_operator_type(const Type::HashableSignature& signature, const Type& return_type, 
-        const Type& lhs, const Type& rhs, unsigned int precedence, Associativity associativity = Associativity::left,
-        bool is_pure = true);
 
 private:
     Type::ID get_id() {

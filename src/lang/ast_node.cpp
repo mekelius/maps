@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "words.hh"
+
 namespace Maps {
 
 // ----- EXPRESSION -----
@@ -65,7 +67,7 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
             value = Let{};
             break;
         case StatementType::operator_s:
-            value = Operator{};
+            value = OperatorStatementValue{};
             break;
         case StatementType::assignment:
             break;          
@@ -147,6 +149,24 @@ void Callable::set_type(const Type& type) {
         default:
             assert(false && "unhandled CallableBody in CallableBody::set_type");
     }
+}
+
+bool Callable::is_operator() const {
+    return static_cast<bool>(operator_props);
+}
+
+bool Callable::is_binary_operator() const {
+    if (!is_operator())
+        return false;
+
+    return (*operator_props)->is_binary();
+}
+
+bool Callable::is_unary_operator() const {
+    if (!is_operator())
+        return false;
+
+    return (*operator_props)->is_unary();
 }
 
 } // namespace AST

@@ -3,26 +3,29 @@
 #include "../src/lang/type.hh"
 #include "../src/lang/ast.hh"
 
-using Maps::Expression, Maps::ExpressionType, Maps::Callable, Maps::BuiltinType;
+using Maps::Expression, Maps::ExpressionType, Maps::Callable;
 
 TEST_CASE("Callables should pass their type correctly") {
     const unsigned int PRECEDENCE = 756;
     Maps::AST ast{};
     
-    Maps::Callable* op = ast.create_builtin(BuiltinType::builtin_operator, "*", 
-        *ast.types_->get_binary_operator_type(Maps::Void, Maps::Number, Maps::Number, PRECEDENCE));
+    Maps::Callable* op = ast.create_builtin_binary_operator("*", 
+        *ast.types_->get_function_type(Maps::Void, {&Maps::Number, &Maps::Number}), PRECEDENCE);
 
-    CHECK(op->get_type()->precedence() == PRECEDENCE);
+    CHECK(op->is_binary_operator());
+    CHECK((*op->operator_props)->precedence == PRECEDENCE);
 }
 
 TEST_CASE("Operator_ref:s should pass their type correctly") {
     const unsigned int PRECEDENCE = 243;
     Maps::AST ast{};
     
-    Maps::Callable* op = ast.create_builtin(BuiltinType::builtin_operator, "*", 
-        *ast.types_->get_binary_operator_type(Maps::Void, Maps::Number, Maps::Number, PRECEDENCE));
+    Maps::Callable* op = ast.create_builtin_binary_operator("*", 
+        *ast.types_->get_function_type(Maps::Void, {&Maps::Number, &Maps::Number}), PRECEDENCE);
 
     Maps::Expression* op_ref = ast.create_operator_ref(op, {0,0});
+
+    CHECK(op_ref->reference_value()->is_binary_operator());
     
-    CHECK(op_ref->type->precedence() == PRECEDENCE);
+    CHECK((*op_ref->reference_value()->operator_props)->precedence == PRECEDENCE);
 }

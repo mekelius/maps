@@ -34,16 +34,21 @@ std::optional<Callable*> Scope::create_callable(const std::string& name, SourceL
     return create_callable(name, std::monostate{}, location);
 }
 
+// quite messy
 std::optional<Callable*> Scope::create_binary_operator(const std::string& name, CallableBody body, 
-    unsigned int precedence, Associativity associativity, SourceLocation location) {
+    Precedence precedence, Associativity associativity, SourceLocation location) {
 
     if (identifier_exists(name))
         return std::nullopt;
 
-    const Type* type = ast_->types_->get_binary_operator_type(Hole, Hole, Hole, precedence, associativity);
-
+    auto operator_props = ast_->create_operator({UnaryFixity::none, BinaryFixity::infix, 
+        precedence, associativity, location});
+    const Type* type = ast_->types_->get_function_type(Hole, {&Hole, &Hole});
+    
     Callable* callable = *create_callable(name, body, location);
-    // !!! this is pretty hacky
+    callable->operator_props = operator_props;
+
+    // !!!
     callable->set_type(*type);
 
     return callable;
@@ -55,10 +60,14 @@ std::optional<Callable*> Scope::create_unary_operator(const std::string& name, C
     if (identifier_exists(name))
         return std::nullopt;
 
-    const Type* type = ast_->types_->get_unary_operator_type(Hole, Hole, fixity);
+    // TODO: use named identifiers
+    auto operator_props = ast_->create_operator({fixity, BinaryFixity::none, 0, Associativity::left,location});
+    const Type* type = ast_->types_->get_function_type(Hole, {&Hole});
     
     Callable* callable = *create_callable(name, body, location);
-    // !!! this is pretty hacky
+    callable->operator_props = operator_props;
+    
+    // !!!
     callable->set_type(*type);
 
     return callable;
