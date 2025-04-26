@@ -51,10 +51,14 @@ public:
     const Type* get_type() const;
     void set_type(const Type& type);
 
+    std::optional<const Type*> get_declared_type() const;
+    bool set_declared_type(const Type& type);
+
     // checks if the name is an operator style name
     bool is_operator() const;
     bool is_binary_operator() const;
     bool is_unary_operator() const;
+
 private:
     std::optional<const Type*> type_;
 };
@@ -66,6 +70,8 @@ private:
 enum class ExpressionType {
     string_literal = 0,             // value: string
     numeric_literal,
+
+    value,
     
     identifier,                     // value: string
     operator_identifier,
@@ -82,7 +88,6 @@ enum class ExpressionType {
     type_constructor_reference,
 
     termed_expression,      // value: std::vector<Expression*>
-    empty,
     
     syntax_error,           // value: std::string
     not_implemented,
@@ -114,7 +119,10 @@ using ExpressionValue = std::variant<
     Callable*,                       // for references to operators and functions
     const Type*,                     // for type expressions
     TypeArgument,
-    TypeConstruct
+    TypeConstruct,
+    int,
+    double,
+    bool
 >;
 
 struct Expression {
@@ -156,6 +164,13 @@ struct Expression {
             rhs.value
         );
     }
+
+    bool is_literal() const;
+    bool is_illegal() const;
+    bool is_reference() const;
+    bool is_identifier() const;
+    bool is_ok_in_layer2() const;
+    bool is_ok_in_codegen() const;
 };
 
 // ----- STATEMENTS -----

@@ -135,9 +135,6 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
                 ostream << "/*unresolved identifier:*/ ";
             return ostream << expression->string_value();
 
-        case Maps::ExpressionType::empty:
-            return ostream << "(/*empty expression*/)";
-
         case Maps::ExpressionType::syntax_error:
             return ostream << "@SYNTAX ERROR@";
 

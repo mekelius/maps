@@ -6,6 +6,8 @@
 #include <memory>
 #include <optional>
 
+#include <cassert>
+
 #include "type.hh"
 #include "type_defs.hh"
 #include "ast_node.hh"
@@ -13,11 +15,12 @@
 
 namespace Maps {
 
-// template<class T>
-// concept AST_Visitor = requires(T t) {
-//     {t.visit_expression()} -> bool;
-//     {t.visit_statement()} -> bool;
-// };
+template<class T>
+concept AST_Visitor = requires(T t) {
+    {t.visit_expression(std::declval<Expression*>())};
+    {t.visit_statement(std::declval<Statement*>())};
+    {t.visit_callable(std::declval<Callable*>())};
+};
 
 class AST {
 public:
@@ -25,8 +28,15 @@ public:
     void set_root(CallableBody root);
     void declare_invalid() { is_valid = false; };
 
-    // template<Visitor T>
-    // bool visit_nodes(T);
+    template<AST_Visitor T>
+    void visit_nodes(T visitor);
+
+    template<AST_Visitor T>
+    void walk_expression(T visitor, Expression* expression);
+    template<AST_Visitor T>
+    void walk_statement(T visitor, Statement* statement);
+    template<AST_Visitor T>
+    void walk_callable(T visitor, Callable* callable);
 
     // ----- CREATING (AND DELETING) EXPRESSIONS -----
     Expression* create_string_literal(const std::string& value, SourceLocation location);
@@ -99,6 +109,78 @@ private:
     std::vector<std::unique_ptr<Callable>> callables_ = {};
     std::vector<std::unique_ptr<Operator>> operators_ = {};
 };
+
+template<AST_Visitor T>
+void AST::walk_expression(T visitor, Expression* expression) {
+    visitor.visit_expression(expression);
+
+    switch (expression->expression_type) {
+        case ExpressionType::call:
+            // can't visit the call target cause would get into infinite loops
+            // !!! TODO: visit lambdas somehow
+            for (Expression* arg: std::get<1>(expression->call_value()))
+                walk_expression(visitor, arg);
+            return;
+
+        case ExpressionType::termed_expression:
+            for (Expression* sub_expression: expression->terms())
+                walk_expression(visitor, sub_expression);
+            return;
+
+        case ExpressionType::type_construct:
+        case ExpressionType::type_argument:
+            assert(false && "not implemented");
+            return;
+        
+        default:
+            return;
+    }
+}
+
+template<AST_Visitor T>
+void AST::walk_statement(T visitor, Statement* statement) {
+    visitor.visit_statement(statement);
+
+    switch (statement->statement_type) {
+        case StatementType::assignment:
+        case StatementType::expression_statement:
+        case StatementType::return_:
+            walk_expression(visitor, get<Expression*>(statement->value));
+            return;
+        
+        case StatementType::block:
+            for (Statement* sub_statement: get<Block>(statement->value))
+                walk_statement(visitor, sub_statement);
+            return;
+
+        case StatementType::let:
+            assert(false && "not implemented");
+
+        case StatementType::operator_s:
+        default:
+            return;
+    }
+}
+
+template<AST_Visitor T>
+void AST::walk_callable(T visitor, Callable* callable) {
+    visitor.visit_callable(callable);
+
+    if (Expression* const* expression = get_if<Expression*>(&callable->body)) {
+        walk_expression(visitor, *expression);
+    } else if (Statement* const* statement = get_if<Statement*>(&callable->body)) {
+        walk_statement(visitor, *statement);
+    }
+}
+
+template<AST_Visitor T>
+void AST::visit_nodes(T visitor) {
+    for (auto [_1, callable]: globals_->identifiers_) {
+        walk_callable(visitor, callable);
+    }
+
+    walk_callable(visitor, root_);
+}
 
 } // namespace Maps
 

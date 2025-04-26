@@ -45,6 +45,8 @@ public:
     std::vector<std::pair<std::string, Callable*>> identifiers_in_order_ = {};
 
 private:
+    friend AST;
+
     std::unordered_map<std::string, Callable*> identifiers_;
     AST* ast_;
 };

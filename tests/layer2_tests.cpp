@@ -92,14 +92,6 @@ TEST_CASE("Maps::TermedExpressionParser should replace a single value term with 
     }
 }
 
-TEST_CASE("Maps::TermedExpressionParser should replace an empty termed expression with ExpressionType::empty") {
-    Maps::AST ast{};
-    Expression* expr = ast.create_termed_expression({}, {0,0});
-    Maps::TermedExpressionParser{&ast, expr}.run();
-
-    CHECK(expr->expression_type == ExpressionType::empty);
-}
-
 TEST_CASE("Maps::TermedExpressionParser should handle binop expressions") {
     Maps::AST ast{};
     Expression* expr = ast.create_termed_expression({}, {0,0});

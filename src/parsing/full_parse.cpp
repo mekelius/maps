@@ -6,11 +6,12 @@
 #include "parser_layer2.hh"
 #include "name_resolution.hh"
 #include "lexer.hh"
+#include "type_inference.hh"
 
-using std::tuple, std::unique_ptr;
+using std::tuple, std::unique_ptr, std::make_optional, std::nullopt;
 using Pragma::Pragmas, Maps::ParserLayer1, Maps::ParserLayer2;
 
-tuple<unique_ptr<Maps::AST>, unique_ptr<Pragmas>> parse_source(std::istream& source_is, bool in_repl) {    
+std::optional<tuple<unique_ptr<Maps::AST>, unique_ptr<Pragmas>>> parse_source(std::istream& source_is, bool in_repl) {    
     std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
     
     Lexer lexer{&source_is};
@@ -19,5 +20,8 @@ tuple<unique_ptr<Maps::AST>, unique_ptr<Pragmas>> parse_source(std::istream& sou
     resolve_identifiers(*ast);
     ParserLayer2{ast.get(), pragmas.get()}.run();
 
-    return {std::move(ast), std::move(pragmas)};
+    if (!Maps::SimpleTypeChecker{}.run(*ast))
+        return nullopt;
+
+    return make_optional(tuple{std::move(ast), std::move(pragmas)});
 }

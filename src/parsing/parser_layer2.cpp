@@ -4,6 +4,7 @@
 
 #include "parser_layer2.hh"
 #include "name_resolution.hh"
+#include "../lang/casts.hh"
 
 using Logging::log_error, Logging::log_info;
 
@@ -11,10 +12,10 @@ namespace Maps {
 
 // Expression types that are not allowed here
 // NOTE: Empty is allowed at top-level
-#define BAD_TERM ExpressionType::identifier: case ExpressionType::type_identifier: case ExpressionType::operator_identifier: case ExpressionType::type_operator_identifier: case ExpressionType::deleted: case ExpressionType::missing_arg: case ExpressionType::syntax_error: case ExpressionType::not_implemented: case ExpressionType::empty
+#define BAD_TERM ExpressionType::identifier: case ExpressionType::type_identifier: case ExpressionType::operator_identifier: case ExpressionType::type_operator_identifier: case ExpressionType::deleted: case ExpressionType::missing_arg: case ExpressionType::syntax_error: case ExpressionType::not_implemented
 
 // Expression types guaranteed to be simple values
-#define GUARANTEED_VALUE ExpressionType::string_literal: case ExpressionType::numeric_literal
+#define GUARANTEED_VALUE ExpressionType::string_literal: case ExpressionType::numeric_literal: case ExpressionType::value
 
 #define POTENTIAL_FUNCTION ExpressionType::call: case ExpressionType::reference: case ExpressionType::termed_expression
 
@@ -117,9 +118,9 @@ bool is_value_literal(Expression* expression) {
 
 Expression* TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
-        log_error(expression_->location, "layer2 tried to parse an empty expresison");
+        log_error(expression_->location, "layer2 tried to parse an empty expression");
         ast_->declare_invalid();
-        return ast_->create_valueless_expression(ExpressionType::empty, expression_->location);
+        return ast_->create_valueless_expression(ExpressionType::syntax_error, expression_->location);
     }
 
     // safe to unwrap because at_expression_end was checked above
@@ -135,8 +136,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             break;
 
         case ExpressionType::call:
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
+        case GUARANTEED_VALUE:
             shift();
             initial_value_state();
             break;
@@ -491,19 +491,28 @@ void TermedExpressionParser::initial_type_reference_state() {
         case GUARANTEED_VALUE:
         case ExpressionType::call: {
             auto type_term = *pop_term();
+            assert(std::holds_alternative<const Type*>(type_term->value) && "no type");
+            auto type_value = std::get<const Type*>(type_term->value);
+            ast_->delete_expression(type_term);
+
+            shift();
+            static_cast_(current_term(), type_value);
+            // current_term()->declared_type = get<const Type*>(type_value);
+            current_term()->location = type_term->location;
+            return initial_value_state();
+        }
+
+        case ExpressionType::reference: {
+            auto type_term = *pop_term();
             auto type_value = type_term->value;
+            ast_->delete_expression(type_term);
             
             assert(std::holds_alternative<const Type*>(type_value) && "no type");
             shift();
             current_term()->declared_type = get<const Type*>(type_value);
             current_term()->location = type_term->location;
-            return initial_value_state();
-        }
-
-        case ExpressionType::reference:
-            peek()->declared_type = get<const Type*>((*pop_term())->value);
-            shift();
-            return initial_reference_state();            
+            return initial_reference_state(); 
+        }           
         case ExpressionType::operator_reference:
             
         case ExpressionType::termed_expression:

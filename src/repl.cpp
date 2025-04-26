@@ -54,7 +54,7 @@ bool JIT_Manager::compile_and_run(const std::string& name, std::unique_ptr<llvm:
         return false;
     }
 
-    // excecute the compiled function
+    // execute the compiled function
     auto *f1_ptr = f1_sym->toPtr<void(*)()>();
     f1_ptr();
 
@@ -99,10 +99,17 @@ void REPL::run() {
         
         unique_ptr<Maps::AST> ast;
         std::stringstream input_s{input};
-        std::tie(ast, pragmas_) = parse_source(input_s, true);
+        auto result = parse_source(input_s, true);
+        if (!result) {
+            Logging::log_error("parsing failed");
+            continue;
+        }
+
+        std::tie(ast, pragmas_) = std::move(*result);
 
         if (!ast->is_valid) {
             Logging::log_error("parsing failed");
+            continue;
         }
 
         if (options_.print_reverse_parse) {
@@ -134,6 +141,7 @@ void REPL::eval(const Maps::AST& ast) {
 
     if (options_.eval) {
         jit_->compile_and_run(static_cast<std::string>(IR::REPL_WRAPPER_NAME), std::move(module_));
+        std::cout << std::endl;
     }
 }
     

@@ -32,6 +32,7 @@ add_library(parsing OBJECT
     src/lang/scope.cpp
     src/lang/pragma.cpp
     src/lang/builtins.cpp
+    src/lang/casts.cpp
     src/parsing/token.cpp
     src/parsing/lexer.cpp
     src/parsing/parser_layer1.cpp

@@ -12,7 +12,6 @@ using namespace Maps;
 
 
 TEST_CASE("Should parse a numberliteral with the correct type") {
-    std::stringstream source{"let x = Int 34"};
     AST ast{};
     auto expr = ast.create_termed_expression({
         ast.create_type_reference(&Int, {0,0}),
@@ -26,10 +25,14 @@ TEST_CASE("Should parse a numberliteral with the correct type") {
     CHECK(**expr->declared_type == Int);
 }
 
-TEST_CASE("Should parse a numberliteral with the correct type") {
+TEST_CASE("Integration test: parse_source should parse a numberliteral with the correct type") {
     std::stringstream source{"let x = Int 34"};
     
-    auto [ast, _1] = parse_source(source, false);
+    auto result = parse_source(source, false);
+
+    CHECK(result);
+
+    auto [ast, _1] = std::move(*result);
 
     CHECK(ast->globals_->identifier_exists("x"));
 

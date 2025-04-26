@@ -2,7 +2,10 @@
 
 #include <cassert>
 
+#include "../logging.hh"
 #include "words.hh"
+
+using Logging::log_error;
 
 namespace Maps {
 
@@ -45,6 +48,73 @@ const std::string& Expression::string_value() const {
         return std::get<Callable*>(value)->name;
     }
     return std::get<std::string>(value);
+}
+
+bool Expression::is_literal() const {
+    switch (expression_type) {
+        case ExpressionType::numeric_literal:
+        case ExpressionType::string_literal:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool Expression::is_illegal() const {
+    switch (expression_type) {
+        case ExpressionType::deleted:
+        case ExpressionType::not_implemented:
+        case ExpressionType::syntax_error:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool Expression::is_reference() const {
+    switch (expression_type) {
+        case ExpressionType::reference:
+        case ExpressionType::type_reference:
+        case ExpressionType::operator_reference:
+        case ExpressionType::type_operator_reference:
+        case ExpressionType::type_constructor_reference:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool Expression::is_identifier() const {
+    switch (expression_type) {
+        case ExpressionType::identifier:
+        case ExpressionType::type_identifier:
+        case ExpressionType::operator_identifier:
+        case ExpressionType::type_operator_identifier:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool Expression::is_ok_in_layer2() const {
+    return (!is_identifier() && !is_illegal());
+}
+
+bool Expression::is_ok_in_codegen() const {
+    switch (expression_type) {
+        case ExpressionType::reference:
+        case ExpressionType::call:
+        case ExpressionType::string_literal:
+        case ExpressionType::numeric_literal:
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 Statement::Statement(StatementType statement_type, SourceLocation location)
@@ -149,6 +219,48 @@ void Callable::set_type(const Type& type) {
         default:
             assert(false && "unhandled CallableBody in CallableBody::set_type");
     }
+}
+
+std::optional<const Type*> Callable::get_declared_type() const {
+    if (Expression* const* expression = std::get_if<Expression*>(&body)) {
+        return (*expression)->declared_type;
+
+    } else if (Statement* const* statement = std::get_if<Statement*>(&body)) {
+        if ((*statement)->statement_type == StatementType::expression_statement)
+            return std::get<Expression*>((*statement)->value)->declared_type;
+
+        return declared_type;
+
+    } else if (Builtin* const* builtin = std::get_if<Builtin*>(&body)) {
+        return (*builtin)->type;
+    }
+
+    assert(false && "unhandled callable type in Callable::get_declared_type");
+    return std::nullopt;
+}
+
+bool Callable::set_declared_type(const Type& type) {
+    if (Expression* const* expression = std::get_if<Expression*>(&body)) {
+        (*expression)->declared_type = &type;
+        return true;
+
+    } else if (Statement* const* statement = std::get_if<Statement*>(&body)) {
+        if ((*statement)->statement_type == StatementType::expression_statement) {
+            auto expression = std::get<Expression*>((*statement)->value);
+            expression->declared_type = &type;
+            return true;
+        }
+
+        declared_type = &type;
+        return true;
+
+    } else if (Builtin* const* builtin = std::get_if<Builtin*>(&body)) {
+        log_error("tried to set the declared type on a builtin");
+        assert(false && "tried to set the declared type on a builtin");
+        return false;
+    }
+
+    return false;
 }
 
 bool Callable::is_operator() const {

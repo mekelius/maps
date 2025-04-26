@@ -236,14 +236,6 @@ optional<llvm::Function*> IR_Generator::handle_top_level_execution(bool in_repl)
     }
     
     if (Statement* const * statement = get_if<Statement*>(&ast_->root_->body)) {
-        // auto str = builder_->CreateGlobalString("asd");
-
-        // auto print = get_function("print");
-
-        // builder_->CreateCall(*print, str);
-        // builder_->CreateRetVoid();
-        // return top_level_function;
-
         switch ((*statement)->statement_type) {
             case StatementType::block:
                 handle_block(**statement, true);
@@ -311,13 +303,14 @@ bool IR_Generator::handle_statement(const Statement& statement) {
         case StatementType::return_: {
             optional<llvm::Value*> value = handle_expression(*get<Expression*>(statement.value));
             if (!value)
-                fail("Missing value while createing return statement");
+                fail("Missing value while creating return statement");
             return builder_->CreateRet(*value);
         }
 
         case StatementType::let:
         case StatementType::assignment:
             assert(false && "not implemented");
+            return false;
 
         case IGNORED_STATEMENT_TYPE:
             return false;
@@ -388,29 +381,15 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
     switch (expression.expression_type) {
         case ExpressionType::call:
             return handle_call(expression);
-            break;
+
+        case ExpressionType::value:
+            return handle_value(expression);
 
         case ExpressionType::string_literal:
             return handle_string_literal(expression);
-            break;
 
         case ExpressionType::numeric_literal:
             return convert_numeric_literal(expression);
-            break;
-
-        // case ExpressionType::native_operator:
-        //     handle_native_operator(expression);
-        //     break;
-
-        // case ExpressionType::function_body:
-        //     *errs_ << "error during codegen: encountered function_body without a callable wrapper\n";
-        //     has_failed_ = true;
-        //     return nullptr;
-
-        // case ExpressionType::callable_expression:
-        //     *errs_ << "error during codegen: encountered callable_expression\n";
-        //     has_failed_ = true;
-        //     return nullptr;
 
         default:
             *errs_ << "error during codegen: encountered unhandled expression type\n";
@@ -441,13 +420,6 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callabl
 
     if (!function)
         return nullopt;
-
-    // if (AST::Statement** statement = std::get_if<AST::Statement*>(&callable.body)) {
-    //     return handle_statement(**statement);
-    // }
-    // if (Expression** expression = std::get_if<Expression*>(&callable.body)) {
-    //     return handle_expression(**expression);
-    // }
     
     return function;
 }
@@ -476,6 +448,19 @@ llvm::Value* IR_Generator::handle_call(const Expression& expression) {
 
 llvm::GlobalVariable* IR_Generator::handle_string_literal(const Expression& expression) {
     return builder_->CreateGlobalString(expression.string_value());
+}
+
+llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
+    // TODO: make typeids known at compile time so this can be a switch
+    if (*expression.type == Maps::Int) {
+        assert(std::holds_alternative<int>(expression.value) && "type on expression didn't match value");
+        return llvm::ConstantInt::get(*context_, llvm::APInt(64, std::get<int>(expression.value), true));
+    // } else if (*expression.type == Maps::String) {
+
+    } else {
+        assert(false && "type not implemented in IR_Generator::handle_value");
+        return nullptr;
+    }
 }
 
 void IR_Generator::fail(const std::string& message) {

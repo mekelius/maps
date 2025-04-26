@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 void print_Boolean(bool b) {
-    puts(b ? "true" : "false");
+    printf("%s", b ? "true" : "false");
 }
 
 void print_Int(int i) {
@@ -11,7 +11,7 @@ void print_Int(int i) {
 }
 
 void print_String(const char* str) {
-    puts(str);
+    printf("%s", str);
 }
 
 void print_Float(double d) {

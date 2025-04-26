@@ -7,11 +7,12 @@
 
 #include <tuple>
 #include <memory>
+#include <optional>
 
 #include "../lang/ast.hh"
 #include "../lang/pragma.hh"
 
-std::tuple<std::unique_ptr<Maps::AST>, std::unique_ptr<Pragma::Pragmas>>
+std::optional<std::tuple<std::unique_ptr<Maps::AST>, std::unique_ptr<Pragma::Pragmas>>>
     parse_source(std::istream& source_is, bool in_repl = false);
 
 #endif

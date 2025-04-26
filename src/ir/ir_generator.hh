@@ -76,6 +76,7 @@ private:
 
     llvm::Value* handle_call(const Maps::Expression& call);
     llvm::GlobalVariable* handle_string_literal(const Maps::Expression& str);
+    llvm::Value* handle_value(const Maps::Expression& expression);
     
     void fail(const std::string& message);
 
