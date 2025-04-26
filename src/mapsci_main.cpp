@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
         } else if (arg == "-e" || arg == "--everything") {
             Logging::Settings::set_loglevel(LogLevel::everything);
 
-        } else if (arg == "--ir" || "--print-ir" || "--dump-ir") {
+        } else if (arg == "--ir" || arg == "--print-ir" || arg == "--dump-ir") {
             repl_options.print_ir = true;
 
         } else if(arg == "--no-eval") {

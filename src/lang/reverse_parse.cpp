@@ -118,8 +118,11 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
             return ostream << std::get<std::string>(expression->value);
         
         case Maps::ExpressionType::reference:
+        case Maps::ExpressionType::type_reference:
+        case Maps::ExpressionType::type_operator_reference:
+        case Maps::ExpressionType::type_constructor_reference:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
-                ostream << "/*identifier:*/ ";
+                ostream << "/*reference to:*/ ";
             return ostream << expression->reference_value()->name;
 
         case Maps::ExpressionType::not_implemented:
@@ -130,6 +133,12 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
                 ostream << "/*unresolved identifier:*/ ";
             return ostream << std::get<std::string>(expression->value);
             
+        case Maps::ExpressionType::value:
+            if (*expression->type == Maps::Int)
+                return ostream << std::get<int>(expression->value);
+
+        case Maps::ExpressionType::type_identifier:
+        case Maps::ExpressionType::type_operator_identifier:
         case Maps::ExpressionType::operator_identifier:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
                 ostream << "/*unresolved identifier:*/ ";
@@ -138,6 +147,14 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
         case Maps::ExpressionType::syntax_error:
             return ostream << "@SYNTAX ERROR@";
 
+        case Maps::ExpressionType::type_construct:
+            return ostream << "@type construct reverse parsing not implemented@";
+
+        case Maps::ExpressionType::type_argument: {
+            auto [arg, name] = std::get<Maps::TypeArgument>(expression->value);
+            return ostream << arg << " " << (name ? *name : ""); 
+        }
+            
         case Maps::ExpressionType::call: {
             auto [callee, args] = expression->call_value();
 
@@ -165,8 +182,12 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
 
             return ostream << ')';
         }
-        default:
-            return ostream << "Expression type not implemented in reverse parser:" << static_cast<int>(expression->expression_type);
+
+        case Maps::ExpressionType::deleted:
+            return ostream << "@deleted expression@";
+
+        case Maps::ExpressionType::missing_arg:
+            return ostream << "@missing arg@";
     }
 }
 

@@ -13,6 +13,6 @@
 #include "../lang/pragma.hh"
 
 std::optional<std::tuple<std::unique_ptr<Maps::AST>, std::unique_ptr<Pragma::Pragmas>>>
-    parse_source(std::istream& source_is, bool in_repl = false);
+    parse_source(std::istream& source_is, bool in_repl = false, bool ignore_errors = false);
 
 #endif

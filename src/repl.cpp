@@ -99,23 +99,26 @@ void REPL::run() {
         
         unique_ptr<Maps::AST> ast;
         std::stringstream input_s{input};
-        auto result = parse_source(input_s, true);
+        auto result = parse_source(input_s, true, true);
+        
         if (!result) {
+            // this shouldn't happen since we told parse_source to ignore error
+            // better to be safe tho
             Logging::log_error("parsing failed");
             continue;
         }
 
         std::tie(ast, pragmas_) = std::move(*result);
 
-        if (!ast->is_valid) {
-            Logging::log_error("parsing failed");
-            continue;
-        }
-
         if (options_.print_reverse_parse) {
             std::cout << "parsed into:\n";
             reverse_parse(*ast, std::cout);           
             std::cout << "\n" << std::endl;
+        }
+
+        if (!ast->is_valid) {
+            Logging::log_error("parsing failed");
+            continue;
         }
 
         if (ast->is_valid)
