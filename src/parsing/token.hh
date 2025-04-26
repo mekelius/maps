@@ -8,14 +8,16 @@
 
 enum class TokenType: int {
     eof,
-    identifier, type_identifier, operator_t,
+    identifier, type_identifier, 
+    operator_t, 
+    arrow_operator, // -> and =>
     number, string_literal,
     reserved_word,
     indent_block_start, indent_block_end, indent_error_fatal,
     curly_brace_open, curly_brace_close,
     parenthesis_open, parenthesis_close,
     bracket_open, bracket_close,
-    semicolon, comma, lambda,
+    semicolon, colon, double_colon, comma, lambda,
     tie,
     pragma,
     dummy,  // dummy token used to initialize token values

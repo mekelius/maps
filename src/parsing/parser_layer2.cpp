@@ -6,18 +6,19 @@
 #include "name_resolution.hh"
 
 using Logging::log_error, Logging::log_info;
-using Maps::ExpressionType, Maps::Expression, Maps::Precedence;
+
+namespace Maps {
 
 // Expression types that are not allowed here
 // NOTE: Empty is allowed at top-level
-#define BAD_TERM ExpressionType::identifier: case ExpressionType::operator_e: case ExpressionType::deleted: case ExpressionType::missing_arg: case ExpressionType::syntax_error: case ExpressionType::not_implemented: case ExpressionType::empty: case ExpressionType::tie
+#define BAD_TERM ExpressionType::identifier: case ExpressionType::type_identifier: case ExpressionType::operator_e: case ExpressionType::deleted: case ExpressionType::missing_arg: case ExpressionType::syntax_error: case ExpressionType::not_implemented: case ExpressionType::empty: case ExpressionType::tie
 
 // Expression types guaranteed to be simple values
 #define GUARANTEED_VALUE ExpressionType::string_literal: case ExpressionType::numeric_literal
 
 #define POTENTIAL_FUNCTION ExpressionType::call: case ExpressionType::reference: case ExpressionType::termed_expression
 
-ParserLayer2::ParserLayer2(Maps::AST* ast, Pragma::Pragmas* pragmas)
+ParserLayer2::ParserLayer2(AST* ast, Pragma::Pragmas* pragmas)
 : ast_(ast), pragmas_(pragmas) {
 }
 
@@ -36,9 +37,9 @@ void ParserLayer2::run() {
     }
 }
 
-TermedExpressionParser::TermedExpressionParser(Maps::AST* ast, Expression* expression)
+TermedExpressionParser::TermedExpressionParser(AST* ast, Expression* expression)
 :ast_(ast), expression_(expression) {
-    expression_terms_ = &std::get<Maps::TermedExpressionValue>(expression->value);
+    expression_terms_ = &std::get<TermedExpressionValue>(expression->value);
     next_term_it_ = expression_terms_->begin();    
 }
 
@@ -53,23 +54,23 @@ void TermedExpressionParser::run() {
 }
 
 Expression* TermedExpressionParser::get_term() {
-    Maps::Expression* current_term = *next_term_it_;
+    Expression* current_term = *next_term_it_;
     next_term_it_++;
     return current_term;
 }
 
-Maps::Expression* TermedExpressionParser::peek() const {
+Expression* TermedExpressionParser::peek() const {
     assert(next_term_it_ != expression_terms_->end() && "peek called with no termas left");
     return *next_term_it_;
 }
 
-Maps::Expression* TermedExpressionParser::current_term() const {
+Expression* TermedExpressionParser::current_term() const {
     assert(!parse_stack_.empty() && "tried to read current_term from an empty parse stack");
     return parse_stack_.back();
 }
 
-Maps::Precedence TermedExpressionParser::peek_precedence() const {
-    assert(peek()->expression_type == ExpressionType::operator_ref && 
+Precedence TermedExpressionParser::peek_precedence() const {
+    assert(peek()->expression_type == ExpressionType::operator_reference && 
         "TermedExpressionParser::peek_precedence called with not an operator on top of the stack");
 
     assert(peek()->reference_value()->is_binary_operator() && 
@@ -83,7 +84,7 @@ void TermedExpressionParser::shift() {
     parse_stack_.push_back(get_term());
 }
 
-std::optional<Maps::Expression*> TermedExpressionParser::pop_term() {
+std::optional<Expression*> TermedExpressionParser::pop_term() {
     if (parse_stack_.size() == 0)
         return std::nullopt;
 
@@ -118,7 +119,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
         log_error(expression_->location, "layer2 tried to parse an empty expresison");
         ast_->declare_invalid();
-        return ast_->create_valueless_expression(Maps::ExpressionType::empty, expression_->location);
+        return ast_->create_valueless_expression(ExpressionType::empty, expression_->location);
     }
 
     // safe to unwrap because at_expression_end was checked above
@@ -140,9 +141,15 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             initial_value_state();
             break;
 
-        case ExpressionType::operator_ref:
+        case ExpressionType::operator_reference:
             shift();
             initial_operator_state();
+            break;
+
+        case ExpressionType::type_reference:
+        case ExpressionType::type_specifier:
+            shift();
+            type_specifier_state();
             break;
 
         case BAD_TERM:
@@ -175,7 +182,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
     return parse_stack_.back();
 }
 
-Maps::Expression* TermedExpressionParser::handle_termed_sub_expression(Maps::Expression* expression) {
+Expression* TermedExpressionParser::handle_termed_sub_expression(Expression* expression) {
     assert(expression->expression_type == ExpressionType::termed_expression 
         && "handle_sub_termed_expression called with non-termed expression");
 
@@ -196,7 +203,7 @@ void TermedExpressionParser::initial_identifier_state() {
     // i.e. the next term has to be an operator
     if (current_term()->type->arity() == 0) {
         switch (peek()->expression_type) {
-            case ExpressionType::operator_ref:
+            case ExpressionType::operator_reference:
                 precedence_stack_.push_back(peek_precedence());
                 shift();
                 return post_binary_operator_state();                
@@ -218,7 +225,7 @@ void TermedExpressionParser::initial_identifier_state() {
         case ExpressionType::call:
             return call_expression_state();
 
-        case ExpressionType::operator_ref:
+        case ExpressionType::operator_reference:
             precedence_stack_.push_back(peek_precedence());
             shift();
             return post_binary_operator_state();
@@ -238,7 +245,7 @@ void TermedExpressionParser::initial_value_state() {
             handle_termed_sub_expression(peek());
             return initial_value_state();
 
-        case ExpressionType::operator_ref:
+        case ExpressionType::operator_reference:
             precedence_stack_.push_back(peek_precedence());
             shift();
             return post_binary_operator_state();
@@ -270,7 +277,7 @@ void TermedExpressionParser::initial_operator_state() {
 
         case GUARANTEED_VALUE: {
             Expression* op = *pop_term();
-            Maps::Expression* rhs = get_term();
+            Expression* rhs = get_term();
 
 
             // if it's an unary operator, just apply and be done with it
@@ -285,10 +292,10 @@ void TermedExpressionParser::initial_operator_state() {
 
             // TODO: handle precedence here
             // it's a binary operator being partially applied
-            Maps::Expression* missing_argument = ast_->create_missing_argument(
+            Expression* missing_argument = ast_->create_missing_argument(
                 *op->type->function_type()->arg_types.at(0), op->location);
 
-            Maps::Expression* call = 
+            Expression* call = 
                 ast_->globals_->create_call_expression(
                     op->reference_value(), { missing_argument, rhs }, expression_->location);
             
@@ -297,7 +304,7 @@ void TermedExpressionParser::initial_operator_state() {
         }
 
         case ExpressionType::call:
-        case ExpressionType::operator_ref:
+        case ExpressionType::operator_reference:
         case ExpressionType::reference:
             assert(false && "not implemented");
 
@@ -325,7 +332,7 @@ void TermedExpressionParser::post_binary_operator_state() {
             handle_termed_sub_expression(peek());
             return post_binary_operator_state();
 
-        case ExpressionType::operator_ref:
+        case ExpressionType::operator_reference:
             // assert that it's unary
             break;
 
@@ -389,7 +396,7 @@ void TermedExpressionParser::compare_precedence_state() {
         return;
     }
 
-    assert(peek()->expression_type == ExpressionType::operator_ref
+    assert(peek()->expression_type == ExpressionType::operator_reference
         && "compare_precedence_state called with not an operator ref next");
 
     if (precedence_stack_.back() == next_precedence) { // !!!: assuming left-associativity
@@ -435,24 +442,34 @@ void TermedExpressionParser::reduce_operator_left() {
     Expression* lhs = *pop_term();
 
     // TODO: check types here
-    assert(std::holds_alternative<Maps::Callable*>(operator_->value) 
+    assert(std::holds_alternative<Callable*>(operator_->value) 
         && "TermedExpressionParser::reduce_operator_left called with a call stack where operator didn't hold a reference to a callable");
 
     Expression* reduced = ast_->globals_->create_call_expression(
-        std::get<Maps::Callable*>(operator_->value), {lhs, rhs}, lhs->location);
-    reduced->value = Maps::CallExpressionValue{std::get<Maps::Callable*>(operator_->value), std::vector<Maps::Expression*>{lhs, rhs}};
+        std::get<Callable*>(operator_->value), {lhs, rhs}, lhs->location);
+    reduced->value = CallExpressionValue{std::get<Callable*>(operator_->value), std::vector<Expression*>{lhs, rhs}};
 
     parse_stack_.push_back(reduced);
 }
 
-void TermedExpressionParser::unary_operators_state() {
+void TermedExpressionParser::type_specifier_state() {
+    assert(false && "not implemented");
+    
     if (at_expression_end()) {
-        return;
+        // try to reduce the specifier?
+        // return
     }
+
+    if (current_term()->expression_type == ExpressionType::type_reference) {
+
+    }
+
+    assert(current_term()->expression_type == ExpressionType::type_specifier && 
+        "TermedExpressionParser::type_specifier_state entered with not a type_specifier/type_reference on the stack");
 }
 
-bool TermedExpressionParser::is_acceptable_next_arg(Maps::Callable* callee, 
-    const std::vector<Maps::Expression*>& args, Maps::Expression* next_arg) {
+bool TermedExpressionParser::is_acceptable_next_arg(Callable* callee, 
+    const std::vector<Expression*>& args, Expression* next_arg) {
     if (args.size() >= callee->get_type()->arity())
         return false;
 
@@ -462,13 +479,13 @@ bool TermedExpressionParser::is_acceptable_next_arg(Maps::Callable* callee,
 
 // does it make sense to use different style of logic here?
 void TermedExpressionParser::call_expression_state() {
-    Maps::Expression* callee = *pop_term();
+    Expression* callee = *pop_term();
     
-    assert(callee->expression_type == Maps::ExpressionType::reference 
+    assert(callee->expression_type == ExpressionType::reference 
         && "TermedExpressionParser called with a callee that was not a reference");
     assert(callee->type->arity() > 0 && "call_expression_state cassed with arity 0");
 
-    std::vector<Maps::Expression*> args;
+    std::vector<Expression*> args;
     
     // parse args
     for (unsigned int i = 0; i < callee->type->arity(); i++) {
@@ -482,12 +499,12 @@ void TermedExpressionParser::call_expression_state() {
         }
     }
 
-    Maps::Expression* call_expression = ast_->globals_->create_call_expression(
-        std::get<Maps::Callable*>(callee->value), args, callee->location);
+    Expression* call_expression = ast_->globals_->create_call_expression(
+        std::get<Callable*>(callee->value), args, callee->location);
     
     // determine the type
     if (args.size() == callee->type->arity()) {
-        assert(std::holds_alternative<std::unique_ptr<Maps::FunctionTypeComplex>>(callee->type->complex) 
+        assert(std::holds_alternative<std::unique_ptr<FunctionTypeComplex>>(callee->type->complex) 
             && "non-function type callee in call_expression_state");
         call_expression->type = callee->type->function_type()->return_type;
     } else {
@@ -529,13 +546,13 @@ void TermedExpressionParser::partial_call_state() {
     return;
 }
 
-Expression* TermedExpressionParser::handle_arg_state(Maps::Callable* callee, const std::vector<Expression*>& args) { 
+Expression* TermedExpressionParser::handle_arg_state(Callable* callee, const std::vector<Expression*>& args) { 
     switch (current_term()->expression_type) {
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(current_term());
             return handle_arg_state(callee, args);
             
-        case ExpressionType::operator_ref:
+        case ExpressionType::operator_reference:
             // abort, partial application
             // might be unary
             // !!! we might need to switch to peeking, unless we want to reverse
@@ -557,3 +574,5 @@ Expression* TermedExpressionParser::handle_arg_state(Maps::Callable* callee, con
             return *pop_term();
     }
 }
+
+} // namespace Maps

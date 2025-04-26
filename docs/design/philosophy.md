@@ -1,4 +1,4 @@
-On abstractions
+## On abstractions
 1. (Correct) code using an abstraction should only need to change if the assumptions it makes about that abstraction become invalid
     - therefore these assumptions need to be documented with redundant symbols
     - This is the underlying idea of uniting pure functions and dictionaries into a common type.
@@ -8,7 +8,7 @@ On abstractions
 3. There should be elegant and non-tedious language for expressing performance assumptions. Performance assumptions becoming untrue shouldn't
    make the program invalid, but they should be found.
 
-General philosophy
+## General philosophy
 1. Simple ideas shouldn't be complex or tedious to express, this is a failure of language
 
 2. Warnings and errors should always point to the locations where the code was changed to cause them
@@ -23,7 +23,7 @@ General philosophy
 5. Differing notations are a space that can carry pragmatic meanings beyond program correctness, this is where we have space for elegant encoding of assumptions.
     - is this idea possible to apply to laziness?
 
-Compilation and structuring of code
+## Compilation and structuring of code
 1. Compiler can use the whole of the source code for inferences and optimizations. There's no such thing as an open world.
 
 2. Modularizing the code should be zero-cost.

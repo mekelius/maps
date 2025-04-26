@@ -27,8 +27,13 @@ Expression* AST::create_identifier_expression(const std::string& value, SourceLo
     unresolved_identifiers_and_operators.push_back(expression);
     return expression;
 }
+Expression* AST::create_type_identifier_expression(const std::string& value, SourceLocation location) {
+    Expression* expression = create_expression(ExpressionType::type_identifier, value, Hole, location);
+    unresolved_identifiers_and_operators.push_back(expression);
+    return expression;
+}
 Expression* AST::create_operator_expression(const std::string& value, SourceLocation location) {
-    Expression* expression = create_expression(ExpressionType::operator_e, value, Hole, location);
+    Expression* expression = create_expression(ExpressionType::operator_identifier, value, Hole, location);
     unresolved_identifiers_and_operators.push_back(expression);
     return expression;
 }
@@ -50,7 +55,7 @@ std::optional<Expression*> AST::create_operator_ref(const std::string& name, Sou
 Expression* AST::create_operator_ref(Callable* callable, SourceLocation location) {
     assert(callable->is_operator() && "AST::create_operator_ref called with not an operator");
 
-    return create_expression(ExpressionType::operator_ref, callable, *callable->get_type(), location);
+    return create_expression(ExpressionType::operator_reference, callable, *callable->get_type(), location);
 }
 
 // valueless expression types are tie, empty, syntax_error and not_implemented

@@ -67,11 +67,15 @@ enum class ExpressionType {
     numeric_literal,
     
     identifier,             // value: string
-    operator_e,
-    
-    reference,              // value: Callable*
-    operator_ref,
+    type_identifier,
+    operator_identifier,
 
+    reference,              // value: Callable*
+    operator_reference,
+    type_reference,
+
+    type_specifier,         // different from type_reference in that these can be nonymous and contain 
+                            // parameter name bindings
     termed_expression,      // value: std::vector<Expression*>
 
     tie,                    // value: std::monostate
@@ -85,11 +89,7 @@ enum class ExpressionType {
     // deferred_call,          // value: std::tuple<Expression*, std::vector<Expression*>>
     missing_arg,
 
-    // TODO: replace these with calls to simplify
-
     deleted,                // value: std::monostate
-
-// misc
 };
 
 using CallExpressionValue = std::tuple<Callable*, std::vector<Expression*>>;
@@ -102,7 +102,8 @@ using ExpressionValue = std::variant<
     CallExpressionValue,
     // CallExpressionValueDeferred,
     TermedExpressionValue,
-    Callable*                       // for references to operators and functions
+    Callable*,                       // for references to operators and functions
+    const Type*                            // for type expressions
 >;
 
 struct Expression {
@@ -179,7 +180,7 @@ enum class StatementType {
     // if,
     // else,
     // for,
-    // for_id,
+    // for_in,
     // do_while,
     // do_for,
     // while/until,

@@ -21,18 +21,20 @@
 using Logging::LogLevel;
 using Logging::MessageType;
 
+namespace Maps {
+
 // ----- PUBLIC METHODS -----
 
 ParserLayer1::ParserLayer1(Lexer* lexer, Pragma::Pragmas* pragmas, bool in_repl):
 lexer_(lexer), pragmas_(pragmas), in_repl_(in_repl) {
-    ast_ = std::make_unique<Maps::AST>();
+    ast_ = std::make_unique<AST>();
     get_token();
     get_token();
 }
 
-std::unique_ptr<Maps::AST> ParserLayer1::run() {    
+std::unique_ptr<AST> ParserLayer1::run() {    
     init_builtins(*ast_);
-    Maps::Statement* root = ast_->create_statement(Maps::StatementType::block, {0,0});
+    Statement* root = ast_->create_statement(StatementType::block, {0,0});
     ast_->set_root(root);
 
     while (current_token().token_type != TokenType::eof) {
@@ -127,12 +129,12 @@ void ParserLayer1::create_identifier(const std::string& name, SourceLocation loc
 }
 
 void ParserLayer1::create_identifier(const std::string& name,
-    Maps::CallableBody body, SourceLocation location) {
+    CallableBody body, SourceLocation location) {
     log_info("created identifier" + name, Logging::MessageType::parser_debug_identifier);
     ast_->globals_->create_callable(name, body, location);
 }
 
-std::optional<Maps::Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
+std::optional<Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
     return ast_->globals_->get_identifier(identifier);
 }
 
@@ -155,17 +157,17 @@ void ParserLayer1::expression_end() {
 
 // creates a statement using ast_, marking the location as the current_statement_start_
 // or if it's not set, the current token location
-Maps::Statement* ParserLayer1::create_statement(Maps::StatementType statement_type) {
+Statement* ParserLayer1::create_statement(StatementType statement_type) {
     if (current_statement_start_.empty())
         return ast_->create_statement(statement_type, current_token().location);
 
-    Maps::Statement* statement = ast_->create_statement(statement_type, current_statement_start_.back());
+    Statement* statement = ast_->create_statement(statement_type, current_statement_start_.back());
     current_statement_start_.pop_back();
     return statement;
 }
 
 
-// ########## PARSING ##########
+// #################### PARSING ####################
 
 // NOTE: pragma.cpp does its own logging
 void ParserLayer1::handle_pragma() {
@@ -203,16 +205,16 @@ void ParserLayer1::handle_pragma() {
 
 // --------- STATEMENTS --------
 
-Maps::Statement* ParserLayer1::broken_statement_helper(const std::string& message) {
+Statement* ParserLayer1::broken_statement_helper(const std::string& message) {
     log_error(message);
     declare_invalid();
-    Maps::Statement* statement = create_statement(Maps::StatementType::broken);
+    Statement* statement = create_statement(StatementType::broken);
     reset_to_top_level();
     return statement;
 }
 
 void ParserLayer1::parse_top_level_statement() {
-    Maps::Statement* statement;
+    Statement* statement;
 
     switch (current_token().token_type) {
         case TokenType::pragma:
@@ -226,41 +228,42 @@ void ParserLayer1::parse_top_level_statement() {
         default:
             // TODO: check pragmas for top-level statement types
             statement = parse_statement();
-            if (statement->statement_type != Maps::StatementType::empty && 
+            if (statement->statement_type != StatementType::empty && 
                 (pragmas_->check_flag_value("top-level evaluation", statement->location) || in_repl_)) {            
-                std::get<Maps::Block>(std::get<Maps::Statement*>(ast_->root_->body)->value).push_back(statement);
+                std::get<Block>(std::get<Statement*>(ast_->root_->body)->value).push_back(statement);
             }
             return;
     }
 }
 
-Maps::Statement* ParserLayer1::parse_non_global_statement() {
+Statement* ParserLayer1::parse_non_global_statement() {
     switch (current_token().token_type) {
         case TokenType::pragma:
             declare_invalid();
             log_error("unexpected non top-level pragma");
             reset_to_top_level();
-            return create_statement(Maps::StatementType::broken); 
+            return create_statement(StatementType::broken); 
 
         case TokenType::eof:
             finished_ = true;
-            return create_statement(Maps::StatementType::broken);
+            return create_statement(StatementType::broken);
 
         default:
             return parse_statement();
     }
 }
 
-Maps::Statement* ParserLayer1::parse_statement() {
+Statement* ParserLayer1::parse_statement() {
     switch (current_token().token_type) {
         case TokenType::eof:
             finished_ = true;
-            return create_statement(Maps::StatementType::empty);
+            return create_statement(StatementType::empty);
 
         case TokenType::reserved_word:
-            log_info("scoping not yet implemented");
-            if (current_token().string_value() == "let")
+            if (current_token().string_value() == "let") {
+                log_info("Scoping not yet implemented");
                 return parse_let_statement();
+            }
 
             if (current_token().string_value() == "operator")
                 return parse_operator_statement();
@@ -271,6 +274,9 @@ Maps::Statement* ParserLayer1::parse_statement() {
             if (peek().token_type == TokenType::operator_t && peek().string_value() == "=") {
                 return parse_assignment_statement();
             }
+            return parse_expression_statement();
+
+        case TokenType::type_identifier:
             return parse_expression_statement();
 
         case TokenType::indent_block_start:
@@ -286,41 +292,41 @@ Maps::Statement* ParserLayer1::parse_statement() {
 
         case TokenType::semicolon:
             get_token(); // eat the semicolon
-            return create_statement(Maps::StatementType::empty);
+            return create_statement(StatementType::empty);
 
         // ----- ignored -----
         case TokenType::dummy:
             get_token(); // eat the dummy
-            return create_statement(Maps::StatementType::empty);
+            return create_statement(StatementType::empty);
             
         // ---- errors -----
         default:
             declare_invalid();    
-            log_error("use \"@ enable top level context\" to allow top level evaluation");
+            log_error("Unexpected "+ current_token().get_string() + ", expected a statement");
             reset_to_top_level();
-            return create_statement(Maps::StatementType::broken);
+            return create_statement(StatementType::broken);
         
         case TokenType::indent_block_end:
             assert(false && "parse_statement called at indent_block_end");
-            return create_statement(Maps::StatementType::broken);
+            return create_statement(StatementType::broken);
         
         case TokenType::indent_error_fatal:
             declare_invalid();
             log_error("indent error");
             reset_to_top_level();
-            return create_statement(Maps::StatementType::broken);
+            return create_statement(StatementType::broken);
 
         case TokenType::unknown:
             declare_invalid();
             log_error("unknown token");
             reset_to_top_level();
-            return create_statement(Maps::StatementType::broken);
+            return create_statement(StatementType::broken);
     }
 }
 
-Maps::Statement* ParserLayer1::parse_expression_statement() {
-    Maps::Expression* expression = parse_expression();
-    Maps::Statement* statement = create_statement(Maps::StatementType::expression_statement);
+Statement* ParserLayer1::parse_expression_statement() {
+    Expression* expression = parse_expression();
+    Statement* statement = create_statement(StatementType::expression_statement);
     statement->value = expression;
 
     assert(is_block_starter(current_token()) || is_statement_separator(current_token()) && "statement didn't end in a statement separator");
@@ -330,7 +336,7 @@ Maps::Statement* ParserLayer1::parse_expression_statement() {
     return statement;
 }
 
-Maps::Statement* ParserLayer1::parse_let_statement() {
+Statement* ParserLayer1::parse_let_statement() {
     statement_start();
     
     switch (get_token().token_type) {
@@ -343,7 +349,7 @@ Maps::Statement* ParserLayer1::parse_let_statement() {
                 if (identifier_exists(name)) {
                     declare_invalid();
                     log_error("Attempting to redefine identifier " + name);
-                    Maps::Statement* statement = create_statement(Maps::StatementType::illegal);
+                    Statement* statement = create_statement(StatementType::illegal);
                     statement->value = "Attempting to redefine identifier: " + name;
                     return statement;
                 }
@@ -355,11 +361,11 @@ Maps::Statement* ParserLayer1::parse_let_statement() {
                     
                     
                     get_token(); // eat the semicolon
-                    Maps::Statement* statement = create_statement(Maps::StatementType::let);
+                    Statement* statement = create_statement(StatementType::let);
 
                     // create an unitialized identifier
                     create_identifier(name, std::monostate{}, statement->location);
-                    statement->value = Maps::Let{ name , std::monostate{} };
+                    statement->value = Let{ name , std::monostate{} };
 
                     return statement;
                 }
@@ -367,15 +373,15 @@ Maps::Statement* ParserLayer1::parse_let_statement() {
                 if (is_assignment_operator(current_token())) {
                     get_token(); // eat the assignment operator
 
-                    Maps::CallableBody body;
+                    CallableBody body;
                     if (is_block_starter(current_token())) {
                         body = parse_block_statement();
                     } else {
                         body = parse_expression();
                     }
 
-                    Maps::Statement* statement = create_statement(Maps::StatementType::let);
-                    statement->value = Maps::Let{name, body};
+                    Statement* statement = create_statement(StatementType::let);
+                    statement->value = Let{name, body};
 
                     create_identifier(name, body, statement->location);
                     log_info("parsed let statement", MessageType::parser_debug);
@@ -386,23 +392,23 @@ Maps::Statement* ParserLayer1::parse_let_statement() {
                 declare_invalid();
                 log_error("unexpected " + current_token().get_string() + ", in let-statement");
                 reset_to_top_level();
-                return create_statement(Maps::StatementType::broken);
+                return create_statement(StatementType::broken);
             }
 
         case TokenType::operator_t:
             log_info("operator overloading not yet implemented, ignoring");
             reset_to_top_level();
-            return create_statement(Maps::StatementType::empty);
+            return create_statement(StatementType::empty);
 
         default:
             declare_invalid();
             log_error("unexpected token: " + current_token().get_string() + " in let statement");
             reset_to_top_level();
-            return create_statement(Maps::StatementType::broken);
+            return create_statement(StatementType::broken);
     }
 }
 
-Maps::Statement* ParserLayer1::parse_operator_statement() {
+Statement* ParserLayer1::parse_operator_statement() {
     statement_start();
 
     switch (get_token().token_type) {
@@ -437,20 +443,20 @@ Maps::Statement* ParserLayer1::parse_operator_statement() {
                     return broken_statement_helper("unexpected token: " + current_token().get_string() + " in unary operator statement, expected \"prefix|postfix\"");
 
                 assert(current_token().get_string() == "prefix" && "postfix operators not implemented");
-                // Maps::UnaryFixity fixity = current_token().get_string() == "prefix" ? Maps::UnaryFixity::prefix : Maps::UnaryFixity::postfix;
-                Maps::UnaryFixity fixity = Maps::UnaryFixity::prefix;
+                // UnaryFixity fixity = current_token().get_string() == "prefix" ? UnaryFixity::prefix : UnaryFixity::postfix;
+                UnaryFixity fixity = UnaryFixity::prefix;
 
                 get_token(); // eat the fixity specifier
 
-                Maps::CallableBody body;
+                CallableBody body;
                 if (is_block_starter(current_token())) {
                     body = parse_block_statement();
                 } else {
                     body = parse_expression();
                 }
 
-                Maps::Statement* statement = create_statement(Maps::StatementType::operator_s);
-                statement->value = Maps::OperatorStatementValue{op, 1, body};
+                Statement* statement = create_statement(StatementType::operator_s);
+                statement->value = OperatorStatementValue{op, 1, body};
 
                 ast_->globals_->create_unary_operator(op, body, fixity, statement->location);
                 log_info("parsed let statement", MessageType::parser_debug);
@@ -462,22 +468,22 @@ Maps::Statement* ParserLayer1::parse_operator_statement() {
                 return broken_statement_helper("unexpected token: " + current_token().get_string() + " in unary operator statement, expected precedence specifier(positive integer)");
 
             unsigned int precedence = std::stoi(current_token().string_value());
-            if (precedence >= Maps::MAX_OPERATOR_PRECEDENCE)
-                return broken_statement_helper("max operator precedence is " + std::to_string(Maps::MAX_OPERATOR_PRECEDENCE));
+            if (precedence >= MAX_OPERATOR_PRECEDENCE)
+                return broken_statement_helper("max operator precedence is " + std::to_string(MAX_OPERATOR_PRECEDENCE));
 
             get_token(); // eat the precedence specifier
 
-            Maps::CallableBody body;
+            CallableBody body;
             if (is_block_starter(current_token())) {
                 body = parse_block_statement();
             } else {
                 body = parse_expression();
             }
 
-            Maps::Statement* statement = create_statement(Maps::StatementType::operator_s);
-            statement->value = Maps::OperatorStatementValue{op, 2, body};
+            Statement* statement = create_statement(StatementType::operator_s);
+            statement->value = OperatorStatementValue{op, 2, body};
 
-            ast_->globals_->create_binary_operator(op, body, precedence, Maps::Associativity::left, statement->location);
+            ast_->globals_->create_binary_operator(op, body, precedence, Associativity::left, statement->location);
             log_info("parsed let statement", MessageType::parser_debug);
             return statement;   
 
@@ -487,7 +493,7 @@ Maps::Statement* ParserLayer1::parse_operator_statement() {
     }
 }
 
-Maps::Statement* ParserLayer1::parse_assignment_statement() {
+Statement* ParserLayer1::parse_assignment_statement() {
     assert(current_token().token_type == TokenType::identifier 
         && "parse_assignment_statement called with current_token that was not an identifier");
 
@@ -502,9 +508,9 @@ Maps::Statement* ParserLayer1::parse_assignment_statement() {
    
     get_token(); // eat '='
 
-    Maps::Statement* inner_statement = parse_statement();
-    Maps::Statement* statement = create_statement(Maps::StatementType::assignment);
-    statement->value = Maps::Assignment{name, inner_statement};
+    Statement* inner_statement = parse_statement();
+    Statement* statement = create_statement(StatementType::assignment);
+    statement->value = Assignment{name, inner_statement};
 
     // expect parse_statement to eat the semicolon etc.
 
@@ -512,7 +518,7 @@ Maps::Statement* ParserLayer1::parse_assignment_statement() {
     return statement;
 }
 
-Maps::Statement* ParserLayer1::parse_block_statement() {
+Statement* ParserLayer1::parse_block_statement() {
     assert(is_block_starter(current_token())
         && "parse_block_statement called with current token that is not a block starter");
 
@@ -539,9 +545,9 @@ Maps::Statement* ParserLayer1::parse_block_statement() {
 
     get_token(); // eat start token
 
-    Maps::Statement* statement = create_statement(Maps::StatementType::block);
+    Statement* statement = create_statement(StatementType::block);
     // fetch the substatements vector
-    std::vector<Maps::Statement*>* substatements = &std::get<Maps::Block>(statement->value);
+    std::vector<Statement*>* substatements = &std::get<Block>(statement->value);
 
     while (
         current_token().token_type != ending_token            ||
@@ -554,9 +560,9 @@ Maps::Statement* ParserLayer1::parse_block_statement() {
             return statement;
         }
 
-        Maps::Statement* substatement = parse_statement();
+        Statement* substatement = parse_statement();
         // discard empty statements
-        if (substatement->statement_type != Maps::StatementType::empty)
+        if (substatement->statement_type != StatementType::empty)
             substatements->push_back(substatement);
     }
 
@@ -570,13 +576,13 @@ Maps::Statement* ParserLayer1::parse_block_statement() {
     return statement;
 }
 
-Maps::Statement* ParserLayer1::parse_return_statement() {
+Statement* ParserLayer1::parse_return_statement() {
     assert(current_token().token_type == TokenType::reserved_word && current_token().string_value() == "return" 
         && "parse_return_statement called with current token other than \"return\"");
 
     get_token(); //eat return
-    Maps::Expression* expression = parse_expression();
-    Maps::Statement* statement = create_statement(Maps::StatementType::return_);
+    Expression* expression = parse_expression();
+    Statement* statement = create_statement(StatementType::return_);
     statement->value = expression;
 
     assert(is_statement_separator(current_token()) 
@@ -587,13 +593,13 @@ Maps::Statement* ParserLayer1::parse_return_statement() {
     return statement;
 }
 
-// --------- EXPRESSIONS --------
+// ----------- EXPRESSIONS ----------
 
-Maps::Expression* ParserLayer1::parse_expression() {
+Expression* ParserLayer1::parse_expression() {
     switch (current_token().token_type) {
         case TokenType::eof: {
-            Maps::Expression* expression = ast_->create_valueless_expression(
-                Maps::ExpressionType::syntax_error, current_expression_start_.back());
+            Expression* expression = ast_->create_valueless_expression(
+                ExpressionType::syntax_error, current_expression_start_.back());
             expression_end();
             return expression;
         }
@@ -625,6 +631,9 @@ Maps::Expression* ParserLayer1::parse_expression() {
             }
         }
 
+        case TokenType::type_identifier: 
+            return parse_type_specifier();
+
         case TokenType::operator_t:
             return parse_termed_expression();
 
@@ -647,7 +656,7 @@ Maps::Expression* ParserLayer1::parse_expression() {
         case TokenType::indent_block_start: {
             unsigned int starting_indent_level = indent_level_;
             get_token(); // eat the starting indent
-            Maps::Expression* expression = parse_expression();
+            Expression* expression = parse_expression();
             
             if (current_token().token_type != TokenType::indent_block_end) {
                 declare_invalid();
@@ -664,8 +673,8 @@ Maps::Expression* ParserLayer1::parse_expression() {
             if (current_token().string_value() != "let") {
                 declare_invalid();
                 log_error("unknown " + current_token().get_string());
-                Maps::Expression* expression = ast_->create_valueless_expression(
-                    Maps::ExpressionType::syntax_error, current_expression_start_.back());
+                Expression* expression = ast_->create_valueless_expression(
+                    ExpressionType::syntax_error, current_expression_start_.back());
                 expression_end();
                 expression->value = "unknown " + current_token().get_string();
                 
@@ -674,8 +683,8 @@ Maps::Expression* ParserLayer1::parse_expression() {
             }
             declare_invalid();
             log_error("Scoped let not yet implemented");
-            Maps::Expression* expression = ast_->create_valueless_expression(
-                Maps::ExpressionType::syntax_error, current_expression_start_.back());
+            Expression* expression = ast_->create_valueless_expression(
+                ExpressionType::syntax_error, current_expression_start_.back());
             expression_end();
             expression->value = "Scoped let not yet implemented";
             
@@ -686,7 +695,7 @@ Maps::Expression* ParserLayer1::parse_expression() {
         default:
             declare_invalid();
             log_error("unexpected " + current_token().get_string() + ", at the start of an expression");
-            Maps::Expression* expression = ast_->create_valueless_expression(Maps::ExpressionType::syntax_error, current_expression_start_.back());
+            Expression* expression = ast_->create_valueless_expression(ExpressionType::syntax_error, current_expression_start_.back());
             expression_end();
             expression->value = "unexpected " + current_token().get_string() + ", at the start of an expression";
 
@@ -697,9 +706,9 @@ Maps::Expression* ParserLayer1::parse_expression() {
 
 // expects to be called with the first term as current
 // tied expression = no whitespace
-Maps::Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
+Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     expression_start();
-    Maps::Expression* expression = ast_->create_termed_expression({}, current_token().location);
+    Expression* expression = ast_->create_termed_expression({}, current_token().location);
 
     log_info("start parsing termed expression", MessageType::parser_debug);
 
@@ -737,6 +746,7 @@ Maps::Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression)
             case TokenType::parenthesis_open:
             case TokenType::bracket_open:
             case TokenType::curly_brace_open:
+            case TokenType::colon:
                 expression->terms().push_back(parse_term(in_tied_expression));
                 break;
 
@@ -748,11 +758,14 @@ Maps::Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression)
                 expression->terms().push_back(parse_term(in_tied_expression));
                 break;
 
+            case TokenType::type_identifier:
+                expression->terms().push_back(parse_type_specifier());
+
             default:
                 declare_invalid();
                 log_error("unexpected: " + current_token().get_string() + ", in termed expression");
-                Maps::Expression* term = ast_->create_valueless_expression(
-                    Maps::ExpressionType::not_implemented, current_token().location);
+                Expression* term = ast_->create_valueless_expression(
+                    ExpressionType::not_implemented, current_token().location);
                 term->value = current_token().get_string();
                 expression->terms().push_back(term);
                 
@@ -766,87 +779,8 @@ Maps::Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression)
     return expression;
 }
 
-Maps::Expression* ParserLayer1::parse_access_expression() {
-    // TODO: eat until the closing character
-    expression_start();
-    Maps::Expression* expression = ast_->create_valueless_expression(
-        Maps::ExpressionType::not_implemented, current_token().location);
-    get_token();
-    expression_end();
-    return expression;
-}
-
-// expects to be called with the opening parenthese as the current_token_
-Maps::Expression* ParserLayer1::parse_parenthesized_expression() {
-    expression_start();
-    get_token(); // eat '('
-
-    if (current_token().token_type == TokenType::parenthesis_close) {
-        declare_invalid();
-        log_error("Empty parentheses in an expression");
-        Maps::Expression* expression = ast_->create_valueless_expression(Maps::ExpressionType::syntax_error, current_token().location);
-        get_token();
-        expression_end();
-        return expression;
-    }
-
-    Maps::Expression* expression = parse_expression();
-    if (current_token().token_type != TokenType::parenthesis_close) {
-        declare_invalid();
-        log_error("Mismatched parentheses");
-        return expression;
-    }
-
-    get_token(); // eat ')'
-    return expression;
-}
-
-Maps::Expression* ParserLayer1::parse_mapping_literal() {
-    expression_start();
-    Maps::Expression* expression = ast_->create_valueless_expression(Maps::ExpressionType::not_implemented, 
-        current_token().location);
-    get_token();
-    // eat until the closing character
-
-    log_info("parsed mapping literal (not implemented)", MessageType::parser_debug);
-
-    expression_end();
-    return expression;
-}
-
-Maps::Expression* ParserLayer1::handle_string_literal() {
-    Maps::Expression* expression = ast_->create_string_literal(current_token().string_value(), 
-        current_token().location);
-
-    get_token();
-    get_token(); // eat closing '"'
-    
-    log_info("parsed string literal", MessageType::parser_debug_terminal);
-    return expression;
-}
-
-Maps::Expression* ParserLayer1::handle_numeric_literal() {
-    Maps::Expression* expression = ast_->create_numeric_literal(current_token().string_value(), 
-        current_token().location);
-    
-    get_token();
-        
-    log_info("parsed numeric literal", MessageType::parser_debug_terminal);
-    return expression;
-}
-
-Maps::Expression* ParserLayer1::handle_identifier() {
-    Maps::Expression* expression = ast_->create_identifier_expression(current_token().string_value(), 
-        current_token().location);
-   
-    get_token();
-    
-    log_info("parsed unresolved identifier", MessageType::parser_debug_terminal);
-    return expression;
-}
-
 // Expects not to be called if the current token is not parseable into a term
-Maps::Expression* ParserLayer1::parse_term(bool is_tied) {
+Expression* ParserLayer1::parse_term(bool is_tied) {
     // if we see a tie, go down into a tied expression if not already in one
     if (peek().token_type == TokenType::tie && !is_tied) {
         return parse_termed_expression(true);
@@ -861,12 +795,17 @@ Maps::Expression* ParserLayer1::parse_term(bool is_tied) {
         case TokenType::number:
             return handle_numeric_literal();
 
+        // !!! I don't think this should exist
         case TokenType::tie: {
-            Maps::Expression* expression = ast_->create_valueless_expression(Maps::ExpressionType::tie, 
+            Expression* expression = ast_->create_valueless_expression(ExpressionType::tie, 
                 current_token().location);
             get_token();
-            return expression;   
+            return expression;
         }
+
+        case TokenType::colon:
+            get_token();
+            return parse_termed_expression();
 
         case TokenType::parenthesis_open: 
             return parse_parenthesized_expression();
@@ -879,15 +818,208 @@ Maps::Expression* ParserLayer1::parse_term(bool is_tied) {
             return parse_expression();
             
         case TokenType::operator_t: {
-            Maps::Expression* expression = ast_->create_operator_expression(current_token().string_value(), 
+            Expression* expression = ast_->create_operator_expression(current_token().string_value(), 
                 current_token().location);
             get_token();
             return expression;
         }
 
+        case TokenType::type_identifier:
+            return parse_type_specifier();
+        
         default:
             assert(false && "Parser::parse_term called with a non-term token");
     }
+}
+
+Expression* ParserLayer1::parse_type_specifier() {
+    assert(false && "work in progress");
+    expression_start();
+
+    log_info("start parsing type_specifier expression", MessageType::parser_debug);
+
+    switch (peek().token_type) {
+        case TokenType::type_identifier:
+            return parse_parameterized_type(); // !!! not implemented
+
+        case TokenType::identifier:
+            Expression* first_part = handle_type_identifier();
+            if (peek().token_type != TokenType::arrow_operator) {
+                Expression* expression = create_type_specifier_expression(first_part, current_expression_start_);
+                expression_end();
+                return expression;
+            }
+            
+            //create function specifier
+            
+            // eat and peek again
+            // if type operator its and arg, if not just return this
+
+        case TokenType::arrow_operator:
+            
+            // start building a function signature
+
+        case TokenType::parenthesis_open:
+        case TokenType::indent_block_start:
+            //how about tupels?
+            // might also be inner parameterized type
+            // send it in to figure out
+            // should still be ll1
+
+        case TokenType::colon:
+            //not so simple, or is it
+    }
+
+    bool done = false;
+    while (!done) {
+        
+        while (current_token)
+        terms.push_back(
+            ast_->create_type_identifier_expression(current_token().string_value(), current_token().location));
+
+        get_token();     
+
+        switch (current_token().token_type) {
+            case TokenType::eof:
+            case TokenType::indent_block_end:
+            case TokenType::semicolon:
+            case TokenType::parenthesis_close:
+            case TokenType::bracket_close:
+            case TokenType::curly_brace_close:
+                done = true;
+                break;
+
+            case TokenType::parenthesis_open:
+            case TokenType::bracket_open:
+            case TokenType::curly_brace_open:
+            case TokenType::colon:
+                expression->terms().push_back(???);
+                break;
+
+            case TokenType::string_literal:
+            case TokenType::number:
+            case TokenType::identifier:
+            case TokenType::type_identifier:
+            case TokenType::operator_t:
+            case TokenType::indent_block_start:
+                expression->terms().push_back(???);
+                break;
+
+            case TokenType::tie:
+                assert(false && "ties shouldn't exist in type specifiers");
+                get_token();
+                break;
+
+            default:
+                declare_invalid();
+                log_error("unexpected: " + current_token().get_string() + ", in type specifier expression");
+                Expression* term = ast_->create_valueless_expression(
+                    ExpressionType::not_implemented, current_token().location);
+                term->value = current_token().get_string();
+                expression->terms().push_back(term);
+                
+                get_token();
+        }
+    }
+    ast_->unparsed_type_specifier_expressions.push_back(expression);
+
+    log_info("finished parsing type specifier expression from " + expression->location.to_string(), MessageType::parser_debug);
+    expression_end();
+    return expression;
+}
+
+Expression* ParserLayer1::parse_parameterized_type() {
+    assert(false && "not implemented");
+    return nullptr;
+}
+
+Expression* ParserLayer1::parse_access_expression() {
+    // TODO: eat until the closing character
+    expression_start();
+    Expression* expression = ast_->create_valueless_expression(
+        ExpressionType::not_implemented, current_token().location);
+    get_token();
+    expression_end();
+    return expression;
+}
+
+// expects to be called with the opening parenthese as the current_token_
+Expression* ParserLayer1::parse_parenthesized_expression() {
+    expression_start();
+    get_token(); // eat '('
+
+    if (current_token().token_type == TokenType::parenthesis_close) {
+        declare_invalid();
+        log_error("Empty parentheses in an expression");
+        Expression* expression = ast_->create_valueless_expression(ExpressionType::syntax_error, current_token().location);
+        get_token();
+        expression_end();
+        return expression;
+    }
+
+    Expression* expression = parse_expression();
+    if (current_token().token_type != TokenType::parenthesis_close) {
+        declare_invalid();
+        log_error("Mismatched parentheses");
+        return expression;
+    }
+
+    get_token(); // eat ')'
+    return expression;
+}
+
+Expression* ParserLayer1::parse_mapping_literal() {
+    expression_start();
+    Expression* expression = ast_->create_valueless_expression(ExpressionType::not_implemented, 
+        current_token().location);
+    get_token();
+    // eat until the closing character
+
+    log_info("parsed mapping literal (not implemented)", MessageType::parser_debug);
+
+    expression_end();
+    return expression;
+}
+
+Expression* ParserLayer1::handle_string_literal() {
+    Expression* expression = ast_->create_string_literal(current_token().string_value(), 
+        current_token().location);
+
+    get_token();
+    get_token(); // eat closing '"'
+    
+    log_info("parsed string literal", MessageType::parser_debug_terminal);
+    return expression;
+}
+
+Expression* ParserLayer1::handle_numeric_literal() {
+    Expression* expression = ast_->create_numeric_literal(current_token().string_value(), 
+        current_token().location);
+    
+    get_token();
+        
+    log_info("parsed numeric literal", MessageType::parser_debug_terminal);
+    return expression;
+}
+
+Expression* ParserLayer1::handle_identifier() {
+    Expression* expression = ast_->create_identifier_expression(current_token().string_value(), 
+        current_token().location);
+   
+    get_token();
+    
+    log_info("parsed unresolved identifier", MessageType::parser_debug_terminal);
+    return expression;
+}
+
+Expression* ParserLayer1::handle_type_identifier() {
+    Expression* expression = ast_->create_type_identifier_expression(current_token().string_value(), 
+        current_token().location);
+   
+    get_token();
+    
+    log_info("parsed unresolved type identifier", MessageType::parser_debug_terminal);
+    return expression;
 }
 
 // AST::Expression* Parser::parse_call_expression(const std::string& callee) {
@@ -976,3 +1108,5 @@ void ParserLayer1::reset_to_top_level() {
     ) get_token();
     get_token();
 }
+
+} // namespace Maps

@@ -10,7 +10,7 @@
 #include <algorithm>
 
 // TODO: make these constexpr
-constexpr std::string_view OPERATOR_GLYPHS = "+-*/^=!?:|<>.$&€£@¬§¤";
+constexpr std::string_view OPERATOR_GLYPHS = "+-*/^=!?|<>.$&€£@¬§¤";
 
 // OPT: roll these into a single enum
 constexpr std::array<std::string_view, 42> RESERVED_WORDS = {

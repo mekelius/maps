@@ -6,76 +6,102 @@
 
 using Logging::log_error, Logging::log_info;
 
+namespace Maps {
+
 // Replaces all identifiers and operators with references to the correct callables
-void resolve_identifiers(Maps::AST& ast) {
-    for (Maps::Expression* expression: ast.unresolved_identifiers_and_operators) {
+bool resolve_identifiers(AST& ast) {
+    for (Expression* expression: ast.unresolved_identifiers_and_operators) {
         switch (expression->expression_type) {
-            case Maps::ExpressionType::identifier:
+            case ExpressionType::identifier:
                 // assert(ast_->builtins_.identifier_exists(expression->string_value()) 
                 //     && "Builtin identifier passed to layer2");
                 resolve_identifier(ast, expression);
                 break;
-            case Maps::ExpressionType::operator_e:
+            case ExpressionType::operator_identifier:
                 resolve_operator(ast, expression);
                 break;
 
+            case ExpressionType::type_identifier:
+                resolve_type_identifier(ast, expression);
+                break;
+
             default:
+                log_error(expression->location, 
+                    "Unexpected expression type in AST.unresolved_identifiers_and_operators");
                 assert(false 
                     && "Unexpected expression type in AST.unresolved_identifiers_and_operators");
+                return false;
         }
     }
 
+    if (!ast.is_valid)
+        return false;
+
     ast.unresolved_identifiers_and_operators = {};
+    return true;
 }
 
 // this should be scope's responsibility
-void resolve_identifier(Maps::AST& ast, Maps::Expression* expression) {
+bool resolve_identifier(AST& ast, Expression* expression) {
     // check builtins
-    std::optional<Maps::Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
+    std::optional<Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
     if (builtin) {
         log_info(expression->location, "Parsed built-in", Logging::MessageType::parser_debug_terminal);
-        expression->expression_type = Maps::ExpressionType::reference;
+        expression->expression_type = ExpressionType::reference;
         expression->type = (*builtin)->get_type();
         expression->value = *builtin;
-        return;
+        return true;
     }
 
-    std::optional<Maps::Callable*> callable = ast.globals_->get_identifier(expression->string_value());
+    std::optional<Callable*> callable = ast.globals_->get_identifier(expression->string_value());
 
     if (!callable) {
         log_error(expression->location, "unknown identifier: " + expression->string_value());
         ast.declare_invalid();
-        return;
+        return false;
     }
 
-    expression->expression_type = Maps::ExpressionType::reference;
+    expression->expression_type = ExpressionType::reference;
     expression->type = (*callable)->get_type();
     expression->value = *callable;
-    return;
+    return true;
 }
 
-void resolve_operator(Maps::AST& ast, Maps::Expression* expression) {
-    std::optional<Maps::Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
+bool resolve_type_identifier(AST& ast, Expression* expression) {
+    // check builtins
+    std::optional<const Type*> type = ast.types_->get(expression->string_value());
+    if (!type) {
+        log_error(expression->location, "unkown type identifier: " + expression->string_value());
+        ast.declare_invalid();
+        return false;
+    }
+    
+    expression->expression_type = ExpressionType::type_reference;
+    expression->value = *type;
+    return true;
+}
+
+bool resolve_operator(AST& ast, Expression* expression) {
+    std::optional<Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
     if (builtin) {
-        assert((*builtin)->is_operator() && "during name resolution: encountered a builtin operator_e that pointed to not an operator");
+        if (!(*builtin)->is_operator()) {
+            log_error("during name resolution: encountered a builtin operator_e that pointed to not an operator");
+            assert(false && 
+                "during name resolution: encountered a builtin operator_e that pointed to not an operator");
+            ast.declare_invalid();
+            return false;
+        }
 
         log_info(expression->location, "Parsed built-in operator", Logging::MessageType::parser_debug_terminal);
-        expression->expression_type = Maps::ExpressionType::operator_ref;
+        expression->expression_type = ExpressionType::operator_reference;
         expression->value = *builtin;
         expression->type = (*builtin)->get_type();
-        return;
+        return true;
     }
 
-    // TODO:user-defined operators
-    // std::optional<AST::Callable*> callable = ast_->global_operators_.get_identifier(expression->string_value());
-
-    // if (!callable) {
-        log_error(expression->location, "unknown operator: " + expression->string_value());
-        ast.declare_invalid();
-        return;
-    // }
-
-    // expression->expression_type = AST::ExpressionType::identifier;
-    // expression->type = (*callable)->get_type();
-    // return;
+    log_error(expression->location, "unknown operator: " + expression->string_value());
+    ast.declare_invalid();
+    return true;
 }
+
+} // namespace Maps

@@ -20,6 +20,8 @@ std::string Token::get_string() const {
             return "type identifier: " + string_value();
         case TokenType::operator_t:
             return "operator: " + string_value();
+        case TokenType::arrow_operator:
+            return "type operator: " + string_value();    
     
         case TokenType::number:
             return "numeric literal: " + string_value();
@@ -50,6 +52,10 @@ std::string Token::get_string() const {
             return "]";
         case TokenType::semicolon:
             return ";";
+        case TokenType::colon:
+            return ":";
+        case TokenType::double_colon:
+            return "::";
         case TokenType::comma:
             return ",";
         case TokenType::lambda:
@@ -69,7 +75,7 @@ std::string Token::get_string() const {
 
 bool is_assignment_operator(const Token& token) {
     if (token.token_type != TokenType::operator_t)
-        return false;       
+        return false;
     
     return (
         token.string_value() == "="    //||
@@ -100,12 +106,12 @@ bool is_statement_separator(const Token& token) {
 bool is_access_operator(const Token& token) {
     switch (token.token_type) {
         case TokenType::operator_t:
-            if (token.string_value() != "::" && token.string_value() != ".")
-                return false;
+            return (token.string_value() == ".");
 
         case TokenType::parenthesis_open:
         case TokenType::curly_brace_open:
         case TokenType::bracket_open:
+        case TokenType::double_colon:
             return true;
         
         default:
@@ -118,21 +124,25 @@ bool is_block_starter(const Token& token) {
         case TokenType::indent_block_start:        
         case TokenType::curly_brace_open:
             return true;
+
         default:
             return false;
     }
 }
 
+// these can be FOLLOWED by a tie
 bool is_tieable_token(const Token& token) {
     // ? should type identifiers be tieable?
     return (
         token.token_type == TokenType::operator_t     ||
         token.token_type == TokenType::identifier     ||
         token.token_type == TokenType::number         ||
+        token.token_type == TokenType::double_colon   ||
         token.token_type == TokenType::string_literal
     );
 }
 
+// these are allowed to appear in termed expressions
 bool is_term_token(const Token& token) {
     switch (token.token_type) {
         case TokenType::string_literal:
@@ -141,11 +151,15 @@ bool is_term_token(const Token& token) {
         case TokenType::bracket_open:
         case TokenType::curly_brace_open:
         case TokenType::identifier:
+        case TokenType::type_identifier:
         case TokenType::indent_block_start:
         case TokenType::lambda:
         case TokenType::operator_t:
+        case TokenType::arrow_operator:
         case TokenType::tie:
         case TokenType::reserved_word:
+        case TokenType::colon:
+        case TokenType::double_colon:
             return true;
 
         default:

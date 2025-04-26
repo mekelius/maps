@@ -34,6 +34,7 @@ public:
     
     // These automatically add the identifier into unresolved list as a convenience
     Expression* create_identifier_expression(const std::string& value, SourceLocation location);
+    Expression* create_type_identifier_expression(const std::string& value, SourceLocation location);
     Expression* create_operator_expression(const std::string& value, SourceLocation location);
 
     Expression* create_termed_expression(std::vector<Expression*>&& terms, SourceLocation location);

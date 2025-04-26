@@ -29,8 +29,8 @@ bool static_cast_(Expression* expression, const Type* target_type, bool const_va
         case ExpressionType::deleted:
         case ExpressionType::empty:
         case ExpressionType::not_implemented:
-        case ExpressionType::operator_e:
-        case ExpressionType::operator_ref:
+        case ExpressionType::operator_identifier:
+        case ExpressionType::operator_reference:
         case ExpressionType::syntax_error:
         case ExpressionType::tie:
             log_error(expression->location, "Trying to apply type specifier to an invalid expression type");

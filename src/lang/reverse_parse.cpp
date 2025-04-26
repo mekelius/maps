@@ -116,7 +116,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
             return ostream;
         }
 
-        case Maps::ExpressionType::operator_ref:
+        case Maps::ExpressionType::operator_reference:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
                 ostream << "/*operator-ref:*/ ";
             return ostream << std::get<std::string>(expression->value);
@@ -138,7 +138,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
                 ostream << "/*unresolved identifier:*/ ";
             return ostream << std::get<std::string>(expression->value);
             
-        case Maps::ExpressionType::operator_e:
+        case Maps::ExpressionType::operator_identifier:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
                 ostream << "/*unresolved identifier:*/ ";
             return ostream << expression->string_value();

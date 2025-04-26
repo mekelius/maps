@@ -3,8 +3,13 @@
 
 #include "../lang/ast.hh"
 
-void resolve_identifiers(Maps::AST& ast);
-void resolve_identifier(Maps::AST& ast, Maps::Expression* expression);
-void resolve_operator(Maps::AST& ast, Maps::Expression* expression);
+namespace Maps {
+
+bool resolve_identifiers(AST& ast);
+bool resolve_identifier(AST& ast, Expression* expression);
+bool resolve_operator(AST& ast, Expression* expression);
+bool resolve_type_identifier(AST& ast, Expression* expression);
+
+} //namespace Maps
 
 #endif

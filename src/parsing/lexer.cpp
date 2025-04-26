@@ -9,6 +9,8 @@
 #include "../logging.hh"
 #include "../lang/words.hh"
 
+using Logging::log_error;
+
 // ----- Public methods -----
 Lexer::Lexer(std::istream* source_is)
 :source_is_(source_is) {
@@ -41,7 +43,12 @@ char Lexer::read_char() {
     source_is_->get(current_char_);
 
     // just pretend like CRLF doesn't exist
+    // !!! untested on a windows machine
     return current_char_ != '\r' ? current_char_ : read_char();
+}
+
+char Lexer::peek_char() {
+    return source_is_->peek();
 }
 
 Token Lexer::create_token(TokenType type) {
@@ -103,6 +110,21 @@ Token Lexer::get_token_() {
             // handle operator
             return read_operator();
 
+        case '-':
+        case '=':
+            if (peek_char() != '>')
+                return read_operator();
+
+            buffer_.sputc(current_char_);
+            buffer_.sputc(read_char());  
+            
+            if (is_operator_glyph(current_char_)) {
+                log_error(SourceLocation{current_token_start_line_, current_token_start_col_}, 
+                    "Syntax error: operator cannot start with \"" + buffer_.str() + "\"");
+                return create_token(TokenType::unknown);
+            }
+            return create_token(TokenType::arrow_operator, buffer_.str());
+
         case '(':
             if (tie_possible_) {
                 tie_possible_ = false;
@@ -150,6 +172,20 @@ Token Lexer::get_token_() {
         case ';':
             while(read_char() == ';' && !source_is_->eof());
             return collapsed_semicolon_token();
+
+        case ':':
+            if (tie_possible_) {
+                tie_possible_ = false;
+                return create_token(TokenType::tie);
+            }
+            read_char();
+
+            if (current_char_ == ':') {
+                read_char();
+                return create_token(TokenType::double_colon);
+            }
+
+            return create_token(TokenType::colon);
 
         case '_':
             return read_identifier();

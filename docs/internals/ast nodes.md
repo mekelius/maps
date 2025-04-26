@@ -1,4 +1,4 @@
-# AST nodes in maps
+# AST nodes
 
 v0.1
 

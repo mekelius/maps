@@ -1,3 +1,0 @@
-// tilde-style comments give meta-info about the file
-~ maps.version = 0.0.1
-// at some point they may be used to give compiler hints for functions etc.
