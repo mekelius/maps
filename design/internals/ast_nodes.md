@@ -17,30 +17,30 @@ All AST nodes also carry their location in the source code.
 
 Expressions have a data type, an expression type and a value determined by their expression type. Expressions are separated into 2 "layers". The first layer uses recursive descent to parse most of the tree, but leaves certain expressions called "termed expressions" as lists of terms (really trees). Layer "1.5" is where name resolution and type inference happens (maybe should call it layer 2). Layer 2 then uses recursive ascent to parse the termed expressions. The expression types are:
 
-| Expression type     | lifetime       | Value                               | Status  |
-| ---                 | ---            | ---                                          | ---     |
-| identifier          | layer 1 - 1.5  | String                                       | done    |
-| operator_identifier | layer 1 - 1.5  | String                                       | done    |
-| type_identifier             | layer 1 - 1.5  | String                               | done    |
-| field_name                  | layer 1 - 1.5  | String                               | work in progress |
-| type_constructor_identifier | layer 1 - 1.5  | String                               | work in progress |
-| type_parameter              | layer 1 - 1.5  | ( type_construction, field_name? )   | work in progress |
-| type_construction           | layer 1 - 1.5  | ( type_construction_identifier, [ type_parameter ] )                                        | work in progress |
-| termed_expression   | layer 1 - 2    | [ Expression* ]                              | done    |
-| reference           | layer 1.5 - 2    | Callable*                                    | done    |
-| operator_reference  | layer 1.5 - 2    | Callable*                                    | done    |
-| string_literal      | layer 1 - codegen | String                                       | done    |
-| numeric_literal     | layer 1 - codegen | String                                       | done    |
-| missing_arg         | layer 2    | -                                            | done    |
-| type_reference      | layer 1.5 - 2 | (const) Type*                                | done    |
-| call                | layer 2 - codegen | ( Callable*, [ Expression* ] )               | done    | 
-| value               | layer 2 - codegen | ???                                          | planned |
-| deferred_call       | layer 2    | ( Expression*, [ Expression* ] )             | planned |
-| deleted             | -          | -                                            | done    | 
-| syntax_error        | -          | -                                            | done    |
-| not_implemented     | -          | -                                            | done    |
-| empty               | ???        | -                                            | to be removed? |
-| tie                 |            |                                              | to be removed  |
+| Expression type     | lifetime from | to  | Value                               | Status  |
+| ---                 | ---           | --- | ---                                 | ---     |
+| identifier          | 1 | 1.5             | String                              | done    |
+| operator_identifier | 1 | 1.5             | String                              | done    |
+| type_identifier     | 1 | 1.5             | String                              | done    |
+| field_name                  | 1 | 1.5  | String                               | work in progress |
+| type_constructor_identifier | 1 | 1.5  | String                               | work in progress |
+| type_parameter              | 1 | 1.5  | ( type_construction, field_name? )   | work in progress |
+| type_construction           | 1 | 1.5  | ( type_construction_identifier, [ type_parameter ] )                                        | work in progress |
+| termed_expression   | 1   | 2       | [ Expression* ]                            | done    |
+| string_literal      | 1   | codegen | String                                     | done    |
+| numeric_literal     | 1   | codegen | String                                     | done    |
+| reference           | 1.5 | 2       | Callable*                                  | done    |
+| operator_reference  | 1.5 | 2       | Callable*                                  | done    |
+| type_reference      | 1.5 | 2       | (const) Type*                              | done    |
+| missing_arg         | 2 | 2 | -                                                  | done    |
+| deferred_call       | 2 | 2       | ( Expression*, [ Expression* ] )             | planned |
+| call                | 2 (should be 1) | codegen | ( Callable*, [ Expression* ] ) | done    | 
+| value               | 2 (1?)          | codegen | ???                            | planned |
+| deleted             | - | -       | -                                            | done    | 
+| syntax_error        | - | -       | -                                            | done    |
+| not_implemented     | - | -       | -                                            | done    |
+| empty               | ??? | -     | -                                            | to be removed? |
+| tie                 |   |         |                                              | to be removed  |
 
 ## Statements
 
