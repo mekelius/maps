@@ -24,23 +24,23 @@ Expression* AST::create_numeric_literal(const std::string& value, SourceLocation
 
 Expression* AST::create_identifier_expression(const std::string& value, SourceLocation location) {
     Expression* expression = create_expression(ExpressionType::identifier, value, Hole, location);
-    unresolved_identifiers_and_operators.push_back(expression);
+    unresolved_identifiers_.push_back(expression);
     return expression;
 }
 Expression* AST::create_type_identifier_expression(const std::string& value, SourceLocation location) {
     Expression* expression = create_expression(ExpressionType::type_identifier, value, Hole, location);
-    unresolved_identifiers_and_operators.push_back(expression);
+    unresolved_identifiers_.push_back(expression);
     return expression;
 }
 Expression* AST::create_operator_expression(const std::string& value, SourceLocation location) {
     Expression* expression = create_expression(ExpressionType::operator_identifier, value, Hole, location);
-    unresolved_identifiers_and_operators.push_back(expression);
+    unresolved_identifiers_.push_back(expression);
     return expression;
 }
 
 Expression* AST::create_type_operator_expression(const std::string& value, SourceLocation location) {
     Expression* expression = create_expression(ExpressionType::type_operator_identifier, value, Void, location);
-    unresolved_type_identifiers.push_back(expression);
+    unresolved_type_identifiers_.push_back(expression);
     return expression;
 }
 

@@ -23,7 +23,7 @@ ParserLayer2::ParserLayer2(AST* ast, Pragma::Pragmas* pragmas)
 }
 
 void ParserLayer2::run() {
-    for (Expression* expression: ast_->unparsed_termed_expressions) {
+    for (Expression* expression: ast_->unparsed_termed_expressions_) {
         // some expressions might be parsed early as sub-expressions
         if (expression->expression_type != ExpressionType::termed_expression)
             continue;
@@ -384,7 +384,7 @@ void TermedExpressionParser::post_binary_operator_state() {
         case ExpressionType::type_construct:
         case ExpressionType::type_constructor_reference:
             assert(false && "not implemented");
-            
+
         case BAD_TERM:
             assert(false && "bad term in TermedExpressionParser::post_binary_operator_state");
             break;

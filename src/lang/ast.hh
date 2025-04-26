@@ -72,9 +72,9 @@ public:
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
     // need to walk the tree to find them
-    std::vector<Expression*> unresolved_identifiers_and_operators = {};
-    std::vector<Expression*> unresolved_type_identifiers = {};
-    std::vector<Expression*> unparsed_termed_expressions = {};
+    std::vector<Expression*> unresolved_identifiers_ = {};
+    std::vector<Expression*> unresolved_type_identifiers_ = {};
+    std::vector<Expression*> unparsed_termed_expressions_ = {};
 
 private:
     friend Scope; // scope is allowed to call create_expression directly to create call expressions

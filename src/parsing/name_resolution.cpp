@@ -10,7 +10,7 @@ namespace Maps {
 
 // Replaces all identifiers and operators with references to the correct callables
 bool resolve_identifiers(AST& ast) {
-    for (Expression* expression: ast.unresolved_identifiers_and_operators) {
+    for (Expression* expression: ast.unresolved_identifiers_) {
         switch (expression->expression_type) {
             case ExpressionType::identifier:
                 // assert(ast_->builtins_.identifier_exists(expression->string_value()) 
@@ -37,7 +37,7 @@ bool resolve_identifiers(AST& ast) {
     if (!ast.is_valid)
         return false;
 
-    ast.unresolved_identifiers_and_operators = {};
+    ast.unresolved_identifiers_ = {};
     return true;
 }
 
