@@ -46,6 +46,20 @@ bool static_cast_(Expression* expression, const Type* target_type, bool const_va
             return false;
 
         case ExpressionType::string_literal:
+            if (*target_type == Int) {
+                auto value = string_to_int(expression->string_value());
+
+                if (!value) {
+                    log_error("value \"" + expression->string_value() + "\" could not be casted to Int");
+                    return false;
+                }
+
+                expression->type = &Int;
+                expression->expression_type = ExpressionType::value;
+                expression->value = *value;
+
+                return true;
+            }
         case ExpressionType::value:
             
         case ExpressionType::call:
