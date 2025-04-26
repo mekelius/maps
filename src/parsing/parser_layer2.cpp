@@ -476,7 +476,7 @@ void TermedExpressionParser::reduce_operator_left() {
 }
 
 void TermedExpressionParser::initial_type_reference_state() {
-    assert(current_term()->expression_type == ExpressionType::type_constructor_reference && 
+    assert(current_term()->expression_type == ExpressionType::type_reference && 
         "TermedExpressionParser::type_specifier_state entered with not a type_specifier/type_reference on the stack");
 
     if (at_expression_end()) {
@@ -488,8 +488,22 @@ void TermedExpressionParser::initial_type_reference_state() {
     }
 
     switch (peek()->expression_type) {
+        case GUARANTEED_VALUE:
+        case ExpressionType::call: {
+            auto type_term = *pop_term();
+            auto type_value = type_term->value;
+            
+            assert(std::holds_alternative<const Type*>(type_value) && "no type");
+            shift();
+            current_term()->declared_type = get<const Type*>(type_value);
+            current_term()->location = type_term->location;
+            return initial_value_state();
+        }
+
         case ExpressionType::reference:
             peek()->declared_type = get<const Type*>((*pop_term())->value);
+            shift();
+            return initial_reference_state();            
         case ExpressionType::operator_reference:
             
         case ExpressionType::termed_expression:

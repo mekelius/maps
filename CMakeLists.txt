@@ -97,8 +97,8 @@ target_link_libraries(verify_mapsc parsing)
 add_executable(parsing_unit_tests
     tests/tests_main.cpp
     tests/layer2_tests.cpp
-    tests/types_tests.cpp
     tests/ast_tests.cpp
+    tests/type_specifiers.cpp
 )
 
 target_link_libraries(parsing_unit_tests parsing)

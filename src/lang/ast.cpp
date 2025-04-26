@@ -48,6 +48,10 @@ Expression* AST::create_termed_expression(std::vector<Expression*>&& terms, Sour
     return create_expression(ExpressionType::termed_expression, terms, Hole, location);
 }
 
+Expression* AST::create_type_reference(const Type* type, SourceLocation location) {
+    return create_expression(ExpressionType::type_reference, type, Void, location);
+}
+
 std::optional<Expression*> AST::create_operator_ref(const std::string& name, SourceLocation location) {
     // TODO: check user_defined operators as well
     std::optional<Callable*> callable = builtins_scope_->get_identifier(name);

@@ -42,6 +42,7 @@ public:
 
     std::optional<Expression*> create_type_operator_ref(const std::string& name, SourceLocation location);
 
+    Expression* create_type_reference(const Type* type, SourceLocation location);
     std::optional<Expression*> create_operator_ref(const std::string& name, SourceLocation location);
     Expression* create_operator_ref(Callable* callable, SourceLocation location);
 
