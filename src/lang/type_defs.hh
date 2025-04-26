@@ -100,6 +100,36 @@ static TypeTemplate Function_ {
     DeferredBool::maybe,
 };
 
+
+namespace TypeConstructors {
+
+class PureFunctionConstructor: public TypeConstructor {
+public:
+    PureFunctionConstructor();
+    const Type* make_type(const std::vector<TypeArg>& args, std::string* name = nullptr);
+};
+static const PureFunctionConstructor PureFunction{};
+
+class ImpureFunctionConstructor: public TypeConstructor {
+public:
+    ImpureFunctionConstructor();
+    const Type* make_type(const std::vector<TypeArg>& args, std::string* name = nullptr);
+};
+static const PureFunctionConstructor ImpureFunction{};
+
+// static constexpr TypeConstructor optional;
+// static constexpr TypeConstructor tuple;
+// static constexpr TypeConstructor union_tc;
+// static constexpr TypeConstructor sequence;
+
+static const std::array<const TypeConstructor*, 2> BUILTINS = {
+    &PureFunction, 
+    &ImpureFunction, 
+};
+
+} // namespace TypeConstructors
+
+
 } // namespace Maps
 
 #endif

@@ -632,8 +632,7 @@ Expression* ParserLayer1::parse_expression() {
         }
 
         case TokenType::type_identifier: 
-            return parse_type_specifier();
-
+        case TokenType::arrow_operator:
         case TokenType::operator_t:
             return parse_termed_expression();
 
@@ -755,11 +754,10 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
             case TokenType::identifier:
             case TokenType::operator_t:
             case TokenType::indent_block_start:
+            case TokenType::type_identifier:
+            case TokenType::arrow_operator:
                 expression->terms().push_back(parse_term(in_tied_expression));
                 break;
-
-            case TokenType::type_identifier:
-                expression->terms().push_back(parse_type_specifier());
 
             default:
                 declare_invalid();
@@ -795,14 +793,6 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
         case TokenType::number:
             return handle_numeric_literal();
 
-        // !!! I don't think this should exist
-        case TokenType::tie: {
-            Expression* expression = ast_->create_valueless_expression(ExpressionType::tie, 
-                current_token().location);
-            get_token();
-            return expression;
-        }
-
         case TokenType::colon:
             get_token();
             return parse_termed_expression();
@@ -825,112 +815,14 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
         }
 
         case TokenType::type_identifier:
-            return parse_type_specifier();
+            return handle_type_identifier();
+
+        case TokenType::arrow_operator:
+            return ast_->create_type_operator_expression(current_token().string_value(), current_token().location);
         
         default:
             assert(false && "Parser::parse_term called with a non-term token");
     }
-}
-
-Expression* ParserLayer1::parse_type_specifier() {
-    assert(false && "work in progress");
-    expression_start();
-
-    log_info("start parsing type_specifier expression", MessageType::parser_debug);
-
-    switch (peek().token_type) {
-        case TokenType::type_identifier:
-            return parse_parameterized_type(); // !!! not implemented
-
-        case TokenType::identifier:
-            Expression* first_part = handle_type_identifier();
-            if (peek().token_type != TokenType::arrow_operator) {
-                Expression* expression = create_type_specifier_expression(first_part, current_expression_start_);
-                expression_end();
-                return expression;
-            }
-            
-            //create function specifier
-            
-            // eat and peek again
-            // if type operator its and arg, if not just return this
-
-        case TokenType::arrow_operator:
-            
-            // start building a function signature
-
-        case TokenType::parenthesis_open:
-        case TokenType::indent_block_start:
-            //how about tupels?
-            // might also be inner parameterized type
-            // send it in to figure out
-            // should still be ll1
-
-        case TokenType::colon:
-            //not so simple, or is it
-    }
-
-    bool done = false;
-    while (!done) {
-        
-        while (current_token)
-        terms.push_back(
-            ast_->create_type_identifier_expression(current_token().string_value(), current_token().location));
-
-        get_token();     
-
-        switch (current_token().token_type) {
-            case TokenType::eof:
-            case TokenType::indent_block_end:
-            case TokenType::semicolon:
-            case TokenType::parenthesis_close:
-            case TokenType::bracket_close:
-            case TokenType::curly_brace_close:
-                done = true;
-                break;
-
-            case TokenType::parenthesis_open:
-            case TokenType::bracket_open:
-            case TokenType::curly_brace_open:
-            case TokenType::colon:
-                expression->terms().push_back(???);
-                break;
-
-            case TokenType::string_literal:
-            case TokenType::number:
-            case TokenType::identifier:
-            case TokenType::type_identifier:
-            case TokenType::operator_t:
-            case TokenType::indent_block_start:
-                expression->terms().push_back(???);
-                break;
-
-            case TokenType::tie:
-                assert(false && "ties shouldn't exist in type specifiers");
-                get_token();
-                break;
-
-            default:
-                declare_invalid();
-                log_error("unexpected: " + current_token().get_string() + ", in type specifier expression");
-                Expression* term = ast_->create_valueless_expression(
-                    ExpressionType::not_implemented, current_token().location);
-                term->value = current_token().get_string();
-                expression->terms().push_back(term);
-                
-                get_token();
-        }
-    }
-    ast_->unparsed_type_specifier_expressions.push_back(expression);
-
-    log_info("finished parsing type specifier expression from " + expression->location.to_string(), MessageType::parser_debug);
-    expression_end();
-    return expression;
-}
-
-Expression* ParserLayer1::parse_parameterized_type() {
-    assert(false && "not implemented");
-    return nullptr;
 }
 
 Expression* ParserLayer1::parse_access_expression() {

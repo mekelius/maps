@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
         std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
         
         std::cout << "run layer1\n\n";
-        std::unique_ptr<Maps::AST> ast = ParserLayer1{&lexer, pragmas.get()}.run();
+        std::unique_ptr<Maps::AST> ast = Maps::ParserLayer1{&lexer, pragmas.get()}.run();
 
         if (logs_since_last_check()) 
             std::cout << "\n";
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
         std::cout << "name resolution done\n\n";
         std::cout << "run layer 2\n\n";
 
-        ParserLayer2{ast.get(), pragmas.get()}.run();
+        Maps::ParserLayer2{ast.get(), pragmas.get()}.run();
 
         if(logs_since_last_check()) 
             std::cout << "\n";

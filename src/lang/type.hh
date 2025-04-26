@@ -2,6 +2,7 @@
 #define __TYPES_HH
 
 #include <optional>
+#include <tuple>
 #include <variant>
 #include <vector>
 #include <string>
@@ -113,6 +114,23 @@ inline bool operator==(const FunctionTypeComplex& lhs, const FunctionTypeComplex
 // caller needs to be sure that type is an operator type
 unsigned int get_precedence(const Type& type);
 
+class TypeConstructor {
+public:
+    using TypeArg = std::tuple<const Type*, std::optional<std::string>>;
+
+    TypeConstructor(const std::string& name, int arity);
+
+    virtual ~TypeConstructor() = default;
+    TypeConstructor(TypeConstructor&) = delete;
+    TypeConstructor& operator=(TypeConstructor&) = delete;
+
+    virtual const Type* make_type(const std::vector<TypeArg>& args, std::string* name = nullptr) = 0;
+    
+    static constexpr int ARITY_N = -1;
+    
+    std::string name_;
+    const int arity_ = 1;
+};
 
 // class for holding the shared type information such as traits
 // See identifying_types text file for better description
@@ -146,8 +164,11 @@ private:
     std::unordered_map<Type::HashableSignature, const Type*> types_by_structure_ = {};
     std::vector<const Type*> types_by_id_ = {};
 
+    std::unordered_map<std::string, const TypeConstructor*> typeconstructors_by_identifier = {};
+
     // we need two different vectors, since the builtin types need to be accessable by id as well
     std::vector<std::unique_ptr<Type>> types_ = {};
+    std::vector<std::unique_ptr<TypeConstructor>> type_constructors_ = {};
 
     Type::ID next_id_;             
 };

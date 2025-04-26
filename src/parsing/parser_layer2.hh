@@ -45,7 +45,7 @@ private:
     Expression* handle_termed_sub_expression(Expression* expression);
     
     // state functioms
-    void initial_identifier_state();
+    void initial_reference_state();
     void initial_value_state();
     void initial_operator_state();
     
@@ -54,7 +54,8 @@ private:
     void compare_precedence_state();
     void reduce_operator_left();
     
-    void type_specifier_state();
+    void initial_type_reference_state();
+    void initial_type_constructor_state();
 
     // calls/access operations
     bool is_acceptable_next_arg(Callable* callee, 
@@ -70,6 +71,7 @@ private:
     std::vector<Expression*>* expression_terms_;
     std::vector<Expression*>::iterator next_term_it_;
 
+    bool possibly_type_expression_ = true;
     std::vector<Expression*> parse_stack_ = {};
     std::vector<unsigned int> precedence_stack_ = {MIN_OPERATOR_PRECEDENCE};
 };

@@ -81,9 +81,6 @@ private:
     // AST::Expression* parse_call_expression(AST::Expression* callee, const std::vector<AST::Type*>& signature = {});
     // std::vector<AST::Expression*> parse_argument_list();
 
-    Expression* parse_type_specifier();
-    Expression* parse_parameterized_type();
-
     Expression* parse_parenthesized_expression();
     Expression* parse_mapping_literal();
     Expression* parse_access_expression();
@@ -93,6 +90,7 @@ private:
     Expression* handle_numeric_literal();
     Expression* handle_identifier();
     Expression* handle_type_identifier();
+    Expression* handle_type_constructor_identifier();
 
     void reset_to_top_level();
     

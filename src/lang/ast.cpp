@@ -38,6 +38,12 @@ Expression* AST::create_operator_expression(const std::string& value, SourceLoca
     return expression;
 }
 
+Expression* AST::create_type_operator_expression(const std::string& value, SourceLocation location) {
+    Expression* expression = create_expression(ExpressionType::type_operator_identifier, value, Void, location);
+    unresolved_type_identifiers.push_back(expression);
+    return expression;
+}
+
 Expression* AST::create_termed_expression(std::vector<Expression*>&& terms, SourceLocation location) {
     return create_expression(ExpressionType::termed_expression, terms, Hole, location);
 }

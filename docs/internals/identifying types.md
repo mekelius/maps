@@ -1,3 +1,7 @@
+# Identifying types internally
+
+***NOTE:*** a lot of this is outdated so you probably don't want to read it
+
 In order to be able to reference types in a meaningful way, there has to be a way to find the
 object associated with the type.
 The chosen approach is to use two hashmaps, one keyed by a given typename if any, the other by a string that hopefully 

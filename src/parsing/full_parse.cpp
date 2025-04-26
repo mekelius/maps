@@ -7,7 +7,8 @@
 #include "name_resolution.hh"
 #include "lexer.hh"
 
-using std::tuple, std::unique_ptr, Pragma::Pragmas;
+using std::tuple, std::unique_ptr;
+using Pragma::Pragmas, Maps::ParserLayer1, Maps::ParserLayer2;
 
 tuple<unique_ptr<Maps::AST>, unique_ptr<Pragmas>> parse_source(std::istream& source_is, bool in_repl) {    
     std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();

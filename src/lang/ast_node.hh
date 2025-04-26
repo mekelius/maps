@@ -2,6 +2,7 @@
 #define __AST_NODE_HH
 
 #include <string>
+#include <tuple>
 
 #include "../source.hh"
 #include "type_defs.hh"
@@ -61,49 +62,59 @@ private:
 // ----- EXPRESSIONS -----
 
 // NOTE: references and calls are created by scopes, rest are created by AST
+// See: 'docs/internals/ast\ nodes' for description of what these mean 
 enum class ExpressionType {
-// layer1
-    string_literal = 0,     // value: string
+    string_literal = 0,             // value: string
     numeric_literal,
     
-    identifier,             // value: string
-    type_identifier,
+    identifier,                     // value: string
     operator_identifier,
+    type_operator_identifier,
 
-    reference,              // value: Callable*
+    type_identifier,                // value: string
+    type_construct,                 // value: type_identifier | (type_constructor_identifier, [type_parameter])
+    type_argument,                  // value: (type_construct, optional<string>)
+
+    reference,                      // value: Callable*
     operator_reference,
     type_reference,
+    type_operator_reference,
+    type_constructor_reference,
 
-    type_specifier,         // different from type_reference in that these can be nonymous and contain 
-                            // parameter name bindings
     termed_expression,      // value: std::vector<Expression*>
-
-    tie,                    // value: std::monostate
     empty,
     
     syntax_error,           // value: std::string
     not_implemented,
     
-// layer2
     call,                   // value: 
-    // deferred_call,          // value: std::tuple<Expression*, std::vector<Expression*>>
     missing_arg,
 
     deleted,                // value: std::monostate
 };
 
 using CallExpressionValue = std::tuple<Callable*, std::vector<Expression*>>;
-// using CallExpressionValueDeferred = std::tuple<Expression*, std::vector<Expression*>>;
 using TermedExpressionValue = std::vector<Expression*>;
+
+using TypeArgument = std::tuple<
+    Expression*,                // type construct or type identifier
+    std::optional<std::string>  // optional name for a named arg
+>;
+
+using TypeConstruct = std::tuple<
+    Expression*,                // type or type_constructor identifier
+    std::vector<Expression*>    // type_arguments
+>;
 
 using ExpressionValue = std::variant<
     std::monostate,
     std::string,
     CallExpressionValue,
-    // CallExpressionValueDeferred,
     TermedExpressionValue,
     Callable*,                       // for references to operators and functions
-    const Type*                            // for type expressions
+    const Type*,                     // for type expressions
+    TypeArgument,
+    TypeConstruct
 >;
 
 struct Expression {

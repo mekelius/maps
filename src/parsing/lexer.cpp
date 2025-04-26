@@ -115,6 +115,11 @@ Token Lexer::get_token_() {
             if (peek_char() != '>')
                 return read_operator();
 
+            if (tie_possible_) {
+                tie_possible_ = false;
+                return create_token(TokenType::tie);
+            }
+    
             buffer_.sputc(current_char_);
             buffer_.sputc(read_char());  
             
@@ -194,9 +199,10 @@ Token Lexer::get_token_() {
             // handle identifiers
             // TODO: handle suffixes
             if (std::isalpha(current_char_)) {
+                // actually we can tie type identifiers
                 // type identifiers can't be tied
-                if (!islower(current_char_))
-                    tie_possible_ = false;
+                // if (!islower(current_char_))
+                //     tie_possible_ = false;
 
                 return read_identifier();
             }

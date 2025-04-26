@@ -134,11 +134,13 @@ bool is_block_starter(const Token& token) {
 bool is_tieable_token(const Token& token) {
     // ? should type identifiers be tieable?
     return (
-        token.token_type == TokenType::operator_t     ||
-        token.token_type == TokenType::identifier     ||
-        token.token_type == TokenType::number         ||
-        token.token_type == TokenType::double_colon   ||
-        token.token_type == TokenType::string_literal
+        token.token_type == TokenType::operator_t      ||
+        token.token_type == TokenType::identifier      ||
+        token.token_type == TokenType::number          ||
+        token.token_type == TokenType::double_colon    ||
+        token.token_type == TokenType::string_literal  ||
+        token.token_type == TokenType::type_identifier ||
+        token.token_type == TokenType::arrow_operator
     );
 }
 

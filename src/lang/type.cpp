@@ -98,6 +98,11 @@ bool operator==(const Type& lhs, const Type& rhs) {
     return false;
 }
 
+TypeConstructor::TypeConstructor(const std::string& name, int arity)
+:name_(name), arity_(arity) {
+}
+
+
 // builtin types are inserted so that they can be looked up nicely
 TypeRegistry::TypeRegistry() {
     next_id_ = BUILTIN_TYPES.size();
@@ -105,6 +110,10 @@ TypeRegistry::TypeRegistry() {
     for (auto type: BUILTIN_TYPES) {
         types_by_identifier_.insert({static_cast<std::string>(type->name()), type});
         types_by_id_.push_back(type);
+    }
+
+    for (auto type_constructor: TypeConstructors::BUILTINS) {
+        typeconstructors_by_identifier.insert({type_constructor->name_, type_constructor});
     }
 }
 

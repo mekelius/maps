@@ -25,10 +25,11 @@ add_library(maps_builtins SHARED
 
 add_library(parsing OBJECT
     src/logging.cpp
-    src/lang/ast.cpp
-    src/lang/ast_node.cpp
-    src/lang/scope.cpp
     src/lang/type.cpp
+    src/lang/type_defs.cpp
+    src/lang/ast_node.cpp
+    src/lang/ast.cpp
+    src/lang/scope.cpp
     src/lang/pragma.cpp
     src/lang/builtins.cpp
     src/parsing/token.cpp

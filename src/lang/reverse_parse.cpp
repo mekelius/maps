@@ -104,12 +104,8 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
 
             bool pad_left = false;
             for (Maps::Expression* term: expression->terms()) {
-                if (term->expression_type == Maps::ExpressionType::tie) {
-                    pad_left = false;
-                } else {
-                    ostream << (pad_left ? " " : "") << term;
-                    pad_left = true; 
-                }
+                ostream << (pad_left ? " " : "") << term;
+                pad_left = true; 
             }
             
             indent_stack--;
@@ -128,10 +124,6 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
 
         case Maps::ExpressionType::not_implemented:
             return ostream << "Expression type not implemented in parser: " + expression->string_value();
-
-        case Maps::ExpressionType::tie:
-            assert(false && "somehow a tie got through to reverse parse");
-            return REVERSE_PARSE_INCLUDE_DEBUG_INFO ? ostream << "/*-tie-*/" : ostream;
 
         case Maps::ExpressionType::identifier:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)

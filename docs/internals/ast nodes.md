@@ -21,17 +21,17 @@ Expressions have a data type, an expression type and a value determined by their
 | ---                 | ---           | --- | ---                                 | ---     |
 | identifier          | 1 | 1.5             | String                              | done    |
 | operator_identifier | 1 | 1.5             | String                              | done    |
+| type_operator_identifier | 1 | 1.5        | String                              | work in progress |
 | type_identifier     | 1 | 1.5             | String                              | done    |
-| field_name                  | 1 | 1.5  | String                               | work in progress |
-| type_constructor_identifier | 1 | 1.5  | String                               | work in progress |
-| type_parameter              | 1 | 1.5  | ( type_construction, field_name? )   | work in progress |
-| type_construction           | 1 | 1.5  | ( type_construction_identifier, [ type_parameter ] )                                        | work in progress |
 | termed_expression   | 1   | 2       | [ Expression* ]                            | done    |
 | string_literal      | 1   | codegen | String                                     | done    |
 | numeric_literal     | 1   | codegen | String                                     | done    |
 | reference           | 1.5 | 2       | Callable*                                  | done    |
 | operator_reference  | 1.5 | 2       | Callable*                                  | done    |
 | type_reference      | 1.5 | 2       | (const) Type*                              | done    |
+| type_constructor_reference | 1.5 | 2       | (const) Type*                       | done    |
+| type_construct      | 2 | 2  | type_identifier \| ( type_constructor_identifier, [ type_argument ] )                                        | work in progress |
+| type_argument       | 2 | 2 | ( type_construct, string? )                | work in progress |
 | missing_arg         | 2 | 2 | -                                                  | done    |
 | deferred_call       | 2 | 2       | ( Expression*, [ Expression* ] )             | planned |
 | call                | 2 (should be 1) | codegen | ( Callable*, [ Expression* ] ) | done    | 

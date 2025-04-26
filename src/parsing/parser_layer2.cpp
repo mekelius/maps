@@ -11,7 +11,7 @@ namespace Maps {
 
 // Expression types that are not allowed here
 // NOTE: Empty is allowed at top-level
-#define BAD_TERM ExpressionType::identifier: case ExpressionType::type_identifier: case ExpressionType::operator_e: case ExpressionType::deleted: case ExpressionType::missing_arg: case ExpressionType::syntax_error: case ExpressionType::not_implemented: case ExpressionType::empty: case ExpressionType::tie
+#define BAD_TERM ExpressionType::identifier: case ExpressionType::type_identifier: case ExpressionType::operator_identifier: case ExpressionType::type_operator_identifier: case ExpressionType::deleted: case ExpressionType::missing_arg: case ExpressionType::syntax_error: case ExpressionType::not_implemented: case ExpressionType::empty
 
 // Expression types guaranteed to be simple values
 #define GUARANTEED_VALUE ExpressionType::string_literal: case ExpressionType::numeric_literal
@@ -131,7 +131,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         // terminals
         case ExpressionType::reference:
             shift();
-            initial_identifier_state();
+            initial_reference_state();
             break;
 
         case ExpressionType::call:
@@ -147,11 +147,14 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             break;
 
         case ExpressionType::type_reference:
-        case ExpressionType::type_specifier:
+        case ExpressionType::type_operator_reference:
             shift();
-            type_specifier_state();
+            initial_type_reference_state();
             break;
 
+        case ExpressionType::type_argument:
+        case ExpressionType::type_construct:
+        case ExpressionType::type_constructor_reference:
         case BAD_TERM:
             // TODO: make expressions print out nice
             log_error(expression_->location, "bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)));
@@ -195,7 +198,7 @@ Expression* TermedExpressionParser::handle_termed_sub_expression(Expression* exp
 
 // ----- STATE FUNCTIONS -----
 
-void TermedExpressionParser::initial_identifier_state() {
+void TermedExpressionParser::initial_reference_state() {
     if (at_expression_end())
         return;
 
@@ -218,7 +221,7 @@ void TermedExpressionParser::initial_identifier_state() {
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(peek());
-            return initial_identifier_state();
+            return initial_reference_state();
 
         case GUARANTEED_VALUE:
         case ExpressionType::reference:
@@ -258,6 +261,13 @@ void TermedExpressionParser::initial_value_state() {
             ast_->declare_invalid();
             return;
 
+        case ExpressionType::type_reference:
+        case ExpressionType::type_operator_reference:
+        case ExpressionType::type_argument:
+        case ExpressionType::type_construct:
+        case ExpressionType::type_constructor_reference:
+            assert(false && "not implemented");
+    
         case BAD_TERM:
             // TODO: make expression to_str
             log_error(peek()->location, "bad term in initial value state");
@@ -302,6 +312,12 @@ void TermedExpressionParser::initial_operator_state() {
             parse_stack_.push_back(call);
             return;
         }
+
+        case ExpressionType::type_reference:
+        case ExpressionType::type_operator_reference:
+        case ExpressionType::type_argument:
+        case ExpressionType::type_construct:
+        case ExpressionType::type_constructor_reference:
 
         case ExpressionType::call:
         case ExpressionType::operator_reference:
@@ -362,6 +378,13 @@ void TermedExpressionParser::post_binary_operator_state() {
             shift();
             return compare_precedence_state();
 
+        case ExpressionType::type_reference:
+        case ExpressionType::type_operator_reference:
+        case ExpressionType::type_argument:
+        case ExpressionType::type_construct:
+        case ExpressionType::type_constructor_reference:
+            assert(false && "not implemented");
+            
         case BAD_TERM:
             assert(false && "bad term in TermedExpressionParser::post_binary_operator_state");
             break;
@@ -452,20 +475,41 @@ void TermedExpressionParser::reduce_operator_left() {
     parse_stack_.push_back(reduced);
 }
 
-void TermedExpressionParser::type_specifier_state() {
-    assert(false && "not implemented");
-    
-    if (at_expression_end()) {
-        // try to reduce the specifier?
-        // return
-    }
-
-    if (current_term()->expression_type == ExpressionType::type_reference) {
-
-    }
-
-    assert(current_term()->expression_type == ExpressionType::type_specifier && 
+void TermedExpressionParser::initial_type_reference_state() {
+    assert(current_term()->expression_type == ExpressionType::type_constructor_reference && 
         "TermedExpressionParser::type_specifier_state entered with not a type_specifier/type_reference on the stack");
+
+    if (at_expression_end()) {
+        if (!possibly_type_expression_) {
+            log_error(current_term()->location, "Unexpected type expression at expression end");
+            ast_->declare_invalid();
+        }
+        return;
+    }
+
+    switch (peek()->expression_type) {
+        case ExpressionType::reference:
+            peek()->declared_type = get<const Type*>((*pop_term())->value);
+        case ExpressionType::operator_reference:
+            
+        case ExpressionType::termed_expression:
+            // parse and come back
+            // 
+        case ExpressionType::type_operator_reference:
+            // make a type construct
+
+        case ExpressionType::type_reference:
+            // fail
+
+        default:
+            assert(false && "-.-"); // !!!
+
+        case BAD_TERM:
+            log_error(current_term()->location, "bad term encountered in TermedExpressoinParser");
+            assert(false && "bad term encountered in TermedExpressoinParser");
+            ast_->declare_invalid();
+            return;
+    }
 }
 
 bool TermedExpressionParser::is_acceptable_next_arg(Callable* callee, 

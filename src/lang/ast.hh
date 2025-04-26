@@ -36,8 +36,11 @@ public:
     Expression* create_identifier_expression(const std::string& value, SourceLocation location);
     Expression* create_type_identifier_expression(const std::string& value, SourceLocation location);
     Expression* create_operator_expression(const std::string& value, SourceLocation location);
+    Expression* create_type_operator_expression(const std::string& value, SourceLocation location);
 
     Expression* create_termed_expression(std::vector<Expression*>&& terms, SourceLocation location);
+
+    std::optional<Expression*> create_type_operator_ref(const std::string& name, SourceLocation location);
 
     std::optional<Expression*> create_operator_ref(const std::string& name, SourceLocation location);
     Expression* create_operator_ref(Callable* callable, SourceLocation location);
@@ -70,8 +73,9 @@ public:
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
     // need to walk the tree to find them
     std::vector<Expression*> unresolved_identifiers_and_operators = {};
+    std::vector<Expression*> unresolved_type_identifiers = {};
     std::vector<Expression*> unparsed_termed_expressions = {};
-    
+
 private:
     friend Scope; // scope is allowed to call create_expression directly to create call expressions
     Expression* create_expression(ExpressionType expression_type, 

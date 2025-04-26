@@ -66,7 +66,7 @@ void prime_terms(auto expr, const std::string& input, auto op1_ref, auto op2_ref
 
 // --------------- TEST CASES ---------------
 
-TEST_CASE("TermedExpressionParser should replace a single value term with that value") {
+TEST_CASE("Maps::TermedExpressionParser should replace a single value term with that value") {
     Maps::AST ast{};
 
     Expression* expr = ast.create_termed_expression({}, {0,0});
@@ -76,7 +76,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
     SUBCASE("String value") {
         Expression* value = ast.create_string_literal("TEST_STRING:oasrpkorsapok", {0,0});
         expr->terms().push_back(value);
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
 
         CHECK(expr->expression_type == ExpressionType::string_literal);
         CHECK(expr->string_value() == value->string_value());
@@ -85,22 +85,22 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
     SUBCASE("Number value") {
         Expression* value = ast.create_numeric_literal("234.52", {0,0});
         expr->terms().push_back(value);
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
 
         CHECK(expr->expression_type == ExpressionType::numeric_literal);
         CHECK(expr->string_value() == value->string_value());
     }
 }
 
-TEST_CASE("TermedExpressionParser should replace an empty termed expression with ExpressionType::empty") {
+TEST_CASE("Maps::TermedExpressionParser should replace an empty termed expression with ExpressionType::empty") {
     Maps::AST ast{};
     Expression* expr = ast.create_termed_expression({}, {0,0});
-    TermedExpressionParser{&ast, expr}.run();
+    Maps::TermedExpressionParser{&ast, expr}.run();
 
     CHECK(expr->expression_type == ExpressionType::empty);
 }
 
-TEST_CASE("TermedExpressionParser should handle binop expressions") {
+TEST_CASE("Maps::TermedExpressionParser should handle binop expressions") {
     Maps::AST ast{};
     Expression* expr = ast.create_termed_expression({}, {0,0});
 
@@ -115,7 +115,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
     REQUIRE(expr->terms().size() == 3);
 
     SUBCASE("Simple expression") {
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
 
         CHECK(expr->expression_type == ExpressionType::call);
         // NOTE: the operator_ref should be unwrapped
@@ -134,7 +134,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         Expression* val3 = ast.create_numeric_literal("235", {0,0});
         expr->terms().push_back(val3);
 
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
 
         CHECK(expr->expression_type == ExpressionType::call);
         auto [outer_op, outer_args] = expr->call_value();
@@ -166,7 +166,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
 
         expr->terms().push_back(val3);
 
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
 
         CHECK(expr->expression_type == ExpressionType::call);
         auto [outer_op, args] = expr->call_value();
@@ -206,7 +206,7 @@ TEST_CASE ("should handle more complex expressions") {
         
         prime_terms(expr, input, op1_ref, op2_ref, op3_ref, val);
 
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
         
         std::stringstream output;
         traverse_pre_order(expr, output);
@@ -219,7 +219,7 @@ TEST_CASE ("should handle more complex expressions") {
         
         prime_terms(expr, input, op1_ref, op2_ref, op3_ref, val);
 
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
         
         std::stringstream output;
         traverse_pre_order(expr, output);
@@ -227,7 +227,7 @@ TEST_CASE ("should handle more complex expressions") {
     }
 }
 
-TEST_CASE("TermedExpressionParser should handle haskell-style call expressions") {
+TEST_CASE("Maps::TermedExpressionParser should handle haskell-style call expressions") {
     Maps::AST ast{};
     Expression* expr = ast.create_termed_expression({}, {0,0});
     
@@ -245,7 +245,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
 
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
         
         CHECK(expr->expression_type == ExpressionType::call);
         auto [callee, args] = expr->call_value();
@@ -274,7 +274,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         expr->terms().push_back(arg3);
         expr->terms().push_back(arg4);
 
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
         
         CHECK(expr->expression_type == ExpressionType::call);
         auto [callee, args] = expr->call_value();
@@ -300,7 +300,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
 
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
         
         CHECK(expr->type == &Maps::Number);
     }
@@ -315,7 +315,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     SUBCASE("right") {
         Expression* expr = ast.create_termed_expression({op_ref, val}, {0,0});
         
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
         
         auto [callee, args] = expr->call_value();
         CHECK(callee == op);
@@ -327,7 +327,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     SUBCASE("left") {
         Expression* expr = ast.create_termed_expression({val, op_ref}, {0,0});
         
-        TermedExpressionParser{&ast, expr}.run();
+        Maps::TermedExpressionParser{&ast, expr}.run();
         
         auto [callee, args] = expr->call_value();
         CHECK(callee == op);
