@@ -496,7 +496,7 @@ void TermedExpressionParser::initial_type_reference_state() {
             ast_->delete_expression(type_term);
 
             shift();
-            static_cast_(current_term(), type_value);
+            cast(current_term(), type_value);
             // current_term()->declared_type = get<const Type*>(type_value);
             current_term()->location = type_term->location;
             return initial_value_state();

@@ -6,6 +6,8 @@
 
 #include "../logging.hh"
 
+#include "../lang/casts.hh"
+
 using std::get, std::get_if, std::optional, std::nullopt;
 using Logging::log_error;
 
@@ -32,10 +34,6 @@ bool has_native_representation(const Type* type) {
 }
 
 optional<const Type*> handle_declared_type(const Type* actual_type, const Type* declared_type) {
-    
-    if (*actual_type == NumberLiteral && *declared_type == Float) {
-
-    }    
     return nullopt;
 }
 
@@ -55,6 +53,18 @@ void SimpleTypeChecker::visit_expression(Expression* expression) {
 
     if (has_native_representation(expression->type))
         return;
+
+    // first try to cast it into an int, then a float
+    if (*expression->type == NumberLiteral) {
+        if (cast(expression, &Int))
+            return;
+
+        if (cast(expression, &Float))
+            return;
+
+        log_error(expression->location, expression->string_value() + " is not a valid number");
+        return fail();
+    }
 
     log_error(expression->location, "Found a non-reduced type: " + static_cast<std::string>(expression->type->name()));
 

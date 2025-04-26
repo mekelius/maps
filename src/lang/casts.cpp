@@ -24,14 +24,13 @@ std::optional<int> string_to_int(std::string str) {
     return result;
 }
 
-bool static_cast_(Expression* expression, const Type* target_type, bool const_value) {
+bool cast(Expression* expression, const Type* target_type, bool const_value) {
     switch (expression->expression_type) {
         case ExpressionType::numeric_literal:
             if (*target_type == Int) {
                 auto value = string_to_int(expression->string_value());
 
                 if (!value) {
-                    log_error("value \"" + expression->string_value() + "\" could not be casted to Int");
                     return false;
                 }
 
@@ -50,7 +49,6 @@ bool static_cast_(Expression* expression, const Type* target_type, bool const_va
                 auto value = string_to_int(expression->string_value());
 
                 if (!value) {
-                    log_error("value \"" + expression->string_value() + "\" could not be casted to Int");
                     return false;
                 }
 

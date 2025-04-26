@@ -9,7 +9,7 @@ namespace Maps {
 // takes an expression and tries to cast it IN PLACE into target type
 // argument const value should be used if this is a new expression created from a known const value
 // like a literal
-bool static_cast_(Expression* expression, const Type* target_type, bool const_value = false);
+bool cast(Expression* expression, const Type* target_type, bool const_value = false);
 
 } // namespace Maps
 
