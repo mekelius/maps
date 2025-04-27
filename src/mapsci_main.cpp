@@ -21,6 +21,9 @@ using Logging::LogLevel;
 constexpr std::string_view USAGE = "\nUSAGE: mapsci [options]\n\noptions:\n  --parser-debug | -q | --quiet | -e | --everything\n  --ir | --print-ir\n  --no-eval\n  --parsed | --print-parsed\n  -h | --help\n";
 
 int main(int argc, char* argv[]) {
+    Logging::init_logging(&std::cout);
+    llvm::raw_os_ostream error_stream{std::cerr};
+
     std::vector<std::string> args = {argv + 1, argc + argv};
     std::vector<std::string> source_filenames{};
 
@@ -28,11 +31,9 @@ int main(int argc, char* argv[]) {
 
     for (std::string arg: args) {
         if (arg == "-t" || arg == "--tokens") {
-            // lexer_ostream = &std::cout;
-            std::cerr << "ERROR: dumping tokens not implemented, exiting" << std::endl;
-            return EXIT_FAILURE;
+            Logging::Settings::set_message_type(Logging::MessageType::lexer_debug_token, true);
 
-        } else if (arg == "--parser-debug") {
+        } else if (arg == "--debug" || arg == "--parser-debug") {
             Logging::Settings::set_loglevel(LogLevel::debug);
             
         } else if (arg == "-q" || arg == "--quiet") {
@@ -50,9 +51,16 @@ int main(int argc, char* argv[]) {
         } else if(arg == "--parsed" || arg == "--print-parsed" || arg == "--reverse-parse") {
             repl_options.print_reverse_parse = true;
 
+        } else if(arg == "--layer1") {
+            repl_options.layer1 = true;
+
         } else if(arg == "-h" || arg == "--help" || arg == "--usage") {
             std::cout << USAGE << std::endl;
             return EXIT_SUCCESS;
+
+        } else if (arg.at(0) == '-') {
+            std::cout << "ERROR: unknown option: " << arg << std::endl;
+            return EXIT_FAILURE;
 
         } else {
             std::cerr << "ERROR: interpreting source files not implemented: use mapsc to compile to binary instead, exiting" << std::endl;
@@ -60,9 +68,6 @@ int main(int argc, char* argv[]) {
             source_filenames.push_back(arg);
         }
     }
-
-    Logging::init_logging(&std::cerr);
-    llvm::raw_os_ostream error_stream{std::cerr};
 
     llvm::InitializeAllTargetInfos();
     llvm::InitializeAllTargets();

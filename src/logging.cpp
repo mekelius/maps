@@ -33,7 +33,6 @@ void LogLevel::init(LogLevel log_level) {
     Settings::set_loglevel(log_level);
 }
 
-
 void log_error(const std::string& message, const std::string& location_string) {
     if (!Settings::ostream)
         return;
@@ -54,6 +53,7 @@ void log_error(SourceLocation location, const std::string& message) {
 void log_info(const std::string& message, MessageType message_type, const std::string& location_string) {
     if (!Settings::ostream)
         return;
+
     if (!Settings::current_loglevel.has_message_type(message_type))
         return;
 

@@ -14,6 +14,8 @@
 
 #include "logging.hh"
 #include "parsing/full_parse.hh"
+#include "parsing/lexer.hh"
+#include "parsing/parser_layer1.hh"
 
 
 using std::optional, std::nullopt;
@@ -97,8 +99,14 @@ void REPL::run() {
             continue;
         }
         
-        unique_ptr<Maps::AST> ast;
         std::stringstream input_s{input};
+        
+        if (options_.layer1) {
+            layer1_parse(input_s);
+            continue;
+        }
+        
+        unique_ptr<Maps::AST> ast;
         auto result = parse_source(input_s, true, true);
         
         if (!result) {
@@ -110,11 +118,8 @@ void REPL::run() {
 
         std::tie(ast, pragmas_) = std::move(*result);
 
-        if (options_.print_reverse_parse) {
-            std::cout << "parsed into:\n";
-            reverse_parse(*ast, std::cout);           
-            std::cout << "\n" << std::endl;
-        }
+        if (options_.print_reverse_parse)
+            print_reverse_parse(*ast);
 
         if (!ast->is_valid) {
             Logging::log_error("parsing failed");
@@ -124,6 +129,19 @@ void REPL::run() {
         if (ast->is_valid)
             eval(*ast);
     }
+}
+
+void REPL::layer1_parse(std::istream& source_is) {
+    std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
+    Lexer lexer{&source_is};
+    std::unique_ptr<Maps::AST> ast = Maps::ParserLayer1{&lexer, pragmas.get(), true}.run();
+    print_reverse_parse(*ast);
+}
+
+void REPL::print_reverse_parse(Maps::AST& ast) {
+    std::cout << "parsed into:\n";
+    reverse_parse(ast, std::cout);           
+    std::cout << "\n" << std::endl;
 }
     
 void REPL::eval(const Maps::AST& ast) {
