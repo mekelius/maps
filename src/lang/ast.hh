@@ -156,7 +156,7 @@ void AST::walk_statement(T visitor, Statement* statement) {
         case StatementType::let:
             assert(false && "not implemented");
 
-        case StatementType::operator_s:
+        case StatementType::operator_definition:
         default:
             return;
     }

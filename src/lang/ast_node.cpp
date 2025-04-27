@@ -140,7 +140,7 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
         case StatementType::let:
             value = Let{};
             break;
-        case StatementType::operator_s:
+        case StatementType::operator_definition:
             value = OperatorStatementValue{};
             break;
         case StatementType::assignment:

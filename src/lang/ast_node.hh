@@ -99,7 +99,6 @@ enum class ExpressionType {
 };
 
 using CallExpressionValue = std::tuple<Callable*, std::vector<Expression*>>;
-using TermedExpressionValue = std::vector<Expression*>;
 
 using TypeArgument = std::tuple<
     Expression*,                // type construct or type identifier
@@ -113,16 +112,16 @@ using TypeConstruct = std::tuple<
 
 using ExpressionValue = std::variant<
     std::monostate,
-    std::string,
-    CallExpressionValue,
-    TermedExpressionValue,
-    Callable*,                       // for references to operators and functions
-    const Type*,                     // for type expressions
-    TypeArgument,
-    TypeConstruct,
     int,
     double,
-    bool
+    bool,
+    std::string,
+    Callable*,                       // for references to operators and functions
+    const Type*,                     // for type expressions
+    std::vector<Expression*>,
+    CallExpressionValue,
+    TypeArgument,
+    TypeConstruct,
 >;
 
 class Expression {
@@ -138,8 +137,8 @@ public:
     std::optional<const Type*> declared_type;
     ExpressionValue value;
 
-    TermedExpressionValue& terms() {
-        return std::get<TermedExpressionValue>(value);
+    std::vector<Expression*>& terms() {
+        return std::get<std::vector<Expression*>>(value);
     }
     CallExpressionValue& call_value() {
         return std::get<CallExpressionValue>(value);
@@ -202,7 +201,7 @@ enum class StatementType {
     expression_statement,   // statement consisting of a single expression
     block,
     let,
-    operator_s,
+    operator_definition,
     assignment,
     return_,
     // if,

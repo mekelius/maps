@@ -455,7 +455,7 @@ Statement* ParserLayer1::parse_operator_statement() {
                     body = parse_expression();
                 }
 
-                Statement* statement = create_statement(StatementType::operator_s);
+                Statement* statement = create_statement(StatementType::operator_definition);
                 statement->value = OperatorStatementValue{op, 1, body};
 
                 ast_->globals_->create_unary_operator(op, body, fixity, statement->location);
@@ -480,7 +480,7 @@ Statement* ParserLayer1::parse_operator_statement() {
                 body = parse_expression();
             }
 
-            Statement* statement = create_statement(StatementType::operator_s);
+            Statement* statement = create_statement(StatementType::operator_definition);
             statement->value = OperatorStatementValue{op, 2, body};
 
             ast_->globals_->create_binary_operator(op, body, precedence, Associativity::left, statement->location);

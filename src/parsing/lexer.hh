@@ -50,5 +50,4 @@ private:
     std::istream* source_is_;
 };
 
-
 #endif

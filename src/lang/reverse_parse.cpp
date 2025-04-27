@@ -68,7 +68,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Statement* statement) {
             break;
         }
 
-        case Maps::StatementType::operator_s: {
+        case Maps::StatementType::operator_definition: {
             auto [name, arity, body] = std::get<Maps::OperatorStatementValue>(statement->value);
 
             ostream << "operator " << name << " = "
