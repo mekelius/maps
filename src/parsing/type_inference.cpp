@@ -13,6 +13,7 @@ using Logging::log_error;
 
 namespace Maps {
 
+// TODO: move to Expression
 bool has_native_representation(const Type* type) {    
     if (type->is_native())
         return true;
@@ -37,65 +38,62 @@ optional<const Type*> handle_declared_type(const Type* actual_type, const Type* 
     return nullopt;
 }
 
-void SimpleTypeChecker::visit_expression(Expression* expression) {
+bool SimpleTypeChecker::visit_expression(Expression* expression) {
     if (expression->declared_type && **expression->declared_type != *expression->type) {
         auto deduced_type = handle_declared_type(expression->type, *expression->declared_type);
 
         if (!deduced_type)
-            return fail();
+            return false;
 
         if (!has_native_representation(*deduced_type))
-            return fail();
+            return false;
 
         expression->type = *deduced_type;
-        return;
+        return true;
     }
 
     if (has_native_representation(expression->type))
-        return;
+        return true;
 
     // first try to cast it into an int, then a float
     if (*expression->type == NumberLiteral) {
         if (expression->type->cast_to(&Int, expression))
-            return;
+            return true;
 
         if (expression->type->cast_to(&Float, expression))
-            return;
+            return true;
 
         log_error(expression->location, expression->string_value() + " is not a valid number");
-        return fail();
+        return false;
     }
 
     log_error(expression->location, "Found a non-reduced type: " + static_cast<std::string>(expression->type->name()));
 
-    return fail();
+    return false;
 }
 
-void SimpleTypeChecker::visit_callable(Callable* callable) {
+bool SimpleTypeChecker::visit_callable(Callable* callable) {
     if (callable->get_declared_type() && **callable->get_declared_type() != *callable->get_type()) {
         auto deduced_type = handle_declared_type(callable->get_type(), *callable->get_declared_type());
 
         if (!deduced_type)
-            return fail();
+            return false;
 
         if (!has_native_representation(*deduced_type))
-            return fail();
+            return false;
 
         callable->set_type(**deduced_type);
-        return;
+        return true;
     }
 
-    if (!has_native_representation(callable->get_type()))
-        return fail();
+    return has_native_representation(callable->get_type());
 }
 
 // Note, statements shouldn't mess with contained expressions, since they will be visited
-void SimpleTypeChecker::visit_statement(Statement* statement) {}
+bool SimpleTypeChecker::visit_statement(Statement* statement) {return true;}
 
 bool SimpleTypeChecker::run(AST& ast) {
-    ast.visit_nodes(*this);
-
-    return success;
+    return ast.walk_tree(*this);
 }
 
 

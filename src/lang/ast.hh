@@ -15,11 +15,13 @@
 
 namespace Maps {
 
+// interface for visitors
+// return false from a visit method to short circuit
 template<class T>
 concept AST_Visitor = requires(T t) {
-    {t.visit_expression(std::declval<Expression*>())};
-    {t.visit_statement(std::declval<Statement*>())};
-    {t.visit_callable(std::declval<Callable*>())};
+    {t.visit_expression(std::declval<Expression*>())} -> std::convertible_to<bool>;
+    {t.visit_statement(std::declval<Statement*>())} -> std::convertible_to<bool>;
+    {t.visit_callable(std::declval<Callable*>())} -> std::convertible_to<bool>;
 };
 
 class AST {
@@ -29,14 +31,14 @@ public:
     void declare_invalid() { is_valid = false; };
 
     template<AST_Visitor T>
-    void visit_nodes(T visitor);
+    bool walk_tree(T visitor);
 
     template<AST_Visitor T>
-    void walk_expression(T visitor, Expression* expression);
+    bool walk_expression(T visitor, Expression* expression);
     template<AST_Visitor T>
-    void walk_statement(T visitor, Statement* statement);
+    bool walk_statement(T visitor, Statement* statement);
     template<AST_Visitor T>
-    void walk_callable(T visitor, Callable* callable);
+    bool walk_callable(T visitor, Callable* callable);
 
     // ----- CREATING (AND DELETING) EXPRESSIONS -----
     Expression* create_string_literal(const std::string& value, SourceLocation location);
@@ -111,75 +113,87 @@ private:
 };
 
 template<AST_Visitor T>
-void AST::walk_expression(T visitor, Expression* expression) {
-    visitor.visit_expression(expression);
+bool AST::walk_expression(T visitor, Expression* expression) {
+    if (!visitor.visit_expression(expression))
+        return false;
 
     switch (expression->expression_type) {
         case ExpressionType::call:
             // can't visit the call target cause would get into infinite loops
             // !!! TODO: visit lambdas somehow
-            for (Expression* arg: std::get<1>(expression->call_value()))
-                walk_expression(visitor, arg);
-            return;
+            for (Expression* arg: std::get<1>(expression->call_value())) {
+                if (!walk_expression(visitor, arg))
+                    return false;
+            }
+            return true;
 
         case ExpressionType::termed_expression:
-            for (Expression* sub_expression: expression->terms())
-                walk_expression(visitor, sub_expression);
-            return;
+            for (Expression* sub_expression: expression->terms()) {
+                if (!walk_expression(visitor, sub_expression))
+                    return false;
+            }
+            return true;
 
         case ExpressionType::type_construct:
         case ExpressionType::type_argument:
             assert(false && "not implemented");
-            return;
+            return false;
         
         default:
-            return;
+            return true;
     }
 }
 
 template<AST_Visitor T>
-void AST::walk_statement(T visitor, Statement* statement) {
-    visitor.visit_statement(statement);
+bool AST::walk_statement(T visitor, Statement* statement) {
+    if (!visitor.visit_statement(statement))
+        return false;
 
     switch (statement->statement_type) {
         case StatementType::assignment:
         case StatementType::expression_statement:
         case StatementType::return_:
-            walk_expression(visitor, get<Expression*>(statement->value));
-            return;
+            return walk_expression(visitor, get<Expression*>(statement->value));
         
         case StatementType::block:
-            for (Statement* sub_statement: get<Block>(statement->value))
-                walk_statement(visitor, sub_statement);
-            return;
+            for (Statement* sub_statement: get<Block>(statement->value)) {
+                if (!walk_statement(visitor, sub_statement))
+                    return false;
+            }
+            return true;
 
         case StatementType::let:
             assert(false && "not implemented");
+            return false;
 
         case StatementType::operator_definition:
         default:
-            return;
+            return true;
     }
 }
 
 template<AST_Visitor T>
-void AST::walk_callable(T visitor, Callable* callable) {
-    visitor.visit_callable(callable);
+bool AST::walk_callable(T visitor, Callable* callable) {
+    if (!visitor.visit_callable(callable))
+        return false;
 
     if (Expression* const* expression = get_if<Expression*>(&callable->body)) {
-        walk_expression(visitor, *expression);
+        return walk_expression(visitor, *expression);
     } else if (Statement* const* statement = get_if<Statement*>(&callable->body)) {
-        walk_statement(visitor, *statement);
+        return walk_statement(visitor, *statement);
     }
+
+    return true;
 }
 
 template<AST_Visitor T>
-void AST::visit_nodes(T visitor) {
+bool AST::walk_tree(T visitor) {
     for (auto [_1, callable]: globals_->identifiers_) {
-        walk_callable(visitor, callable);
+        if (!walk_callable(visitor, callable))
+            return false;
     }
 
-    walk_callable(visitor, root_);
+    return walk_callable(visitor, root_);
 }
 
 } // namespace Maps

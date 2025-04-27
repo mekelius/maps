@@ -44,6 +44,10 @@ public:
     // version of run that always processes top-level statements, and wraps them in print calls
     bool repl_run();
     bool print_ir_to_file(const std::string& filename);
+
+    void visit_expression(Maps::Expression*);
+    void visit_statement(Maps::Statement*);
+    void visit_callable(Maps::Callable*);
     
     // TODO: move to use logging
     llvm::raw_ostream* errs_;
