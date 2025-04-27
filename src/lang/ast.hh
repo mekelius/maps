@@ -26,9 +26,13 @@ concept AST_Visitor = requires(T t) {
 
 class AST {
 public:
+    using const_iterator = Scope::const_iterator;
+
     AST();
     void set_root(CallableBody root);
     void declare_invalid() { is_valid = false; };
+
+    // ----- WALKING TREE NODE BY NODE -----
 
     template<AST_Visitor T>
     bool walk_tree(T visitor);
@@ -39,6 +43,12 @@ public:
     bool walk_statement(T visitor, Statement* statement);
     template<AST_Visitor T>
     bool walk_callable(T visitor, Callable* callable);
+
+    // ----- ITERATING THROUGH CALLABLES -----
+
+    // This will at some point be replaced with something that supports nested scopes
+    const_iterator begin() const { return globals_->begin(); }
+    const_iterator end() const {return globals_->end(); }
 
     // ----- CREATING (AND DELETING) EXPRESSIONS -----
     Expression* create_string_literal(const std::string& value, SourceLocation location);

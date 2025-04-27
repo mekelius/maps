@@ -29,6 +29,7 @@ add_library(parsing OBJECT
     src/lang/type.cpp
     src/lang/type_defs.cpp
     src/lang/ast_node.cpp
+    src/lang/callable.cpp
     src/lang/ast.cpp
     src/lang/scope.cpp
     src/lang/pragma.cpp

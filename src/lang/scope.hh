@@ -19,6 +19,10 @@ class AST;
  */
 class Scope {
 public:
+    using const_iterator = std::vector<std::pair<std::string, Callable*>>::const_iterator;
+    const_iterator begin() const { return identifiers_in_order_.begin(); }
+    const_iterator end() const { return identifiers_in_order_.end(); }
+
     Scope(AST* ast): ast_(ast) {};
 
     bool identifier_exists(const std::string& name) const;

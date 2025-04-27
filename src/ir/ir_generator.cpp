@@ -212,7 +212,7 @@ optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& e
 // --------- HANDLERS ---------
 
 bool IR_Generator::handle_global_functions() {
-    for (auto [_1, callable]: ast_->globals_->identifiers_in_order_) {
+    for (auto [_1, callable]: *ast_) {
         if (!handle_global_definition(*callable))
             return false;
     }
