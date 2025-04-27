@@ -121,7 +121,7 @@ using ExpressionValue = std::variant<
     std::vector<Expression*>,
     CallExpressionValue,
     TypeArgument,
-    TypeConstruct,
+    TypeConstruct
 >;
 
 class Expression {

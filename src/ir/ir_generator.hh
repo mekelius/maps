@@ -21,8 +21,10 @@ class FunctionStore {
 
 public:
     // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
-    std::optional<llvm::FunctionCallee> get(const std::string& name, const Maps::FunctionType& ast_type) const;
-    bool insert(const std::string& name, const Maps::FunctionType& ast_type, llvm::FunctionCallee function_callee);
+    std::optional<llvm::FunctionCallee> get(const std::string& name, 
+        const Maps::FunctionType& ast_type) const;
+    bool insert(const std::string& name, const Maps::FunctionType& ast_type, 
+        llvm::FunctionCallee function_callee);
 
 private:
     using InnerMapType = std::unordered_map<Signature, llvm::FunctionCallee>;
@@ -76,7 +78,7 @@ private:
     std::optional<llvm::Value*> handle_expression(const Maps::Expression& expression);
     std::optional<llvm::Function*> handle_function(const Maps::Callable& callable);
 
-    llvm::Value* handle_call(const Maps::Expression& call);
+    llvm::Value* handle_call(const Maps::CallExpressionValue& call);
     llvm::GlobalVariable* handle_string_literal(const Maps::Expression& str);
     llvm::Value* handle_value(const Maps::Expression& expression);
     

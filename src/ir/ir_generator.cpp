@@ -26,7 +26,7 @@ using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, M
 using Pragma::Pragmas;
 
 #define BAD_STATEMENT_TYPE StatementType::broken: case StatementType::illegal
-#define IGNORED_STATEMENT_TYPE StatementType::operator_s: case StatementType::empty
+#define IGNORED_STATEMENT_TYPE StatementType::operator_definition: case StatementType::empty
 
 namespace IR {
 
@@ -380,7 +380,7 @@ std::optional<llvm::Value*> IR_Generator::handle_expression_statement(const Maps
 optional<llvm::Value*> IR_Generator::handle_expression(const Expression& expression) {
     switch (expression.expression_type) {
         case ExpressionType::call:
-            return handle_call(expression);
+            return handle_call(std::get<Maps::CallExpressionValue>(expression.value));
 
         case ExpressionType::value:
             return handle_value(expression);
@@ -426,8 +426,8 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callabl
     return function;
 }
 
-llvm::Value* IR_Generator::handle_call(const Expression& expression) {
-    auto [callee, args] = get<Maps::CallExpressionValue>(expression.value);
+llvm::Value* IR_Generator::handle_call(const Maps::CallExpressionValue& call) {
+    auto [callee, args] = call;
 
     std::optional<llvm::FunctionCallee> function = function_store_->get(
         callee->name, *dynamic_cast<const Maps::FunctionType*>(callee->get_type()));
