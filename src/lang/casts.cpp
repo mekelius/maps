@@ -4,7 +4,10 @@
 #include <cerrno>
 #include <cstdlib>
 #include <optional>
+
 #include "../logging.hh"
+
+#include "type_defs.hh"
 
 using Logging::log_error;
 

@@ -119,7 +119,12 @@ int main(int argc, char** argv) {
     std::unique_ptr<Maps::AST> ast;
     std::unique_ptr<Pragma::Pragmas> pragmas;
 
-    std::tie(ast, pragmas) = parse_source(source_is);
+    auto result = parse_source(source_is);
+    if (!result) {
+        Logging::log_error("parsing failed");
+        return EXIT_FAILURE;
+    }
+    std::tie(ast, pragmas) = std::move(*result);
 
     std::cerr << "Parsing complete" << std::endl;
     

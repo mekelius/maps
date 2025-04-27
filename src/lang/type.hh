@@ -19,10 +19,6 @@ enum class DeferredBool {
     maybe,
 };
 
-class FunctionTypeComplex;
-
-using TypeComplex = std::variant<std::monostate, std::unique_ptr<FunctionTypeComplex>>;
-
 struct TypeTemplate {
     const std::string_view name;
     const bool is_native = false;
@@ -32,63 +28,70 @@ struct TypeTemplate {
     const bool is_type_alias = false;
 };
 
-class Type {    
+class Type {
 public:
+    using ID = int;
     using HashableSignature = std::string;
-    using ID = unsigned int;
 
-    TypeTemplate* type_template;
-    TypeComplex complex = std::monostate{};
-
-    Type(ID id, TypeTemplate* type_template);
-
+    constexpr Type(const ID id, const TypeTemplate* type_template)
+    : id_(id), type_template_(type_template) {}
+    
     // copy constructor
-    Type(const Type& rhs);
-    Type& operator=(const Type& other);
+    constexpr Type(const Type& rhs):id_(rhs.id_), type_template_(rhs.type_template_) {}
+    
+    constexpr Type& operator=(const Type& rhs) {
+        if (this == &rhs)
+            return *this;
+
+        type_template_ = rhs.type_template_;
+
+        return *this;
+    }
+
+    constexpr bool friend operator==(const Type& lhs, const Type& rhs) {
+        if (lhs.name() != rhs.name())
+            return false;
+            
+        return false;
+    }
 
     // rule of 5
     // Type(Type&& rhs) = delete;
     // Type&& operator=(Type&& other) = delete;
-
-    ~Type() = default;
+    constexpr virtual ~Type() = default;
 
     std::string to_string() const;
 
     bool is_complex() const;
-    bool is_function() const;
-    unsigned int arity() const;
+    virtual bool is_function() const { return false; }
+    virtual unsigned int arity() const { return 0; }
 
-    FunctionTypeComplex* function_type() const {
-        return std::get<std::unique_ptr<FunctionTypeComplex>>(complex).get();
-    }
+    std::string_view name() const { return type_template_->name; }
+    bool is_native() const { return type_template_->is_native; }
+    DeferredBool is_numeric() const { return type_template_->is_numeric; }
+    DeferredBool is_integral() const { return type_template_->is_integral; }
+    bool is_user_defined() const { return type_template_->is_user_defined; }
+    bool is_type_alias() const { return type_template_->is_type_alias; }
 
-    std::string_view name() const { return type_template->name; }
-    bool is_native() const { return type_template->is_native; }
-    DeferredBool is_numeric() const { return type_template->is_numeric; }
-    DeferredBool is_integral() const { return type_template->is_integral; }
-    bool is_user_defined() const { return type_template->is_user_defined; }
-    bool is_type_alias() const { return type_template->is_type_alias; }
-
-    ID id;
+    const ID id_;
+    const TypeTemplate* type_template_;
 };
-
-// currently simple types are only compared based on their name 
-// TODO: need to prevent user created types from colliding
-bool operator==(const Type& lhs, const Type& rhs);
-inline bool operator!=(const Type& lhs, const Type& rhs) {
-    return !(lhs == rhs);
-}
 
 // !! this struct has way too much stuff
 // maybe inheritance is the way
-class FunctionTypeComplex {
+class FunctionType: public Type {
 public:
     // this is what is used as the basis for function specialization
     using HashableSignature = std::string;
 
-    const Type* return_type;
-    std::vector<const Type*> arg_types;
-    bool is_pure = false;
+    FunctionType(const ID id, const TypeTemplate* type_template, const Type* return_type, 
+        const std::vector<const Type*>& arg_types, bool is_pure = false)
+        :Type(id, type_template), return_type_(return_type), arg_types_(arg_types), is_pure_(is_pure) {
+    }
+
+    const Type* return_type_;
+    std::vector<const Type*> arg_types_;
+    bool is_pure_ = false;
 
     // DO NOTE!: string representation is (currently) used as the basis for function overload specialization
     // IF YOU CREATE TYPES THAT HAVE IDENTICAL STRINGS THEIR FUNCTIONS WILL COLLIDE
@@ -100,15 +103,19 @@ public:
         return to_string();
     }
 
+    virtual bool is_function() const { return true; }
     unsigned int arity() const {
-        return arg_types.size();
+        return arg_types_.size();
     }
 };
-inline bool operator==(const FunctionTypeComplex& lhs, const FunctionTypeComplex& rhs) {
-    if (lhs.return_type != rhs.return_type)
+inline bool operator==(const FunctionType& lhs, const FunctionType& rhs) {
+    if (*dynamic_cast<const Type*>(&lhs) != *dynamic_cast<const Type*>(&rhs))
         return false;
 
-    return lhs.arg_types == rhs.arg_types;  
+    if (lhs.return_type_ != rhs.return_type_)
+        return false;
+
+    return lhs.arg_types_ == rhs.arg_types_;  
 }
 
 // caller needs to be sure that type is an operator type
@@ -143,7 +150,7 @@ public:
     std::optional<const Type*> get(const std::string& identifier);
     const Type* get_unsafe(const std::string& identifier);
 
-    const Type* get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
+    const FunctionType* get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
         bool pure = true);
 
     const Type* create_opaque_alias(std::string name, const Type* type);
@@ -152,7 +159,7 @@ public:
     Type::HashableSignature make_function_signature(const Type& return_type, const std::vector<const Type*>& arg_types, 
         bool is_pure = true) const;
 
-    const Type* create_function_type(const Type::HashableSignature& signature, const Type& return_type, 
+    const FunctionType* create_function_type(const Type::HashableSignature& signature, const Type& return_type, 
         const std::vector<const Type*>& arg_types, bool is_pure = true);
 
 private:

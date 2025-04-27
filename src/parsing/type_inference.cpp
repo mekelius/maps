@@ -20,12 +20,12 @@ bool has_native_representation(const Type* type) {
     if (!type->is_function())
         return false;
 
-    auto function_type = type->function_type();
+    auto function_type = dynamic_cast<const FunctionType*>(type);
 
-    if (!has_native_representation(function_type->return_type))
+    if (!has_native_representation(function_type->return_type_))
         return false;
 
-    for (auto arg: function_type->arg_types) {
+    for (auto arg: function_type->arg_types_) {
         if (!has_native_representation(arg))
             return false;
     }

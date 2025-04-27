@@ -298,7 +298,7 @@ void TermedExpressionParser::initial_operator_state() {
             // TODO: handle precedence here
             // it's a binary operator being partially applied
             Expression* missing_argument = ast_->create_missing_argument(
-                *op->type->function_type()->arg_types.at(0), op->location);
+                *dynamic_cast<const FunctionType*>(op->type)->arg_types_.at(0), op->location);
 
             Expression* call = 
                 ast_->globals_->create_call_expression(
@@ -329,7 +329,7 @@ void TermedExpressionParser::post_binary_operator_state() {
         Expression* op = *pop_term(); // pop the operator
         Expression* lhs = *pop_term();
         Expression* missing_argument = ast_->create_missing_argument(
-            *op->type->function_type()->arg_types.at(1), op->location);
+            *dynamic_cast<const FunctionType*>(op->type)->arg_types_.at(1), op->location);
 
         Expression* call = ast_->globals_->create_call_expression(op->reference_value(), 
             {lhs, missing_argument}, lhs->location);
@@ -566,9 +566,7 @@ void TermedExpressionParser::call_expression_state() {
     
     // determine the type
     if (args.size() == callee->type->arity()) {
-        assert(std::holds_alternative<std::unique_ptr<FunctionTypeComplex>>(callee->type->complex) 
-            && "non-function type callee in call_expression_state");
-        call_expression->type = callee->type->function_type()->return_type;
+        call_expression->type = dynamic_cast<const FunctionType*>(callee->type)->return_type_;
     } else {
         // TODO: partial application type
     }

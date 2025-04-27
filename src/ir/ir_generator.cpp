@@ -82,11 +82,11 @@ bool IR_Generator::print_ir_to_file(const std::string& filename) {
 // --------- HELPERS ---------
 
 // creates the internal name for a function based on arg types
-std::string create_internal_name(const std::string& name, const Maps::Type& ast_type) {
+std::string create_internal_name(const std::string& name, const Maps::FunctionType& ast_type) {
     std::string internal_name = name;
 
     // prepend arg names
-    for (const Maps::Type* arg_type: ast_type.function_type()->arg_types) {
+    for (const Maps::Type* arg_type: ast_type.arg_types_) {
         internal_name += "_" + static_cast<std::string>(arg_type->name());
     }
 
@@ -94,7 +94,7 @@ std::string create_internal_name(const std::string& name, const Maps::Type& ast_
 }
 
 optional<llvm::Function*> IR_Generator::function_definition(const std::string& name, 
-    const Maps::Type& ast_type, llvm::FunctionType* llvm_type, llvm::Function::LinkageTypes linkage) {
+    const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, llvm::Function::LinkageTypes linkage) {
 
     if (!ast_type.is_function()) {
         log_error("IR::Generator::function_definition called with a non-function type: " + ast_type.to_string());
@@ -111,7 +111,7 @@ optional<llvm::Function*> IR_Generator::function_definition(const std::string& n
 }
 
 optional<llvm::Function*> IR_Generator::function_declaration(const std::string& name, 
-    const Maps::Type& ast_type, llvm::FunctionType* llvm_type, 
+    const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
     
     llvm::Function::LinkageTypes linkage) {
     
@@ -145,7 +145,7 @@ optional<llvm::Value*> IR_Generator::global_constant(const Callable& callable) {
 }
 
 std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, 
-    const Maps::Type& function_type) const {
+    const Maps::FunctionType& function_type) const {
     
     auto outer_it = functions_.find(name);
 
@@ -153,7 +153,7 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
         return nullopt;
 
     auto inner_map = outer_it->second.get();
-    auto inner_it = inner_map->find(function_type.function_type()->hashable_signature());
+    auto inner_it = inner_map->find(function_type.hashable_signature());
 
     if (inner_it == inner_map->end()) {
         log_error("function \"" + name + "\" has not been specialized for type \"" + 
@@ -164,10 +164,10 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
     return inner_it->second;
 }
 
-bool FunctionStore::insert(const std::string& name, const Maps::Type& ast_type, 
+bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& ast_type, 
     llvm::FunctionCallee function_callee) {    
     
-    auto signature = ast_type.function_type()->hashable_signature();
+    auto signature = ast_type.hashable_signature();
 
     auto outer_it = functions_.find(name);
 
@@ -404,19 +404,21 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callabl
     assert(callable.get_type()->is_function() && 
         "IR_Generator::handle function called with a non-function callable");
 
-    auto [return_type_, arg_types_, _1]
-        = *callable.get_type()->function_type();
+    const Maps::FunctionType* function_type = dynamic_cast<const Maps::FunctionType*>(
+        callable.get_type());
 
-    optional<llvm::FunctionType*> signature = types_.convert_function_type(*return_type_, arg_types_);
+    optional<llvm::FunctionType*> signature = types_.convert_function_type(
+        *function_type->return_type_, function_type->arg_types_);
 
     if (!signature) {
         assert(callable.location && 
             "in IR_Generator::handle_function: callable missing location, did it try to handle a builtin");
-        Logging::log_error(*callable.location, "unable to convert type signature for " + callable.name);
+        Logging::log_error(*callable.location, 
+            "unable to convert type signature for " + callable.name);
         return nullopt;
     }
 
-    optional<llvm::Function*> function = function_definition(callable.name, *callable.get_type(), *signature);
+    optional<llvm::Function*> function = function_definition(callable.name, *dynamic_cast<const Maps::FunctionType*>(callable.get_type()), *signature);
 
     if (!function)
         return nullopt;
@@ -427,7 +429,8 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callabl
 llvm::Value* IR_Generator::handle_call(const Expression& expression) {
     auto [callee, args] = get<Maps::CallExpressionValue>(expression.value);
 
-    std::optional<llvm::FunctionCallee> function = function_store_->get(callee->name, *callee->get_type());
+    std::optional<llvm::FunctionCallee> function = function_store_->get(
+        callee->name, *dynamic_cast<const Maps::FunctionType*>(callee->get_type()));
 
     if (!function) {
         fail("attempt to call unknown function: \"" + callee->name + "\"");

@@ -17,12 +17,12 @@ namespace IR {
 constexpr std::string_view REPL_WRAPPER_NAME = "repl_wrapper";
 
 class FunctionStore {
-    using Signature = Maps::FunctionTypeComplex::HashableSignature;
+    using Signature = Maps::Type::HashableSignature;
 
 public:
     // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
-    std::optional<llvm::FunctionCallee> get(const std::string& name, const Maps::Type& ast_type) const;
-    bool insert(const std::string& name, const Maps::Type& ast_type, llvm::FunctionCallee function_callee);
+    std::optional<llvm::FunctionCallee> get(const std::string& name, const Maps::FunctionType& ast_type) const;
+    bool insert(const std::string& name, const Maps::FunctionType& ast_type, llvm::FunctionCallee function_callee);
 
 private:
     using InnerMapType = std::unordered_map<Signature, llvm::FunctionCallee>;
@@ -52,9 +52,11 @@ public:
 
     TypeMap types_;
 private:
-    std::optional<llvm::Function*> function_definition(const std::string& name, const Maps::Type& ast_type, llvm::FunctionType* llvm_type, 
+    std::optional<llvm::Function*> function_definition(const std::string& name, 
+        const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
-    std::optional<llvm::Function*> function_declaration(const std::string& name, const Maps::Type& ast_type, llvm::FunctionType* type, 
+    std::optional<llvm::Function*> function_declaration(const std::string& name, 
+        const Maps::FunctionType& ast_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
     std::optional<llvm::Value*> global_constant(const Maps::Callable& callable);
