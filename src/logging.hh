@@ -7,9 +7,6 @@
 
 #include "source.hh"
 
-constexpr bool REVERSE_PARSE_INCLUDE_DEBUG_INFO = true;
-constexpr unsigned int REVERSE_PARSE_INDENT_WIDTH = 4;
-
 namespace Logging {
 
 // at line 1000 the token stream is gonna shift right, but that's ok

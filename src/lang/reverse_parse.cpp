@@ -3,6 +3,10 @@
 #include "../logging.hh"
 #include "reverse_parse.hh"
 
+constexpr bool REVERSE_PARSE_INCLUDE_DEBUG_INFO = false;
+constexpr bool REVERSE_PARSE_DEBUG_SEPARATORS = false;
+constexpr unsigned int REVERSE_PARSE_INDENT_WIDTH = 4;
+
 unsigned int indent_stack = 0;
 
 std::string linebreak() {
@@ -13,6 +17,8 @@ std::ostream& operator<<(std::ostream& ostream, Maps::CallableBody body);
 std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression);
 
 std::ostream& operator<<(std::ostream& ostream, Maps::Statement* statement) {
+    if (REVERSE_PARSE_DEBUG_SEPARATORS) ostream << "$";
+
     assert(statement && "Reverse parse encountered a nullptr statement");
     ostream << linebreak();
 
@@ -90,6 +96,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Statement* statement) {
 
 std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
     assert(expression && "Reverse parse encountered a nullptr expression");
+    if (REVERSE_PARSE_DEBUG_SEPARATORS) ostream << "£";
 
     switch (expression->expression_type) {
         case Maps::ExpressionType::string_literal:
@@ -99,17 +106,23 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
             return ostream << std::get<std::string>(expression->value);
 
         case Maps::ExpressionType::termed_expression: {
-            indent_stack++;
-            ostream << linebreak();
+            // indent_stack++;
+            // ostream << linebreak();
+            ostream << "( ";
 
             bool pad_left = false;
             for (Maps::Expression* term: expression->terms()) {
-                ostream << (pad_left ? " " : "") << term;
+                ostream << (pad_left ? " " : "");
+                
+                if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+                    ostream << "/*term:*/";
+
+                ostream << term;
                 pad_left = true; 
             }
             
-            indent_stack--;
-            return ostream;
+            // indent_stack--;
+            return ostream << " )";
         }
 
         case Maps::ExpressionType::operator_reference:
@@ -136,6 +149,17 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
         case Maps::ExpressionType::value:
             if (*expression->type == Maps::Int)
                 return ostream << std::get<int>(expression->value);
+            
+            if (*expression->type == Maps::Float)
+                return ostream << std::get<double>(expression->value);
+
+            if (*expression->type == Maps::Boolean)
+                return ostream << (std::get<bool>(expression->value) ? "true" : "false");
+
+            if (*expression->type == Maps::String)
+                return ostream << std::get<std::string>(expression->value);
+
+            assert(false && "valuetype not implemented in reverse parser");
 
         case Maps::ExpressionType::type_identifier:
         case Maps::ExpressionType::type_operator_identifier:
@@ -154,7 +178,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
             auto [arg, name] = std::get<Maps::TypeArgument>(expression->value);
             return ostream << arg << " " << (name ? *name : ""); 
         }
-            
+
         case Maps::ExpressionType::call: {
             auto [callee, args] = expression->call_value();
 
