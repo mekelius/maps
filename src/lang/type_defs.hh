@@ -3,6 +3,7 @@
 
 #include <array>
 
+#include "casts.hh"
 #include "type.hh"
 
 namespace Maps {
@@ -13,7 +14,7 @@ constexpr TypeTemplate Absurd_ {
     DeferredBool::false_,
     DeferredBool::false_,
 };
-constexpr Type Absurd{ 0, &Absurd_ };
+constexpr Type Absurd{ 0, &Absurd_, not_castable };
 
 static TypeTemplate Hole_ {
     "Hole",
@@ -21,7 +22,7 @@ static TypeTemplate Hole_ {
     DeferredBool::maybe,
     DeferredBool::maybe,
 };
-static const Type Hole = { 1, &Hole_ };
+static const Type Hole = { 1, &Hole_, not_castable };
 
 static TypeTemplate Void_ {
     "Void",
@@ -29,7 +30,7 @@ static TypeTemplate Void_ {
     DeferredBool::false_,
     DeferredBool::false_,
 };
-static const Type Void = { 2, &Void_ };
+static const Type Void = { 2, &Void_, not_castable };
 
 
 static TypeTemplate Boolean_ {
@@ -38,7 +39,7 @@ static TypeTemplate Boolean_ {
     DeferredBool::false_,
     DeferredBool::false_,
 };
-static const Type Boolean = { 3, &Boolean_ };
+static const Type Boolean = { 3, &Boolean_, cast_from_Boolean };
 
 static TypeTemplate Int_ {
     "Int",
@@ -46,7 +47,7 @@ static TypeTemplate Int_ {
     DeferredBool::true_,
     DeferredBool::true_,
 };
-static const Type Int{ 4, &Int_ };
+static const Type Int{ 4, &Int_, cast_from_Int };
 
 static TypeTemplate Float_ {
     "Float",
@@ -54,7 +55,7 @@ static TypeTemplate Float_ {
     DeferredBool::true_,
     DeferredBool::true_,
 };
-static const Type Float{ 5, &Float_ };
+static const Type Float{ 5, &Float_, cast_from_Float };
 
 static TypeTemplate String_ {
     "String",
@@ -62,7 +63,7 @@ static TypeTemplate String_ {
     DeferredBool::false_,
     DeferredBool::false_,
 };
-static const Type String = { 6, &String_};
+static const Type String = { 6, &String_, cast_from_String};
 
 constexpr TypeTemplate Number_ {
     "Number",
@@ -70,7 +71,7 @@ constexpr TypeTemplate Number_ {
     DeferredBool::true_,
     DeferredBool::maybe,
 };
-constexpr Type Number{ 7, &Number_ };
+constexpr Type Number{ 7, &Number_, cast_from_Number };
 
 // a number who's type hasn't yet been determined
 static TypeTemplate NumberLiteral_ {
@@ -79,7 +80,7 @@ static TypeTemplate NumberLiteral_ {
     DeferredBool::true_,
     DeferredBool::maybe,
 };
-static const Type NumberLiteral = { 8, &NumberLiteral_};
+static const Type NumberLiteral = { 8, &NumberLiteral_, cast_from_NumberLiteral};
 
 static const std::array<const Type*, 9> BUILTIN_TYPES = {
     &Absurd,

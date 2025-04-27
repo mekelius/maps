@@ -13,6 +13,8 @@ using Logging::log_error;
 
 namespace Maps {
 
+namespace {
+
 std::optional<int> string_to_int(std::string str) {
     errno = 0;
     char* end = nullptr;
@@ -27,60 +29,86 @@ std::optional<int> string_to_int(std::string str) {
     return result;
 }
 
-bool cast(Expression* expression, const Type* target_type, bool const_value) {
-    switch (expression->expression_type) {
-        case ExpressionType::numeric_literal:
-            if (*target_type == Int) {
-                auto value = string_to_int(expression->string_value());
+} // anonymous namespace
 
-                if (!value) {
-                    return false;
-                }
+bool not_castable(const Type*, Expression*) {
+    return false;
+}
 
-                expression->type = &Int;
-                expression->expression_type = ExpressionType::value;
-                expression->value = *value;
-
-                return true;
-            }
-
-            assert(false && "not implemented");
-            return false;
-
-        case ExpressionType::string_literal:
-            if (*target_type == Int) {
-                auto value = string_to_int(expression->string_value());
-
-                if (!value) {
-                    return false;
-                }
-
-                expression->type = &Int;
-                expression->expression_type = ExpressionType::value;
-                expression->value = *value;
-
-                return true;
-            }
-        case ExpressionType::value:
-            
-        case ExpressionType::call:
-
-        case ExpressionType::missing_arg:
-
-        case ExpressionType::reference:
-        case ExpressionType::identifier:
-
-        case ExpressionType::termed_expression:
-            // maybe parse it and then?
-            // but we don't know if the identifiers are there yet?
-            assert(false && "not implemented");
-            return false;
-
-        default:
-            log_error(expression->location, "Trying to apply type specifier to an invalid expression type");
-            assert(false);
-            return false;
+bool cast_from_Int(const Type* target_type, Expression* expression) {
+    assert(false && "not implemented");
+    if (*target_type == Float) {
+        return true;
     }
+
+    if (*target_type == Number) {
+        return true;
+    }
+
+    if (*target_type == String) {
+        return true;
+    }
+
+    return false;
+}
+
+bool cast_from_Float(const Type* target_type, Expression* expression) {
+    assert(false && "not implemented");
+
+    if (*target_type == String) {
+        return true;
+    }
+
+    return false;
+}
+
+bool cast_from_Number(const Type* target_type, Expression* expression) {
+    assert(false && "not implemented");
+    if (*target_type == String) {
+        return true;
+    }
+    return false;
+}
+
+bool cast_from_String(const Type* target_type, Expression* expression) {
+    assert(false && "not implemented");
+
+    if (*target_type == String) {
+        return true;
+    }
+    return false;
+}
+
+bool cast_from_Boolean(const Type* target_type, Expression* expression) {
+    assert(false && "not implemented");
+
+    if (*target_type == String) {
+        return true;
+    }
+
+    return false;
+}
+
+bool cast_from_NumberLiteral(const Type* target_type, Expression* expression) {
+    assert(false && "not implemented");
+
+    if (*target_type == String) {
+        return true;
+    }
+
+    if (*target_type == Int) {
+
+    }
+
+    if (*target_type == Float) {
+        
+    }
+
+    if (*target_type == Number) {
+
+    }
+
+    return false;
 }
 
 } // namespace Maps

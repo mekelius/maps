@@ -56,10 +56,10 @@ void SimpleTypeChecker::visit_expression(Expression* expression) {
 
     // first try to cast it into an int, then a float
     if (*expression->type == NumberLiteral) {
-        if (cast(expression, &Int))
+        if (expression->type->cast_to(&Int, expression))
             return;
 
-        if (cast(expression, &Float))
+        if (expression->type->cast_to(&Float, expression))
             return;
 
         log_error(expression->location, expression->string_value() + " is not a valid number");

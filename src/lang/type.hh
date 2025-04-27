@@ -28,16 +28,21 @@ struct TypeTemplate {
     const bool is_type_alias = false;
 };
 
+class Type;
+class Expression;
+
+typedef bool(*CastFunction)(const Type*, Expression*);
+
 class Type {
 public:
     using ID = int;
     using HashableSignature = std::string;
 
-    constexpr Type(const ID id, const TypeTemplate* type_template)
-    : id_(id), type_template_(type_template) {}
+    constexpr Type(const ID id, const TypeTemplate* type_template, const CastFunction cast_function)
+    : id_(id), type_template_(type_template), cast_function_(cast_function) {}
     
     // copy constructor
-    constexpr Type(const Type& rhs):id_(rhs.id_), type_template_(rhs.type_template_) {}
+    constexpr Type(const Type& rhs):id_(rhs.id_), type_template_(rhs.type_template_), cast_function_(rhs.cast_function_) {}
     
     constexpr Type& operator=(const Type& rhs) {
         if (this == &rhs)
@@ -49,10 +54,7 @@ public:
     }
 
     constexpr bool friend operator==(const Type& lhs, const Type& rhs) {
-        if (lhs.name() != rhs.name())
-            return false;
-            
-        return false;
+        return lhs.id_ == rhs.id_;
     }
 
     // rule of 5
@@ -73,8 +75,16 @@ public:
     bool is_user_defined() const { return type_template_->is_user_defined; }
     bool is_type_alias() const { return type_template_->is_type_alias; }
 
+    bool cast_to(const Type* type, Expression* expression) const;
+
     const ID id_;
     const TypeTemplate* type_template_;
+    const CastFunction cast_function_;
+
+protected:
+    virtual bool cast_to_(const Type* type, Expression* expression) const {
+        return (*cast_function_)(type, expression);
+    }
 };
 
 // !! this struct has way too much stuff
@@ -85,9 +95,7 @@ public:
     using HashableSignature = std::string;
 
     FunctionType(const ID id, const TypeTemplate* type_template, const Type* return_type, 
-        const std::vector<const Type*>& arg_types, bool is_pure = false)
-        :Type(id, type_template), return_type_(return_type), arg_types_(arg_types), is_pure_(is_pure) {
-    }
+        const std::vector<const Type*>& arg_types, bool is_pure = false);
 
     const Type* return_type_;
     std::vector<const Type*> arg_types_;

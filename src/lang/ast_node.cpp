@@ -117,6 +117,10 @@ bool Expression::is_ok_in_codegen() const {
     }
 }
 
+bool Expression::is_castable_expression() const {
+    return true;
+}
+
 Statement::Statement(StatementType statement_type, SourceLocation location)
 :statement_type(statement_type), location(location) {
     switch (statement_type) {

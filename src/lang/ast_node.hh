@@ -17,7 +17,7 @@ struct Builtin {
     const Type* type;
 };
 
-struct Expression;
+class Expression;
 struct Statement;
 
 using CallableBody = std::variant<std::monostate, Expression*, Statement*, Builtin*>;
@@ -125,7 +125,8 @@ using ExpressionValue = std::variant<
     bool
 >;
 
-struct Expression {
+class Expression {
+public:
     // TODO: move initializing expression values from AST::create_expression
     Expression(ExpressionType expr_type, SourceLocation location, const Type& type): 
         expression_type(expr_type), location(location), type(&type) {};
@@ -171,6 +172,7 @@ struct Expression {
     bool is_identifier() const;
     bool is_ok_in_layer2() const;
     bool is_ok_in_codegen() const;
+    bool is_castable_expression() const;
 };
 
 // ----- STATEMENTS -----

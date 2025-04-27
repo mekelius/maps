@@ -12,6 +12,7 @@ add_compile_options(-Wall -Wextra -Werror
     -Wno-error=unused-but-set-variable 
     -Wno-error=unused-variable
     -Wno-error=unused-private-field
+    -Wno-error=unused-function
 )
 
 # ------------------- MAPSC BUILTINS ------------------
