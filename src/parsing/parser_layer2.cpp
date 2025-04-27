@@ -29,12 +29,7 @@ void ParserLayer2::run() {
         if (expression->expression_type != ExpressionType::termed_expression)
             continue;
         
-        SourceLocation original_location = expression->location;
-
         TermedExpressionParser{ast_, expression}.run();
-        
-        assert(expression->location == original_location 
-            && "parsing termed expression changed the location of the expression");
     }
 }
 

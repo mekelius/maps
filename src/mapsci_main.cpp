@@ -54,6 +54,9 @@ int main(int argc, char* argv[]) {
         } else if(arg == "--layer1") {
             repl_options.layer1 = true;
 
+        } else if(arg == "--layer2") {
+            repl_options.layer2 = true;
+
         } else if(arg == "-h" || arg == "--help" || arg == "--usage") {
             std::cout << USAGE << std::endl;
             return EXIT_SUCCESS;

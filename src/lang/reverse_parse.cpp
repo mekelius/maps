@@ -128,7 +128,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
         case Maps::ExpressionType::operator_reference:
             if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
                 ostream << "/*operator-ref:*/ ";
-            return ostream << std::get<std::string>(expression->value);
+            return ostream << expression->reference_value()->name;
         
         case Maps::ExpressionType::reference:
         case Maps::ExpressionType::type_reference:
@@ -160,6 +160,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
                 return ostream << std::get<std::string>(expression->value);
 
             assert(false && "valuetype not implemented in reverse parser");
+            return ostream;
 
         case Maps::ExpressionType::type_identifier:
         case Maps::ExpressionType::type_operator_identifier:

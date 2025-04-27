@@ -3,6 +3,7 @@
 #include <optional>
 #include <memory>
 #include <iostream>
+#include <tuple>
 
 #include "llvm/Support/raw_os_ostream.h"
 
@@ -16,10 +17,12 @@
 #include "parsing/full_parse.hh"
 #include "parsing/lexer.hh"
 #include "parsing/parser_layer1.hh"
+#include "parsing/name_resolution.hh"
+#include "parsing/parser_layer2.hh"
 
 
 using std::optional, std::nullopt;
-using std::unique_ptr, std::make_unique;
+using std::unique_ptr, std::make_unique, std::make_optional, std::tuple;
 
 constexpr std::string_view DEFAULT_MODULE_NAME = "interpreted";
 constexpr std::string_view PROMPT = "mapsci> ";
@@ -101,11 +104,16 @@ void REPL::run() {
         
         std::stringstream input_s{input};
         
+        if (options_.layer2) {
+            layer2_parse(input_s);
+            continue;
+        }
+
         if (options_.layer1) {
             layer1_parse(input_s);
             continue;
         }
-        
+
         unique_ptr<Maps::AST> ast;
         auto result = parse_source(input_s, true, true);
         
@@ -135,6 +143,35 @@ void REPL::layer1_parse(std::istream& source_is) {
     std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
     Lexer lexer{&source_is};
     std::unique_ptr<Maps::AST> ast = Maps::ParserLayer1{&lexer, pragmas.get(), true}.run();
+    print_reverse_parse(*ast);
+}
+
+void REPL::layer2_parse(std::istream& source_is) {
+    std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
+    Lexer lexer{&source_is};
+    std::unique_ptr<Maps::AST> ast = Maps::ParserLayer1{&lexer, pragmas.get(), true}.run();
+
+    if (!ast->is_valid) {
+        Logging::log_error("parsing failed");
+        print_reverse_parse(*ast);
+        return;
+    }
+
+    if (!Maps::resolve_identifiers(*ast)) {
+        Logging::log_error("parsing failed");
+        print_reverse_parse(*ast);
+        return;
+    }
+
+    if (options_.layer1)
+        print_reverse_parse(*ast);
+
+    Maps::ParserLayer2{ast.get(), pragmas.get()}.run();
+
+    if (!ast->is_valid) {
+        Logging::log_error("parsing failed");
+    }
+
     print_reverse_parse(*ast);
 }
 
@@ -173,6 +210,14 @@ void REPL::run_command(const std::string& command) {
         command == ":exit"  || 
         command == ":c"     ||
         command == ":close"   
-    ) running_ = false;
+    ) {
+        running_ = false;
+    } else if (command == ":toggle layer1") {
+        options_.layer1 = !options_.layer1;
+
+    } else if (command == ":toggle layer2") {
+        options_.layer1 = !options_.layer2;
+
+    }
 }
            

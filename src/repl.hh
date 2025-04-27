@@ -38,6 +38,7 @@ public:
         bool print_ir = false;
         bool eval = true;
         bool layer1 = false;
+        bool layer2 = false;
     };
 
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options);
@@ -47,6 +48,7 @@ public:
     
 private:
     void layer1_parse(std::istream& source_is);
+    void layer2_parse(std::istream& source_is);
     void print_reverse_parse(Maps::AST& ast);
     void eval(const Maps::AST& ast);
     void run_command(const std::string& command);
