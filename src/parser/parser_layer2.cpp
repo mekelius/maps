@@ -374,6 +374,9 @@ void TermedExpressionParser::post_binary_operator_state() {
             return compare_precedence_state();
 
         case ExpressionType::type_reference:
+            shift();
+            initial_type_reference_state();
+            return compare_precedence_state();
         case ExpressionType::type_operator_reference:
         case ExpressionType::type_argument:
         case ExpressionType::type_construct:
@@ -492,7 +495,7 @@ void TermedExpressionParser::initial_type_reference_state() {
 
             shift();
             current_term()->type->cast_to(type_value, current_term());
-            // current_term()->declared_type = get<const Type*>(type_value);
+            current_term()->declared_type = type_value;
             current_term()->location = type_term->location;
             return initial_value_state();
         }

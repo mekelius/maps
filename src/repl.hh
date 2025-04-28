@@ -60,6 +60,7 @@ public:
     
 private:
     void eval(const Maps::AST& ast, Pragma::Pragmas& pragmas);
+    std::string parse_type(std::istream& input_stream);
     void run_command(const std::string& command);
 
     void update_parse_options();

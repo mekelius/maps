@@ -418,7 +418,8 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callabl
         return nullopt;
     }
 
-    optional<llvm::Function*> function = function_definition(callable.name, *dynamic_cast<const Maps::FunctionType*>(callable.get_type()), *signature);
+    optional<llvm::Function*> function = function_definition(callable.name, 
+        *dynamic_cast<const Maps::FunctionType*>(callable.get_type()), *signature);
 
     if (!function)
         return nullopt;
@@ -456,8 +457,10 @@ llvm::GlobalVariable* IR_Generator::handle_string_literal(const Expression& expr
 llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
     // TODO: make typeids known at compile time so this can be a switch
     if (*expression.type == Maps::Int) {
-        assert(std::holds_alternative<int>(expression.value) && "type on expression didn't match value");
-        return llvm::ConstantInt::get(*context_, llvm::APInt(64, std::get<int>(expression.value), true));
+        assert(std::holds_alternative<int>(expression.value) && 
+            "type on expression didn't match value");
+        return llvm::ConstantInt::get(*context_, 
+            llvm::APInt(64, std::get<int>(expression.value), true));
     // } else if (*expression.type == Maps::String) {
 
     } else {
