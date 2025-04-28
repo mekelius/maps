@@ -12,12 +12,30 @@ namespace Maps {
 
 // Expression types that are not allowed here
 // NOTE: Empty is allowed at top-level
-#define BAD_TERM ExpressionType::identifier: case ExpressionType::type_identifier: case ExpressionType::operator_identifier: case ExpressionType::type_operator_identifier: case ExpressionType::deleted: case ExpressionType::missing_arg: case ExpressionType::syntax_error: case ExpressionType::not_implemented
+#define BAD_TERM ExpressionType::identifier: \
+            case ExpressionType::type_identifier: \
+            case ExpressionType::operator_identifier: \
+            case ExpressionType::type_operator_identifier: \
+            case ExpressionType::deleted: \
+            case ExpressionType::missing_arg: \
+            case ExpressionType::syntax_error: \
+            case ExpressionType::not_implemented
+
+#define TYPE_DECLARATION_TERM ExpressionType::type_argument: \
+                         case ExpressionType::type_field_name: \
+                         case ExpressionType::type_constructor_reference: \
+                         case ExpressionType::type_reference: \
+                         case ExpressionType::type_operator_reference: \
+                         case ExpressionType::type_construct
 
 // Expression types guaranteed to be simple values
-#define GUARANTEED_VALUE ExpressionType::string_literal: case ExpressionType::numeric_literal: case ExpressionType::value
+#define GUARANTEED_VALUE ExpressionType::string_literal: \
+                    case ExpressionType::numeric_literal: \
+                    case ExpressionType::value
 
-#define POTENTIAL_FUNCTION ExpressionType::call: case ExpressionType::reference: case ExpressionType::termed_expression
+#define POTENTIAL_FUNCTION ExpressionType::call: \
+                      case ExpressionType::reference: \
+                      case ExpressionType::termed_expression
 
 ParserLayer2::ParserLayer2(AST* ast, Pragma::Pragmas* pragmas)
 : ast_(ast), pragmas_(pragmas) {
@@ -147,6 +165,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             initial_type_reference_state();
             break;
 
+        case ExpressionType::type_field_name:
         case ExpressionType::type_argument:
         case ExpressionType::type_construct:
         case ExpressionType::type_constructor_reference:
@@ -263,6 +282,7 @@ void TermedExpressionParser::initial_value_state() {
         case ExpressionType::type_constructor_reference:
             assert(false && "not implemented");
     
+        case ExpressionType::type_field_name:
         case BAD_TERM:
             // TODO: make expression to_str
             log_error(peek()->location, "bad term in initial value state");
@@ -308,12 +328,7 @@ void TermedExpressionParser::initial_operator_state() {
             return;
         }
 
-        case ExpressionType::type_reference:
-        case ExpressionType::type_operator_reference:
-        case ExpressionType::type_argument:
-        case ExpressionType::type_construct:
-        case ExpressionType::type_constructor_reference:
-
+        case TYPE_DECLARATION_TERM:
         case ExpressionType::call:
         case ExpressionType::operator_reference:
         case ExpressionType::reference:
@@ -373,14 +388,13 @@ void TermedExpressionParser::post_binary_operator_state() {
             shift();
             return compare_precedence_state();
 
-        case ExpressionType::type_reference:
-            shift();
-            initial_type_reference_state();
-            return compare_precedence_state();
-        case ExpressionType::type_operator_reference:
-        case ExpressionType::type_argument:
-        case ExpressionType::type_construct:
-        case ExpressionType::type_constructor_reference:
+        case TYPE_DECLARATION_TERM:
+            if (peek()->expression_type == ExpressionType::type_reference) {
+                shift();
+                initial_type_reference_state();
+                return compare_precedence_state();
+            }
+
             assert(false && "not implemented");
 
         case BAD_TERM:

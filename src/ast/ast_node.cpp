@@ -40,6 +40,13 @@ bool Expression::is_reduced_value() const {
     }
 }
 
+void Expression::mark_not_type_declaration() {
+    if (expression_type != ExpressionType::termed_expression)
+        return;
+
+    std::get<TermedExpressionValue>(value).is_type_declaration = DeferredBool::false_;
+}
+
 DeferredBool Expression::is_type_declaration() {
     switch (expression_type) {
         case ExpressionType::termed_expression:
@@ -138,14 +145,18 @@ bool Expression::is_castable_expression() const {
 
 bool Expression::is_allowed_in_type_declaration() const {
     switch (expression_type) {
+        case ExpressionType::termed_expression:
+            return std::get<TermedExpressionValue>(value).is_type_declaration != 
+                DeferredBool::false_;
+
         case ExpressionType::type_argument:
         case ExpressionType::type_construct:
-        case ExpressionType::termed_expression:
         case ExpressionType::type_operator_identifier:
         case ExpressionType::type_operator_reference:
         case ExpressionType::type_constructor_reference:
         case ExpressionType::type_identifier:
         case ExpressionType::type_reference:
+        case ExpressionType::type_field_name:
             return true;
 
         case ExpressionType::identifier:

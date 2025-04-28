@@ -715,6 +715,9 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     log_info("start parsing termed expression", MessageType::parser_debug);
 
     expression->terms().push_back(parse_term(in_tied_expression));
+    
+    if (!expression->terms().back()->is_allowed_in_type_declaration())
+        expression->mark_not_type_declaration();
 
     bool done = false;
     while (!done) {
@@ -750,19 +753,28 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
                 // colon has to add parenthesis around left side as well
                 if (expression->terms().size() > 1) {
-                    Expression* lhs = ast_->create_termed_expression(std::move(expression->terms()), expression->location);
+                    Expression* lhs = ast_->create_termed_expression({}, expression->location);
+                    *lhs = *expression;
                     expression->terms() = {lhs};
+                    std::get<TermedExpressionValue>(expression->value).is_type_declaration = 
+                        DeferredBool::maybe;
                 }
 
                 // eat the ":" and any following ones as they wouldn't do anything
                 while (current_token().token_type == TokenType::colon) get_token(); 
+                
                 expression->terms().push_back(parse_termed_expression(false));
+
+                if (!expression->terms().back()->is_allowed_in_type_declaration())
+                    expression->mark_not_type_declaration();
             }
 
             case TokenType::parenthesis_open:
             case TokenType::bracket_open:
             case TokenType::curly_brace_open:
                 expression->terms().push_back(parse_term(in_tied_expression));
+                if (!expression->terms().back()->is_allowed_in_type_declaration())
+                    expression->mark_not_type_declaration();
                 break;
 
             case TokenType::string_literal:
@@ -773,6 +785,8 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
             case TokenType::type_identifier:
             case TokenType::arrow_operator:
                 expression->terms().push_back(parse_term(in_tied_expression));
+                if (!expression->terms().back()->is_allowed_in_type_declaration())
+                    expression->mark_not_type_declaration();
                 break;
 
             default:

@@ -46,6 +46,7 @@ enum class ExpressionType {
     type_reference,
     type_operator_reference,
     type_constructor_reference,
+    type_field_name,
 
     termed_expression,      // value: std::vector<Expression*>
     
@@ -116,6 +117,7 @@ public:
     bool is_partial_call() const;
     bool is_reduced_value() const;
 
+    void mark_not_type_declaration();
     DeferredBool is_type_declaration();
 
     const std::string& string_value() const;

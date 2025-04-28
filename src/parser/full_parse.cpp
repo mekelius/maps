@@ -12,7 +12,7 @@
 
 using std::tuple, std::unique_ptr, std::make_optional, std::nullopt;
 using Pragma::Pragmas, Maps::ParserLayer1, Maps::ParserLayer2, Maps::SimpleTypeChecker;
-using Maps::check_binding_type_declarations, Maps::resolve_identifiers;
+using Maps::handle_BTD_field_names, Maps::resolve_identifiers;
 
 // if parse fails at any point, returns nullopt, 
 // except if ignore errors is true returns the broken ast
@@ -39,7 +39,7 @@ tuple<bool, unique_ptr<Maps::AST>, unique_ptr<Pragmas>>
 
     // ----- binding type declarations -----
 
-    if (!check_binding_type_declarations(ast->possible_binding_type_declarations_) && options.stop_on_error)
+    if (!handle_BTD_field_names(ast->possible_binding_type_declarations_) && options.stop_on_error)
         return {false, std::move(ast), std::move(pragmas)};
 
     // ----- name resolution -----
