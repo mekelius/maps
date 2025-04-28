@@ -744,11 +744,24 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
             case TokenType::curly_brace_close:
                 done = true;
                 break;
+                
+            case TokenType::colon: {
+                assert(!in_tied_expression && "colon shouldn't be tieable");
+
+                // colon has to add parenthesis around left side as well
+                if (expression->terms().size() > 1) {
+                    Expression* lhs = ast_->create_termed_expression(std::move(expression->terms()), expression->location);
+                    expression->terms() = {lhs};
+                }
+
+                // eat the ":" and any following ones as they wouldn't do anything
+                while (current_token().token_type == TokenType::colon) get_token(); 
+                expression->terms().push_back(parse_termed_expression(false));
+            }
 
             case TokenType::parenthesis_open:
             case TokenType::bracket_open:
             case TokenType::curly_brace_open:
-            case TokenType::colon:
                 expression->terms().push_back(parse_term(in_tied_expression));
                 break;
 
@@ -786,25 +799,12 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
     // handle possible binding type declaration
     if (expression->terms().size() == 2) {
-        auto lhs = expression->terms().at(0);
-        auto rhs = expression->terms().at(1);
+        Expression* lhs = expression->terms().at(0);
+        Expression* rhs = expression->terms().at(1);
 
-        if (is_type_declaration(lhs) && !is_type_declaration(rhs)) {
-            assert(false && "not implemented");
-
-            // this 
-            handle_binding_type_declaration(lhs, rhs);
-            // ??
-            ast_->delete_expression(expression);
-
-            // !!! not correct
-            ast_->unparsed_termed_expressions_.push_back(rhs);
-            ast_->unparsed_termed_expressions_.push_back(lhs);
-
-            log_info("removed \"parentheses\" from " + expression->location.to_string(), MessageType::parser_debug);
-            expression_end();
-            return rhs;
-        }
+        if ( rhs->is_type_declaration() != DeferredBool::true_ &&
+             lhs->is_type_declaration() != DeferredBool::false_
+        ) ast_->possible_binding_type_declarations_.push_back(lhs);
     }
 
     ast_->unparsed_termed_expressions_.push_back(expression);
@@ -831,8 +831,10 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return handle_numeric_literal();
 
         case TokenType::colon:
-            get_token();
-            return parse_termed_expression();
+            log_error("unhandled token type: " + current_token().get_string() + ", reached ParserLayer1::parse_term");
+            assert(false && "colons should be handled by parse_termed expression");
+            declare_invalid();            
+            return ast_->create_valueless_expression(ExpressionType::syntax_error, current_token().location);
 
         case TokenType::parenthesis_open: 
             return parse_parenthesized_expression();
@@ -858,7 +860,10 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return ast_->create_type_operator_expression(current_token().string_value(), current_token().location);
         
         default:
-            assert(false && "Parser::parse_term called with a non-term token");
+            declare_invalid();
+            log_error("unhandled token type: " + current_token().get_string() + ", reached ParserLayer1::parse_term");
+            assert(false && "unhandled token type in parse_term");
+            return ast_->create_valueless_expression(ExpressionType::syntax_error, current_token().location);
     }
 }
 

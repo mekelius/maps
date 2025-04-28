@@ -102,7 +102,7 @@ TEST_CASE("Maps::TermedExpressionParser should handle binop expressions") {
     // create the operator
     auto [op1_ref, op1] = create_operator_helper(ast, "+");
 
-    expr->value = std::vector<Expression*>{val1, op1_ref, val2};
+    expr->terms() = std::vector<Expression*>{val1, op1_ref, val2};
 
     REQUIRE(expr->terms().size() == 3);
 

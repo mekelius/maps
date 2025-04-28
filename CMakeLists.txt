@@ -50,6 +50,7 @@ add_library(parser OBJECT
     src/parser/parser_layer2.cpp
     src/parser/name_resolution.cpp
     src/parser/type_inference.cpp
+    src/parser/type_declaration.cpp
     src/parser/full_parse.cpp
     src/parser/reverse_parse.cpp
 )

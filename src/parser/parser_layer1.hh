@@ -87,9 +87,6 @@ private:
     Expression* parse_mapping_literal();
     Expression* parse_access_expression();
 
-    bool is_type_declaration(Expression* expression);
-    bool handle_binding_type_declaration(Expression* type_declaration, Expression* target);
-
 
     // ----- TERMINALS -----
     Expression* handle_string_literal();

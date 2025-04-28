@@ -84,6 +84,7 @@ public:
     void run();
 
 private:
+
     // Selects a termed expression to parse. That expressions terms become the tokenstream
     void select_expression(Expression* expression);
     AST* ast_;

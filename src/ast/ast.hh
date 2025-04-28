@@ -100,6 +100,8 @@ public:
     // need to walk the tree to find them
     std::vector<Expression*> unresolved_identifiers_ = {};
     std::vector<Expression*> unresolved_type_identifiers_ = {};
+    // these have to be dealt with before name resolution
+    std::vector<Expression*> possible_binding_type_declarations_ = {};
     std::vector<Expression*> unparsed_termed_expressions_ = {};
 
 private:

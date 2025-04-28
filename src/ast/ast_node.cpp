@@ -40,6 +40,22 @@ bool Expression::is_reduced_value() const {
     }
 }
 
+DeferredBool Expression::is_type_declaration() {
+    switch (expression_type) {
+        case ExpressionType::termed_expression:
+            return std::get<TermedExpressionValue>(value).is_type_declaration;
+
+        case ExpressionType::type_identifier:
+        case ExpressionType::type_construct:
+        case ExpressionType::type_reference:
+        case ExpressionType::type_constructor_reference:
+            return DeferredBool::true_;
+
+        default:
+            return DeferredBool::false_;
+    }
+}
+
 // TODO: clean this up
 const std::string& Expression::string_value() const {
     if (std::holds_alternative<Callable*>(value)) {
@@ -118,6 +134,26 @@ bool Expression::is_ok_in_codegen() const {
 
 bool Expression::is_castable_expression() const {
     return true;
+}
+
+bool Expression::is_allowed_in_type_declaration() const {
+    switch (expression_type) {
+        case ExpressionType::type_argument:
+        case ExpressionType::type_construct:
+        case ExpressionType::termed_expression:
+        case ExpressionType::type_operator_identifier:
+        case ExpressionType::type_operator_reference:
+        case ExpressionType::type_constructor_reference:
+        case ExpressionType::type_identifier:
+        case ExpressionType::type_reference:
+            return true;
+
+        case ExpressionType::identifier:
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 Statement::Statement(StatementType statement_type, SourceLocation location)

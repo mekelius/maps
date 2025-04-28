@@ -2,15 +2,17 @@
 
 #include <memory>
 
+#include "parser/lexer.hh"
 #include "parser/reverse_parse.hh"
-#include "parser_layer1.hh"
-#include "parser_layer2.hh"
-#include "name_resolution.hh"
-#include "lexer.hh"
-#include "type_inference.hh"
+#include "parser/parser_layer1.hh"
+#include "parser/type_declaration.hh"
+#include "parser/name_resolution.hh"
+#include "parser/parser_layer2.hh"
+#include "parser/type_inference.hh"
 
 using std::tuple, std::unique_ptr, std::make_optional, std::nullopt;
-using Pragma::Pragmas, Maps::ParserLayer1, Maps::ParserLayer2;
+using Pragma::Pragmas, Maps::ParserLayer1, Maps::ParserLayer2, Maps::SimpleTypeChecker;
+using Maps::check_binding_type_declarations, Maps::resolve_identifiers;
 
 // if parse fails at any point, returns nullopt, 
 // except if ignore errors is true returns the broken ast
@@ -35,6 +37,11 @@ tuple<bool, unique_ptr<Maps::AST>, unique_ptr<Pragmas>>
     if (options.stop_after == ParseStage::layer1)
         return {true, std::move(ast), std::move(pragmas)};
 
+    // ----- binding type declarations -----
+
+    if (!check_binding_type_declarations(ast->possible_binding_type_declarations_) && options.stop_on_error)
+        return {false, std::move(ast), std::move(pragmas)};
+
     // ----- name resolution -----
 
     if (!resolve_identifiers(*ast) && options.stop_on_error)
@@ -57,7 +64,7 @@ tuple<bool, unique_ptr<Maps::AST>, unique_ptr<Pragmas>>
 
     // ----- type checks -----
 
-    if (!Maps::SimpleTypeChecker{}.run(*ast) && options.stop_on_error)
+    if (!SimpleTypeChecker{}.run(*ast) && options.stop_on_error)
         return {false, std::move(ast), std::move(pragmas)};
 
     // ----- done -----

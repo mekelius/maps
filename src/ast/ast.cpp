@@ -51,7 +51,7 @@ Expression* AST::create_type_operator_expression(const std::string& value, Sourc
 }
 
 Expression* AST::create_termed_expression(std::vector<Expression*>&& terms, SourceLocation location) {
-    return create_expression(ExpressionType::termed_expression, terms, Hole, location);
+    return create_expression(ExpressionType::termed_expression, TermedExpressionValue{terms}, Hole, location);
 }
 
 Expression* AST::create_type_reference(const Type* type, SourceLocation location) {

@@ -70,6 +70,13 @@ using TypeConstruct = std::tuple<
     std::vector<Expression*>    // type_arguments
 >;
 
+struct TermedExpressionValue {
+    std::vector<Expression*> terms;
+    DeferredBool is_type_declaration = DeferredBool::maybe;
+
+    bool operator==(const TermedExpressionValue&) const = default;
+};
+
 using ExpressionValue = std::variant<
     std::monostate,
     int,
@@ -78,7 +85,7 @@ using ExpressionValue = std::variant<
     std::string,
     Callable*,                       // for references to operators and functions
     const Type*,                     // for type expressions
-    std::vector<Expression*>,
+    TermedExpressionValue,
     CallExpressionValue,
     TypeArgument,
     TypeConstruct
@@ -98,7 +105,7 @@ public:
     ExpressionValue value;
 
     std::vector<Expression*>& terms() {
-        return std::get<std::vector<Expression*>>(value);
+        return std::get<TermedExpressionValue>(value).terms;
     }
     CallExpressionValue& call_value() {
         return std::get<CallExpressionValue>(value);
@@ -108,6 +115,8 @@ public:
     }
     bool is_partial_call() const;
     bool is_reduced_value() const;
+
+    DeferredBool is_type_declaration();
 
     const std::string& string_value() const;
 
@@ -132,6 +141,7 @@ public:
     bool is_ok_in_layer2() const;
     bool is_ok_in_codegen() const;
     bool is_castable_expression() const;
+    bool is_allowed_in_type_declaration() const;
 };
 
 // ----- STATEMENTS -----

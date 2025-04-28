@@ -35,7 +35,7 @@ void ParserLayer2::run() {
 
 TermedExpressionParser::TermedExpressionParser(AST* ast, Expression* expression)
 :ast_(ast), expression_(expression) {
-    expression_terms_ = &std::get<std::vector<Expression*>>(expression->value);
+    expression_terms_ = &expression->terms();
     next_term_it_ = expression_terms_->begin();    
 }
 

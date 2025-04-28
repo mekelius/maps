@@ -18,7 +18,8 @@ Parsing is done in layers
 | ----- | ----------------                         | -------- | ---------- | --------           |
 | 0     | lexing                                   | LL/RD    | char       | Token              |
 | 1     | statements, terminals, overall structure | RD       | Token      | Expression, Pragma |
-| 2.1   | name resolution                          | just lookup | *_identifier      | *_reference    |
+| 2.1   | binding type declarations                | RA       | identifier | field_name |
+| 2.2   | name resolution                          | just lookup | *_identifier      | *_reference |
 | 3     | termed expressions (binops, calls...)    | RA/RD    | termed_expression <br> *_reference | call <br> value |
 | 4     | type inference                           | ?        | ? polymorphic_call? | call       |
 | Codegen | generating the ir                      |          | call <br> value | llvm::Module | 
