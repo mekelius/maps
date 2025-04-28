@@ -2,7 +2,7 @@
 
 #include <tuple>
 
-#include "../logging.hh"
+#include "logging.hh"
 
 namespace IR {
 

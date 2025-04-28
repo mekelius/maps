@@ -1,7 +1,7 @@
 #ifndef __TYPE_INFERENCE_HH
 #define __TYPE_INFERENCE_HH
 
-#include "../lang/ast.hh"
+#include "ast/ast.hh"
 
 namespace Maps {
 

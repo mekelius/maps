@@ -1,4 +1,4 @@
-#include "ir_types.hh"
+#include "type_mapping.hh"
 
 using std::optional, std::nullopt, std::vector;
 

@@ -2,8 +2,7 @@
 
 #include <cassert>
 
-#include "../logging.hh"
-#include "words.hh"
+#include "logging.hh"
 
 using Logging::log_error;
 

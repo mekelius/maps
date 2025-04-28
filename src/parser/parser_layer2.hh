@@ -7,8 +7,8 @@
  *  - parsing mapping literals i.e. lists, enums, dictionaries etc.
  */
 
-#include "../lang/pragma.hh"
-#include "../lang/ast.hh"
+#include "lang/pragma.hh"
+#include "ast/ast.hh"
 
 namespace Maps {
 

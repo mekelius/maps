@@ -15,6 +15,12 @@ add_compile_options(-Wall -Wextra -Werror
     -Wno-error=unused-function
 )
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug")
+endif()
+
+include_directories(src)
+
 # ------------------- MAPSC BUILTINS ------------------
 
 add_library(maps_builtins SHARED
@@ -22,26 +28,29 @@ add_library(maps_builtins SHARED
     maps_builtins/maps_builtins.c
 )
 
-# ------------------- MAPSC PARSING -------------------
+# ------------------- MAPSC PARSER -------------------
 
-add_library(parsing OBJECT
+add_library(parser OBJECT
     src/logging.cpp
+
     src/lang/type.cpp
     src/lang/type_defs.cpp
-    src/lang/ast_node.cpp
-    src/lang/callable.cpp
-    src/lang/ast.cpp
-    src/lang/scope.cpp
     src/lang/pragma.cpp
     src/lang/builtins.cpp
     src/lang/casts.cpp
-    src/parsing/token.cpp
-    src/parsing/lexer.cpp
-    src/parsing/parser_layer1.cpp
-    src/parsing/parser_layer2.cpp
-    src/parsing/name_resolution.cpp
-    src/parsing/type_inference.cpp
-    src/parsing/full_parse.cpp
+    
+    src/ast/ast_node.cpp
+    src/ast/callable.cpp
+    src/ast/ast.cpp
+    src/ast/scope.cpp
+    
+    src/parser/token.cpp
+    src/parser/lexer.cpp
+    src/parser/parser_layer1.cpp
+    src/parser/parser_layer2.cpp
+    src/parser/name_resolution.cpp
+    src/parser/type_inference.cpp
+    src/parser/full_parse.cpp
 )
 
 # ---------------------- IR_GEN ------------------------
@@ -49,10 +58,10 @@ add_library(parsing OBJECT
 add_library(ir_gen OBJECT
     src/ir/ir_generator.cpp
     src/ir/ir_builtins.cpp
-    src/ir/ir_types.cpp
+    src/ir/type_mapping.cpp
 )
 
-target_link_libraries(ir_gen parsing -lLLVM-19)
+target_link_libraries(ir_gen parser -lLLVM-19)
 target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 # ----------------------- MAPSC ------------------------
@@ -62,7 +71,7 @@ add_executable(mapsc
     src/ir/obj_output.cpp
 )
 
-target_link_libraries(mapsc parsing ir_gen maps_builtins -lLLVM-19)
+target_link_libraries(mapsc parser ir_gen maps_builtins -lLLVM-19)
 target_include_directories(mapsc SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 target_compile_options(mapsc PRIVATE 
@@ -75,10 +84,10 @@ target_compile_options(mapsc PRIVATE
 add_executable(mapsci
     src/mapsci_main.cpp
     src/repl.cpp
-    src/lang/reverse_parse.cpp
+    src/parser/reverse_parse.cpp
 )
 
-target_link_libraries(mapsci parsing ir_gen maps_builtins -lLLVM-19)
+target_link_libraries(mapsci parser ir_gen maps_builtins -lLLVM-19)
 target_include_directories(mapsci SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 target_compile_options(mapsci PRIVATE 
@@ -89,20 +98,20 @@ target_compile_options(mapsci PRIVATE
 # -------------------- VERIFY MAPSC --------------------
 
 add_executable(verify_mapsc
-    src/lang/reverse_parse.cpp
+    src/parser/reverse_parse.cpp
     src/verify_mapsc_main.cpp
 )
 
-target_link_libraries(verify_mapsc parsing)
+target_link_libraries(verify_mapsc parser)
 
-# ----------------- PARSING UNIT_TESTS -----------------
+# ----------------- PARSer UNIT_TESTS -----------------
 
-add_executable(parsing_unit_tests
+add_executable(parser_unit_tests
     tests/tests_main.cpp
     tests/layer2_tests.cpp
     tests/ast_tests.cpp
     tests/type_specifiers.cpp
 )
 
-target_link_libraries(parsing_unit_tests parsing)
-target_include_directories(parsing_unit_tests SYSTEM PRIVATE doctest)
+target_link_libraries(parser_unit_tests parser)
+target_include_directories(parser_unit_tests SYSTEM PRIVATE doctest)

@@ -10,16 +10,16 @@
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 
-#include "ir/ir_generator.hh"
-#include "lang/reverse_parse.hh"
-
 #include "logging.hh"
-#include "parsing/full_parse.hh"
-#include "parsing/lexer.hh"
-#include "parsing/parser_layer1.hh"
-#include "parsing/name_resolution.hh"
-#include "parsing/parser_layer2.hh"
 
+#include "ir/ir_generator.hh"
+
+#include "parser/name_resolution.hh"
+#include "parser/reverse_parse.hh"
+#include "parser/parser_layer2.hh"
+#include "parser/parser_layer1.hh"
+#include "parser/full_parse.hh"
+#include "parser/lexer.hh"
 
 using std::optional, std::nullopt;
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple;

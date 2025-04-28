@@ -9,8 +9,8 @@
 #include <memory>
 #include <optional>
 
-#include "../lang/ast.hh"
-#include "../lang/pragma.hh"
+#include "ast/ast.hh"
+#include "lang/pragma.hh"
 
 std::optional<std::tuple<std::unique_ptr<Maps::AST>, std::unique_ptr<Pragma::Pragmas>>>
     parse_source(std::istream& source_is, bool in_repl = false, bool ignore_errors = false);

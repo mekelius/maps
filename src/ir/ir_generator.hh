@@ -7,10 +7,10 @@
 
 #include <ostream>
 
-#include "../lang/ast.hh"
-#include "../lang/pragma.hh"
+#include "ast/ast.hh"
+#include "lang/pragma.hh"
 
-#include "ir_types.hh"
+#include "ir/type_mapping.hh"
 
 namespace IR {
 

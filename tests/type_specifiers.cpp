@@ -3,10 +3,10 @@
 #include <string>
 #include <sstream>
 
-#include "../src/lang/type.hh"
-#include "../src/lang/ast.hh"
-#include "../src/parsing/full_parse.hh"
-#include "../src/parsing/parser_layer2.hh"
+#include "lang/type.hh"
+#include "ast/ast.hh"
+#include "parser/full_parse.hh"
+#include "parser/parser_layer2.hh"
 
 using namespace Maps;
 

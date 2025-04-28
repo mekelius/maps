@@ -16,9 +16,9 @@
 
 #include "logging.hh"
 
-#include "lang/ast.hh"
+#include "ast/ast.hh"
 
-#include "parsing/full_parse.hh"
+#include "parser/full_parse.hh"
 
 #include "ir/ir_generator.hh"
 #include "ir/ir_builtins.hh"

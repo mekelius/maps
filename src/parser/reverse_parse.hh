@@ -3,7 +3,7 @@
 
 #include <ostream>
 
-#include "ast.hh"
+#include "ast/ast.hh"
 
 void reverse_parse(Maps::AST& ast, std::ostream& ostream);
 

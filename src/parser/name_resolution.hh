@@ -1,7 +1,7 @@
 #ifndef __NAME_RESOLUTION_HH
 #define __NAME_RESOLUTION_HH
 
-#include "../lang/ast.hh"
+#include "ast/ast.hh"
 
 namespace Maps {
 

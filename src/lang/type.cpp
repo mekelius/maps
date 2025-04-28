@@ -2,15 +2,15 @@
 
 #include <cassert>
 
-#include "type_defs.hh"
-#include "casts.hh"
-#include "ast_node.hh"
+#include "ast/ast_node.hh"
+
+#include "lang/type_defs.hh"
+#include "lang/casts.hh"
 
 namespace Maps {
 
 using std::unique_ptr, std::make_unique;
 using std::optional, std::nullopt;
-
 
 // todo: memoize this on the type
 std::string Type::to_string() const {

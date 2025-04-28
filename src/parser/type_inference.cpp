@@ -4,9 +4,9 @@
 #include <cassert>
 #include <optional>
 
-#include "../logging.hh"
+#include "logging.hh"
 
-#include "../lang/casts.hh"
+#include "lang/casts.hh"
 
 using std::get, std::get_if, std::optional, std::nullopt;
 using Logging::log_error;

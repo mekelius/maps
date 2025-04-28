@@ -8,10 +8,11 @@
 
 #include <cassert>
 
-#include "type.hh"
-#include "type_defs.hh"
-#include "ast_node.hh"
-#include "scope.hh"
+#include "lang/type.hh"
+#include "lang/type_defs.hh"
+
+#include "ast/ast_node.hh"
+#include "ast/scope.hh"
 
 namespace Maps {
 

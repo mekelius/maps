@@ -7,7 +7,7 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/LLVMContext.h"
 
-#include "../lang/ast.hh"
+#include "lang/type.hh"
 
 namespace IR {
 

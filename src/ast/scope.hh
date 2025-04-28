@@ -5,9 +5,9 @@
 #include <optional>
 #include <variant>
 
-#include "type.hh"
-#include "../source.hh"
-#include "ast_node.hh"
+#include "source.hh"
+#include "lang/type.hh"
+#include "ast/ast_node.hh"
 
 namespace Maps {
 

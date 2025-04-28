@@ -8,11 +8,11 @@
 #include <vector>
 #include <unordered_map>
 
-#include "../lang/pragma.hh"
-#include "../lang/ast.hh"
-#include "../logging.hh"
+#include "logging.hh"
 
-#include "lexer.hh"
+#include "ast/ast.hh"
+#include "lang/pragma.hh"
+#include "parser/lexer.hh"
 
 namespace Maps {
 

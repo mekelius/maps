@@ -4,10 +4,11 @@
 #include <string>
 #include <tuple>
 
-#include "../source.hh"
-#include "callable.hh"
-#include "type_defs.hh"
-#include "operator.hh"
+#include "source.hh"
+
+#include "lang/type_defs.hh"
+#include "ast/callable.hh"
+#include "ast/operator.hh"
 
 namespace Maps {
 

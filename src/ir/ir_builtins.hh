@@ -4,7 +4,6 @@
 #include "llvm/IR/Function.h"
 
 #include "ir_generator.hh"
-#include "ir_types.hh"
 
 namespace IR {
 

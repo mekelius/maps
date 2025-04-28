@@ -2,10 +2,10 @@
 
 #include <cassert>
 
-#include "../logging.hh"
+#include "logging.hh"
 
-#include "type_defs.hh"
-#include "ast_node.hh"
+#include "lang/type_defs.hh"
+#include "ast/ast_node.hh"
 
 using Logging::log_error;
 

@@ -1,7 +1,7 @@
 #include "builtins.hh"
 
-#include "ast.hh"
-#include "type.hh"
+#include "ast/ast.hh"
+#include "lang/type.hh"
 
 void init_builtins(Maps::AST& ast) {
     init_builtin_callables(ast);

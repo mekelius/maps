@@ -8,7 +8,7 @@
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 
 #include "lang/pragma.hh"
-#include "lang/ast.hh"
+#include "ast/ast.hh"
 
 class JIT_Manager {
 public:

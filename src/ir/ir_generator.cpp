@@ -13,11 +13,11 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Constants.h"
 
-#include "../logging.hh"
+#include "logging.hh"
 
-#include "../lang/ast.hh"
+#include "ast/ast.hh"
 
-#include "ir_builtins.hh"
+#include "ir/ir_builtins.hh"
 
 using llvm::LLVMContext;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;
