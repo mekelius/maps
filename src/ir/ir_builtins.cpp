@@ -87,7 +87,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     }
 
     generator.builder_->CreateRet(
-        generator.builder_->CreateAdd(
+        generator.builder_->CreateFAdd(
             (*float_add)->getArg(0), (*float_add)->getArg(1)
         )
     );
@@ -100,7 +100,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     }
 
     generator.builder_->CreateRet(
-        generator.builder_->CreateMul(
+        generator.builder_->CreateFMul(
             (*float_mul)->getArg(0), (*float_mul)->getArg(1)
         )
     );
@@ -113,7 +113,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     }
 
     generator.builder_->CreateRet(
-        generator.builder_->CreateSub(
+        generator.builder_->CreateFSub(
             (*float_sub)->getArg(0), (*float_sub)->getArg(1)
         )
     );
@@ -126,7 +126,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     }
 
     generator.builder_->CreateRet(
-        generator.builder_->CreateSub(
+        generator.builder_->CreateFDiv(
             (*float_div)->getArg(0), (*float_div)->getArg(1)
         )
     );
