@@ -9,6 +9,8 @@
 
 #include "type_defs.hh"
 
+#include "ast/ast_node.hh"
+
 using Logging::log_error;
 
 namespace Maps {
@@ -27,6 +29,13 @@ std::optional<int> string_to_int(std::string str) {
         return std::nullopt;
 
     return result;
+}
+
+template<typename T>
+void cast_value(Expression* expression, const Type* type, T value) {
+    expression->value = value;
+    expression->expression_type = ExpressionType::value;
+    expression->type = type;
 }
 
 } // anonymous namespace
@@ -90,15 +99,23 @@ bool cast_from_Boolean(const Type* target_type, Expression* expression) {
 }
 
 bool cast_from_NumberLiteral(const Type* target_type, Expression* expression) {
-    assert(false && "not implemented");
-
     if (*target_type == String) {
         return true;
     }
 
     if (*target_type == Int) {
+        if (!std::holds_alternative<std::string>(expression->value))
+            return false;
 
+        std::optional<int> result = string_to_int(expression->string_value());
+        if (!result)
+            return false;
+
+        cast_value<int>(expression, &Int, *result);
+        return true;
     }
+
+    assert(false && "not implemented");
 
     if (*target_type == Float) {
         
