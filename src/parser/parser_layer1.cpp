@@ -6,17 +6,16 @@
  * 
  * Same if a token is rejected. 
  */
+#include "parser_layer1.hh"
+
 
 #include <variant>
 #include <cassert>
 
-#include "../logging.hh"
-#include "../source.hh"
+#include "logging.hh"
+#include "source.hh"
 
-#include "../lang/builtins.hh"
-
-#include "token.hh"
-#include "parser_layer1.hh"
+#include "parser/token.hh"
 
 using Logging::LogLevel;
 using Logging::MessageType;
@@ -28,12 +27,16 @@ namespace Maps {
 ParserLayer1::ParserLayer1(Lexer* lexer, Pragma::Pragmas* pragmas, bool in_repl):
 lexer_(lexer), pragmas_(pragmas), in_repl_(in_repl) {
     ast_ = std::make_unique<AST>();
+    if (!ast_->init_builtins()) {
+        Logging::log_error("Initializing builtins failed");
+        assert(false && "Initializing builtins failed");
+        declare_invalid();
+    }
     get_token();
     get_token();
 }
 
 std::unique_ptr<AST> ParserLayer1::run() {    
-    init_builtins(*ast_);
     Statement* root = ast_->create_statement(StatementType::block, {0,0});
     ast_->set_root(root);
 

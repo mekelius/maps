@@ -106,6 +106,9 @@ private:
 
     bool in_repl_ = false;
 
+    bool type_declaration_possible_ = true;
+    bool binding_type_declaration_possible_ = true;
+
     // these are automatically incremented and decremented by the get_token()
     unsigned int indent_level_ = 0;
     unsigned int parenthese_level_ = 0;

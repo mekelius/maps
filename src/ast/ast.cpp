@@ -1,11 +1,17 @@
 #include "ast.hh"
 
+#include "lang/builtins.hh"
+
 #include <cassert>
 
 namespace Maps {
 
 AST::AST() {
     root_ = create_callable("root", {0,0});
+}
+
+bool AST::init_builtins() {
+    return ::init_builtins(*this);
 }
 
 void AST::set_root(CallableBody root) {

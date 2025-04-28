@@ -30,6 +30,8 @@ public:
     using const_iterator = Scope::const_iterator;
 
     AST();
+    [[nodiscard]] bool init_builtins();
+
     void set_root(CallableBody root);
     void declare_invalid() { is_valid = false; };
 
@@ -63,10 +65,10 @@ public:
 
     Expression* create_termed_expression(std::vector<Expression*>&& terms, SourceLocation location);
 
-    std::optional<Expression*> create_type_operator_ref(const std::string& name, SourceLocation location);
+    [[nodiscard]] std::optional<Expression*> create_type_operator_ref(const std::string& name, SourceLocation location);
 
     Expression* create_type_reference(const Type* type, SourceLocation location);
-    std::optional<Expression*> create_operator_ref(const std::string& name, SourceLocation location);
+    [[nodiscard]] std::optional<Expression*> create_operator_ref(const std::string& name, SourceLocation location);
     Expression* create_operator_ref(Callable* callable, SourceLocation location);
 
     // valueless expression types are tie, empty, syntax_error and not_implemented
