@@ -40,11 +40,9 @@ TEST_CASE("Should be able to cast a string literal into Int") {
 TEST_CASE("Integration test: parse_source should parse a numberliteral with the correct type") {
     std::stringstream source{"let x = Int 34"};
     
-    auto result = parse_source(source, false);
+    auto [success, ast, _1] = parse_source(source);
 
-    CHECK(result);
-
-    auto [ast, _1] = std::move(*result);
+    CHECK(success);
 
     CHECK(ast->globals_->identifier_exists("x"));
 

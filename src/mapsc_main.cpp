@@ -116,15 +116,11 @@ int main(int argc, char** argv) {
     
     std::cerr << "Parsing source file(s)...\n";
 
-    std::unique_ptr<Maps::AST> ast;
-    std::unique_ptr<Pragma::Pragmas> pragmas;
-
-    auto result = parse_source(source_is);
-    if (!result) {
+    auto [success, ast, pragmas] = parse_source(source_is);
+    if (!success) {
         Logging::log_error("parsing failed");
         return EXIT_FAILURE;
     }
-    std::tie(ast, pragmas) = std::move(*result);
 
     std::cerr << "Parsing complete" << std::endl;
     

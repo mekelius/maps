@@ -7,6 +7,7 @@
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 
+#include "parser/full_parse.hh"
 #include "lang/pragma.hh"
 #include "ast/ast.hh"
 
@@ -33,12 +34,23 @@ private:
 
 class REPL {
 public:
+    enum class Stage {
+        layer1,
+        layer2,
+        ir,
+        done
+    };
+
     struct Options {
+        bool print_layer1 = false;
+        bool print_layer2 = false;
         bool print_reverse_parse = false;
         bool print_ir = false;
+        
         bool eval = true;
-        bool layer1 = false;
-        bool layer2 = false;
+
+        bool stop_on_error = true;
+        Stage stop_after = Stage::done;
     };
 
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options);
@@ -47,11 +59,10 @@ public:
     void run();
     
 private:
-    void layer1_parse(std::istream& source_is);
-    void layer2_parse(std::istream& source_is);
-    void print_reverse_parse(Maps::AST& ast);
-    void eval(const Maps::AST& ast);
+    void eval(const Maps::AST& ast, Pragma::Pragmas& pragmas);
     void run_command(const std::string& command);
+
+    void update_parse_options();
 
     bool running_ = true;
     bool is_good_ = true;
@@ -60,7 +71,9 @@ private:
     JIT_Manager* jit_;
     llvm::raw_ostream* error_stream_;
     Options options_ = {};
-    std::unique_ptr<Pragma::Pragmas> pragmas_{};
+    ParseOptions parse_options_ = {};
+
+    // std::unique_ptr<Pragma::Pragmas> pragmas_{};
 };
     
 #endif

@@ -36,7 +36,7 @@ public:
     // ----- WALKING TREE NODE BY NODE -----
 
     template<AST_Visitor T>
-    bool walk_tree(T visitor);
+    bool walk_tree(T& visitor);
 
     template<AST_Visitor T>
     bool walk_expression(T visitor, Expression* expression);
@@ -198,7 +198,7 @@ bool AST::walk_callable(T visitor, Callable* callable) {
 }
 
 template<AST_Visitor T>
-bool AST::walk_tree(T visitor) {
+bool AST::walk_tree(T& visitor) {
     for (auto [_1, callable]: globals_->identifiers_) {
         if (!walk_callable(visitor, callable))
             return false;

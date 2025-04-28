@@ -51,6 +51,7 @@ add_library(parser OBJECT
     src/parser/name_resolution.cpp
     src/parser/type_inference.cpp
     src/parser/full_parse.cpp
+    src/parser/reverse_parse.cpp
 )
 
 # ---------------------- IR_GEN ------------------------
@@ -84,7 +85,6 @@ target_compile_options(mapsc PRIVATE
 add_executable(mapsci
     src/mapsci_main.cpp
     src/repl.cpp
-    src/parser/reverse_parse.cpp
 )
 
 target_link_libraries(mapsci parser ir_gen maps_builtins -lLLVM-19)
@@ -98,7 +98,6 @@ target_compile_options(mapsci PRIVATE
 # -------------------- VERIFY MAPSC --------------------
 
 add_executable(verify_mapsc
-    src/parser/reverse_parse.cpp
     src/verify_mapsc_main.cpp
 )
 

@@ -76,10 +76,14 @@ void JIT_Manager::reset() {
 }
     
 REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options)
-: context_(context), jit_(jit), error_stream_(error_stream), options_(options) {}
+: context_(context), jit_(jit), error_stream_(error_stream), options_(options) {
+    update_parse_options();
+}
 
 REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream)
-: context_(context), jit_(jit), error_stream_(error_stream) {}
+: context_(context), jit_(jit), error_stream_(error_stream) {
+    update_parse_options();
+}
 
     
 void REPL::run() {    
@@ -103,99 +107,47 @@ void REPL::run() {
         }
         
         std::stringstream input_s{input};
-        
-        if (options_.layer2) {
-            layer2_parse(input_s);
+
+        auto [success, ast, pragmas] = parse_source(input_s, parse_options_, std::cout);
+  
+        if (!success && options_.stop_on_error)
             continue;
-        }
 
-        if (options_.layer1) {
-            layer1_parse(input_s);
+        if (options_.stop_after == Stage::layer2)
             continue;
-        }
 
-        unique_ptr<Maps::AST> ast;
-        auto result = parse_source(input_s, true, true);
-        
-        if (!result) {
-            // this shouldn't happen since we told parse_source to ignore error
-            // better to be safe tho
-            Logging::log_error("parsing failed");
-            continue;
-        }
-
-        std::tie(ast, pragmas_) = std::move(*result);
-
-        if (options_.print_reverse_parse)
-            print_reverse_parse(*ast);
-
-        if (!ast->is_valid) {
-            Logging::log_error("parsing failed");
-            continue;
+        if (options_.print_reverse_parse) {
+            std::cout << "parsed into:\n";
+            reverse_parse(*ast, std::cout);
+            std::cout << "\n" << std::endl;
         }
 
         if (ast->is_valid)
-            eval(*ast);
+            eval(*ast, *pragmas);
     }
-}
-
-void REPL::layer1_parse(std::istream& source_is) {
-    std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
-    Lexer lexer{&source_is};
-    std::unique_ptr<Maps::AST> ast = Maps::ParserLayer1{&lexer, pragmas.get(), true}.run();
-    print_reverse_parse(*ast);
-}
-
-void REPL::layer2_parse(std::istream& source_is) {
-    std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
-    Lexer lexer{&source_is};
-    std::unique_ptr<Maps::AST> ast = Maps::ParserLayer1{&lexer, pragmas.get(), true}.run();
-
-    if (!ast->is_valid) {
-        Logging::log_error("parsing failed");
-        print_reverse_parse(*ast);
-        return;
-    }
-
-    if (!Maps::resolve_identifiers(*ast)) {
-        Logging::log_error("parsing failed");
-        print_reverse_parse(*ast);
-        return;
-    }
-
-    if (options_.layer1)
-        print_reverse_parse(*ast);
-
-    Maps::ParserLayer2{ast.get(), pragmas.get()}.run();
-
-    if (!ast->is_valid) {
-        Logging::log_error("parsing failed");
-    }
-
-    print_reverse_parse(*ast);
-}
-
-void REPL::print_reverse_parse(Maps::AST& ast) {
-    std::cout << "parsed into:\n";
-    reverse_parse(ast, std::cout);           
-    std::cout << "\n" << std::endl;
 }
     
-void REPL::eval(const Maps::AST& ast) {
+void REPL::eval(const Maps::AST& ast, Pragma::Pragmas& pragmas) {
     jit_->reset();
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
     unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), 
-        ast, *pragmas_, error_stream_);
+        ast, pragmas, error_stream_);
 
     insert_builtins(*generator);
-    generator->repl_run();
+    bool success = generator->repl_run();
 
     if (options_.print_ir) {
         std::cerr << "---IR DUMP---:\n\n";
         module_->dump();
         std::cerr << "\n---IR END---\n";
     }
+
+    if (!success && options_.stop_on_error)
+        return;
+
+    if (options_.stop_after == Stage::ir)
+        return;
 
     if (options_.eval) {
         jit_->compile_and_run(static_cast<std::string>(IR::REPL_WRAPPER_NAME), std::move(module_));
@@ -212,12 +164,63 @@ void REPL::run_command(const std::string& command) {
         command == ":close"   
     ) {
         running_ = false;
-    } else if (command == ":toggle layer1") {
-        options_.layer1 = !options_.layer1;
 
-    } else if (command == ":toggle layer2") {
-        options_.layer1 = !options_.layer2;
+    } else if (command == ":stop after layer1") {
+        options_.stop_after = Stage::layer1;
+        update_parse_options();
 
+    } else if (command == ":stop after layer2") {
+        options_.stop_after = Stage::layer2;
+        update_parse_options();
+
+    } else if (command == ":stop after ir") {
+        options_.stop_after = Stage::ir;
+        update_parse_options();
+
+    } else if (command == ":stop after done") {
+        options_.stop_after = Stage::done;
+        update_parse_options();
+    
+    } else if (command == ":halt on error") {
+        options_.stop_on_error = true;
+        update_parse_options();
+
+    } else if (command == ":no halt on error") {
+        options_.stop_on_error = false;
+        update_parse_options();
+
+    } else if (command == ":toggle eval") {
+        options_.eval = !options_.eval;
+
+    } else if (command == ":toggle print layer1") {
+        options_.print_layer1 = !options_.print_layer1;
+        update_parse_options();
+
+    } else if (command == ":toggle print layer2") {
+        options_.print_layer2 = !options_.print_layer2;
+        update_parse_options();
+
+    } else if (command == ":toggle print ir") {
+        options_.print_ir = !options_.print_ir;
     }
 }
-           
+
+void REPL::update_parse_options() {
+    parse_options_ = {
+        options_.print_layer1,
+        options_.print_layer2,
+        options_.stop_on_error,
+        ParseStage::done,
+        true
+    };
+
+    if (options_.stop_after == Stage::layer1) {
+        parse_options_.stop_after = ParseStage::layer1;
+        return;
+    }
+
+    if (options_.stop_after == Stage::layer2) {
+        parse_options_.stop_after = ParseStage::layer2;
+        return;
+    }
+}
