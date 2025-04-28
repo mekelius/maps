@@ -773,8 +773,42 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
                 get_token();
         }
     }
-    ast_->unparsed_termed_expressions_.push_back(expression);
 
+    // unwrap redundant parentheses
+    if (expression->terms().size() == 1) {
+        auto term = expression->terms().at(0);
+        ast_->delete_expression(expression);
+
+        log_info("removed \"parentheses\" from " + expression->location.to_string(), MessageType::parser_debug);
+        expression_end();
+        return term;
+    }
+
+    // handle possible binding type declaration
+    if (expression->terms().size() == 2) {
+        auto lhs = expression->terms().at(0);
+        auto rhs = expression->terms().at(1);
+
+        if (is_type_declaration(lhs) && !is_type_declaration(rhs)) {
+            assert(false && "not implemented");
+
+            // this 
+            handle_binding_type_declaration(lhs, rhs);
+            // ??
+            ast_->delete_expression(expression);
+
+            // !!! not correct
+            ast_->unparsed_termed_expressions_.push_back(rhs);
+            ast_->unparsed_termed_expressions_.push_back(lhs);
+
+            log_info("removed \"parentheses\" from " + expression->location.to_string(), MessageType::parser_debug);
+            expression_end();
+            return rhs;
+        }
+    }
+
+    ast_->unparsed_termed_expressions_.push_back(expression);
+    
     log_info("finished parsing termed expression from " + expression->location.to_string(), MessageType::parser_debug);
     expression_end();
     return expression;

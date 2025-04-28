@@ -54,6 +54,8 @@ private:
 
     void statement_start();
 
+    
+
     // creates an expression using ast_, marking the location as the current_expression_start_
     Statement* create_statement(StatementType statement_type);
 
@@ -85,6 +87,10 @@ private:
     Expression* parse_mapping_literal();
     Expression* parse_access_expression();
 
+    bool is_type_declaration(Expression* expression);
+    bool handle_binding_type_declaration(Expression* type_declaration, Expression* target);
+
+
     // ----- TERMINALS -----
     Expression* handle_string_literal();
     Expression* handle_numeric_literal();
@@ -105,9 +111,6 @@ private:
     std::vector<SourceLocation> current_statement_start_;
 
     bool in_repl_ = false;
-
-    bool type_declaration_possible_ = true;
-    bool binding_type_declaration_possible_ = true;
 
     // these are automatically incremented and decremented by the get_token()
     unsigned int indent_level_ = 0;
