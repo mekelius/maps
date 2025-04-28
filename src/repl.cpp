@@ -1,14 +1,18 @@
 #include "repl.hh"
 
+
 #include <optional>
 #include <memory>
 #include <iostream>
 #include <tuple>
 
-#include "llvm/Support/raw_os_ostream.h"
+#include "readline.h"
+#include "history.h"
 
+#include "llvm/Support/raw_os_ostream.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
+
 
 #include "logging.hh"
 
@@ -88,18 +92,22 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
     
 void REPL::run() {    
     while (running_) {
-        std::cout << PROMPT;
+        char* line = readline(PROMPT.cbegin());
 
-        std::string input;
-        std::getline(std::cin, input);
-
-        if (std::cin.eof()) {
+        if (!line) {
             std::cout << std::endl;
-            running_ = false;
+            break;
         }
-
-        if (input.empty())
+        
+        std::string input{line};
+        
+        if (input.empty()) {
+            free(line);
             continue;
+        }
+        
+        add_history(line);
+        free(line);
     
         if (input.at(0) == ':') {
             run_command(input);

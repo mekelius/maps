@@ -88,11 +88,14 @@ add_executable(mapsci
     src/repl.cpp
 )
 
-target_link_libraries(mapsci parser ir_gen maps_builtins -lLLVM-19)
-target_include_directories(mapsci SYSTEM PUBLIC /usr/lib/llvm-19/include)
+target_link_libraries(mapsci parser ir_gen maps_builtins -lLLVM-19 -ledit -lncurses)
+target_include_directories(mapsci SYSTEM PUBLIC 
+    /usr/lib/llvm-19/include
+    /usr/include/editline
+)
 
 target_compile_options(mapsci PRIVATE 
-    -fno-exceptions -funwind-tables 
+    -fno-exceptions -funwind-tables
     -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
 )
 
