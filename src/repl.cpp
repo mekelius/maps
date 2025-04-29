@@ -100,24 +100,11 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
     }
 }
 
-REPL::~REPL() {
-    if (options_.save_history) {
-        if (options_.history_file.empty())
-            return;
-
-        if (write_history(options_.history_file.c_str()) == errno && errno) {
-            std::cout << "ERROR: writing history failed" << std::endl;
-            return;
-        }
-    }
-}
-
 REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream)
 : context_(context), jit_(jit), error_stream_(error_stream) {
     update_parse_options();
 }
 
-    
 void REPL::run() {    
     while (running_) {
         char* line = readline(PROMPT.cbegin());
@@ -161,6 +148,20 @@ void REPL::run() {
         if (ast->is_valid)
             eval(*ast, *pragmas);
     }
+
+    save_history();
+}
+
+bool REPL::save_history() {
+    if (!options_.save_history || options_.history_file.empty()) 
+        return true;
+
+    if (write_history(options_.history_file.c_str()) == errno && errno) {
+        std::cout << "ERROR: writing history failed" << std::endl;
+        return false;
+    }
+
+    return true;
 }
     
 void REPL::eval(const Maps::AST& ast, Maps::Pragmas& pragmas) {

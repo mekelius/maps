@@ -35,7 +35,6 @@ private:
 
 class REPL {
 public:
-
     enum class Stage {
         layer1,
         layer2,
@@ -61,11 +60,10 @@ public:
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options);
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream);
 
-    ~REPL();
-
     void run();
     
 private:
+    bool save_history();
     void eval(const Maps::AST& ast, Maps::Pragmas& pragmas);
     std::string parse_type(std::istream& input_stream);
     void run_command(const std::string& command);
@@ -80,7 +78,7 @@ private:
     Options options_ = {};
     ParseOptions parse_options_ = {};
 
-    // std::unique_ptr<Pragma::Pragmas> pragmas_{};
+    // std::unique_ptr<Mapsc::Pragmas> pragmas_{};
 };
     
 #endif
