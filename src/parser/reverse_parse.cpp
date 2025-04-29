@@ -3,21 +3,25 @@
 #include "../logging.hh"
 #include "reverse_parse.hh"
 
-constexpr bool REVERSE_PARSE_INCLUDE_DEBUG_INFO = false;
-constexpr bool REVERSE_PARSE_DEBUG_SEPARATORS = false;
-constexpr unsigned int REVERSE_PARSE_INDENT_WIDTH = 4;
+struct ReverseParseOptions {
+    bool include_debug_info = false;
+    bool debug_separators = false;
+    unsigned int indent_width = 4;
+};
+
+constexpr ReverseParseOptions default_options{};
 
 unsigned int indent_stack = 0;
 
 std::string linebreak() {
-    return "\n" + std::string(indent_stack * REVERSE_PARSE_INDENT_WIDTH, ' ');
+    return "\n" + std::string(indent_stack * default_options.indent_width, ' ');
 }
 
 std::ostream& operator<<(std::ostream& ostream, Maps::CallableBody body);
 std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression);
 
 std::ostream& operator<<(std::ostream& ostream, Maps::Statement* statement) {
-    if (REVERSE_PARSE_DEBUG_SEPARATORS) ostream << "$";
+    if (default_options.debug_separators) ostream << "$";
 
     assert(statement && "Reverse parse encountered a nullptr statement");
     ostream << linebreak();
@@ -96,7 +100,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Statement* statement) {
 
 std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
     assert(expression && "Reverse parse encountered a nullptr expression");
-    if (REVERSE_PARSE_DEBUG_SEPARATORS) ostream << "£";
+    if (default_options.debug_separators) ostream << "£";
 
     switch (expression->expression_type) {
         case Maps::ExpressionType::string_literal:
@@ -114,7 +118,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
             for (Maps::Expression* term: expression->terms()) {
                 ostream << (pad_left ? " " : "");
                 
-                if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+                if (default_options.include_debug_info)
                     ostream << "/*term:*/";
 
                 ostream << term;
@@ -126,7 +130,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
         }
 
         case Maps::ExpressionType::operator_reference:
-            if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+            if (default_options.include_debug_info)
                 ostream << "/*operator-ref:*/ ";
             return ostream << expression->reference_value()->name;
         
@@ -134,7 +138,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
         case Maps::ExpressionType::type_reference:
         case Maps::ExpressionType::type_operator_reference:
         case Maps::ExpressionType::type_constructor_reference:
-            if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+            if (default_options.include_debug_info)
                 ostream << "/*reference to:*/ ";
             return ostream << expression->reference_value()->name;
 
@@ -142,7 +146,7 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
             return ostream << "Expression type not implemented in parser: " + expression->string_value();
 
         case Maps::ExpressionType::identifier:
-            if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+            if (default_options.include_debug_info)
                 ostream << "/*unresolved identifier:*/ ";
             return ostream << std::get<std::string>(expression->value);
             
@@ -163,13 +167,13 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
             return ostream;
 
         case Maps::ExpressionType::type_field_name:
-            if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+            if (default_options.include_debug_info)
                 ostream << "/*type field name:*/ ";
             return ostream << expression->string_value();
         case Maps::ExpressionType::type_identifier:
         case Maps::ExpressionType::type_operator_identifier:
         case Maps::ExpressionType::operator_identifier:
-            if (REVERSE_PARSE_INCLUDE_DEBUG_INFO)
+            if (default_options.include_debug_info)
                 ostream << "/*unresolved identifier:*/ ";
             return ostream << expression->string_value();
 
