@@ -1,8 +1,10 @@
 #include "ast_node.hh"
 
 #include <cassert>
+#include <sstream>
 
 #include "logging.hh"
+#include "parser/reverse_parse.hh"
 
 using Logging::log_error;
 
@@ -165,6 +167,80 @@ bool Expression::is_allowed_in_type_declaration() const {
         default:
             return false;
     }
+}
+
+std::string Expression::log_message_string() const {
+    switch (expression_type) {
+        case ExpressionType::type_construct:
+            return "type argument (TODO pretty print)";
+            // TOOD:
+            // return type_argument_value().to_string();
+
+        case ExpressionType::type_argument:
+            return "type argument (TODO pretty print)";
+            // TOOD:
+            // return type_argument_value().to_string();
+
+        case ExpressionType::termed_expression:
+            return std::get<TermedExpressionValue>(value).to_string();
+
+        case ExpressionType::string_literal:
+            return "string literal \"" + string_value() + "\"";
+
+        case ExpressionType::numeric_literal:
+            return "numeric literal +" + string_value();
+    
+        case ExpressionType::value:
+            return "value expression of type " + type->to_string();
+        
+        case ExpressionType::identifier:
+            return "identifier " + string_value();
+
+        case ExpressionType::operator_identifier:
+            return "operator " + string_value();
+        case ExpressionType::type_operator_identifier:
+            return "type operator " + string_value();
+        case ExpressionType::type_identifier:
+            return "type identifier " + string_value();
+
+        case ExpressionType::reference:
+            return "reference to " + reference_value()->name;
+        case ExpressionType::type_reference:
+            return "reference to type " + reference_value()->name;
+        case ExpressionType::operator_reference:
+            return "operator " + reference_value()->name;
+        case ExpressionType::type_operator_reference:
+            return "type operator " + reference_value()->name;
+        case ExpressionType::type_constructor_reference:
+            return "reference to type constructor " + reference_value()->name;
+   
+        case ExpressionType::type_field_name:
+            return "named field" + string_value();
+
+        case ExpressionType::syntax_error:
+            return "broken expression";
+        
+        case ExpressionType::not_implemented:
+            return "nonimplemented expression";
+
+        case ExpressionType::call: {
+            std::stringstream output{"call expression "};
+            output << this;
+            return output.str();
+        }
+
+        case ExpressionType::missing_arg:
+            return "incomplete partial application missing argument of type " + type->to_string();
+
+        case ExpressionType::deleted:
+            return "deleted expession";
+    }
+}
+
+std::string TermedExpressionValue::to_string() const {
+    std::stringstream output{"expression "};
+    output << this;
+    return output.str();
 }
 
 Statement::Statement(StatementType statement_type, SourceLocation location)

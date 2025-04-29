@@ -76,6 +76,8 @@ struct TermedExpressionValue {
     DeferredBool is_type_declaration = DeferredBool::maybe;
 
     bool operator==(const TermedExpressionValue&) const = default;
+
+    std::string to_string() const;
 };
 
 using ExpressionValue = std::variant<
@@ -144,6 +146,8 @@ public:
     bool is_ok_in_codegen() const;
     bool is_castable_expression() const;
     bool is_allowed_in_type_declaration() const;
+
+    std::string log_message_string() const;
 };
 
 // ----- STATEMENTS -----
