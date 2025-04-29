@@ -1,9 +1,9 @@
-/**
- * This file contains the high level wrapper to run the parsing procedure
- */
-
 #ifndef __FULL_PARSE_HH
 #define __FULL_PARSE_HH
+
+/**
+ * This file contains the high level wrapper to run the whole parsing procedure
+ */
 
 #include <tuple>
 #include <memory>
@@ -31,7 +31,7 @@ struct ParseOptions {
 };
 
 // the first value is if the parse succeeded
-std::tuple<bool, std::unique_ptr<Maps::AST>, std::unique_ptr<Pragma::Pragmas>>
+std::tuple<bool, std::unique_ptr<Maps::AST>, std::unique_ptr<Maps::Pragmas>>
     parse_source(std::istream& source_is, const ParseOptions& options = {}, 
         std::ostream& debug_print_ostream = std::cout);
 

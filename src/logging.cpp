@@ -33,12 +33,14 @@ void LogLevel::init(LogLevel log_level) {
     Settings::set_loglevel(log_level);
 }
 
-void log_error(const std::string& message, const std::string& location_string) {
+void log_error(const std::string& message, SourceLocation location) {
     if (!Settings::ostream)
         return;
     if (!Settings::current_loglevel.has_message_type(MessageType::error))
         return;
-
+    
+    std::string location_string = location.to_string();
+    
     log_check_flag = true;
 
     *Settings::ostream
@@ -46,16 +48,13 @@ void log_error(const std::string& message, const std::string& location_string) {
         << "error: " << message << "\n";
 }
 
-void log_error(SourceLocation location, const std::string& message) {
-    log_error(message, location.to_string());
-}
-
-void log_info(const std::string& message, MessageType message_type, const std::string& location_string) {
+void log_info(const std::string& message, MessageType message_type, SourceLocation location) {
     if (!Settings::ostream)
         return;
-
     if (!Settings::current_loglevel.has_message_type(message_type))
         return;
+
+    std::string location_string = location.to_string();
 
     log_check_flag = true;
 
@@ -64,11 +63,7 @@ void log_info(const std::string& message, MessageType message_type, const std::s
         << "info:  " << message << '\n';
 }
 
-void log_info(SourceLocation location, const std::string& message, MessageType message_type) {
-    log_info(message, message_type, location.to_string());
-}
-
-void log_token(SourceLocation location, const std::string& message) {
+void log_token(const std::string& message, SourceLocation location) {
     if (Settings::ostream && Settings::current_loglevel.has_message_type(MessageType::lexer_debug_token)) {
         log_check_flag = true;
 

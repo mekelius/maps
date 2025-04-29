@@ -25,11 +25,12 @@ enum class TokenType: int {
 };
 
 struct Token {
-    Token(TokenType token_type, SourceLocation location, const std::string& value = "");
+    Token(TokenType token_type, const std::string& value, SourceLocation location);
+    Token(TokenType token_type, SourceLocation location);
 
     TokenType token_type;
-    SourceLocation location;
     std::string value;
+    SourceLocation location;
 
     // the raw string value
     // getter kept to save on changes

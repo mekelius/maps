@@ -3,9 +3,11 @@
 #include "token.hh"
 #include "../logging.hh"
 
-Token::Token(TokenType token_type, SourceLocation location, const std::string& value)
-:token_type(token_type), location(location), value(value) {
-}
+Token::Token(TokenType token_type, const std::string& value, SourceLocation location)
+:token_type(token_type), value(value), location(location) {}
+
+Token::Token(TokenType token_type, SourceLocation location)
+:Token(token_type, "", location) {}
 
 std::string Token::get_string() const {
     switch (token_type) {
@@ -169,4 +171,4 @@ bool is_term_token(const Token& token) {
     }
 }
 
-const Token Token::dummy_token {TokenType::dummy, {0,0}};
+const Token Token::dummy_token{TokenType::dummy, NO_SOURCE_LOCATION};

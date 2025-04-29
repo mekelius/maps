@@ -18,7 +18,7 @@ namespace Maps {
 
 class ParserLayer1 {
 public:
-    ParserLayer1(Lexer* lexer, Pragma::Pragmas* pragmas, bool in_repl = false);
+    ParserLayer1(Lexer* lexer, Pragmas* pragmas, bool in_repl = false);
     
     std::unique_ptr<AST> run();
 private:
@@ -33,13 +33,13 @@ private:
 
     // TODO: refactor these
     void log_error(const std::string& message) const;
-    void log_error(SourceLocation location, const std::string& message) const;
+    void log_error(const std::string& message, SourceLocation location) const;
     
     void log_info(const std::string& message, 
         Logging::MessageType message_type = Logging::MessageType::general_info) const;
     
-    void log_info(SourceLocation location, const std::string& message, 
-        Logging::MessageType message_type = Logging::MessageType::general_info) const;
+    void log_info(const std::string& message, Logging::MessageType message_type, 
+        SourceLocation location) const;
 
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& name) const;
@@ -99,7 +99,7 @@ private:
     
     Lexer* lexer_;
     std::unique_ptr<AST> ast_;
-    Pragma::Pragmas* pragmas_;
+    Pragmas* pragmas_;
     
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_ = { Token::dummy_token, Token::dummy_token };

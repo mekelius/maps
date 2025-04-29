@@ -1,23 +1,36 @@
 #ifndef __SOURCE_HH
 #define __SOURCE_HH
 
+#include <optional>
 #include <string>
 
+using SourceID = int;
+
+constexpr SourceID DEFAULT_SOURCE_ID = 0;
+constexpr SourceID NULL_SOURCE_ID = -1;
+constexpr SourceID BUILTIN_SOURCE_ID = -2;
+
 struct SourceLocation {
-    unsigned int line;
-    unsigned int column;
+    static constexpr int OUT_OF_SOURCE = -1;
+
+    int line;
+    int column;
+
+    SourceID source_id = DEFAULT_SOURCE_ID;
     
     auto operator<=>(const SourceLocation&) const = default;
 
     std::string to_string() const {
+        if (line < 0)
+            return "-:-";
         return std::to_string(line) + ":" + std::to_string(column);
     };
 };
 
-// NOTE: Unused, just put it down because I think this is how it should be done 
-// when we get to it
-struct SourceReference {
-    std::string filename;
-    SourceLocation location;
-};
+constexpr SourceLocation NO_SOURCE_LOCATION{
+    SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, NULL_SOURCE_ID};
+
+constexpr SourceLocation BUILTIN_SOURCE_LOCATION{
+    SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, BUILTIN_SOURCE_ID};
+
 #endif

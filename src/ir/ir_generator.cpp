@@ -23,7 +23,7 @@ using llvm::LLVMContext;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;
 using Logging::log_error, Logging::log_info;
 using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, Maps::StatementType;
-using Pragma::Pragmas;
+using Maps::Pragmas;
 
 #define BAD_STATEMENT_TYPE StatementType::broken: case StatementType::illegal
 #define IGNORED_STATEMENT_TYPE StatementType::operator_definition: case StatementType::empty
@@ -33,7 +33,7 @@ namespace IR {
 // ----- IR Generation -----
 
 IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
-    Pragma::Pragmas& pragmas, llvm::raw_ostream* error_stream)
+    Pragmas& pragmas, llvm::raw_ostream* error_stream)
 :errs_(error_stream), context_(context), module_(module), types_({*context_}), pragmas_(&pragmas), 
 ast_(&ast), maps_types_(ast.types_.get()) {
     builder_ = std::make_unique<llvm::IRBuilder<>>(*context_);
@@ -413,8 +413,8 @@ std::optional<llvm::Function*> IR_Generator::handle_function(const Maps::Callabl
     if (!signature) {
         assert(callable.location && 
             "in IR_Generator::handle_function: callable missing location, did it try to handle a builtin");
-        Logging::log_error(*callable.location, 
-            "unable to convert type signature for " + callable.name);
+        Logging::log_error("unable to convert type signature for " + callable.name, 
+            *callable.location);
         return nullopt;
     }
 

@@ -18,7 +18,14 @@
 using std::unique_ptr, std::make_unique;
 using Logging::LogLevel;
 
-constexpr std::string_view USAGE = "\nUSAGE: mapsci [options]\n\noptions:\n  --parser-debug | -q | --quiet | -e | --everything\n  --ir | --print-ir\n  --no-eval\n  --parsed | --print-parsed\n  -h | --help\n";
+constexpr std::string_view USAGE = "\
+\nUSAGE: mapsci [options]\n\n\
+options:\n\
+  --parser-debug | -q | --quiet | -e | --everything\n  --ir | --print-ir\n\
+  --no-eval\n\
+  --parsed | --print-parsed\n\
+  -h | --help\n\
+";
 
 int main(int argc, char* argv[]) {
     Logging::init_logging(&std::cout);

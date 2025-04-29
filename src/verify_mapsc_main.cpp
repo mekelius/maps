@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
         }
         
         Lexer lexer{&source_file};
-        std::unique_ptr<Pragma::Pragmas> pragmas = std::make_unique<Pragma::Pragmas>();
+        std::unique_ptr<Maps::Pragmas> pragmas = std::make_unique<Maps::Pragmas>();
         
         std::cout << "run layer1\n\n";
         std::unique_ptr<Maps::AST> ast = Maps::ParserLayer1{&lexer, pragmas.get()}.run();

@@ -1,4 +1,4 @@
-#include "type_inference.hh"
+#include "type_checking.hh"
 
 #include <variant>
 #include <cassert>
@@ -63,11 +63,12 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
         if (expression->type->cast_to(&Float, expression))
             return true;
 
-        log_error(expression->location, expression->string_value() + " is not a valid number");
+        log_error(expression->string_value() + " is not a valid number", expression->location);
         return false;
     }
 
-    log_error(expression->location, "Found a non-reduced type: " + static_cast<std::string>(expression->type->name()));
+    log_error("Found a non-reduced type: " + static_cast<std::string>(expression->type->name()), 
+        expression->location);
 
     return false;
 }

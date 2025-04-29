@@ -24,7 +24,7 @@ namespace Maps {
 
 // ----- PUBLIC METHODS -----
 
-ParserLayer1::ParserLayer1(Lexer* lexer, Pragma::Pragmas* pragmas, bool in_repl):
+ParserLayer1::ParserLayer1(Lexer* lexer, Pragmas* pragmas, bool in_repl):
 lexer_(lexer), pragmas_(pragmas), in_repl_(in_repl) {
     ast_ = std::make_unique<AST>();
     if (!ast_->init_builtins()) {
@@ -105,19 +105,21 @@ void ParserLayer1::declare_invalid() {
 // ----- OUTPUT HELPERS -----
 
 void ParserLayer1::log_error(const std::string& message) const {
-    log_error(current_token().location, message);
+    log_error(message, current_token().location);
 }
 
-void ParserLayer1::log_error(SourceLocation location, const std::string& message) const {
-    Logging::log_error(location, message);
+void ParserLayer1::log_error(const std::string& message, SourceLocation location) const {
+    Logging::log_error(message, location);
 }
 
 void ParserLayer1::log_info(const std::string& message, Logging::MessageType message_type) const {
-    log_info(current_token().location, message, message_type);
+    log_info(message, message_type, current_token().location);
 }
 
-void ParserLayer1::log_info(SourceLocation location, const std::string& message, Logging::MessageType message_type) const {
-    Logging::log_info(location, message, message_type);
+void ParserLayer1::log_info(const std::string& message, Logging::MessageType message_type, 
+    SourceLocation location) const {
+    
+    Logging::log_info(message, message_type, location);
 }
 
 

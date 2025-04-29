@@ -26,8 +26,8 @@ bool resolve_identifiers(AST& ast) {
                 break;
 
             default:
-                log_error(expression->location, 
-                    "Unexpected expression type in AST.unresolved_identifiers_and_operators");
+                log_error("Unexpected expression type in AST.unresolved_identifiers_and_operators", 
+                    expression->location);
                 assert(false 
                     && "Unexpected expression type in AST.unresolved_identifiers_and_operators");
                 return false;
@@ -46,7 +46,7 @@ bool resolve_identifier(AST& ast, Expression* expression) {
     // check builtins
     std::optional<Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
     if (builtin) {
-        log_info(expression->location, "Parsed built-in", Logging::MessageType::parser_debug_terminal);
+        log_info("Parsed built-in", Logging::MessageType::parser_debug_terminal, expression->location);
         expression->expression_type = ExpressionType::reference;
         expression->type = (*builtin)->get_type();
         expression->value = *builtin;
@@ -56,7 +56,7 @@ bool resolve_identifier(AST& ast, Expression* expression) {
     std::optional<Callable*> callable = ast.globals_->get_identifier(expression->string_value());
 
     if (!callable) {
-        log_error(expression->location, "unknown identifier: " + expression->string_value());
+        log_error("unknown identifier: " + expression->string_value(), expression->location);
         ast.declare_invalid();
         return false;
     }
@@ -71,7 +71,7 @@ bool resolve_type_identifier(AST& ast, Expression* expression) {
     // check builtins
     std::optional<const Type*> type = ast.types_->get(expression->string_value());
     if (!type) {
-        log_error(expression->location, "unkown type identifier: " + expression->string_value());
+        log_error("unkown type identifier: " + expression->string_value(), expression->location);
         ast.declare_invalid();
         return false;
     }
@@ -92,14 +92,14 @@ bool resolve_operator(AST& ast, Expression* expression) {
             return false;
         }
 
-        log_info(expression->location, "Parsed built-in operator", Logging::MessageType::parser_debug_terminal);
+        log_info("Parsed built-in operator", Logging::MessageType::parser_debug_terminal, expression->location);
         expression->expression_type = ExpressionType::operator_reference;
         expression->value = *builtin;
         expression->type = (*builtin)->get_type();
         return true;
     }
 
-    log_error(expression->location, "unknown operator: " + expression->string_value());
+    log_error("unknown operator: " + expression->string_value(), expression->location);
     ast.declare_invalid();
     return true;
 }

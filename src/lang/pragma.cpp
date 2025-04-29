@@ -3,10 +3,10 @@
 #include "../logging.hh"
 #include "pragma.hh"
 
-namespace Pragma {
+namespace Maps {
 
 Pragmas::Pragmas() {
-    for (const Flags::Flag& flag: flags) {
+    for (const PragmaFlag& flag: flags) {
         // gotta insert the default at the start, because the begin is never read
         declarations_.insert({flag.name, {{SourceLocation{0,0}, flag.default_value}}});
     }
@@ -16,15 +16,14 @@ bool Pragmas::set_flag(const std::string& flag_name, bool value, const SourceLoc
     auto flag_declarations_it = declarations_.find(flag_name);
     
     if (flag_declarations_it == declarations_.end()) {
-        Logging::log_error(location, "tried to set unkown pragma: " + std::string{flag_name});
+        Logging::log_error("tried to set unkown pragma: " + std::string{flag_name}, location);
         return false;
     }
 
     flag_declarations_it->second.insert({location, value});
     Logging::log_info(
-        location, 
         "set pragma: " + std::string(value ? "enable " : "disable ") + std::string{flag_name}, 
-        Logging::MessageType::pragma_debug);
+        Logging::MessageType::pragma_debug, location);
     return true;
 }
 

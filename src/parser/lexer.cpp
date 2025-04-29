@@ -12,7 +12,7 @@
 using Logging::log_error;
 
 // ----- Public methods -----
-Lexer::Lexer(std::istream* source_is)
+Lexer::Lexer(std::istream* source_is, SourceID source_id)
 :source_is_(source_is) {
     read_char();
 }
@@ -20,7 +20,7 @@ Lexer::Lexer(std::istream* source_is)
 Token Lexer::get_token() {
     Token token = get_token_();
 
-    Logging::log_token(prev_token_.location, prev_token_.get_string());
+    Logging::log_token(prev_token_.get_string(), prev_token_.location);
     
     // a bit of a hack to keep the outputs in sync
     prev_token_ = token;
@@ -52,11 +52,13 @@ char Lexer::peek_char() {
 }
 
 Token Lexer::create_token(TokenType type) {
-    return Token{type, {current_token_start_line_, current_token_start_col_}};
+    return Token{type, SourceLocation{static_cast<int>(current_token_start_line_), 
+        static_cast<int>(current_token_start_col_), source_id_}};
 }
 
 Token Lexer::create_token(TokenType type, const std::string& value) {
-    return Token{type, {current_token_start_line_, current_token_start_col_}, value};
+    return Token{type, value, {static_cast<int>(current_token_start_line_), 
+        static_cast<int>(current_token_start_col_), source_id_}};
 }
 
 // ----- PRODUCTION RULES -----
@@ -124,8 +126,8 @@ Token Lexer::get_token_() {
             buffer_.sputc(read_char());  
             
             if (is_operator_glyph(current_char_)) {
-                log_error(SourceLocation{current_token_start_line_, current_token_start_col_}, 
-                    "Syntax error: operator cannot start with \"" + buffer_.str() + "\"");
+                log_error("Syntax error: operator cannot start with \"" + buffer_.str() + "\"",
+                    {static_cast<int>(current_token_start_line_), static_cast<int>(current_token_start_col_)});
                 return create_token(TokenType::unknown);
             }
             return create_token(TokenType::arrow_operator, buffer_.str());

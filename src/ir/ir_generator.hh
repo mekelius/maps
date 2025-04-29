@@ -37,7 +37,7 @@ private:
 class IR_Generator {
 public:
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
-        Pragma::Pragmas& pragmas, llvm::raw_ostream* error_stream);
+        Maps::Pragmas& pragmas, llvm::raw_ostream* error_stream);
 
     bool run();
 
@@ -84,7 +84,7 @@ private:
     
     void fail(const std::string& message);
 
-    Pragma::Pragmas* pragmas_;
+    Maps::Pragmas* pragmas_;
     const Maps::AST* ast_;
     Maps::TypeRegistry* maps_types_;
     

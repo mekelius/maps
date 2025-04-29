@@ -116,7 +116,7 @@ void REPL::run() {
         
         std::stringstream input_s{input};
 
-        auto [success, ast, pragmas] = parse_source(input_s, parse_options_, std::cout);
+        auto [success, ast, pragmas] = parse_source(input_s, parse_options_, std::cerr);
   
         if (!success && options_.stop_on_error)
             continue;
@@ -125,9 +125,9 @@ void REPL::run() {
             continue;
 
         if (options_.print_reverse_parse) {
-            std::cout << "parsed into:\n";
+            std::cerr << "parsed into:\n";
             reverse_parse(*ast, std::cout);
-            std::cout << "\n" << std::endl;
+            std::cerr << "\n" << std::endl;
         }
 
         if (ast->is_valid)
@@ -135,7 +135,7 @@ void REPL::run() {
     }
 }
     
-void REPL::eval(const Maps::AST& ast, Pragma::Pragmas& pragmas) {
+void REPL::eval(const Maps::AST& ast, Maps::Pragmas& pragmas) {
     jit_->reset();
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);

@@ -8,22 +8,23 @@
 
 #include "../source.hh"
 
-namespace Pragma {
+namespace Maps {
 
-namespace Flags {
 
-// all pragmas are bool now
-struct Flag {
+// all pragmas are bool for now
+struct PragmaFlag {
     std::string_view name;
     bool default_value;
 };
 
-constexpr Flag top_level_evaluation_context{"top-level evaluation", false};
-constexpr Flag mutable_global_variables{"mutable global variables", false};
+namespace Flags {
+
+constexpr PragmaFlag top_level_evaluation_context{"top-level evaluation", false};
+constexpr PragmaFlag mutable_global_variables{"mutable global variables", false};
 
 }
 
-constexpr std::array<Flags::Flag, 2> flags{
+constexpr std::array<PragmaFlag, 2> flags{
     Flags::top_level_evaluation_context,
     Flags::mutable_global_variables
 };

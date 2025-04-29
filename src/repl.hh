@@ -59,14 +59,13 @@ public:
     void run();
     
 private:
-    void eval(const Maps::AST& ast, Pragma::Pragmas& pragmas);
+    void eval(const Maps::AST& ast, Maps::Pragmas& pragmas);
     std::string parse_type(std::istream& input_stream);
     void run_command(const std::string& command);
 
     void update_parse_options();
 
     bool running_ = true;
-    bool is_good_ = true;
 
     llvm::LLVMContext* context_;
     JIT_Manager* jit_;
