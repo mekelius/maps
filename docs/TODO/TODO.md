@@ -1,34 +1,60 @@
 # TODO
 
-## Now
+## Priorities
 
-- layer 2 type specifier handling
-- keep named args in mind
-- Type specifiers as let-statement rhs => type decl
+#### Needed for 0.1
 
-### Current goals:
-- type specifiers
-- print the damn numbers
-- add, mult etc.
-- some rudimentary casting maybe
+| Feature                                               | State     | What's missing |
+| ---                                                   | ---       | ---            |
+| Operator definitions                                  | testing   | parsing        |
+| Parsing needs a lot of work                          | in progress | bits and pieces |
+| Print expressions and statements in messages nicely   | not started |  |
+| Runtime casts                               | in progress | rest of the compile time |
+| Function calls need to be smooth | testing | partial application rust style at least |
+| Arithmetic stuff working smooth  | in progress | builtin definitions maps side |
+| Blocks and parentheses should work well               | testing | parsing messy |
+| if, for etc.                                          | not started |  |
 
-## Later
-- named args
-- parsing needs a lot of work
-- traits?
-- clean up design files to amore readable state
-- print expressions and statements in messages nicely
-- pattern matching
-- combine asts
-- parser gc
+#### ASAP architectural things
 
-## Accumulated tweaks
-- name resolution should return false on fail
+- Line-end real-estate
+- Source file/module reference to locations
 
-## Other stuff
-- optional unwrapping syntax
-- ownership and references
-- defining mapping providers
-- context syntax
-- laziness
-- sum types
+#### Internal cleanup and stuff
+
+- Combine asts
+- Parser gc
+
+#### Accumulated tweaks
+
+- Name resolution should return false on fail
+
+## Planned for 0.2
+
+#### Priority features for 0.2 and onward
+
+- Scopes and contexts (likely 0.2)
+- Retain definitions in REPL
+- Internal: Rename layers
+- Named args
+- Traits and generics
+- Optional unwrapping syntax
+
+## Planned for later
+
+#### 0.3 and onward
+
+- ADT:s
+- Type constructors
+- Access syntax
+- Mappings
+- Mutable values?
+- Pattern matching, destructuring
+- lambdas and first class functions
+
+#### To be designed
+
+- Context syntax
+- Ownership and references
+- Defining mapping providers
+- Laziness
