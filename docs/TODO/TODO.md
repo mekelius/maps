@@ -14,6 +14,7 @@
 | Arithmetic stuff working smooth  | in progress | builtin definitions maps side |
 | Blocks and parentheses should work well               | testing | parsing messy |
 | if, for etc.                                          | not started |  |
+| repl improvements                                     | | directly evaluate args |
 
 #### Accumulated tweaks
 

@@ -2,10 +2,13 @@
 
 #include <cassert>
 
+#include "logging.hh"
 #include "ast/ast_node.hh"
 
 #include "lang/type_defs.hh"
 #include "lang/casts.hh"
+
+using Logging::log_error;
 
 namespace Maps {
 
@@ -22,8 +25,10 @@ bool Type::cast_to(const Type* target_type, Expression* expression) const {
     if (*expression->type == *target_type)
         return true;
 
-    if (!expression->is_castable_expression())
+    if (!expression->is_castable_expression()) {
+        log_error("expression " + expression->log_message_string() + ", is not castable");
         return false;
+    }
     
     return cast_to_(target_type, expression);
 }

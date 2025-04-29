@@ -1,10 +1,10 @@
 #include "repl.hh"
 
-
 #include <optional>
 #include <memory>
 #include <iostream>
 #include <tuple>
+#include <fstream>
 
 #include "readline.h"
 #include "history.h"
@@ -13,6 +13,7 @@
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 
+// ---------------------------------------------------
 
 #include "logging.hh"
 
@@ -82,6 +83,33 @@ void JIT_Manager::reset() {
 REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options)
 : context_(context), jit_(jit), error_stream_(error_stream), options_(options) {
     update_parse_options();
+
+    if (options_.save_history) {
+        if (options_.history_file.empty()) {
+            std::cout << "no history file given" << std::endl;
+            return;
+        }
+
+        if (!std::filesystem::exists(options_.history_file))
+            std::ofstream file{options_.history_file};
+
+        // read history returns errno on failed read, but we also have to check that
+        // errno wasn't 0 
+        if (read_history(options_.history_file.c_str()) == errno && errno)
+            std::cout << "ERROR: reading history failed" << std::endl;
+    }
+}
+
+REPL::~REPL() {
+    if (options_.save_history) {
+        if (options_.history_file.empty())
+            return;
+
+        if (write_history(options_.history_file.c_str()) == errno && errno) {
+            std::cout << "ERROR: writing history failed" << std::endl;
+            return;
+        }
+    }
 }
 
 REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream)

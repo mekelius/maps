@@ -1,6 +1,8 @@
 #ifndef __REPL_HH
 #define __REPL_HH
 
+#include <filesystem>
+
 #include "llvm/Support/raw_os_ostream.h"
 
 #include "llvm/IR/LLVMContext.h"
@@ -31,9 +33,9 @@ private:
     std::unique_ptr<llvm::orc::LLJIT> jit_;
 };
 
-
 class REPL {
 public:
+
     enum class Stage {
         layer1,
         layer2,
@@ -51,10 +53,15 @@ public:
 
         bool stop_on_error = true;
         Stage stop_after = Stage::done;
+
+        bool save_history = false;
+        std::filesystem::path history_file;
     };
 
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options);
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream);
+
+    ~REPL();
 
     void run();
     
