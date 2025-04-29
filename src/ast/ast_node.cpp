@@ -280,4 +280,45 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
     }
 }
 
+std::string Statement::log_message_string() const {
+    switch (statement_type) {
+        case StatementType::broken:
+            return "broken statement";
+        case StatementType::illegal:
+            return "illegal statement";
+        case StatementType::empty:
+            return "empty statement";
+        case StatementType::expression_statement:
+            return std::get<Expression*>(value)->log_message_string();
+
+        case StatementType::block:
+            return "block";
+
+        case StatementType::let:
+            return "let statement";
+
+        case StatementType::operator_definition:
+            return "operator definition";
+
+        case StatementType::assignment:
+            return "assignment to " + std::get<Assignment>(value).identifier;
+
+        case StatementType::return_:
+            return "return statement";
+
+        // case StatementType::if,
+        // case StatementType::else,
+            // return "conditional";
+        // case StatementType::for,
+        // case StatementType::for_in,
+        // case StatementType::do_while,
+        // case StatementType::do_for,
+        // case StatementType::while/until,
+            // return "loop";
+        // case StatementType::switch:
+            // return "switch statement";
+    }
+}
+
+
 } // namespace AST

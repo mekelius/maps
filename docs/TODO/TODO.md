@@ -8,7 +8,7 @@
 | ---                                                   | ---       | ---            |
 | Operator definitions                                  | testing   | parsing        |
 | Parsing needs a lot of work                          | in progress | bits and pieces |
-| Print expressions and statements in messages nicely   | not started |  |
+| Print expressions and statements in messages nicely   | done | Callables? |
 | Runtime casts                               | in progress | rest of the compile time |
 | Function calls need to be smooth | testing | partial application rust style at least |
 | Arithmetic stuff working smooth  | in progress | builtin definitions maps side |

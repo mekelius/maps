@@ -207,6 +207,8 @@ struct Statement {
     StatementType statement_type;
     SourceLocation location;
     StatementValue value;
+
+    std::string log_message_string() const;
 };
 
 // TODO: expand mind enough for contexts
