@@ -7,23 +7,13 @@
 | Feature                                               | State     | What's missing |
 | ---                                                   | ---       | ---            |
 | Operator definitions                                  | testing   | parsing        |
-| Parsing needs a lot of work                          | in progress | bits and pieces |
+| Parsing needs a lot of work                           | in progress | bits and pieces |
 | Print expressions and statements in messages nicely   | done | Callables? |
 | Runtime casts                               | in progress | rest of the compile time |
 | Function calls need to be smooth | testing | partial application rust style at least |
 | Arithmetic stuff working smooth  | in progress | builtin definitions maps side |
 | Blocks and parentheses should work well               | testing | parsing messy |
 | if, for etc.                                          | not started |  |
-
-#### ASAP architectural things
-
-- Line-end real-estate
-- Source file/module reference to locations
-
-#### Internal cleanup and stuff
-
-- Combine asts
-- Parser gc
 
 #### Accumulated tweaks
 
@@ -41,6 +31,12 @@
 - Optional unwrapping syntax
 
 ## Planned for later
+
+#### architectural things
+
+- Line-end real-estate
+- Combine asts
+- Parser gc
 
 #### 0.3 and onward
 
