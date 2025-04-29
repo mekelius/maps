@@ -85,17 +85,17 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
     update_parse_options();
 
     if (options_.save_history) {
-        if (options_.history_file.empty()) {
+        if (options_.history_file_path.empty()) {
             std::cout << "no history file given" << std::endl;
             return;
         }
 
-        if (!std::filesystem::exists(options_.history_file))
-            std::ofstream file{options_.history_file};
+        if (!std::filesystem::exists(options_.history_file_path))
+            std::ofstream file{options_.history_file_path};
 
         // read history returns errno on failed read, but we also have to check that
         // errno wasn't 0 
-        if (read_history(options_.history_file.c_str()) == errno && errno)
+        if (read_history(options_.history_file_path.c_str()) == errno && errno)
             std::cout << "ERROR: reading history failed" << std::endl;
     }
 }
@@ -153,10 +153,10 @@ void REPL::run() {
 }
 
 bool REPL::save_history() {
-    if (!options_.save_history || options_.history_file.empty()) 
+    if (!options_.save_history || options_.history_file_path.empty()) 
         return true;
 
-    if (write_history(options_.history_file.c_str()) == errno && errno) {
+    if (write_history(options_.history_file_path.c_str()) == errno && errno) {
         std::cout << "ERROR: writing history failed" << std::endl;
         return false;
     }

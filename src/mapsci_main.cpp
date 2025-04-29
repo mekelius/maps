@@ -43,7 +43,6 @@ options:\n\
 
 // first see if $XDG_DATA_DIR is set
 // if not, try $HOME/.local/share
-// if $HOME isn't set use pw
 std::optional<std::filesystem::path> get_data_directory() {
     char* c_str;
 
@@ -53,8 +52,6 @@ std::optional<std::filesystem::path> get_data_directory() {
     std::filesystem::path home_dir;
     if ((c_str = getenv("HOME"))) {
         home_dir = std::filesystem::path{c_str};
-    } else if ((c_str = getpwuid(getuid())->pw_dir)) {
-        home_dir = std::filesystem::path{c_str};
     } else {
         std::cerr << "ERROR: finding user data directory failed\n";
         return std::nullopt;
@@ -63,7 +60,8 @@ std::optional<std::filesystem::path> get_data_directory() {
     return home_dir /= ".local/share";
 }
 
-std::optional<std::filesystem::path> get_default_history_filename() {
+// gets the default history file path, creating the subdirectory if it doesn't exist
+std::optional<std::filesystem::path> get_default_history_file_path() {
     auto data_directory = get_data_directory();
 
     if (!data_directory)
@@ -145,7 +143,7 @@ int main(int argc, char* argv[]) {
             repl_options.save_history = false;
 
         } else if(key == "--history-file") {
-            repl_options.history_file = value;
+            repl_options.history_file_path = value;
 
         } else if(key == "-h" || key == "--help" || key == "--usage") {
             std::cout << USAGE << std::endl;
@@ -162,14 +160,13 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (repl_options.save_history && repl_options.history_file.empty()) {
-        auto history_filename = get_default_history_filename();
-
-        if (!history_filename) {
+    if (repl_options.save_history && repl_options.history_file_path.empty()) {
+        auto history_file_path = get_default_history_file_path();
+        if (!history_file_path) {
             repl_options.save_history = false;
-            repl_options.history_file = "";
+            repl_options.history_file_path = "";
         } else {
-            repl_options.history_file = *history_filename;
+            repl_options.history_file_path = *history_file_path;
         }
     }
 

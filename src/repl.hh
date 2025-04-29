@@ -54,7 +54,7 @@ public:
         Stage stop_after = Stage::done;
 
         bool save_history = false;
-        std::filesystem::path history_file;
+        std::filesystem::path history_file_path;
     };
 
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options);
