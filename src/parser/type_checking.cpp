@@ -74,7 +74,20 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
 }
 
 bool SimpleTypeChecker::visit_callable(Callable* callable) {
-    if (callable->get_declared_type() && **callable->get_declared_type() != *callable->get_type()) {
+    if (std::holds_alternative<Expression*>(callable->body))
+        return true;
+
+    // TODO: how to get to return type?
+    assert(false && "type check for statement callables not implemented");
+    return false;
+
+    auto type = callable->get_type();
+    auto declared_type = callable->get_declared_type();
+
+    if (*type == Hole) {
+    }
+
+    if (declared_type && **declared_type != *type) {
         auto deduced_type = handle_declared_type(callable->get_type(), *callable->get_declared_type());
 
         if (!deduced_type)
@@ -97,39 +110,6 @@ bool SimpleTypeChecker::run(AST& ast) {
     // return ast.walk_tree(*this);
     // !!! ignoring failures
     ast.walk_tree(*this);
-    return true;
-}
-
-
-bool handle_callable(AST& ast, Callable& callable) {
-    assert(false && "not implemented");
-    const Type* type = callable.get_type();
-
-    if (!type->is_native()) {
-
-    }
-
-    if (Expression* const* expression = get_if<Expression*>(&callable.body)) {
-        // handle_expression();
-    }
-
-    if (Statement* const* expression = get_if<Statement*>(&callable.body)) {
-
-    }
-
-    return false;
-}
-
-// first attempt
-bool infer_types(AST& ast) {
-    assert(false && "not implemented");
-
-    for (auto [_1, callable]: ast.globals_->identifiers_in_order_) {
-        if (!handle_callable(ast, *callable)) {
-
-        }
-    }
-
     return true;
 }
 

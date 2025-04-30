@@ -61,13 +61,13 @@ private:
         const Maps::FunctionType& ast_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
-    std::optional<llvm::Value*> global_constant(const Maps::Callable& callable);
+    std::optional<llvm::Value*> global_constant(const Maps::Expression& expression);
     std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression) const;
     std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression) const;
 
-    std::optional<llvm::Function*> handle_top_level_execution(bool in_repl);
+    std::optional<llvm::Function*> eval_and_print_root();
     bool handle_global_functions();
-    bool handle_global_definition(const Maps::Callable& callable);
+    std::optional<llvm::FunctionCallee> handle_global_definition(const Maps::Callable& callable);
     llvm::Value* handle_callable(const Maps::Callable& callable);
     bool handle_statement(const Maps::Statement& statement);
 
@@ -76,7 +76,8 @@ private:
     std::optional<llvm::Value*> handle_expression_statement(const Maps::Statement& statement, bool repl_top_level = false);
 
     std::optional<llvm::Value*> handle_expression(const Maps::Expression& expression);
-    std::optional<llvm::Function*> handle_function(const Maps::Callable& callable);
+    std::optional<llvm::FunctionCallee> wrap_value_in_function(const std::string& name, const Maps::Expression& expression);
+    std::optional<llvm::FunctionCallee> handle_function(const Maps::Callable& callable);
 
     llvm::Value* handle_call(const Maps::CallExpressionValue& call);
     llvm::GlobalVariable* handle_string_literal(const Maps::Expression& str);

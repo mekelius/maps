@@ -62,7 +62,6 @@ void ParserLayer1::run_parse(std::istream& source_is) {
     lexer_ = nullptr;
 }
 
-
 void ParserLayer1::prime_tokens() {
     get_token();
     get_token();
