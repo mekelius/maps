@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
         } else if(key == "--layer2") {
             repl_options.print_layer2 = true;
 
-        } else if(key == "--stop_after") {
+        } else if(key == "--stop-after") {
             if (value == "layer1") {
                 repl_options.stop_after = REPL::Stage::layer1;
 
