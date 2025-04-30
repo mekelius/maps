@@ -19,24 +19,34 @@
 
 using Logging::LogLevel;
 using Logging::MessageType;
+using std::optional, std::nullopt, std::make_unique;
 
 namespace Maps {
 
 // ----- PUBLIC METHODS -----
 
-ParserLayer1::ParserLayer1(Lexer* lexer, Pragmas* pragmas, bool in_repl):
-lexer_(lexer), pragmas_(pragmas), in_repl_(in_repl) {
-    ast_ = std::make_unique<AST>();
-    if (!ast_->init_builtins()) {
-        Logging::log_error("Initializing builtins failed");
-        assert(false && "Initializing builtins failed");
-        declare_invalid();
-    }
-    get_token();
-    get_token();
+ParserLayer1::ParserLayer1(AST* ast, Pragmas* pragmas)
+:ast_(ast), pragmas_(pragmas) {}
+
+bool ParserLayer1::run(std::istream& source_is) {
+    run_parse(source_is);
+    return ast_->is_valid;
 }
 
-std::unique_ptr<AST> ParserLayer1::run() {    
+optional<Callable*> ParserLayer1::eval(std::istream& source_is) {
+    force_top_level_eval_ = true;
+    run_parse(source_is);
+    force_top_level_eval_ = false;
+
+    return ast_->root_;
+}
+// ----- PRIVATE METHODS -----
+
+void ParserLayer1::run_parse(std::istream& source_is) {
+    lexer_ = make_unique<Lexer>(&source_is);
+
+    prime_tokens();
+
     Statement* root = ast_->create_statement(StatementType::block, {0,0});
     ast_->set_root(root);
 
@@ -49,9 +59,14 @@ std::unique_ptr<AST> ParserLayer1::run() {
             "Parser::parse_top_level_statement didn't advance the tokenstream");
     }
 
-    return std::move(ast_);
+    lexer_ = nullptr;
 }
-// ----- PRIVATE METHODS -----
+
+
+void ParserLayer1::prime_tokens() {
+    get_token();
+    get_token();
+}
 
 Token ParserLayer1::get_token() {
     token_buf_[which_buf_slot_ % 2] = lexer_->get_token();
@@ -234,7 +249,7 @@ void ParserLayer1::parse_top_level_statement() {
             // TODO: check pragmas for top-level statement types
             statement = parse_statement();
             if (statement->statement_type != StatementType::empty && 
-                (pragmas_->check_flag_value("top-level evaluation", statement->location) || in_repl_)) {            
+                (pragmas_->check_flag_value("top-level evaluation", statement->location) || force_top_level_eval_)) {            
                 std::get<Block>(std::get<Statement*>(ast_->root_->body)->value).push_back(statement);
             }
             return;

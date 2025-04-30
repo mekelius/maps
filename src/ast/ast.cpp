@@ -15,6 +15,8 @@ bool AST::init_builtins() {
 }
 
 void AST::set_root(CallableBody root) {
+    // TODO: delete the old
+    // delete_node(root_);
     root_->body = root;
 }
 

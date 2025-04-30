@@ -18,10 +18,16 @@ namespace Maps {
 
 class ParserLayer1 {
 public:
-    ParserLayer1(Lexer* lexer, Pragmas* pragmas, bool in_repl = false);
-    
-    std::unique_ptr<AST> run();
+    ParserLayer1(AST* ast, Pragmas* pragmas);
+
+    // if fails, sets ast->is_valid to false
+    bool run(std::istream& source_is);
+    std::optional<Callable*> eval(std::istream& source_is);
+
 private:
+    void run_parse(std::istream& source_is);
+    void prime_tokens();
+
     // gets the next token from the lexer and stores it in current_token_
     Token get_token();
     Token current_token() const;
@@ -53,8 +59,6 @@ private:
     void expression_end();
 
     void statement_start();
-
-    
 
     // creates an expression using ast_, marking the location as the current_expression_start_
     Statement* create_statement(StatementType statement_type);
@@ -97,8 +101,8 @@ private:
 
     void reset_to_top_level();
     
-    Lexer* lexer_;
-    std::unique_ptr<AST> ast_;
+    std::unique_ptr<Lexer> lexer_;
+    AST* ast_;
     Pragmas* pragmas_;
     
     int which_buf_slot_ = 0;
@@ -107,7 +111,7 @@ private:
     std::vector<SourceLocation> current_expression_start_;
     std::vector<SourceLocation> current_statement_start_;
 
-    bool in_repl_ = false;
+    bool force_top_level_eval_ = false;
 
     // these are automatically incremented and decremented by the get_token()
     unsigned int indent_level_ = 0;
