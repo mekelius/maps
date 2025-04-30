@@ -14,7 +14,7 @@ v0.1
 - contexts (how exactly?)
 
 ## "How it should've always been done"-features
-- optionals as first-class citizens and with elegant syntax
+- deeply integrated optionals with elegant syntax
     - monadic optional unwrapping
     - optionals baked into primitives and casting
     - make any value or type optional by adding ?

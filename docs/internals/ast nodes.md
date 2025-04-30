@@ -39,8 +39,6 @@ Expressions have a data type, an expression type and a value determined by their
 | deleted             | - | -       | -                                            | done    | 
 | syntax_error        | - | -       | -                                            | done    |
 | not_implemented     | - | -       | -                                            | done    |
-| empty               | ??? | -     | -                                            | to be removed? |
-| tie                 |   |         |                                              | to be removed  |
 
 ## Statements
 

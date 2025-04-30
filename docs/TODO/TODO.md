@@ -55,3 +55,10 @@
 - Ownership and references
 - Defining mapping providers
 - Laziness
+
+
+#### Possible simplifications
+
+- do type arguments need to hold type constructs or should they hold type references?
+- operator identifiers and identifiers could be rolled into one, if not for named type args.
+    - except, how about operators as type args? would need special syntax

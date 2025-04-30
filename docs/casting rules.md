@@ -64,7 +64,7 @@ There's no falsiness of zero, empty string etc. Use explicit conditionals.
 
 ### Casting optionals
 
-Applying a cast to an optional first tries casting the optional. If not possible, instead tries to fmap the cast on the value.
+Applying a cast to an optional first tries casting from the optional. If not possible, instead tries to fmap the cast on the value.
 
 ### Casting functions return values
 
