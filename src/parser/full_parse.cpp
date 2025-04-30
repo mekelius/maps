@@ -36,7 +36,7 @@ tuple<bool, unique_ptr<Maps::AST>, unique_ptr<Pragmas>>
     if (!options.in_repl) {
         layer1.run(source_is);
     } else {
-        layer1.eval(source_is);
+        layer1.eval_parse(source_is);
     }
 
     if (options.print_layer1) {

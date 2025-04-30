@@ -22,7 +22,7 @@ public:
 
     // if fails, sets ast->is_valid to false
     bool run(std::istream& source_is);
-    std::optional<Callable*> eval(std::istream& source_is);
+    std::optional<Callable*> eval_parse(std::istream& source_is);
 
 private:
     void run_parse(std::istream& source_is);
@@ -37,9 +37,8 @@ private:
     // declare the program invalid. Parsing may still continue, but no final output should be produced
     void declare_invalid();
 
-    // TODO: refactor these
-    void log_error(const std::string& message) const;
-    void log_error(const std::string& message, SourceLocation location) const;
+    void fail(const std::string& message);
+    void fail(const std::string& message, SourceLocation location);
     
     void log_info(const std::string& message, 
         Logging::MessageType message_type = Logging::MessageType::general_info) const;
@@ -78,6 +77,9 @@ private:
     Statement* parse_return_statement();
     Statement* parse_block_statement();
 
+    // attempts to collapse a single statement block
+    bool simplify_single_statement_block(Statement* outer);
+
     Expression* parse_expression();
 
     Expression* parse_termed_expression(bool is_tied = false);
@@ -90,7 +92,6 @@ private:
     Expression* parse_parenthesized_expression();
     Expression* parse_mapping_literal();
     Expression* parse_access_expression();
-
 
     // ----- TERMINALS -----
     Expression* handle_string_literal();
@@ -120,6 +121,12 @@ private:
     unsigned int angle_bracket_level_ = 0;
 
     bool finished_ = false;
+
+    // #ifdef DOCTEST_LIBRARY_INCLUDED
+    
+    // #include "layer1_tests.hh"
+
+    // #endif
 };
 
 } // namespace Maps

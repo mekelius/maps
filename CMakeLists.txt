@@ -107,7 +107,7 @@ add_executable(verify_mapsc
 
 target_link_libraries(verify_mapsc parser)
 
-# ----------------- PARSer UNIT_TESTS -----------------
+# ----------------- PARSER UNIT_TESTS -----------------
 
 add_executable(parser_unit_tests
     tests/tests_main.cpp
@@ -117,4 +117,5 @@ add_executable(parser_unit_tests
 )
 
 target_link_libraries(parser_unit_tests parser)
-target_include_directories(parser_unit_tests SYSTEM PRIVATE doctest)
+
+target_include_directories(parser_unit_tests SYSTEM PRIVATE doctest tests)

@@ -76,6 +76,10 @@ public:
     Expression* create_missing_argument(const Type& type, SourceLocation location);
     
     void delete_expression(Expression* expression);
+    void delete_expression_recursive(Expression* expression);
+
+    void delete_statement(Statement* statement);
+    void delete_statement_recursive(Statement* statement);
 
     //  ----- CREATING OTHER THINGS -----
     Statement* create_statement(StatementType statement_type, SourceLocation location);

@@ -25,8 +25,12 @@ using Logging::log_error, Logging::log_info;
 using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, Maps::StatementType;
 using Maps::Pragmas;
 
-#define BAD_STATEMENT_TYPE StatementType::broken: case StatementType::illegal
-#define IGNORED_STATEMENT_TYPE StatementType::operator_definition: case StatementType::empty
+#define BAD_STATEMENT_TYPE StatementType::broken:\
+                      case StatementType::illegal:\
+                      case StatementType::deleted
+
+#define IGNORED_STATEMENT_TYPE StatementType::operator_definition:\
+                          case StatementType::empty
 
 namespace IR {
 

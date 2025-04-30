@@ -33,7 +33,7 @@ bool ParserLayer1::run(std::istream& source_is) {
     return ast_->is_valid;
 }
 
-optional<Callable*> ParserLayer1::eval(std::istream& source_is) {
+optional<Callable*> ParserLayer1::eval_parse(std::istream& source_is) {
     force_top_level_eval_ = true;
     run_parse(source_is);
     force_top_level_eval_ = false;
@@ -118,12 +118,13 @@ void ParserLayer1::declare_invalid() {
 
 // ----- OUTPUT HELPERS -----
 
-void ParserLayer1::log_error(const std::string& message) const {
-    log_error(message, current_token().location);
+void ParserLayer1::fail(const std::string& message) {
+    fail(message, current_token().location);
 }
 
-void ParserLayer1::log_error(const std::string& message, SourceLocation location) const {
+void ParserLayer1::fail(const std::string& message, SourceLocation location) {
     Logging::log_error(message, location);
+    declare_invalid();
 }
 
 void ParserLayer1::log_info(const std::string& message, Logging::MessageType message_type) const {
@@ -205,8 +206,7 @@ void ParserLayer1::handle_pragma() {
     } else if (value_string == "disable") {
         value = false;
     } else {
-        log_error("invalid pragma declaration");
-        declare_invalid();
+        fail("invalid pragma declaration");
         get_token();
         return;
     }
@@ -225,8 +225,7 @@ void ParserLayer1::handle_pragma() {
 // --------- STATEMENTS --------
 
 Statement* ParserLayer1::broken_statement_helper(const std::string& message) {
-    log_error(message);
-    declare_invalid();
+    fail(message);
     Statement* statement = create_statement(StatementType::broken);
     reset_to_top_level();
     return statement;
@@ -258,8 +257,7 @@ void ParserLayer1::parse_top_level_statement() {
 Statement* ParserLayer1::parse_non_global_statement() {
     switch (current_token().token_type) {
         case TokenType::pragma:
-            declare_invalid();
-            log_error("unexpected non top-level pragma");
+            fail("unexpected non top-level pragma");
             reset_to_top_level();
             return create_statement(StatementType::broken); 
 
@@ -320,8 +318,7 @@ Statement* ParserLayer1::parse_statement() {
             
         // ---- errors -----
         default:
-            declare_invalid();    
-            log_error("Unexpected "+ current_token().get_string() + ", expected a statement");
+            fail("Unexpected "+ current_token().get_string() + ", expected a statement");
             reset_to_top_level();
             return create_statement(StatementType::broken);
         
@@ -330,14 +327,12 @@ Statement* ParserLayer1::parse_statement() {
             return create_statement(StatementType::broken);
         
         case TokenType::indent_error_fatal:
-            declare_invalid();
-            log_error("indent error");
+            fail("indent error");
             reset_to_top_level();
             return create_statement(StatementType::broken);
 
         case TokenType::unknown:
-            declare_invalid();
-            log_error("unknown token");
+            fail("unknown token");
             reset_to_top_level();
             return create_statement(StatementType::broken);
     }
@@ -366,8 +361,7 @@ Statement* ParserLayer1::parse_let_statement() {
                 
                 // check if name already exists
                 if (identifier_exists(name)) {
-                    declare_invalid();
-                    log_error("Attempting to redefine identifier " + name);
+                    fail("Attempting to redefine identifier " + name);
                     Statement* statement = create_statement(StatementType::illegal);
                     statement->value = "Attempting to redefine identifier: " + name;
                     return statement;
@@ -408,8 +402,7 @@ Statement* ParserLayer1::parse_let_statement() {
                 }
 
                 get_token();
-                declare_invalid();
-                log_error("unexpected " + current_token().get_string() + ", in let-statement");
+                fail("unexpected " + current_token().get_string() + ", in let-statement");
                 reset_to_top_level();
                 return create_statement(StatementType::broken);
             }
@@ -420,8 +413,7 @@ Statement* ParserLayer1::parse_let_statement() {
             return create_statement(StatementType::empty);
 
         default:
-            declare_invalid();
-            log_error("unexpected token: " + current_token().get_string() + " in let statement");
+            fail("unexpected token: " + current_token().get_string() + " in let statement");
             reset_to_top_level();
             return create_statement(StatementType::broken);
     }
@@ -574,8 +566,7 @@ Statement* ParserLayer1::parse_block_statement() {
             curly_brace_level_ > curly_brace_at_start
     ) {
         if (current_token().token_type == TokenType::eof) {
-            declare_invalid();
-            log_error("Unexpected eof while parsing block statement");
+            fail("Unexpected eof while parsing block statement");
             return statement;
         }
 
@@ -592,7 +583,47 @@ Statement* ParserLayer1::parse_block_statement() {
 
     log_info("finished parsing block statement from " + statement->location.to_string(), 
         MessageType::parser_debug);
+
+    if (substatements->size() == 1) {
+        // attempt to simplify
+        if (!simplify_single_statement_block(statement)) {
+            statement->statement_type = StatementType::illegal;
+            statement->value = std::monostate{};
+            return statement;
+        }
+    }
+
+    // simplify empty block
+    if (substatements->empty()) {
+        statement->statement_type = StatementType::empty;
+        statement->value = std::monostate{};
+        return statement;
+    }
+
     return statement;
+}
+
+bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
+    log_info("simplifying single statement block", MessageType::parser_debug, outer->location);
+
+    assert(outer->statement_type == StatementType::block && 
+        "ParserLayer1::collapse_single_statement_block called with a statement that's not a block");
+
+    auto block = std::get<Block>(outer->value);
+
+    assert(block.size() == 1 && 
+        "ParserLayer1::collapse_single_statement_block called with a block of length other than 1");
+
+    auto inner = block.back();
+
+    if (inner->is_illegal_as_single_statement_block()) {
+        fail("A block cannot be a single " + inner->log_message_string(), inner->location);
+        return false;
+    }
+
+    *outer = *inner;
+    ast_->delete_statement(outer);
+    return true;
 }
 
 Statement* ParserLayer1::parse_return_statement() {
@@ -677,8 +708,7 @@ Expression* ParserLayer1::parse_expression() {
             Expression* expression = parse_expression();
             
             if (current_token().token_type != TokenType::indent_block_end) {
-                declare_invalid();
-                log_error("Mismatched indents!");
+                fail("Mismatched indents!");
                 return expression;
             }
 
@@ -689,8 +719,7 @@ Expression* ParserLayer1::parse_expression() {
 
         case TokenType::reserved_word: {
             if (current_token().string_value() != "let") {
-                declare_invalid();
-                log_error("unknown " + current_token().get_string());
+                fail("unknown " + current_token().get_string());
                 Expression* expression = ast_->create_valueless_expression(
                     ExpressionType::syntax_error, current_expression_start_.back());
                 expression_end();
@@ -699,8 +728,7 @@ Expression* ParserLayer1::parse_expression() {
                 get_token();
                 return expression;
             }
-            declare_invalid();
-            log_error("Scoped let not yet implemented");
+            fail("Scoped let not yet implemented");
             Expression* expression = ast_->create_valueless_expression(
                 ExpressionType::syntax_error, current_expression_start_.back());
             expression_end();
@@ -711,8 +739,7 @@ Expression* ParserLayer1::parse_expression() {
         }
             
         default:
-            declare_invalid();
-            log_error("unexpected " + current_token().get_string() + ", at the start of an expression");
+            fail("unexpected " + current_token().get_string() + ", at the start of an expression");
             Expression* expression = ast_->create_valueless_expression(ExpressionType::syntax_error, current_expression_start_.back());
             expression_end();
             expression->value = "unexpected " + current_token().get_string() + ", at the start of an expression";
@@ -806,8 +833,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
                 break;
 
             default:
-                declare_invalid();
-                log_error("unexpected: " + current_token().get_string() + ", in termed expression");
+                fail("unexpected: " + current_token().get_string() + ", in termed expression");
                 Expression* term = ast_->create_valueless_expression(
                     ExpressionType::not_implemented, current_token().location);
                 term->value = current_token().get_string();
@@ -861,9 +887,8 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return handle_numeric_literal();
 
         case TokenType::colon:
-            log_error("unhandled token type: " + current_token().get_string() + ", reached ParserLayer1::parse_term");
+            fail("unhandled token type: " + current_token().get_string() + ", reached ParserLayer1::parse_term");
             assert(false && "colons should be handled by parse_termed expression");
-            declare_invalid();            
             return ast_->create_valueless_expression(ExpressionType::syntax_error, current_token().location);
 
         case TokenType::parenthesis_open: 
@@ -890,8 +915,7 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return ast_->create_type_operator_expression(current_token().string_value(), current_token().location);
         
         default:
-            declare_invalid();
-            log_error("unhandled token type: " + current_token().get_string() + ", reached ParserLayer1::parse_term");
+            fail("unhandled token type: " + current_token().get_string() + ", reached ParserLayer1::parse_term");
             assert(false && "unhandled token type in parse_term");
             return ast_->create_valueless_expression(ExpressionType::syntax_error, current_token().location);
     }
@@ -913,8 +937,7 @@ Expression* ParserLayer1::parse_parenthesized_expression() {
     get_token(); // eat '('
 
     if (current_token().token_type == TokenType::parenthesis_close) {
-        declare_invalid();
-        log_error("Empty parentheses in an expression");
+        fail("Empty parentheses in an expression");
         Expression* expression = ast_->create_valueless_expression(ExpressionType::syntax_error, current_token().location);
         get_token();
         expression_end();
@@ -923,8 +946,7 @@ Expression* ParserLayer1::parse_parenthesized_expression() {
 
     Expression* expression = parse_expression();
     if (current_token().token_type != TokenType::parenthesis_close) {
-        declare_invalid();
-        log_error("Mismatched parentheses");
+        fail("Mismatched parentheses");
         return expression;
     }
 
@@ -1060,6 +1082,9 @@ Expression* ParserLayer1::handle_type_identifier() {
 
 void ParserLayer1::reset_to_top_level() {
     log_info("resetting to global scope", MessageType::parser_debug);
+
+    current_expression_start_ = {};
+    current_statement_start_ = {};
 
     while (
         current_token().token_type != TokenType::eof          && (

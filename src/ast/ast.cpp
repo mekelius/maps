@@ -87,6 +87,16 @@ Expression* AST::create_missing_argument(const Type& type, SourceLocation locati
 void AST::delete_expression(Expression* expression) {
     expression->expression_type = ExpressionType::deleted;
 }
+void AST::delete_expression_recursive(Expression* expression) {
+    assert(false && "not implemented");
+}
+
+void AST::delete_statement(Statement* statement) {
+    statement->statement_type = StatementType::deleted;
+}
+void AST::delete_statement_recursive(Statement* statement) {
+    assert(false && "not implemented");
+}
 
 // ---------- CREATING OTHER THINGS ----------
 

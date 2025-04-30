@@ -27,6 +27,10 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Statement* statement) {
     ostream << linebreak();
 
     switch (statement->statement_type) {
+        case Maps::StatementType::deleted:
+            assert(false && "deleted statement encountered in-tree");
+            ostream << "@deleted statement@";
+            break;
         case Maps::StatementType::broken:
             ostream << "@broken statement@";
             break;

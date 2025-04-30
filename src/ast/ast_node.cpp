@@ -250,6 +250,8 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
         case StatementType::illegal:
             value = static_cast<std::string>("");
             break;
+        case StatementType::deleted:
+            assert(false && "why are we creating statements pre-deleted?");
         case StatementType::empty:
             value = std::monostate{};
             break;               
@@ -282,6 +284,8 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
 
 std::string Statement::log_message_string() const {
     switch (statement_type) {
+        case StatementType::deleted:
+            return "deleted statement";
         case StatementType::broken:
             return "broken statement";
         case StatementType::illegal:
@@ -320,5 +324,25 @@ std::string Statement::log_message_string() const {
     }
 }
 
+bool Statement::is_illegal_as_single_statement_block() const {
+    switch (statement_type) {
+        case StatementType::expression_statement:
+        case StatementType::return_:
+        case StatementType::illegal:
+        case StatementType::broken:
+        case StatementType::empty:
+        case StatementType::block:
+            return false;
+
+        case StatementType::assignment:
+            // ???
+            return true;
+
+        case StatementType::operator_definition:
+        case StatementType::deleted:
+        case StatementType::let:
+            return true;
+    }
+}
 
 } // namespace AST

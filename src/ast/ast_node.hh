@@ -171,6 +171,7 @@ struct Assignment {
 using Block = std::vector<Statement*>;
 
 enum class StatementType {
+    deleted,
     broken,                 // parsing failed
     illegal,                // well formed but illegal statements
     empty,
@@ -209,6 +210,8 @@ struct Statement {
     StatementValue value;
 
     std::string log_message_string() const;
+
+    bool is_illegal_as_single_statement_block() const;
 };
 
 // TODO: expand mind enough for contexts
