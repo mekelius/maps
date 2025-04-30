@@ -285,7 +285,7 @@ Statement* ParserLayer1::parse_statement() {
             }
 
             if (current_token().string_value() == "operator")
-                return parse_operator_statement();
+                return parse_operator_definition();
             
             assert(false && "Unhandled reserved word in Parser::parse_top_level_statement");
             
@@ -427,7 +427,7 @@ Statement* ParserLayer1::parse_let_statement() {
     }
 }
 
-Statement* ParserLayer1::parse_operator_statement() {
+Statement* ParserLayer1::parse_operator_definition() {
     statement_start();
 
     switch (get_token().token_type) {

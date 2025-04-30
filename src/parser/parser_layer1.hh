@@ -73,7 +73,7 @@ private:
 
     Statement* parse_expression_statement();
     Statement* parse_let_statement();
-    Statement* parse_operator_statement();
+    Statement* parse_operator_definition();
     Statement* parse_assignment_statement();
     Statement* parse_return_statement();
     Statement* parse_block_statement();
