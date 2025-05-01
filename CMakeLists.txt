@@ -109,13 +109,13 @@ target_link_libraries(verify_mapsc parser)
 
 # ----------------- PARSER UNIT_TESTS -----------------
 
-add_executable(parser_unit_tests
+add_executable(tests
     tests/tests_main.cpp
     tests/layer2_tests.cpp
     tests/ast_tests.cpp
     tests/type_specifiers.cpp
 )
 
-target_link_libraries(parser_unit_tests parser)
+target_link_libraries(tests parser)
 
-target_include_directories(parser_unit_tests SYSTEM PRIVATE doctest tests)
+target_include_directories(tests SYSTEM PRIVATE doctest tests)
