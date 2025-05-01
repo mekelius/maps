@@ -24,7 +24,8 @@ public:
     bool run(std::istream& source_is);
     std::optional<Callable*> eval_parse(std::istream& source_is);
 
-private:
+// protected for unit tests
+protected:
     void run_parse(std::istream& source_is);
     void prime_tokens();
 

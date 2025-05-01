@@ -8,7 +8,6 @@
  */
 #include "parser_layer1.hh"
 
-
 #include <variant>
 #include <cassert>
 
@@ -622,7 +621,7 @@ bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
     }
 
     *outer = *inner;
-    ast_->delete_statement(outer);
+    ast_->delete_statement(inner);
     return true;
 }
 

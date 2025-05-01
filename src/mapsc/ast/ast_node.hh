@@ -154,6 +154,8 @@ public:
 struct Let {
     std::string identifier; 
     CallableBody body;
+
+    bool operator==(const Let& other) const = default;
 };
 
 struct OperatorStatementValue {
@@ -161,11 +163,15 @@ struct OperatorStatementValue {
     unsigned int arity;
     CallableBody body;
     // include the specifiers
+    bool operator==(const OperatorStatementValue& other) const = default;
+
 };
 
 struct Assignment {
     std::string identifier; 
     CallableBody body;
+
+    bool operator==(const Assignment& other) const = default;
 };
 
 using Block = std::vector<Statement*>;
@@ -212,6 +218,8 @@ struct Statement {
     std::string log_message_string() const;
 
     bool is_illegal_as_single_statement_block() const;
+
+    bool operator==(const Statement& other) const = default;
 };
 
 // TODO: expand mind enough for contexts
