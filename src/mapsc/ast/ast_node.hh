@@ -124,19 +124,7 @@ public:
 
     const std::string& string_value() const;
 
-    friend bool operator==(const Expression& lhs, const Expression& rhs) {
-        return std::tie(
-            lhs.expression_type,
-            lhs.location,
-            lhs.type,
-            lhs.value
-        ) == std::tie(
-            rhs.expression_type,
-            rhs.location,
-            rhs.type,
-            rhs.value
-        );
-    }
+    bool operator==(const Expression& other) const = default;
 
     bool is_literal() const;
     bool is_illegal() const;
@@ -221,20 +209,6 @@ struct Statement {
 
     bool operator==(const Statement& other) const = default;
 };
-
-// TODO: expand mind enough for contexts
-// context where statements can exist
-// class Context {
-//   public:
-//     enum Type {
-//         local,
-//         global,
-//         global_eval, // global context where evaluation is allowed 
-//     };
-
-//     Context::Type context_type = local;
-//     std::optional<Scope> scope = std::nullopt;
-// };
 
 } // namespace Maps
 
