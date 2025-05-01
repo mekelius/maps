@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
         }
         
         Lexer lexer{&source_file};
-        std::unique_ptr<Maps::Pragmas> pragmas = std::make_unique<Maps::Pragmas>();
+        std::unique_ptr<Maps::PragmaStore> pragmas = std::make_unique<Maps::PragmaStore>();
         
         std::cout << "run layer1\n\n";
         std::unique_ptr<Maps::AST> ast = std::make_unique<Maps::AST>();

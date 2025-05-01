@@ -64,7 +64,7 @@ public:
     
 private:
     bool save_history();
-    void eval(const Maps::AST& ast, Maps::Pragmas& pragmas);
+    void eval(const Maps::AST& ast, Maps::PragmaStore& pragmas);
     std::string parse_type(std::istream& input_stream);
     void run_command(const std::string& command);
 

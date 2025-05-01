@@ -5,6 +5,12 @@
 
 using Maps::Expression, Maps::ExpressionType, Maps::Callable;
 
+TEST_CASE("AST should be empty when created") {
+    Maps::AST ast{};
+    CHECK(ast.empty());
+    CHECK(ast.size() == 0);
+}
+
 TEST_CASE("Callables should pass their type correctly") {
     const unsigned int PRECEDENCE = 756;
     Maps::AST ast{};

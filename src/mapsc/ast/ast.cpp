@@ -11,6 +11,7 @@ AST::AST() {
 }
 
 bool AST::init_builtins() {
+    // !!! this isn't good
     return ::init_builtins(*this);
 }
 
@@ -18,6 +19,31 @@ void AST::set_root(CallableBody root) {
     // TODO: delete the old
     // delete_node(root_);
     root_->body = root;
+}
+
+bool AST::empty() const {
+    return (
+        statements_.empty() &&
+        expressions_.empty() &&
+        builtins_.empty() &&
+        operators_.empty() &&
+
+        // !!! this isn't good
+        callables_.size() == 1 &&
+        *callables_.back() == *root_
+    );
+}
+
+size_t AST::size() const {
+    return (
+        statements_.size() +
+        expressions_.size() +
+        builtins_.size() +
+        operators_.size() +
+
+        // !!! this isn't good
+        callables_.size() - 1
+    );
 }
 
 // ---------- CREATING (AND DELETING) EXPRESSIONS ----------

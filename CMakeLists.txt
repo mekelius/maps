@@ -113,6 +113,7 @@ target_link_libraries(verify_mapsc parser)
 add_executable(tests
     tests/tests_main.cpp
     tests/ast.cpp
+    tests/pragmas.cpp
     tests/layer1.cpp
     tests/layer2.cpp
     tests/type_specifiers.cpp

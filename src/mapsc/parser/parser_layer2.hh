@@ -80,7 +80,7 @@ private:
 // in the ast and runs them
 class ParserLayer2 {
 public:
-    ParserLayer2(AST* ast, Pragmas* pragmas);
+    ParserLayer2(AST* ast, PragmaStore* pragmas);
     void run();
 
 private:
@@ -88,7 +88,7 @@ private:
     // Selects a termed expression to parse. That expressions terms become the tokenstream
     void select_expression(Expression* expression);
     AST* ast_;
-    Pragmas* pragmas_;
+    PragmaStore* pragmas_;
 };
 
 } // namespace Maps

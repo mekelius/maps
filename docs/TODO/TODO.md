@@ -19,6 +19,7 @@
 #### Accumulated tweaks
 
 - Name resolution should return false on fail
+- Fix pragmas when we do multiple files
 
 ## Planned for 0.2
 

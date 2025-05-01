@@ -18,7 +18,7 @@ namespace Maps {
 
 class ParserLayer1 {
 public:
-    ParserLayer1(AST* ast, Pragmas* pragmas);
+    ParserLayer1(AST* ast, PragmaStore* pragmas);
 
     // if fails, sets ast->is_valid to false
     bool run(std::istream& source_is);
@@ -105,7 +105,7 @@ protected:
     
     std::unique_ptr<Lexer> lexer_;
     AST* ast_;
-    Pragmas* pragmas_;
+    PragmaStore* pragmas_;
     
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_ = { Token::dummy_token, Token::dummy_token };

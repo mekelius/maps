@@ -10,7 +10,6 @@
 
 namespace Maps {
 
-
 // all pragmas are bool for now
 struct PragmaFlag {
     std::string_view name;
@@ -34,14 +33,16 @@ constexpr std::array<PragmaFlag, 2> flags{
 // when we look for pragmas affecting a certain AST::Node, we search the multimap and look for the
 // previous relevant pragma
 // If these were to become a bottleneck we should cache them 
-class Pragmas {
+class PragmaStore {
   public:
-    Pragmas();
+    PragmaStore();
     
     // returns false if the flag doesn't exist
     bool set_flag(const std::string& flag_name, bool value, const SourceLocation& location);
     bool check_flag_value(const std::string& flag_name, const SourceLocation& location) const;
 
+    bool empty() const;
+    size_t size() const;
   private:
     std::unordered_map<
         std::string_view,

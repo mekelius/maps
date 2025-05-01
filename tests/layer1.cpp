@@ -12,7 +12,7 @@ public:
 
     TEST_CASE_CLASS("simplify_single_statement_block") {
         AST ast;
-        Pragmas pragmas;
+        PragmaStore pragmas;
 
         Layer1tests layer1{&ast, &pragmas};
 
@@ -34,25 +34,33 @@ public:
         CHECK(*block == inner_copy);
     };
 
-// TEST_CASE("layer1 eval should collapse single statement blocks") {
-//     AST ast;
-//     Pragmas pragmas;
-
-//     ParserLayer1 layer1{&ast, &pragmas};
-
-//     std::string source = "{{ {4} }}";
-//     std::stringstream source_s{source};
-
-//     auto callable = layer1.eval_parse(source_s);
-
-//     CHECK(ast.is_valid);
-//     CHECK(callable);
-//     CHECK(std::holds_alternative<Expression*>((*callable)->body));
-
-//     auto expression = std::get<Expression*>((*callable)->body);
-
-//     CHECK(expression->expression_type == ExpressionType::numeric_literal);
-//     CHECK(expression->string_value() == "4");
-// }
-
 };
+
+TEST_CASE("layer1 eval should collapse single statement blocks") {
+    AST ast;
+
+    CHECK(ast.empty());
+
+    PragmaStore pragmas;
+
+    ParserLayer1 layer1{&ast, &pragmas};
+
+    REQUIRE(ast.empty());
+    REQUIRE(pragmas.empty());
+
+    SUBCASE("{{ {4} }}") {
+        std::string source = "{{ {4} }}";
+        std::stringstream source_s{source};
+        
+        auto callable = layer1.eval_parse(source_s);
+        
+        CHECK(ast.is_valid);
+        CHECK(callable);
+        CHECK(std::holds_alternative<Expression*>((*callable)->body));
+        
+        auto expression = std::get<Expression*>((*callable)->body);
+        
+        CHECK(expression->expression_type == ExpressionType::numeric_literal);
+        CHECK(expression->string_value() == "4");
+    }
+}

@@ -54,6 +54,8 @@ public:
     bool is_binary_operator() const;
     bool is_unary_operator() const;
 
+    bool operator==(const Callable&) const = default;
+
 private:
     std::optional<const Type*> type_;
 };

@@ -10,18 +10,18 @@
 #include "mapsc/parser/parser_layer2.hh"
 #include "mapsc/types/type_checking.hh"
 
-using std::tuple, std::unique_ptr, std::make_optional, std::nullopt;
+using std::tuple, std::optional, std::make_optional, std::nullopt;
 using std::unique_ptr, std::make_unique;
-using Maps::Pragmas, Maps::ParserLayer1, Maps::ParserLayer2, Maps::SimpleTypeChecker;
+using Maps::AST, Maps::PragmaStore, Maps::ParserLayer1, Maps::ParserLayer2, Maps::SimpleTypeChecker;
 using Maps::handle_BTD_field_names, Maps::resolve_identifiers;
 
 // if parse fails at any point, returns nullopt, 
 // except if ignore errors is true returns the broken ast
-tuple<bool, unique_ptr<Maps::AST>, unique_ptr<Pragmas>>
+tuple<bool, unique_ptr<AST>, unique_ptr<PragmaStore>>
     parse_source(std::istream& source_is, const ParseOptions& options, std::ostream& debug_print_ostream) {
             
-    std::unique_ptr<Pragmas> pragmas = std::make_unique<Pragmas>();
-    unique_ptr<Maps::AST> ast = make_unique<Maps::AST>(); 
+    unique_ptr<PragmaStore> pragmas = make_unique<PragmaStore>();
+    unique_ptr<AST> ast = make_unique<AST>(); 
     
     if (!ast->init_builtins()) {
         Logging::log_error("Initializing builtins failed");

@@ -24,7 +24,7 @@ namespace Maps {
 
 // ----- PUBLIC METHODS -----
 
-ParserLayer1::ParserLayer1(AST* ast, Pragmas* pragmas)
+ParserLayer1::ParserLayer1(AST* ast, PragmaStore* pragmas)
 :ast_(ast), pragmas_(pragmas) {}
 
 bool ParserLayer1::run(std::istream& source_is) {

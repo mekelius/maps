@@ -5,14 +5,14 @@
 
 namespace Maps {
 
-Pragmas::Pragmas() {
+PragmaStore::PragmaStore() {
     for (const PragmaFlag& flag: flags) {
         // gotta insert the default at the start, because the begin is never read
         declarations_.insert({flag.name, {{SourceLocation{0,0}, flag.default_value}}});
     }
 }
 
-bool Pragmas::set_flag(const std::string& flag_name, bool value, const SourceLocation& location) {
+bool PragmaStore::set_flag(const std::string& flag_name, bool value, const SourceLocation& location) {
     auto flag_declarations_it = declarations_.find(flag_name);
     
     if (flag_declarations_it == declarations_.end()) {
@@ -28,7 +28,7 @@ bool Pragmas::set_flag(const std::string& flag_name, bool value, const SourceLoc
 }
 
 // NOTE: if these were ever somehow to become a bottleneck they could be cached
-bool Pragmas::check_flag_value(const std::string& flag_name, const SourceLocation& location) const {
+bool PragmaStore::check_flag_value(const std::string& flag_name, const SourceLocation& location) const {
     auto flag_declarations_it = declarations_.find(flag_name);
     assert(flag_declarations_it != declarations_.end() && "tried to read an unknown pragma");
     
@@ -39,6 +39,16 @@ bool Pragmas::check_flag_value(const std::string& flag_name, const SourceLocatio
     auto it = flag_declarations.lower_bound(location);
     assert(it != flag_declarations.end() && "somehow check_flag_value failed to produce a value");
     return it->second;
+}
+
+bool PragmaStore::empty() const { 
+    // default flags are always there
+    return declarations_.size() == flags.size(); 
+}
+
+size_t PragmaStore::size() const { 
+    // default flags are always there
+    return declarations_.size() - flags.size(); 
 }
 
 } // namespace Pragmas

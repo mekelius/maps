@@ -34,6 +34,9 @@ public:
 
     void set_root(CallableBody root);
     void declare_invalid() { is_valid = false; };
+    
+    bool empty() const;
+    size_t size() const;
 
     // ----- WALKING TREE NODE BY NODE -----
 
@@ -91,13 +94,15 @@ public:
     Callable* create_builtin_unary_operator(const std::string& name, const Type& type, 
         UnaryFixity fixity = UnaryFixity::prefix);
 
+    // ----- FIELDS -----
+
+    bool is_valid = true;
     // container for top-level statements
     Callable* root_;
 
     std::unique_ptr<Scope> globals_ = std::make_unique<Scope>(this);
     std::unique_ptr<Scope> builtins_scope_ = std::make_unique<Scope>(this);
 
-    bool is_valid = true;
     std::unique_ptr<TypeRegistry> types_ = std::make_unique<TypeRegistry>();
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
