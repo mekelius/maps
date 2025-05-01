@@ -78,7 +78,8 @@ int main(int argc, char* argv[]) {
         std::unique_ptr<Maps::Pragmas> pragmas = std::make_unique<Maps::Pragmas>();
         
         std::cout << "run layer1\n\n";
-        std::unique_ptr<Maps::AST> ast = Maps::ParserLayer1{&lexer, pragmas.get()}.run();
+        std::unique_ptr<Maps::AST> ast = std::make_unique<Maps::AST>();
+        Maps::ParserLayer1{ast.get(), pragmas.get()}.run(source_file);
 
         if (logs_since_last_check()) 
             std::cout << "\n";
