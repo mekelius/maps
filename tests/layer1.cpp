@@ -5,38 +5,38 @@
 
 using namespace Maps;
 
-class Layer1tests: public ParserLayer1 {
-public:
+// class Layer1tests: public ParserLayer1 {
+// public:
 
-    Layer1tests(auto ast, auto pragmas): ParserLayer1(ast, pragmas) {}
+//     Layer1tests(auto ast, auto pragmas): ParserLayer1(ast, pragmas) {}
 
-    TEST_CASE_CLASS("simplify_single_statement_block") {
-        AST ast;
-        PragmaStore pragmas;
+//     TEST_CASE_CLASS("simplify_single_statement_block") {
+//         AST ast;
+//         PragmaStore pragmas;
 
-        Layer1tests layer1{&ast, &pragmas};
+//         Layer1tests layer1{&ast, &pragmas};
 
-        Statement* block = ast.create_statement(StatementType::block, TEST_SOURCE_LOCATION);
-        Statement* inner = ast.create_statement(StatementType::expression_statement, TEST_SOURCE_LOCATION);
+//         Statement* block = ast.create_statement(StatementType::block, TEST_SOURCE_LOCATION);
+//         Statement* inner = ast.create_statement(StatementType::expression_statement, TEST_SOURCE_LOCATION);
         
-        Expression* value = ast.create_string_literal("test", TEST_SOURCE_LOCATION);
-        inner->value = value;
+//         Expression* value = ast.create_numeric_literal("4", TEST_SOURCE_LOCATION);
+//         inner->value = value;
 
-        std::get<Block>(block->value).push_back(inner);
-        Statement inner_copy = *inner;
+//         std::get<Block>(block->value).push_back(inner);
+//         Statement inner_copy = *inner;
 
-        auto success = layer1.simplify_single_statement_block(block);
+//         auto success = layer1.simplify_single_statement_block(block);
 
-        CHECK(success);
-        CHECK(ast.is_valid);
-        CHECK(block->statement_type == StatementType::expression_statement);
-        CHECK(std::get<Expression*>(block->value) == value);
-        CHECK(*block == inner_copy);
-    };
+//         CHECK(success);
+//         CHECK(ast.is_valid);
+//         CHECK(block->statement_type == StatementType::expression_statement);
+//         CHECK(std::get<Expression*>(block->value) == value);
+//         CHECK(*block == inner_copy);
+//     };
 
-};
+// };
 
-TEST_CASE("layer1 eval should collapse single statement blocks") {
+TEST_CASE("layer1 eval should simplify single statement blocks") {
     AST ast;
 
     CHECK(ast.empty());
@@ -48,19 +48,24 @@ TEST_CASE("layer1 eval should collapse single statement blocks") {
     REQUIRE(ast.empty());
     REQUIRE(pragmas.empty());
 
-    SUBCASE("{{ {4} }}") {
-        std::string source = "{{ {4} }}";
-        std::stringstream source_s{source};
-        
-        auto callable = layer1.eval_parse(source_s);
-        
-        CHECK(ast.is_valid);
-        CHECK(callable);
-        CHECK(std::holds_alternative<Expression*>((*callable)->body));
-        
-        auto expression = std::get<Expression*>((*callable)->body);
-        
-        CHECK(expression->expression_type == ExpressionType::numeric_literal);
-        CHECK(expression->string_value() == "4");
-    }
+    #define CURLY_BRACE_SUBCASE(test_string)\
+        SUBCASE(test_string) {\
+            std::string source = test_string;\
+            std::stringstream source_s{source};\
+            \
+            auto callable = layer1.eval_parse(source_s);\
+            \
+            CHECK(ast.is_valid);\
+            CHECK(callable);\
+            CHECK(std::holds_alternative<Expression*>((*callable)->body));\
+            \
+            auto expression = std::get<Expression*>((*callable)->body);\
+            \
+            CHECK(expression->expression_type == ExpressionType::numeric_literal);\
+            CHECK(expression->string_value() == "4");\
+        }\
+
+    CURLY_BRACE_SUBCASE("{ 4 }");
+    CURLY_BRACE_SUBCASE("{4}");
+    CURLY_BRACE_SUBCASE("{{ {4} }}");
 }

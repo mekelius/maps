@@ -82,6 +82,7 @@ void JIT_Manager::reset() {
     
 REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options)
 : context_(context), jit_(jit), error_stream_(error_stream), options_(options) {
+    parse_options_.in_repl = true;
     update_parse_options();
 
     if (options_.save_history) {
@@ -100,9 +101,8 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
     }
 }
 
-REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream)
-: context_(context), jit_(jit), error_stream_(error_stream) {
-    update_parse_options();
+REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream) {
+    REPL(jit, context, error_stream, {});
 }
 
 void REPL::run() {    
@@ -131,14 +131,13 @@ void REPL::run() {
         }
         
         std::stringstream input_s{input};
-
         auto [success, ast, pragmas] = parse_source(input_s, parse_options_, std::cerr);
-  
-        if (!success && !options_.ignore_errors)
-            continue;
-
-        if (options_.stop_after == Stage::layer2)
-            continue;
+        
+        if (
+            (!success && !options_.ignore_errors) || 
+            options_.stop_after == Stage::layer1 ||
+            options_.stop_after == Stage::layer2
+        ) continue;
 
         if (options_.print_reverse_parse) {
             std::cerr << "parsed into:\n";
@@ -311,13 +310,10 @@ void REPL::run_command(const std::string& input) {
 }
 
 void REPL::update_parse_options() {
-    parse_options_ = {
-        options_.print_layer1,
-        options_.print_layer2,
-        options_.ignore_errors,
-        ParseStage::done,
-        true
-    };
+    parse_options_.ignore_errors = options_.ignore_errors;
+    parse_options_.print_layer1 = options_.print_layer1;
+    parse_options_.print_layer2 = options_.print_layer2;
+    parse_options_.ignore_errors = options_.ignore_errors;
 
     if (options_.stop_after == Stage::layer1) {
         parse_options_.stop_after = ParseStage::layer1;
@@ -328,4 +324,6 @@ void REPL::update_parse_options() {
         parse_options_.stop_after = ParseStage::layer2;
         return;
     }
+
+    parse_options_.stop_after = ParseStage::done;
 }

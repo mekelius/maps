@@ -18,7 +18,7 @@ using Maps::handle_BTD_field_names, Maps::resolve_identifiers;
 // if parse fails at any point, returns nullopt, 
 // except if ignore errors is true returns the broken ast
 tuple<bool, unique_ptr<AST>, unique_ptr<PragmaStore>>
-    parse_source(std::istream& source_is, const ParseOptions& options, std::ostream& debug_print_ostream) {
+    parse_source(std::istream& source_is, const ParseOptions& options, std::ostream& debug_ostream) {
             
     unique_ptr<PragmaStore> pragmas = make_unique<PragmaStore>();
     unique_ptr<AST> ast = make_unique<AST>(); 
@@ -40,9 +40,9 @@ tuple<bool, unique_ptr<AST>, unique_ptr<PragmaStore>>
     }
 
     if (options.print_layer1) {
-        debug_print_ostream <<   "\n------- layer1 -------";
-        reverse_parse(*ast, debug_print_ostream);
-        debug_print_ostream << "\n----- layer1 end -----\n\n";
+        debug_ostream <<   "\n------- layer1 -------";
+        reverse_parse(*ast, debug_ostream);
+        debug_ostream << "\n----- layer1 end -----\n\n";
     }
 
     if (!ast->is_valid && !options.ignore_errors)
@@ -66,9 +66,9 @@ tuple<bool, unique_ptr<AST>, unique_ptr<PragmaStore>>
     ParserLayer2{ast.get(), pragmas.get()}.run();
 
     if (options.print_layer2) {
-        debug_print_ostream <<   "------- layer2 -------";
-        reverse_parse(*ast, debug_print_ostream);
-        debug_print_ostream << "\n----- layer2 end -----\n\n";
+        debug_ostream <<   "------- layer2 -------";
+        reverse_parse(*ast, debug_ostream);
+        debug_ostream << "\n----- layer2 end -----\n\n";
     }
 
     if (!ast->is_valid && !options.ignore_errors)

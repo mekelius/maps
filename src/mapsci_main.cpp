@@ -138,7 +138,6 @@ int main(int argc, char* argv[]) {
             } else if(value == "ir") {
                 repl_options.stop_after = REPL::Stage::ir;
             }
-
         } else if(key == "--ignore-errors" || key == "--ignore-error") {
             repl_options.ignore_errors = false;
 
