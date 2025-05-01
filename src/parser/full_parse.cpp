@@ -45,7 +45,7 @@ tuple<bool, unique_ptr<Maps::AST>, unique_ptr<Pragmas>>
         debug_print_ostream << "\n----- layer1 end -----\n\n";
     }
 
-    if (!ast->is_valid && options.stop_on_error)
+    if (!ast->is_valid && !options.ignore_errors)
         return {false, std::move(ast), std::move(pragmas)};
 
     if (options.stop_after == ParseStage::layer1)
@@ -53,12 +53,12 @@ tuple<bool, unique_ptr<Maps::AST>, unique_ptr<Pragmas>>
 
     // ----- binding type declarations -----
 
-    if (!handle_BTD_field_names(ast->possible_binding_type_declarations_) && options.stop_on_error)
+    if (!handle_BTD_field_names(ast->possible_binding_type_declarations_) && !options.ignore_errors)
         return {false, std::move(ast), std::move(pragmas)};
 
     // ----- name resolution -----
 
-    if (!resolve_identifiers(*ast) && options.stop_on_error)
+    if (!resolve_identifiers(*ast) && !options.ignore_errors)
         return {false, std::move(ast), std::move(pragmas)};
 
     // ----- layer2 -----
@@ -71,7 +71,7 @@ tuple<bool, unique_ptr<Maps::AST>, unique_ptr<Pragmas>>
         debug_print_ostream << "\n----- layer2 end -----\n\n";
     }
 
-    if (!ast->is_valid && options.stop_on_error)
+    if (!ast->is_valid && !options.ignore_errors)
         return {false, std::move(ast), std::move(pragmas)};
 
     if (options.stop_after == ParseStage::layer2)
@@ -79,7 +79,7 @@ tuple<bool, unique_ptr<Maps::AST>, unique_ptr<Pragmas>>
 
     // ----- type checks -----
 
-    if (!SimpleTypeChecker{}.run(*ast) && options.stop_on_error)
+    if (!SimpleTypeChecker{}.run(*ast) && !options.ignore_errors)
         return {false, std::move(ast), std::move(pragmas)};
 
     // ----- done -----

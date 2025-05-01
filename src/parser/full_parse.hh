@@ -24,7 +24,7 @@ struct ParseOptions {
     bool print_layer1 = false;
     bool print_layer2 = false;
     
-    bool stop_on_error = true;
+    bool ignore_errors = false;
     ParseStage stop_after = ParseStage::done;
     
     bool in_repl;

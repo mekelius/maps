@@ -50,7 +50,7 @@ public:
         
         bool eval = true;
 
-        bool stop_on_error = true;
+        bool ignore_errors = false;
         Stage stop_after = Stage::done;
 
         bool save_history = false;

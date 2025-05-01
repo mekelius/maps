@@ -134,7 +134,7 @@ void REPL::run() {
 
         auto [success, ast, pragmas] = parse_source(input_s, parse_options_, std::cerr);
   
-        if (!success && options_.stop_on_error)
+        if (!success && !options_.ignore_errors)
             continue;
 
         if (options_.stop_after == Stage::layer2)
@@ -179,7 +179,7 @@ void REPL::eval(const Maps::AST& ast, Maps::Pragmas& pragmas) {
         std::cerr << "\n---IR END---\n";
     }
 
-    if (!success && options_.stop_on_error)
+    if (!success && !options_.ignore_errors)
         return;
 
     if (options_.stop_after == Stage::ir)
@@ -194,7 +194,7 @@ void REPL::eval(const Maps::AST& ast, Maps::Pragmas& pragmas) {
 std::string REPL::parse_type(std::istream& input_stream) {
     auto [success, ast, pragmas] = parse_source(input_stream, parse_options_, std::cout);
     
-    if (!success && options_.stop_on_error) {
+    if (!success && !options_.ignore_errors) {
         std::cout << "ERROR: parsing type failed" << std::endl;
         return "";
     }
@@ -219,12 +219,14 @@ void REPL::run_command(const std::string& input) {
         running_ = false;
         return;
     }
-    
-    if (command == ":stop_after") {
-        std::string arg;
-        std::getline(input_stream, arg, ' ');
 
-        if (arg == "layer1") {
+    std::string next_arg;
+    
+    if (command == ":stop_after" || command == ":stop_at") {
+        std::string next_arg;
+        std::getline(input_stream, next_arg, ' ');
+
+        if (next_arg == "layer1") {
             options_.stop_after = Stage::layer1;
             update_parse_options();
             return;
@@ -249,49 +251,56 @@ void REPL::run_command(const std::string& input) {
         }
 
         return;
-    } 
-    
-    if (command == ":toggle") { 
-        std::string arg;
-        std::getline(input_stream, arg, ' ');
+    }
 
-        if (arg == "eval") {
+    if (command == ":toggle") { 
+        std::string next_arg;
+        std::getline(input_stream, next_arg, ' ');
+
+        if (next_arg == "eval") {
             options_.eval = !options_.eval;
             std::cout << "eval " << (options_.eval ? "on" : "off") << std::endl;
             return;
         }
 
-        if (arg == "print_layer1") {
-            options_.print_layer1 = !options_.print_layer1;
-            update_parse_options();
-            std::cout << "print_layer1 " << (options_.eval ? "on" : "off") << std::endl;
+        if (next_arg == "print" || next_arg == "show") { 
+            std::string next_arg;
+            std::getline(input_stream, next_arg, ' ');
+
+            if ("layer1") {
+                options_.print_layer1 = !options_.print_layer1;
+                update_parse_options();
+                std::cout << "print_layer1 " << (options_.eval ? "on" : "off") << std::endl;
+                return;
+            }
+
+            if (next_arg == "print_layer2") {
+                options_.print_layer2 = !options_.print_layer2;
+                update_parse_options();
+                std::cout << "print_layer2 " << (options_.eval ? "on" : "off") << std::endl;
+                return;
+            }
+            
+            if (next_arg == "print_ir") {
+                options_.print_ir = !options_.print_ir;
+                std::cout << "print_ir " << (options_.eval ? "on" : "off") << std::endl;
+                return;
+            }
+
             return;
         }
 
-        if (arg == "print_layer2") {
-            options_.print_layer2 = !options_.print_layer2;
-            update_parse_options();
-            std::cout << "print_layer2 " << (options_.eval ? "on" : "off") << std::endl;
-            return;
-        }
-        
-        if (arg == "print_ir") {
-            options_.print_ir = !options_.print_ir;
-            std::cout << "print_ir " << (options_.eval ? "on" : "off") << std::endl;
-            return;
-        }
-
-        if (arg == "stop_on_error") {
-            options_.stop_on_error = !options_.stop_on_error;
+        if (next_arg == "stop_on_error") {
+            options_.ignore_errors = !options_.ignore_errors;
             update_parse_options();
             std::cout << "stop_on_error " << (options_.eval ? "on" : "off") << std::endl;
             return;
         }
 
-        std::cout << "\"" << arg << "\" is not a toggle" << std::endl;
+        std::cout << "\"" << next_arg << "\" is not a toggle" << std::endl;
         return;
     }
-    
+
     if (command == ":t") {
         std::cout << parse_type(input_stream) << std::endl;
         return;
@@ -305,7 +314,7 @@ void REPL::update_parse_options() {
     parse_options_ = {
         options_.print_layer1,
         options_.print_layer2,
-        options_.stop_on_error,
+        options_.ignore_errors,
         ParseStage::done,
         true
     };

@@ -135,10 +135,13 @@ int main(int argc, char* argv[]) {
             } else if (value == "layer2") {
                 repl_options.stop_after = REPL::Stage::layer2;
 
-            } else if(key == "ir") {
+            } else if(value == "ir") {
                 repl_options.stop_after = REPL::Stage::ir;
-
             }
+
+        } else if(key == "--ignore-errors" || key == "--ignore-error") {
+            repl_options.ignore_errors = false;
+
         } else if(key == "--no-history") {
             repl_options.save_history = false;
 
@@ -154,7 +157,7 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
 
         } else {
-            std::cerr << "ERROR: interpreting source files not implemented: use mapsc to compile to binary instead, exiting" << std::endl;
+            std::cerr << "ERROR: interpreting source files not implemented, exiting" << std::endl;
             return EXIT_FAILURE;
             source_filenames.push_back(key);
         }
