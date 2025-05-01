@@ -2,8 +2,8 @@
 
 #include <sstream>
 
-#include "ast/ast.hh"
-#include "parser/parser_layer2.hh"
+#include "mapsc/ast/ast.hh"
+#include "mapsc/parser/parser_layer2.hh"
 
 using Maps::Expression, Maps::ExpressionType, Maps::Callable;
 

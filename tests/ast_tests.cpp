@@ -1,7 +1,7 @@
 #include "doctest.h"
 
-#include "lang/type.hh"
-#include "ast/ast.hh"
+#include "mapsc/types/type.hh"
+#include "mapsc/ast/ast.hh"
 
 using Maps::Expression, Maps::ExpressionType, Maps::Callable;
 

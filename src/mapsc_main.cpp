@@ -14,15 +14,15 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Support/raw_os_ostream.h"
 
-#include "logging.hh"
+#include "mapsc/logging.hh"
 
-#include "ast/ast.hh"
+#include "mapsc/ast/ast.hh"
 
-#include "parser/full_parse.hh"
+#include "mapsc/parser/full_parse.hh"
 
-#include "ir/ir_generator.hh"
-#include "ir/ir_builtins.hh"
-#include "ir/obj_output.hh"
+#include "mapsc/llvm/ir_generator.hh"
+#include "mapsc/llvm/ir_builtins.hh"
+#include "mapsc/llvm/obj_output.hh"
 
 // TODO: handle multiple inputfiles
 constexpr std::string_view USAGE = "USAGE: testc inputfile [-o filename] [-ir filename]";

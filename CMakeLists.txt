@@ -31,36 +31,37 @@ add_library(maps_builtins SHARED
 # ------------------- MAPSC PARSER -------------------
 
 add_library(parser OBJECT
-    src/logging.cpp
+    src/mapsc/logging.cpp
 
-    src/lang/type.cpp
-    src/lang/type_defs.cpp
-    src/lang/pragma.cpp
-    src/lang/builtins.cpp
-    src/lang/casts.cpp
+    src/mapsc/pragma.cpp
+    src/mapsc/builtins.cpp
+    src/mapsc/name_resolution.cpp
+
+    src/mapsc/types/type.cpp
+    src/mapsc/types/type_defs.cpp
+    src/mapsc/types/casts.cpp
+    src/mapsc/types/type_checking.cpp
     
-    src/ast/ast_node.cpp
-    src/ast/callable.cpp
-    src/ast/ast.cpp
-    src/ast/scope.cpp
+    src/mapsc/ast/ast_node.cpp
+    src/mapsc/ast/callable.cpp
+    src/mapsc/ast/ast.cpp
+    src/mapsc/ast/scope.cpp
     
-    src/parser/token.cpp
-    src/parser/lexer.cpp
-    src/parser/parser_layer1.cpp
-    src/parser/parser_layer2.cpp
-    src/parser/name_resolution.cpp
-    src/parser/type_checking.cpp
-    src/parser/type_declaration.cpp
-    src/parser/full_parse.cpp
-    src/parser/reverse_parse.cpp
+    src/mapsc/parser/token.cpp
+    src/mapsc/parser/lexer.cpp
+    src/mapsc/parser/parser_layer1.cpp
+    src/mapsc/parser/parser_layer2.cpp
+    src/mapsc/parser/type_declaration.cpp
+    src/mapsc/parser/reverse_parse.cpp
+    src/mapsc/parser/full_parse.cpp
 )
 
 # ---------------------- IR_GEN ------------------------
 
 add_library(ir_gen OBJECT
-    src/ir/ir_generator.cpp
-    src/ir/ir_builtins.cpp
-    src/ir/type_mapping.cpp
+    src/mapsc/llvm/ir_generator.cpp
+    src/mapsc/llvm/ir_builtins.cpp
+    src/mapsc/llvm/type_mapping.cpp
 )
 
 target_link_libraries(ir_gen parser -lLLVM-19)
@@ -70,7 +71,7 @@ target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 add_executable(mapsc
     src/mapsc_main.cpp
-    src/ir/obj_output.cpp
+    src/mapsc/llvm/obj_output.cpp
 )
 
 target_link_libraries(mapsc parser ir_gen maps_builtins -lLLVM-19)
@@ -85,7 +86,7 @@ target_compile_options(mapsc PRIVATE
 
 add_executable(mapsci
     src/mapsci_main.cpp
-    src/repl.cpp
+    src/mapsci/repl.cpp
 )
 
 target_link_libraries(mapsci parser ir_gen maps_builtins -lLLVM-19 -ledit -lncurses)

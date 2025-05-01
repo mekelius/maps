@@ -17,10 +17,10 @@
 
 // -----------------------------------
 
-#include "logging.hh"
+#include "mapsc/logging.hh"
+#include "mapsc/pragma.hh"
 
-#include "lang/pragma.hh"
-#include "repl.hh"
+#include "mapsci/repl.hh"
 
 using std::unique_ptr, std::make_unique;
 using Logging::LogLevel;

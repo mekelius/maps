@@ -2,14 +2,14 @@
 #include <memory>
 #include <fstream>
 
-#include "logging.hh"
+#include "mapsc/logging.hh"
 
-#include "ast/ast.hh"
+#include "mapsc/ast/ast.hh"
 
-#include "parser/reverse_parse.hh"
-#include "parser/name_resolution.hh"
-#include "parser/parser_layer1.hh"
-#include "parser/parser_layer2.hh"
+#include "mapsc/parser/reverse_parse.hh"
+#include "mapsc/name_resolution.hh"
+#include "mapsc/parser/parser_layer1.hh"
+#include "mapsc/parser/parser_layer2.hh"
 
 constexpr unsigned int OUTPUT_WIDTH = 80;
 constexpr std::string_view USAGE = "USAGE: verify_mapsc inputfile... [ -v | --verbose | --parser-debug | --debug | -q | --quiet | -e | --everything ] [ -t | --tokens ]";
