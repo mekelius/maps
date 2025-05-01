@@ -123,6 +123,7 @@ void REPL::run() {
         
         add_history(line);
         free(line);
+        save_history();
     
         if (input.at(0) == ':') {
             run_command(input);
@@ -148,8 +149,6 @@ void REPL::run() {
         if (ast->is_valid)
             eval(*ast, *pragmas);
     }
-
-    save_history();
 }
 
 bool REPL::save_history() {
