@@ -20,6 +20,8 @@
 
 - Name resolution should return false on fail
 - Fix pragmas when we do multiple files
+- move simplifying blocks and other ast nodes out of layer1
+- rename AST to AST_Store
 
 ## Planned for 0.2
 

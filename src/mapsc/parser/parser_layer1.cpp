@@ -37,6 +37,9 @@ optional<Callable*> ParserLayer1::eval_parse(std::istream& source_is) {
     run_parse(source_is);
     force_top_level_eval_ = false;
 
+    // if root is a single statement block or an expression statement, simplify it
+    ast_->root_->attempt_simplify();
+
     return ast_->root_;
 }
 // ----- PRIVATE METHODS -----
@@ -344,7 +347,8 @@ Statement* ParserLayer1::parse_expression_statement() {
 
     assert(is_block_starter(current_token()) || is_statement_separator(current_token()) && "statement didn't end in a statement separator");
 
-    get_token(); // eat statement separator
+    if (current_token().token_type == TokenType::semicolon)
+        get_token(); // eat trailing semicolon
     log_info("finished parsing expression statement from " + statement->location.to_string(), MessageType::parser_debug);
     return statement;
 }
@@ -559,10 +563,9 @@ Statement* ParserLayer1::parse_block_statement() {
     // fetch the substatements vector
     std::vector<Statement*>* substatements = &std::get<Block>(statement->value);
 
-    while (
-        current_token().token_type != ending_token            ||
-            indent_level_ > indent_at_start             || 
-            curly_brace_level_ > curly_brace_at_start
+    while (current_token().token_type != ending_token   ||
+            indent_level_ > indent_at_start             || // allow nested blocks
+            curly_brace_level_ > curly_brace_at_start      // allow nested blocks
     ) {
         if (current_token().token_type == TokenType::eof) {
             fail("Unexpected eof while parsing block statement");

@@ -34,6 +34,11 @@ public:
     Callable& operator=(const Callable& other) = default;
     ~Callable() = default;
 
+    // tries to remove braces etc.
+    void attempt_simplify();
+    // the parameter must be a call expression
+    void attempt_inline(Expression* call);
+
     CallableBody body;
     std::string name;
     std::optional<SourceLocation> location;
