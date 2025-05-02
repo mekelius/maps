@@ -266,23 +266,23 @@ void REPL::run_command(const std::string& input) {
             std::string next_arg;
             std::getline(input_stream, next_arg, ' ');
 
-            if ("layer1") {
+            if (next_arg == "layer1") {
                 options_.print_layer1 = !options_.print_layer1;
                 update_parse_options();
-                std::cout << "print_layer1 " << (options_.eval ? "on" : "off") << std::endl;
+                std::cout << "print layer1 " << (options_.eval ? "on" : "off") << std::endl;
                 return;
             }
 
-            if (next_arg == "print_layer2") {
+            if (next_arg == "layer2") {
                 options_.print_layer2 = !options_.print_layer2;
                 update_parse_options();
-                std::cout << "print_layer2 " << (options_.eval ? "on" : "off") << std::endl;
+                std::cout << "print layer2 " << (options_.eval ? "on" : "off") << std::endl;
                 return;
             }
             
-            if (next_arg == "print_ir") {
+            if (next_arg == "ir") {
                 options_.print_ir = !options_.print_ir;
-                std::cout << "print_ir " << (options_.eval ? "on" : "off") << std::endl;
+                std::cout << "print ir " << (options_.eval ? "on" : "off") << std::endl;
                 return;
             }
 
