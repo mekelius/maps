@@ -5,3 +5,4 @@ parsing_rules
 node_modules
 **/.vitepress/dist
 **/.vitepress/cache
+mirror_*

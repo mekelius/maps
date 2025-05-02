@@ -45,7 +45,12 @@ public:
     };
 
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
-        Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream, Options options = {});
+        Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream, Options options);
+
+    // delegating contructor to make options optional
+    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
+        Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream)
+    :IR_Generator(IR_Generator(context, module, ast, pragmas, error_stream, Options{})) {}
 
     bool run();
 
