@@ -148,8 +148,8 @@ public:
     const FunctionType* get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
         bool pure = true);
 
-    // const Type* create_opaque_alias(std::string name, const Type* type);
-    // const Type* create_transparent_alias(std::string name, const Type* type);
+    const Type* create_opaque_alias(std::string name, const Type* type);
+    const Type* create_transparent_alias(std::string name, const Type* type);
 
     Type::HashableSignature make_function_signature(const Type& return_type, const std::vector<const Type*>& arg_types, 
         bool is_pure = true) const;
@@ -171,7 +171,7 @@ private:
     std::vector<std::unique_ptr<Type>> types_ = {};
     
     Type::ID next_id_;             
-    
+
     // std::vector<std::unique_ptr<TypeConstructor>> type_constructors_ = {};
     // std::unordered_map<std::string, const TypeConstructor*> typeconstructors_by_identifier = {};
 };
