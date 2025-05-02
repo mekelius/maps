@@ -37,11 +37,15 @@ private:
 class IR_Generator {
 public:
     struct Options {
+        // one of these kinda needs to be on
+        // if true, every function is verified individually
         bool verify_functions = true;
+        // if true, the module as a whole is verified in the end
+        bool verify_module = true;
     };
 
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
-        Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream);
+        Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream, Options options = {});
 
     bool run();
 
@@ -70,6 +74,10 @@ private:
         const Maps::FunctionType& ast_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
+    // Runs llvm::verify_module (flips the result so that true means passed)
+    // If options.verify_module = false, always returns true
+    bool verify_module();
+
     std::optional<llvm::Value*> global_constant(const Maps::Expression& expression);
     std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression);
     std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression);
@@ -96,7 +104,7 @@ private:
     void fail(const std::string& message);
 
     // ----- PRIVATE FIELDS -----
-    Options options_ = {};
+    Options options_;
 
     Maps::PragmaStore* pragmas_;
     const Maps::AST* ast_;

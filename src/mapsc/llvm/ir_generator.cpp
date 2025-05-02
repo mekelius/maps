@@ -82,9 +82,15 @@ bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& as
 // ----- IR Generation -----
 
 IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
-    PragmaStore& pragmas, llvm::raw_ostream* error_stream)
-:errs_(error_stream), context_(context), module_(module), types_({*context_}), pragmas_(&pragmas), 
-ast_(&ast), maps_types_(ast.types_.get()) {
+    PragmaStore& pragmas, llvm::raw_ostream* error_stream, Options options)
+:errs_(error_stream), 
+ context_(context), 
+ module_(module), 
+ types_({*context_}), 
+ options_(options), 
+ pragmas_(&pragmas), 
+ ast_(&ast), 
+ maps_types_(ast.types_.get()) {
 
     if (!types_.is_good_)
         fail("Initializing type map failed");
@@ -97,19 +103,22 @@ bool IR_Generator::run() {
     if (has_failed_)
         return false;
 
-    // global definitions
-    handle_global_functions();
-    // check if global eval context
+    if (!handle_global_functions())
+        return false;
+
+    // TODO 0.2: check if global eval context
     
+    // TODO 0.1: add main wrapper
     // fix main to have the correct type
     // std::optional<AST::Callable*> main = ast->globals_->get_identifier("main");
     // if (main) {
     //     (*main)->arg_types = { &AST::Int, &AST::String };
     // }
 
-    // for (auto& function : ast_->callables_) {
-    //     handle_function(*function.get());
-    // }
+    if (!verify_module()) {
+        fail("Module verification failed");
+        return false;
+    }
 
     return !has_failed_;
 }
@@ -124,6 +133,11 @@ bool IR_Generator::repl_run() {
 
     if (!eval_and_print_root())
         return false;
+
+    if (!verify_module()) {
+        fail("Module verification failed");
+        return false;
+    }
 
     return true;
 }
@@ -195,6 +209,13 @@ optional<llvm::Function*> IR_Generator::function_declaration(const std::string& 
         create_internal_name(name, ast_type), module_);
     function_store_->insert(name, ast_type, function);
     return function;
+}
+
+bool IR_Generator::verify_module() {
+    if (!options_.verify_module)
+        return true;
+
+    return (!llvm::verifyModule(*module_, errs_));
 }
 
 optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& expression) {

@@ -4,17 +4,20 @@
 
 #### Needed for 0.1
 
+0.1 focus is on expressions (parse, eval, print)
+
 | Feature                                               | State     | What's missing |
 | ---                                                   | ---       | ---            |
 | Operator definitions                                  | testing   | parsing        |
 | Parsing needs a lot of work                           | in progress | bits and pieces |
 | Print expressions and statements in messages nicely   | done | Callables? |
 | Runtime casts                               | in progress | rest of the compile time |
-| Function calls need to be smooth | testing | partial application rust style at least |
-| Arithmetic stuff working smooth  | in progress | builtin definitions maps side |
+| Function calls need to work and be smooth | testing | partial application rust style at least |
+| Arithmetic stuff working and smooth  | in progress | builtin definitions maps side |
 | Blocks and parentheses should work well               | testing | parsing messy |
-| if, for etc.                                          | not started |  |
-| repl improvements                                     | | directly evaluate args |
+| repl improvements                                     | getting there | directly evaluate args |
+| clean up IR_Generator                                 | total mess | order |
+| restore mapsc functionality                           | ???       | testing |
 
 #### Accumulated tweaks
 
@@ -36,6 +39,8 @@
 
 #### Priority features for 0.2 and onward
 
+- if, for etc.
+- top-level-evaluation via pragma
 - Scopes and contexts (likely 0.2)
 - Retain definitions in REPL
 - Internal: Rename layers
