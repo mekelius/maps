@@ -171,6 +171,21 @@ optional<llvm::Function*> IR_Generator::function_definition(const std::string& n
     return function;
 }
 
+// ??? how to do recursion?
+bool IR_Generator::close_function_definition(const llvm::Function& function, llvm::Value* return_value) {
+    if (return_value) {
+        builder_->CreateRet(return_value);
+    } else {
+        builder_->CreateRetVoid();
+    }
+
+    if (!options_.verify_functions)
+        return true;
+
+    // llvm::verifyFunction returns true on fail for some reason
+    return (!llvm::verifyFunction(function, errs_));
+}
+
 optional<llvm::Function*> IR_Generator::function_declaration(const std::string& name, 
     const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
     
@@ -284,7 +299,12 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
         function_store_->get("print", *ast_->types_->get_function_type(Maps::Void, {ast_->root_->get_type()}));
     
     builder_->CreateCall(*print, builder_->CreateCall(*root_function));
-    builder_->CreateRetVoid();
+
+    if (!close_function_definition(**top_level_function)) {
+        fail("REPL wrapper failed verification");
+        return nullopt;    
+    }
+
     return top_level_function;
 }
 

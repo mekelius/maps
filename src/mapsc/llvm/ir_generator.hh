@@ -36,6 +36,10 @@ private:
 // Helper class that holds the module, context, etc. for IR generation
 class IR_Generator {
 public:
+    struct Options {
+        bool verify_functions = true;
+    };
+
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
         Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream);
 
@@ -44,6 +48,8 @@ public:
     // version of run that always processes top-level statements, and wraps them in print calls
     bool repl_run();
     bool print_ir_to_file(const std::string& filename);
+
+    // ----- PUBLIC FIELDS -----
 
     // TODO: move to use logging
     llvm::raw_ostream* errs_;
@@ -57,6 +63,9 @@ private:
     std::optional<llvm::Function*> function_definition(const std::string& name, 
         const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
+    
+    bool close_function_definition(const llvm::Function& function, llvm::Value* return_value = nullptr);
+
     std::optional<llvm::Function*> function_declaration(const std::string& name, 
         const Maps::FunctionType& ast_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
@@ -86,13 +95,18 @@ private:
     
     void fail(const std::string& message);
 
+    // ----- PRIVATE FIELDS -----
+    Options options_ = {};
+
     Maps::PragmaStore* pragmas_;
     const Maps::AST* ast_;
     Maps::TypeRegistry* maps_types_;
     
-    bool has_failed_ = false;
     std::unique_ptr<FunctionStore> function_store_ = std::make_unique<FunctionStore>();
+    
+    bool has_failed_ = false;
 
+    // ----- FRIEND FUNCTION -----
     friend bool insert_builtins(IR::IR_Generator& generator);
 };
 
