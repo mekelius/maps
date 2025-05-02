@@ -91,7 +91,6 @@ private:
     std::optional<llvm::Function*> eval_and_print_root();
     bool handle_global_functions();
     std::optional<llvm::FunctionCallee> handle_global_definition(const Maps::Callable& callable);
-    llvm::Value* handle_callable(const Maps::Callable& callable);
     bool handle_statement(const Maps::Statement& statement);
 
     // if repl_top_level is true, wraps every expression-statement in the block into a print call for the appropriate print function

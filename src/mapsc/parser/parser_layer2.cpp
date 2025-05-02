@@ -547,7 +547,7 @@ void TermedExpressionParser::initial_type_reference_state() {
 }
 
 bool TermedExpressionParser::is_acceptable_next_arg(Callable* callee, 
-    const std::vector<Expression*>& args, Expression* next_arg) {
+    const std::vector<Expression*>& args/*, Expression* next_arg*/) {
     if (args.size() >= callee->get_type()->arity())
         return false;
 
@@ -636,7 +636,7 @@ Expression* TermedExpressionParser::handle_arg_state(Callable* callee, const std
         case GUARANTEED_VALUE:
         case ExpressionType::reference:
         case ExpressionType::call:
-            if (!is_acceptable_next_arg(callee, args, current_term())) {
+            if (!is_acceptable_next_arg(callee, args/*, current_term()*/)) {
                 // TODO: try all kinds of partial application
                 log_error("possible type-error", current_term()->location);
                 ast_->declare_invalid();

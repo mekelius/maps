@@ -343,11 +343,6 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
     return nullopt;
 }
 
-llvm::Value* IR_Generator::handle_callable(const Callable& callable) {
-    assert(false && "not implemented");
-    return nullptr; //!!!
-}
-
 bool IR_Generator::handle_statement(const Statement& statement) {
     switch (statement.statement_type) {
         case StatementType::block: 

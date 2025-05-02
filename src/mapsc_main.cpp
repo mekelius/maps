@@ -108,10 +108,6 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    // prepare the output stream
-    std::unique_ptr<std::ofstream> tokens_file;
-    std::ostream* tokens_ostream;
-    
     // ----- parse the source -----
     
     std::cerr << "Parsing source file(s)...\n";

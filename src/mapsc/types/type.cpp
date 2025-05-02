@@ -56,9 +56,6 @@ std::string FunctionType::to_string() const {
     return output;
 }
 
-TypeConstructor::TypeConstructor(const std::string& name, int arity)
-:name_(name), arity_(arity) {}
-
 // builtin types are inserted so that they can be looked up nicely
 TypeRegistry::TypeRegistry() {
     next_id_ = BUILTIN_TYPES.size();
@@ -68,9 +65,10 @@ TypeRegistry::TypeRegistry() {
         types_by_id_.push_back(type);
     }
 
-    for (auto type_constructor: TypeConstructors::BUILTINS) {
-        typeconstructors_by_identifier.insert({type_constructor->name_, type_constructor});
-    }
+    // insert type constructors
+    // for (auto type_constructor: BUILTIN_TYPECONSTRUCTORS) {
+    //     typeconstructors_by_identifier.insert({type_constructor->name_, type_constructor});
+    // }
 }
 
 optional<const Type*> TypeRegistry::get(const std::string& identifier) {
@@ -95,16 +93,16 @@ const FunctionType* TypeRegistry::get_function_type(const Type& return_type, con
     return create_function_type(signature, return_type, arg_types, is_pure);
 }
 
-const Type* TypeRegistry::create_opaque_alias(std::string name, const Type* type) {
-    assert(false && "not implemented");
-}
+// const Type* TypeRegistry::create_opaque_alias(std::string name, const Type* type) {
+//     assert(false && "not implemented");
+// }
 
-const Type* TypeRegistry::create_transparent_alias(std::string name, const Type* type) {
-    assert(false && "not implemented");
-}
+// const Type* TypeRegistry::create_transparent_alias(std::string name, const Type* type) {
+//     assert(false && "not implemented");
+// }
 
-Type::HashableSignature TypeRegistry::make_function_signature(const Type& return_type, const std::vector<const Type*>& arg_types, 
-    bool is_pure) const {
+Type::HashableSignature TypeRegistry::make_function_signature(const Type& return_type, 
+    const std::vector<const Type*>& arg_types, bool is_pure) const {
 
     // // nullary pure function is just a value
     if (arg_types.size() == 0 && is_pure)
@@ -132,12 +130,13 @@ Type::HashableSignature TypeRegistry::make_function_signature(const Type& return
 // NOTE: This actually doesn't work. The type structure notation idea is extremely ambiguous...
 // we need to do this by pattern matching instead, but it is what it is
 // TODO: mark purity
-const FunctionType* TypeRegistry::create_function_type(const Type::HashableSignature& signature, const Type& return_type,
-    const std::vector<const Type*>& arg_types, bool is_pure) {
+const FunctionType* TypeRegistry::create_function_type(const Type::HashableSignature& signature, 
+    const Type& return_type, const std::vector<const Type*>& arg_types, bool is_pure) {
 
-    assert(types_by_id_.size() == static_cast<size_t>(next_id_) && "TypeRegistry types_by_id_ not in sync with id:s");
+    assert(types_by_id_.size() == static_cast<size_t>(next_id_) && 
+        "TypeRegistry types_by_id_ not in sync with id:s");
 
-    auto type = make_unique<FunctionType>(get_id(), &Function_, &return_type, arg_types, false);
+    auto type = make_unique<FunctionType>(get_id(), &Function_, &return_type, arg_types, is_pure);
     auto raw_ptr = type.get();
 
     types_.push_back(std::move(type));
