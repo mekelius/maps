@@ -12,10 +12,8 @@
 namespace IR {
 
 class TypeMap {
-  public:
+public:
     TypeMap(llvm::LLVMContext& context);
-
-    std::unordered_map<std::string_view, llvm::Type*> type_map_;
 
     llvm::Type* char_t;
     llvm::Type* int_t;
@@ -27,10 +25,20 @@ class TypeMap {
     llvm::FunctionType* repl_wrapper_signature;
     llvm::FunctionType* cmain_signature;
 
+    // size_t size() const;
+    // bool empty() const;
+    bool contains(const Maps::Type& maps_type) const;
+    [[nodiscard]] bool insert(const Maps::Type* maps_type, llvm::Type* llvm_type);
+
     std::optional<llvm::Type*> convert_type(const Maps::Type& type) const;
-    std::optional<llvm::FunctionType*> convert_function_type(const Maps::Type& return_type, 
-        const std::vector<const Maps::Type*>& arg_types) const;
+    std::optional<llvm::FunctionType*> convert_function_type(
+        const Maps::Type& return_type, const std::vector<const Maps::Type*>& arg_types) const;
     std::optional<llvm::FunctionType*> convert_function_type(const Maps::FunctionType& type) const;
+
+    bool is_good_ = true;
+    
+private:
+    std::unordered_map<Maps::Type::HashableSignature, llvm::Type*> type_map_;
 };
 
 }

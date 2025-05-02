@@ -14,56 +14,62 @@ constexpr TypeTemplate Absurd_ {
     DeferredBool::false_,
     DeferredBool::false_,
 };
-constexpr Type Absurd{ 0, &Absurd_, not_castable };
+constexpr Type::ID Absurd_ID = 0;
+constexpr Type Absurd{ Absurd_ID, &Absurd_, not_castable };
 
-static TypeTemplate Hole_ {
+constexpr TypeTemplate Hole_ {
     "Hole",
     false,
     DeferredBool::maybe,
     DeferredBool::maybe,
 };
-static const Type Hole = { 1, &Hole_, not_castable };
+constexpr Type::ID Hole_ID = 1;
+constexpr Type Hole = { Hole_ID, &Hole_, not_castable };
 
-static TypeTemplate Void_ {
+constexpr TypeTemplate Void_ {
     "Void",
     true,
     DeferredBool::false_,
     DeferredBool::false_,
 };
-static const Type Void = { 2, &Void_, not_castable };
+constexpr Type::ID Void_ID = 2;
+constexpr Type Void = { Void_ID, &Void_, not_castable };
 
-
-static TypeTemplate Boolean_ {
+constexpr TypeTemplate Boolean_ {
     "Boolean",
     true,
     DeferredBool::false_,
     DeferredBool::false_,
 };
-static const Type Boolean = { 3, &Boolean_, cast_from_Boolean };
+constexpr Type::ID Boolean_ID = 3;
+constexpr Type Boolean = { Boolean_ID, &Boolean_, cast_from_Boolean };
 
-static TypeTemplate Int_ {
+constexpr TypeTemplate Int_ {
     "Int",
     true,
     DeferredBool::true_,
     DeferredBool::true_,
 };
-static const Type Int{ 4, &Int_, cast_from_Int };
+constexpr Type::ID Int_ID = 4;
+constexpr Type Int{ Int_ID, &Int_, cast_from_Int };
 
-static TypeTemplate Float_ {
+constexpr TypeTemplate Float_ {
     "Float",
     true,
     DeferredBool::true_,
     DeferredBool::true_,
 };
-static const Type Float{ 5, &Float_, cast_from_Float };
+constexpr Type::ID Float_ID = 5;
+constexpr Type Float{ Float_ID, &Float_, cast_from_Float };
 
-static TypeTemplate String_ {
+constexpr TypeTemplate String_ {
     "String",
     true,
     DeferredBool::false_,
     DeferredBool::false_,
 };
-static const Type String = { 6, &String_, cast_from_String};
+constexpr Type::ID String_ID = 6;
+constexpr Type String = { String_ID, &String_, cast_from_String};
 
 constexpr TypeTemplate Number_ {
     "Number",
@@ -71,16 +77,18 @@ constexpr TypeTemplate Number_ {
     DeferredBool::true_,
     DeferredBool::maybe,
 };
-constexpr Type Number{ 7, &Number_, cast_from_Number };
+constexpr Type::ID Number_ID = 7;
+constexpr Type Number{ Number_ID, &Number_, cast_from_Number };
 
 // a number who's type hasn't yet been determined
-static TypeTemplate NumberLiteral_ {
+constexpr TypeTemplate NumberLiteral_ {
     "NumberLiteral",
     false,
     DeferredBool::true_,
     DeferredBool::maybe,
 };
-static const Type NumberLiteral = { 8, &NumberLiteral_, cast_from_NumberLiteral};
+constexpr Type::ID NumberLiteral_ID = 8;
+constexpr Type NumberLiteral = { NumberLiteral_ID, &NumberLiteral_, cast_from_NumberLiteral};
 
 static const std::array<const Type*, 9> BUILTIN_TYPES = {
     &Absurd,
@@ -94,7 +102,7 @@ static const std::array<const Type*, 9> BUILTIN_TYPES = {
     &NumberLiteral
 };
 
-static TypeTemplate Function_ {
+constexpr TypeTemplate Function_ {
     "Function",
     false,
     DeferredBool::maybe,

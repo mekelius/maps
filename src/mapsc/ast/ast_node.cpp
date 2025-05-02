@@ -35,6 +35,7 @@ bool Expression::is_reduced_value() const {
         case ExpressionType::numeric_literal:
         case ExpressionType::reference:
         case ExpressionType::call:
+        case ExpressionType::value:
             return true;
 
         default:

@@ -69,6 +69,8 @@ public:
     virtual unsigned int arity() const { return 0; }
 
     std::string_view name() const { return type_template_->name; }
+    HashableSignature hashable_signature() const { return static_cast<std::string>(name()); }
+
     bool is_native() const { return type_template_->is_native; }
     DeferredBool is_numeric() const { return type_template_->is_numeric; }
     DeferredBool is_integral() const { return type_template_->is_integral; }

@@ -19,13 +19,14 @@ inline std::string line_col_padding(unsigned int width) {
 
 enum class MessageType: unsigned int {
     error = 0,
-    general_info,
-    parser_debug,
-    parser_debug_terminal,
-    parser_debug_identifier,
-    lexer_debug_token,
-    pragma_debug,
-    parser_debug_termed_expression,
+    general_info = 1,
+    parser_debug = 2,
+    parser_debug_terminal = 3,
+    parser_debug_identifier = 4,
+    lexer_debug_token = 5,
+    pragma_debug = 6,
+    parser_debug_termed_expression = 7,
+    ir_gen_debug = 8,
 };
 
 class LogLevel {
@@ -46,9 +47,10 @@ class LogLevel {
         message_types.at(static_cast<unsigned int>(message_type)) = value;
     }
 
-    std::array<bool, 8> message_types = {
+    std::array<bool, 9> message_types = {
         true,
         true,
+        false,
         false,
         false,
         false,

@@ -13,8 +13,9 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Constants.h"
 
-#include "mapsc/logging.hh"
+#include "common/string_helpers.hh"
 
+#include "mapsc/logging.hh"
 #include "mapsc/ast/ast.hh"
 
 #include "mapsc/llvm/ir_builtins.hh"
@@ -22,8 +23,9 @@
 using llvm::LLVMContext;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;
 using Logging::log_error, Logging::log_info;
-using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, Maps::StatementType;
-using Maps::PragmaStore;
+using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, Maps::StatementType, 
+    Maps::PragmaStore;
+using Maps::Helpers::capitalize;
 
 #define BAD_STATEMENT_TYPE StatementType::broken:\
                       case StatementType::illegal:\
@@ -34,16 +36,67 @@ using Maps::PragmaStore;
 
 namespace IR {
 
+std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, 
+    const Maps::FunctionType& function_type) const {
+    
+    auto outer_it = functions_.find(name);
+
+    if (outer_it == functions_.end())
+        return nullopt;
+
+    auto inner_map = outer_it->second.get();
+    auto inner_it = inner_map->find(function_type.hashable_signature());
+
+    if (inner_it == inner_map->end()) {
+        log_error("function \"" + name + "\" has not been specialized for type \"" + 
+            function_type.to_string() + "\"");
+        return nullopt;
+    }
+
+    return inner_it->second;
+}
+
+bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& ast_type, 
+    llvm::FunctionCallee function_callee) {    
+    
+    auto signature = ast_type.hashable_signature();
+
+    auto outer_it = functions_.find(name);
+
+    if (outer_it == functions_.end()) {
+        functions_.insert({name, make_unique<InnerMapType>()});
+        functions_.at(name)->insert({signature, function_callee});
+        return true;
+    }
+
+    auto inner_map = outer_it->second.get();
+    if (inner_map->find(signature) != inner_map->end()) {
+        log_error("tried to insert a function overload that already exists");
+        return false;
+    }
+
+    inner_map->insert({signature, function_callee});
+    return true;
+}
+
 // ----- IR Generation -----
 
 IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
     PragmaStore& pragmas, llvm::raw_ostream* error_stream)
 :errs_(error_stream), context_(context), module_(module), types_({*context_}), pragmas_(&pragmas), 
 ast_(&ast), maps_types_(ast.types_.get()) {
+
+    if (!types_.is_good_)
+        fail("Initializing type map failed");
+
     builder_ = std::make_unique<llvm::IRBuilder<>>(*context_);
 }
 
 bool IR_Generator::run() {
+    // Not allowed to run if we have already failed
+    if (has_failed_)
+        return false;
+
     // global definitions
     handle_global_functions();
     // check if global eval context
@@ -62,6 +115,10 @@ bool IR_Generator::run() {
 }
 
 bool IR_Generator::repl_run() {
+    // Not allowed to run if we have already failed
+    if (has_failed_)
+        return false;
+
     if (!handle_global_functions())
         return false;
 
@@ -126,66 +183,37 @@ optional<llvm::Function*> IR_Generator::function_declaration(const std::string& 
 }
 
 optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& expression) {
-    if (!expression.is_reduced_value())
-        return nullopt;
-
-    return convert_literal(expression);
-}
-
-std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, 
-    const Maps::FunctionType& function_type) const {
-    
-    auto outer_it = functions_.find(name);
-
-    if (outer_it == functions_.end())
-        return nullopt;
-
-    auto inner_map = outer_it->second.get();
-    auto inner_it = inner_map->find(function_type.hashable_signature());
-
-    if (inner_it == inner_map->end()) {
-        log_error("function \"" + name + "\" has not been specialized for type \"" + 
-            function_type.to_string() + "\"");
+    if (!expression.is_reduced_value()) {
+        fail(capitalize(expression.log_message_string()) + " is not a reduced value");
         return nullopt;
     }
 
-    return inner_it->second;
-}
+    if (expression.is_literal())
+        return convert_literal(expression);
 
-bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& ast_type, 
-    llvm::FunctionCallee function_callee) {    
-    
-    auto signature = ast_type.hashable_signature();
-
-    auto outer_it = functions_.find(name);
-
-    if (outer_it == functions_.end()) {
-        functions_.insert({name, make_unique<InnerMapType>()});
-        functions_.at(name)->insert({signature, function_callee});
-        return true;
+    if (expression.expression_type == ExpressionType::value) {
+        return convert_value(expression);
     }
 
-    auto inner_map = outer_it->second.get();
-    if (inner_map->find(signature) != inner_map->end()) {
-        log_error("tried to insert a function overload that already exists");
-        return false;
-    }
-
-    inner_map->insert({signature, function_callee});
-    return true;
+    fail("Could not create a global constant from " + expression.log_message_string());
+    return nullopt;
 }
 
-optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expression) const {
+optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expression) {
     if (*expression.type == Maps::String)
         return builder_->CreateGlobalString(expression.string_value());
 
-    if (expression.type->is_numeric() == Maps::DeferredBool::true_)
+    if (*expression.type == Maps::NumberLiteral)
         return convert_numeric_literal(expression);
+
+    assert(false && "IR_Generator::convert_literal called with a non-literal");
+    fail(capitalize(expression.log_message_string()) + " is not a literal");
 
     return nullopt;
 }
 
-optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& expression) const {
+// ??? shouldn;t this have been done earlier
+optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& expression) {
     assert(expression.type->is_numeric() == Maps::DeferredBool::true_ 
         && "convert_numeric_literal called with a non-num value");
     
@@ -196,6 +224,34 @@ optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& e
     return llvm::ConstantFP::get(*context_, llvm::APFloat(num_value));
 }
 
+// TODO: some assertions here for variant types
+optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression) {
+    switch (expression.type->id_) {
+        case Maps::Int.id_:
+            assert(std::holds_alternative<int>(expression.value) && 
+                "In IR_Generator::convert_value: expression type didn't match value");
+            return llvm::ConstantInt::get(*context_, llvm::APInt(64, std::get<int>(expression.value)));
+
+        case Maps::Float.id_:
+            assert(std::holds_alternative<double>(expression.value) && 
+                "In IR_Generator::convert_value: expression type didn't match value");
+            return llvm::ConstantFP::get(*context_, llvm::APFloat(std::get<double>(expression.value)));
+
+        case Maps::String.id_:
+            assert(std::holds_alternative<std::string>(expression.value) && 
+                "In IR_Generator::convert_value: expression type didn't match value");
+            return builder_->CreateGlobalString(expression.string_value());
+
+        case Maps::Boolean.id_:
+            assert(std::holds_alternative<bool>(expression.value) && 
+                "In IR_Generator::convert_value: expression type didn't match value");
+            return llvm::ConstantInt::get(*context_, llvm::APInt(1, std::get<bool>(expression.value)));
+
+        default:
+            fail("Unable to create a value from type " + expression.type->to_string());
+            return nullopt;
+    }
+}
 
 // --------- HANDLERS ---------
 
@@ -217,7 +273,7 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
     auto root_function = handle_global_definition(*ast_->root_);
 
     if (!root_function) {
-        fail("repl-wrapper codegen failed");
+        fail("Creating REPL wrapper failed");
         return nullopt;
     }
 
@@ -228,9 +284,8 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
         function_store_->get("print", *ast_->types_->get_function_type(Maps::Void, {ast_->root_->get_type()}));
     
     builder_->CreateCall(*print, builder_->CreateCall(*root_function));
+    builder_->CreateRetVoid();
     return top_level_function;
-
-    return nullopt;
 }
 
 std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
@@ -366,13 +421,20 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(const s
 
     optional<llvm::FunctionType*> llvm_type = types_.convert_function_type(
         *maps_type->return_type_, maps_type->arg_types_);
+
+    if (!llvm_type) {
+        fail("Converting \" Void -> " + maps_type->to_string() + "\" into an llvm type failed");
+        return nullopt;
+    }
     
     auto wrapper = function_definition(name, *maps_type, *llvm_type);
 
     auto value = global_constant(expression);
 
-    if (!value)
+    if (!value) {
+        fail("Converting " + expression.log_message_string() + " to a value failed");
         return nullopt;
+    }
 
     builder_->CreateRet(*value);
 

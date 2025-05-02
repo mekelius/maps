@@ -62,8 +62,9 @@ private:
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
     std::optional<llvm::Value*> global_constant(const Maps::Expression& expression);
-    std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression) const;
-    std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression) const;
+    std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression);
+    std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression);
+    std::optional<llvm::Value*> convert_value(const Maps::Expression& expression);
 
     std::optional<llvm::Function*> eval_and_print_root();
     bool handle_global_functions();

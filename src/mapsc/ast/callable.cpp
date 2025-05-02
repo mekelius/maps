@@ -2,15 +2,13 @@
 
 #include <cassert>
 
-#include "mapsc/logging.hh"
+#include "common/std_visit_helper.hh"
 
+#include "mapsc/logging.hh"
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/ast/ast_node.hh"
 
 using Logging::log_error;
-
-template<class... Ts>
-struct overloaded : Ts... { using Ts::operator()...; };
 
 namespace Maps {
 
