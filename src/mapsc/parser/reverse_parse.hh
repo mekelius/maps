@@ -3,7 +3,7 @@
 
 #include <ostream>
 
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 
 void reverse_parse(Maps::AST_Store& ast, std::ostream& ostream);
 

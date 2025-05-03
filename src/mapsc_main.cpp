@@ -16,7 +16,7 @@
 
 #include "mapsc/logging.hh"
 
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 
 #include "mapsc/parser/full_parse.hh"
 

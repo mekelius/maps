@@ -11,7 +11,7 @@
 #include <ostream>
 #include <iostream>
 
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 #include "mapsc/pragma.hh"
 
 enum class ParseStage {

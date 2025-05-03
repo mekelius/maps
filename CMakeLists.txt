@@ -44,7 +44,7 @@ add_library(parser OBJECT
     
     src/mapsc/ast/ast_node.cpp
     src/mapsc/ast/callable.cpp
-    src/mapsc/ast/ast.cpp
+    src/mapsc/ast/ast_store.cpp
     src/mapsc/ast/scope.cpp
     
     src/mapsc/parser/token.cpp

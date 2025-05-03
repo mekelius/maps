@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 #include "mapsc/parser/parser_layer2.hh"
 
 using Maps::Expression, Maps::ExpressionType, Maps::Callable;

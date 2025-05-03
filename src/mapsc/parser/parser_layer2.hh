@@ -8,7 +8,7 @@
  */
 
 #include "mapsc/pragma.hh"
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 
 namespace Maps {
 

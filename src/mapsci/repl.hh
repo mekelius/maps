@@ -11,7 +11,7 @@
 
 #include "mapsc/parser/full_parse.hh"
 #include "mapsc/pragma.hh"
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 
 class JIT_Manager {
 public:

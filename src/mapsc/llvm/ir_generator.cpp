@@ -16,7 +16,7 @@
 #include "common/string_helpers.hh"
 
 #include "mapsc/logging.hh"
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 
 #include "mapsc/llvm/ir_builtins.hh"
 

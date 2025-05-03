@@ -7,7 +7,7 @@
 
 #include <ostream>
 
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 #include "mapsc/pragma.hh"
 
 #include "type_mapping.hh"

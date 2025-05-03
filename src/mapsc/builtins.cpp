@@ -1,6 +1,6 @@
 #include "builtins.hh"
 
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 #include "mapsc/types/type.hh"
 
 namespace {

@@ -10,7 +10,7 @@
 
 #include "mapsc/logging.hh"
 
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 #include "mapsc/pragma.hh"
 #include "mapsc/parser/lexer.hh"
 

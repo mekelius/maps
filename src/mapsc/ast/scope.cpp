@@ -1,6 +1,6 @@
 #include "scope.hh"
 
-#include "ast.hh"
+#include "mapsc/ast/ast_store.hh"
 
 namespace Maps {
 

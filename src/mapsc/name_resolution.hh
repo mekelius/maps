@@ -1,7 +1,7 @@
 #ifndef __NAME_RESOLUTION_HH
 #define __NAME_RESOLUTION_HH
 
-#include "mapsc/ast/ast.hh"
+#include "mapsc/ast/ast_store.hh"
 
 namespace Maps {
 
