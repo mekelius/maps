@@ -28,6 +28,7 @@ public:
         bool verify_module = true;
     };
 
+    // ----- CONSTRUCTORS -----
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST_Store& ast, 
         Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream, Options options);
 
@@ -36,6 +37,7 @@ public:
         Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream)
     :IR_Generator(IR_Generator(context, module, ast, pragmas, error_stream, Options{})) {}
 
+    // ----- RUNNING THE GENERATOR -----
     bool run();
 
     // version of run that always processes top-level statements, and wraps them in print calls
@@ -52,14 +54,17 @@ public:
     std::unique_ptr<llvm::IRBuilder<>> builder_;
 
     TypeMap types_;
+
 private:
+    void fail(const std::string& message);
+
     std::optional<llvm::Function*> function_definition(const std::string& name, 
         const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
     
     bool close_function_definition(const llvm::Function& function, llvm::Value* return_value = nullptr);
 
-    std::optional<llvm::Function*> function_declaration(const std::string& name, 
+    std::optional<llvm::Function*> forward_declaration(const std::string& name, 
         const Maps::FunctionType& ast_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
@@ -67,29 +72,35 @@ private:
     // If options.verify_module = false, always returns true
     bool verify_module();
 
-    std::optional<llvm::Value*> global_constant(const Maps::Expression& expression);
-    std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression);
-    std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression);
-    std::optional<llvm::Value*> convert_value(const Maps::Expression& expression);
-
+    // ---- HIGH-LEVEL HANDLERS -----
     std::optional<llvm::Function*> eval_and_print_root();
     bool handle_global_functions();
+    std::optional<llvm::FunctionCallee> wrap_value_in_function(const std::string& name, 
+        const Maps::Expression& expression);
+
+    // ----- DEFINITION HANDLERS -----
     std::optional<llvm::FunctionCallee> handle_global_definition(const Maps::Callable& callable);
-    bool handle_statement(const Maps::Statement& statement);
-
-    // if repl_top_level is true, wraps every expression-statement in the block into a print call for the appropriate print function
-    bool handle_block(const Maps::Statement& statement, bool repl_top_level = false);
-    std::optional<llvm::Value*> handle_expression_statement(const Maps::Statement& statement, bool repl_top_level = false);
-
-    std::optional<llvm::Value*> handle_expression(const Maps::Expression& expression);
-    std::optional<llvm::FunctionCallee> wrap_value_in_function(const std::string& name, const Maps::Expression& expression);
     std::optional<llvm::FunctionCallee> handle_function(const Maps::Callable& callable);
 
-    llvm::Value* handle_call(const Maps::CallExpressionValue& call);
-    llvm::GlobalVariable* handle_string_literal(const Maps::Expression& str);
-    llvm::Value* handle_value(const Maps::Expression& expression);
+    // ----- STATEMENT HANDLERS -----
+    bool handle_statement(const Maps::Statement& statement);
+    // if repl_top_level is true, wraps every expression-statement in the block into a print call
+    // for the appropriate print function
+    bool handle_block(const Maps::Statement& statement, bool repl_top_level = false);
+    std::optional<llvm::Value*> handle_expression_statement(const Maps::Statement& statement, 
+        bool repl_top_level = false);
     
-    void fail(const std::string& message);
+    // ----- EXPRESSION HANDLERS -----
+    std::optional<llvm::Value*> handle_expression(const Maps::Expression& expression);
+    llvm::Value* handle_call(const Maps::CallExpressionValue& call);
+
+    // ----- VALUE HANDLERS -----
+    llvm::Value* handle_value(const Maps::Expression& expression);
+    std::optional<llvm::Value*> convert_value(const Maps::Expression& expression);
+    std::optional<llvm::Value*> global_constant(const Maps::Expression& expression);
+    std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression);
+    llvm::GlobalVariable* handle_string_literal(const Maps::Expression& str);
+    std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression);
 
     // ----- PRIVATE FIELDS -----
     Options options_;
