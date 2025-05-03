@@ -11,7 +11,7 @@ public:
     Layer1tests(auto ast, auto pragmas): ParserLayer1(ast, pragmas) {}
 
     TEST_CASE_CLASS("simplify_single_statement_block") {
-        AST ast;
+        AST_Store ast;
         PragmaStore pragmas;
 
         Layer1tests layer1{&ast, &pragmas};
@@ -37,7 +37,7 @@ public:
 };
 
 TEST_CASE("layer1 eval should simplify single statement blocks") {
-    AST ast;
+    AST_Store ast;
 
     CHECK(ast.empty());
 

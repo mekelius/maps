@@ -11,16 +11,16 @@
 
 using std::tuple, std::optional, std::make_optional, std::nullopt;
 using std::unique_ptr, std::make_unique;
-using Maps::AST, Maps::PragmaStore, Maps::ParserLayer1, Maps::ParserLayer2, Maps::SimpleTypeChecker;
+using Maps::AST_Store, Maps::PragmaStore, Maps::ParserLayer1, Maps::ParserLayer2, Maps::SimpleTypeChecker;
 using Maps::resolve_identifiers;
 
 // if parse fails at any point, returns nullopt, 
 // except if ignore errors is true returns the broken ast
-tuple<bool, unique_ptr<AST>, unique_ptr<PragmaStore>>
+tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
     parse_source(std::istream& source_is, const ParseOptions& options, std::ostream& debug_ostream) {
             
     unique_ptr<PragmaStore> pragmas = make_unique<PragmaStore>();
-    unique_ptr<AST> ast = make_unique<AST>(); 
+    unique_ptr<AST_Store> ast = make_unique<AST_Store>(); 
     
     if (!ast->init_builtins()) {
         Logging::log_error("Initializing builtins failed");

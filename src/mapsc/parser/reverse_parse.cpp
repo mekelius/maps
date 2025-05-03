@@ -246,6 +246,6 @@ std::ostream& operator<<(std::ostream& ostream, Maps::CallableBody body) {
     }
 }
 
-void reverse_parse(Maps::AST& ast, std::ostream& ostream) {
+void reverse_parse(Maps::AST_Store& ast, std::ostream& ostream) {
     ostream << ast.root_->body;
 }

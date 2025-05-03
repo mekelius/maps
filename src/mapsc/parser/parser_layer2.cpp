@@ -38,7 +38,7 @@ namespace Maps {
                       case ExpressionType::reference: \
                       case ExpressionType::termed_expression
 
-ParserLayer2::ParserLayer2(AST* ast, PragmaStore* pragmas)
+ParserLayer2::ParserLayer2(AST_Store* ast, PragmaStore* pragmas)
 : ast_(ast), pragmas_(pragmas) {
 }
 
@@ -52,7 +52,7 @@ void ParserLayer2::run() {
     }
 }
 
-TermedExpressionParser::TermedExpressionParser(AST* ast, Expression* expression)
+TermedExpressionParser::TermedExpressionParser(AST_Store* ast, Expression* expression)
 :ast_(ast), expression_(expression) {
     expression_terms_ = &expression->terms();
     next_term_it_ = expression_terms_->begin();    

@@ -6,14 +6,14 @@
 using Maps::Expression, Maps::ExpressionType, Maps::Callable;
 
 TEST_CASE("AST should be empty when created") {
-    Maps::AST ast{};
+    Maps::AST_Store ast{};
     CHECK(ast.empty());
     CHECK(ast.size() == 0);
 }
 
 TEST_CASE("Callables should pass their type correctly") {
     const unsigned int PRECEDENCE = 756;
-    Maps::AST ast{};
+    Maps::AST_Store ast{};
     
     Maps::Callable* op = ast.create_builtin_binary_operator("*", 
         *ast.types_->get_function_type(Maps::Void, {&Maps::Number, &Maps::Number}), PRECEDENCE);
@@ -24,7 +24,7 @@ TEST_CASE("Callables should pass their type correctly") {
 
 TEST_CASE("Operator_ref:s should pass their type correctly") {
     const unsigned int PRECEDENCE = 243;
-    Maps::AST ast{};
+    Maps::AST_Store ast{};
     
     Maps::Callable* op = ast.create_builtin_binary_operator("*", 
         *ast.types_->get_function_type(Maps::Void, {&Maps::Number, &Maps::Number}), PRECEDENCE);

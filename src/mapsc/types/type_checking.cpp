@@ -106,7 +106,7 @@ bool SimpleTypeChecker::visit_callable(Callable* callable) {
 // Note, statements shouldn't mess with contained expressions, since they will be visited
 bool SimpleTypeChecker::visit_statement(Statement* statement) {return true;}
 
-bool SimpleTypeChecker::run(AST& ast) {
+bool SimpleTypeChecker::run(AST_Store& ast) {
     // return ast.walk_tree(*this);
     // !!! ignoring failures
     ast.walk_tree(*this);

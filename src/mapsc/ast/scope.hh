@@ -11,7 +11,7 @@
 
 namespace Maps {
 
-class AST;
+class AST_Store;
 
 /**
  * Scopes contain names bound to callables
@@ -23,7 +23,7 @@ public:
     const_iterator begin() const { return identifiers_in_order_.begin(); }
     const_iterator end() const { return identifiers_in_order_.end(); }
 
-    Scope(AST* ast): ast_(ast) {};
+    Scope(AST_Store* ast): ast_(ast) {};
 
     bool identifier_exists(const std::string& name) const;
     std::optional<Callable*> get_identifier(const std::string& name) const;
@@ -49,10 +49,10 @@ public:
     std::vector<std::pair<std::string, Callable*>> identifiers_in_order_ = {};
 
 private:
-    friend AST;
+    friend AST_Store;
 
     std::unordered_map<std::string, Callable*> identifiers_;
-    AST* ast_;
+    AST_Store* ast_;
 };
 
 } // namespace AST

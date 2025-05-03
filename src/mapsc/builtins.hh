@@ -3,6 +3,6 @@
 
 #include "mapsc/ast/ast.hh"
 
-bool init_builtins(Maps::AST& ast);
+bool init_builtins(Maps::AST_Store& ast);
 
 #endif

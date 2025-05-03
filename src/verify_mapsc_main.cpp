@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
         std::unique_ptr<Maps::PragmaStore> pragmas = std::make_unique<Maps::PragmaStore>();
         
         std::cout << "run layer1\n\n";
-        std::unique_ptr<Maps::AST> ast = std::make_unique<Maps::AST>();
+        std::unique_ptr<Maps::AST_Store> ast = std::make_unique<Maps::AST_Store>();
         Maps::ParserLayer1{ast.get(), pragmas.get()}.run(source_file);
 
         if (logs_since_last_check()) 

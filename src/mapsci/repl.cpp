@@ -162,7 +162,7 @@ bool REPL::save_history() {
     return true;
 }
     
-void REPL::eval(const Maps::AST& ast, Maps::PragmaStore& pragmas) {
+void REPL::eval(const Maps::AST_Store& ast, Maps::PragmaStore& pragmas) {
     jit_->reset();
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);

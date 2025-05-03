@@ -81,7 +81,7 @@ bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& as
 
 // ----- IR Generation -----
 
-IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
+IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST_Store& ast, 
     PragmaStore& pragmas, llvm::raw_ostream* error_stream, Options options)
 :errs_(error_stream), 
  context_(context), 

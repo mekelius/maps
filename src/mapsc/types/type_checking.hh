@@ -11,7 +11,7 @@ public:
     bool visit_statement(Statement*);
     bool visit_callable(Callable*);
 
-    bool run(AST& ast);
+    bool run(AST_Store& ast);
 };
 
 } // namespace Maps

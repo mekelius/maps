@@ -14,7 +14,7 @@ namespace Maps {
 
 class TermedExpressionParser {
 public:
-    TermedExpressionParser(AST* ast, Expression* expression);
+    TermedExpressionParser(AST_Store* ast, Expression* expression);
     // parses the expression in-place
     void run();
 
@@ -65,7 +65,7 @@ private:
     void partial_call_state();
     Expression* handle_arg_state(Callable* callee, const std::vector<Expression*>& args);
 
-    AST* ast_;
+    AST_Store* ast_;
 
     Expression* expression_;
     std::vector<Expression*>* expression_terms_;
@@ -80,14 +80,14 @@ private:
 // in the ast and runs them
 class ParserLayer2 {
 public:
-    ParserLayer2(AST* ast, PragmaStore* pragmas);
+    ParserLayer2(AST_Store* ast, PragmaStore* pragmas);
     void run();
 
 private:
 
     // Selects a termed expression to parse. That expressions terms become the tokenstream
     void select_expression(Expression* expression);
-    AST* ast_;
+    AST_Store* ast_;
     PragmaStore* pragmas_;
 };
 

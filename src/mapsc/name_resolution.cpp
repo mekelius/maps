@@ -9,7 +9,7 @@ using Logging::log_error, Logging::log_info;
 namespace Maps {
 
 // Replaces all identifiers and operators with references to the correct callables
-bool resolve_identifiers(AST& ast) {
+bool resolve_identifiers(AST_Store& ast) {
     for (Expression* expression: ast.unresolved_identifiers_) {
         switch (expression->expression_type) {
             case ExpressionType::identifier:
@@ -42,7 +42,7 @@ bool resolve_identifiers(AST& ast) {
 }
 
 // this should be scope's responsibility
-bool resolve_identifier(AST& ast, Expression* expression) {
+bool resolve_identifier(AST_Store& ast, Expression* expression) {
     // check builtins
     std::optional<Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
     if (builtin) {
@@ -67,7 +67,7 @@ bool resolve_identifier(AST& ast, Expression* expression) {
     return true;
 }
 
-bool resolve_type_identifier(AST& ast, Expression* expression) {
+bool resolve_type_identifier(AST_Store& ast, Expression* expression) {
     // check builtins
     std::optional<const Type*> type = ast.types_->get(expression->string_value());
     if (!type) {
@@ -81,7 +81,7 @@ bool resolve_type_identifier(AST& ast, Expression* expression) {
     return true;
 }
 
-bool resolve_operator(AST& ast, Expression* expression) {
+bool resolve_operator(AST_Store& ast, Expression* expression) {
     std::optional<Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
     if (builtin) {
         if (!(*builtin)->is_operator()) {

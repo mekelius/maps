@@ -9,7 +9,7 @@ using Maps::Expression, Maps::ExpressionType, Maps::Callable;
 
 // --------------- HELPERS ---------------
 
-inline std::tuple<Maps::Expression*, Maps::Callable*> create_operator_helper(Maps::AST& ast, 
+inline std::tuple<Maps::Expression*, Maps::Callable*> create_operator_helper(Maps::AST_Store& ast, 
     const std::string& op_string, unsigned int precedence = 500) {
 
     const Maps::Type* type = ast.types_->get_function_type(Maps::Void, {&Maps::Number, &Maps::Number});
@@ -67,7 +67,7 @@ void prime_terms(auto expr, const std::string& input, auto op1_ref, auto op2_ref
 // --------------- TEST CASES ---------------
 
 TEST_CASE("Maps::TermedExpressionParser should replace a single value term with that value") {
-    Maps::AST ast{};
+    Maps::AST_Store ast{};
 
     Expression* expr = ast.create_termed_expression({}, {0,0});
 
@@ -93,7 +93,7 @@ TEST_CASE("Maps::TermedExpressionParser should replace a single value term with 
 }
 
 TEST_CASE("Maps::TermedExpressionParser should handle binop expressions") {
-    Maps::AST ast{};
+    Maps::AST_Store ast{};
     Expression* expr = ast.create_termed_expression({}, {0,0});
 
     Expression* val1 = ast.create_numeric_literal("23", {0,0});
@@ -182,7 +182,7 @@ TEST_CASE("Maps::TermedExpressionParser should handle binop expressions") {
 }
 
 TEST_CASE ("should handle more complex expressions") {
-    Maps::AST ast{};
+    Maps::AST_Store ast{};
     Expression* expr = ast.create_termed_expression({}, {0,0});
 
     auto [op1_ref, op1] = create_operator_helper(ast, "1", 1);
@@ -220,7 +220,7 @@ TEST_CASE ("should handle more complex expressions") {
 }
 
 TEST_CASE("Maps::TermedExpressionParser should handle haskell-style call expressions") {
-    Maps::AST ast{};
+    Maps::AST_Store ast{};
     Expression* expr = ast.create_termed_expression({}, {0,0});
     
     SUBCASE("1 arg") {    
@@ -299,7 +299,7 @@ TEST_CASE("Maps::TermedExpressionParser should handle haskell-style call express
 }
 
 TEST_CASE("Should handle partial application of binary operators") {
-    Maps::AST ast{};
+    Maps::AST_Store ast{};
 
     auto [op_ref, op] = create_operator_helper(ast, "-");
     auto val = ast.create_numeric_literal("34", {0,0});

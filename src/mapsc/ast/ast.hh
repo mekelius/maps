@@ -25,11 +25,11 @@ concept AST_Visitor = requires(T t) {
     {t.visit_callable(std::declval<Callable*>())} -> std::convertible_to<bool>;
 };
 
-class AST {
+class AST_Store {
 public:
     using const_iterator = Scope::const_iterator;
 
-    AST();
+    AST_Store();
     [[nodiscard]] bool init_builtins();
 
     void set_root(CallableBody root);
@@ -137,7 +137,7 @@ private:
 };
 
 template<AST_Visitor T>
-bool AST::walk_expression(T visitor, Expression* expression) {
+bool AST_Store::walk_expression(T visitor, Expression* expression) {
     if (!visitor.visit_expression(expression))
         return false;
 
@@ -169,7 +169,7 @@ bool AST::walk_expression(T visitor, Expression* expression) {
 }
 
 template<AST_Visitor T>
-bool AST::walk_statement(T visitor, Statement* statement) {
+bool AST_Store::walk_statement(T visitor, Statement* statement) {
     if (!visitor.visit_statement(statement))
         return false;
 
@@ -197,7 +197,7 @@ bool AST::walk_statement(T visitor, Statement* statement) {
 }
 
 template<AST_Visitor T>
-bool AST::walk_callable(T visitor, Callable* callable) {
+bool AST_Store::walk_callable(T visitor, Callable* callable) {
     if (!visitor.visit_callable(callable))
         return false;
 
@@ -211,7 +211,7 @@ bool AST::walk_callable(T visitor, Callable* callable) {
 }
 
 template<AST_Visitor T>
-bool AST::walk_tree(T& visitor) {
+bool AST_Store::walk_tree(T& visitor) {
     for (auto [_1, callable]: globals_->identifiers_) {
         if (!walk_callable(visitor, callable))
             return false;

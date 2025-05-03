@@ -12,7 +12,7 @@ using namespace Maps;
 
 
 TEST_CASE("Should parse a numberliteral with the correct type") {
-    AST ast{};
+    AST_Store ast{};
     auto expr = ast.create_termed_expression({
         ast.create_type_reference(&Int, {0,0}),
         ast.create_numeric_literal("23", {0,0})
@@ -24,7 +24,7 @@ TEST_CASE("Should parse a numberliteral with the correct type") {
 }
 
 TEST_CASE("Should be able to cast a string literal into Int") {
-    AST ast{};
+    AST_Store ast{};
     
     auto expr = ast.create_termed_expression({
         ast.create_type_reference(&Int, {0,0}),

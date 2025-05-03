@@ -5,6 +5,6 @@
 
 #include "mapsc/ast/ast.hh"
 
-void reverse_parse(Maps::AST& ast, std::ostream& ostream);
+void reverse_parse(Maps::AST_Store& ast, std::ostream& ostream);
 
 #endif

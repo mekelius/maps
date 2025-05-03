@@ -5,10 +5,10 @@
 
 namespace Maps {
 
-bool resolve_identifiers(AST& ast);
-bool resolve_identifier(AST& ast, Expression* expression);
-bool resolve_operator(AST& ast, Expression* expression);
-bool resolve_type_identifier(AST& ast, Expression* expression);
+bool resolve_identifiers(AST_Store& ast);
+bool resolve_identifier(AST_Store& ast, Expression* expression);
+bool resolve_operator(AST_Store& ast, Expression* expression);
+bool resolve_type_identifier(AST_Store& ast, Expression* expression);
 
 } //namespace Maps
 

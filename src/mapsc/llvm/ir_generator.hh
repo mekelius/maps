@@ -44,11 +44,11 @@ public:
         bool verify_module = true;
     };
 
-    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
+    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST_Store& ast, 
         Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream, Options options);
 
     // delegating contructor to make options optional
-    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST& ast, 
+    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST_Store& ast, 
         Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream)
     :IR_Generator(IR_Generator(context, module, ast, pragmas, error_stream, Options{})) {}
 
@@ -111,7 +111,7 @@ private:
     Options options_;
 
     Maps::PragmaStore* pragmas_;
-    const Maps::AST* ast_;
+    const Maps::AST_Store* ast_;
     Maps::TypeRegistry* maps_types_;
     
     std::unique_ptr<FunctionStore> function_store_ = std::make_unique<FunctionStore>();

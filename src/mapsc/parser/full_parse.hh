@@ -31,7 +31,7 @@ struct ParseOptions {
 };
 
 // the first value is if the parse succeeded
-std::tuple<bool, std::unique_ptr<Maps::AST>, std::unique_ptr<Maps::PragmaStore>>
+std::tuple<bool, std::unique_ptr<Maps::AST_Store>, std::unique_ptr<Maps::PragmaStore>>
     parse_source(std::istream& source_is, const ParseOptions& options = {}, 
         std::ostream& debug_ostream = std::cout);
 

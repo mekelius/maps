@@ -5,7 +5,7 @@
 
 namespace {
 
-[[nodiscard]] bool init_builtin_operators(Maps::AST& ast) {
+[[nodiscard]] bool init_builtin_operators(Maps::AST_Store& ast) {
     if (!ast.create_builtin_binary_operator("+", *ast.types_->get_function_type(Maps::Number, 
         {&Maps::Number, &Maps::Number}), 1, Maps::Associativity::left /* Maps::Associativity::both*/))
             return false;
@@ -26,7 +26,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool init_builtin_callables(Maps::AST& ast) {
+[[nodiscard]] bool init_builtin_callables(Maps::AST_Store& ast) {
     if (!ast.create_builtin("print",
         *ast.types_->get_function_type(Maps::Void, {&Maps::String})))
             return false;
@@ -45,7 +45,7 @@ namespace {
 
 } // namespace
 
-bool init_builtins(Maps::AST& ast) {
+bool init_builtins(Maps::AST_Store& ast) {
     if (!init_builtin_callables(ast))
         return false;
 
