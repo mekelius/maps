@@ -11,27 +11,11 @@
 #include "mapsc/pragma.hh"
 
 #include "type_mapping.hh"
+#include "mapsc/llvm/function_store.hh"
 
 namespace IR {
 
 constexpr std::string_view REPL_WRAPPER_NAME = "repl_wrapper";
-
-class FunctionStore {
-    using Signature = Maps::Type::HashableSignature;
-
-public:
-    // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
-    std::optional<llvm::FunctionCallee> get(const std::string& name, 
-        const Maps::FunctionType& ast_type) const;
-    bool insert(const std::string& name, const Maps::FunctionType& ast_type, 
-        llvm::FunctionCallee function_callee);
-
-private:
-    using InnerMapType = std::unordered_map<Signature, llvm::FunctionCallee>;
-
-    std::unordered_map<std::string, std::unique_ptr<InnerMapType>>
-        functions_ = std::unordered_map<std::string, std::unique_ptr<InnerMapType>>();
-};
 
 // Helper class that holds the module, context, etc. for IR generation
 class IR_Generator {

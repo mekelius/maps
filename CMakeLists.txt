@@ -61,6 +61,7 @@ add_library(ir_gen OBJECT
     src/mapsc/llvm/ir_generator.cpp
     src/mapsc/llvm/ir_builtins.cpp
     src/mapsc/llvm/type_mapping.cpp
+    src/mapsc/llvm/function_store.cpp
 )
 
 target_link_libraries(ir_gen parser -lLLVM-19)
