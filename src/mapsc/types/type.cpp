@@ -93,14 +93,6 @@ const FunctionType* TypeRegistry::get_function_type(const Type& return_type, con
     return create_function_type(signature, return_type, arg_types, is_pure);
 }
 
-// const Type* TypeRegistry::create_opaque_alias(std::string name, const Type* type) {
-//     assert(false && "not implemented");
-// }
-
-// const Type* TypeRegistry::create_transparent_alias(std::string name, const Type* type) {
-//     assert(false && "not implemented");
-// }
-
 Type::HashableSignature TypeRegistry::make_function_signature(const Type& return_type, 
     const std::vector<const Type*>& arg_types, bool is_pure) const {
 

@@ -10,8 +10,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include "type_constructor.hh"
-
 namespace Maps {
 
 // class for booleans we may or may not know yet
@@ -147,9 +145,6 @@ public:
 
     const FunctionType* get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
         bool pure = true);
-
-    // const Type* create_opaque_alias(std::string name, const Type* type);
-    // const Type* create_transparent_alias(std::string name, const Type* type);
 
     Type::HashableSignature make_function_signature(const Type& return_type, const std::vector<const Type*>& arg_types, 
         bool is_pure = true) const;

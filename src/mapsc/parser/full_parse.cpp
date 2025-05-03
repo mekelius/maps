@@ -5,7 +5,6 @@
 #include "mapsc/parser/lexer.hh"
 #include "mapsc/parser/reverse_parse.hh"
 #include "mapsc/parser/parser_layer1.hh"
-#include "mapsc/parser/type_declaration.hh"
 #include "mapsc/name_resolution.hh"
 #include "mapsc/parser/parser_layer2.hh"
 #include "mapsc/types/type_checking.hh"
@@ -13,7 +12,7 @@
 using std::tuple, std::optional, std::make_optional, std::nullopt;
 using std::unique_ptr, std::make_unique;
 using Maps::AST, Maps::PragmaStore, Maps::ParserLayer1, Maps::ParserLayer2, Maps::SimpleTypeChecker;
-using Maps::handle_BTD_field_names, Maps::resolve_identifiers;
+using Maps::resolve_identifiers;
 
 // if parse fails at any point, returns nullopt, 
 // except if ignore errors is true returns the broken ast
@@ -50,11 +49,6 @@ tuple<bool, unique_ptr<AST>, unique_ptr<PragmaStore>>
 
     if (options.stop_after == ParseStage::layer1)
         return {true, std::move(ast), std::move(pragmas)};
-
-    // ----- binding type declarations -----
-
-    if (!handle_BTD_field_names(ast->possible_binding_type_declarations_) && !options.ignore_errors)
-        return {false, std::move(ast), std::move(pragmas)};
 
     // ----- name resolution -----
 

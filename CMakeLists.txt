@@ -41,7 +41,6 @@ add_library(parser OBJECT
     src/mapsc/types/type_defs.cpp
     src/mapsc/types/casts.cpp
     src/mapsc/types/type_checking.cpp
-    src/mapsc/types/type_constructor.cpp
     
     src/mapsc/ast/ast_node.cpp
     src/mapsc/ast/callable.cpp
@@ -52,7 +51,6 @@ add_library(parser OBJECT
     src/mapsc/parser/lexer.cpp
     src/mapsc/parser/parser_layer1.cpp
     src/mapsc/parser/parser_layer2.cpp
-    src/mapsc/parser/type_declaration.cpp
     src/mapsc/parser/reverse_parse.cpp
     src/mapsc/parser/full_parse.cpp
 )
