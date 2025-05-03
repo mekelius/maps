@@ -107,34 +107,22 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
 
 void REPL::run() {    
     while (running_) {
-        char* line = readline(PROMPT.cbegin());
+        
+        optional<std::string> input = get_input();
 
-        if (!line) {
-            std::cout << std::endl;
-            break;
-        }
-        
-        std::string input{line};
-        
-        if (input.empty()) {
-            free(line);
+        if (!input)
+            continue;
+
+        if (input->at(0) == ':') {
+            run_command(*input);
             continue;
         }
-        
-        add_history(line);
-        free(line);
-        save_history();
-    
-        if (input.at(0) == ':') {
-            run_command(input);
-            continue;
-        }
-        
-        std::stringstream input_s{input};
-        auto [success, ast, pragmas] = parse_source(input_s, parse_options_, std::cerr);
+
+        std::stringstream input_s{*input};
+        auto [parse_success, ast, pragmas] = parse_source(input_s, parse_options_, std::cerr);
         
         if (
-            (!success && !options_.ignore_errors) || 
+            (!parse_success && !options_.ignore_errors) || 
             options_.stop_after == Stage::layer1 ||
             options_.stop_after == Stage::layer2
         ) continue;
@@ -145,9 +133,50 @@ void REPL::run() {
             std::cerr << "\n" << std::endl;
         }
 
-        if (ast->is_valid)
-            eval(*ast, *pragmas);
+        unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
+        unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), 
+            *ast, *pragmas, error_stream_);
+    
+        insert_builtins(*generator);
+        bool ir_success = generator->repl_run();
+    
+        if (options_.print_ir) {
+            std::cerr << "---IR DUMP---:\n\n";
+            module_->dump();
+            std::cerr << "\n---IR END---\n";
+        }
+    
+        if (!ir_success && !options_.ignore_errors)
+            return;
+
+        if (options_.stop_after == Stage::ir)
+            return;
+
+        eval(std::move(module_));
     }
+}
+
+std::optional<std::string> REPL::get_input() {
+    char* line = readline(PROMPT.cbegin());
+
+    if (!line) {
+        std::cout << std::endl;
+        running_ = false;
+        return nullopt;
+    }
+    
+    std::string input{line};
+    
+    if (input.empty()) {
+        free(line);
+        return nullopt;
+    }
+    
+    add_history(line);
+    free(line);
+    save_history();
+
+    return input;
 }
 
 bool REPL::save_history() {
@@ -162,27 +191,8 @@ bool REPL::save_history() {
     return true;
 }
     
-void REPL::eval(const Maps::AST_Store& ast, Maps::PragmaStore& pragmas) {
+void REPL::eval(std::unique_ptr<llvm::Module> module_) {
     jit_->reset();
-
-    unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
-    unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), 
-        ast, pragmas, error_stream_);
-
-    insert_builtins(*generator);
-    bool success = generator->repl_run();
-
-    if (options_.print_ir) {
-        std::cerr << "---IR DUMP---:\n\n";
-        module_->dump();
-        std::cerr << "\n---IR END---\n";
-    }
-
-    if (!success && !options_.ignore_errors)
-        return;
-
-    if (options_.stop_after == Stage::ir)
-        return;
 
     if (options_.eval) {
         jit_->compile_and_run(static_cast<std::string>(IR::REPL_WRAPPER_NAME), std::move(module_));

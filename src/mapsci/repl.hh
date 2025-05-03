@@ -63,8 +63,9 @@ public:
     void run();
     
 private:
+    std::optional<std::string> get_input();
     bool save_history();
-    void eval(const Maps::AST_Store& ast, Maps::PragmaStore& pragmas);
+    void eval(std::unique_ptr<llvm::Module> module_);
     std::string parse_type(std::istream& input_stream);
     void run_command(const std::string& command);
 
