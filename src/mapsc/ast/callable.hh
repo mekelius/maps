@@ -6,6 +6,7 @@
 #include <string>
 
 #include "mapsc/source.hh"
+#include "mapsc/types/type_defs.hh"
 
 namespace Maps {
 
@@ -26,6 +27,9 @@ using CallableBody = std::variant<std::monostate, Expression*, Statement*, Built
  */
 class Callable {
 public:
+    // creates a new dummy callable suitable for unit testing
+    static Callable testing_callable(const Type* type = &Hole); 
+
     Callable(CallableBody body, const std::string& name,
         std::optional<SourceLocation> location = std::nullopt);
     Callable(CallableBody body, std::optional<SourceLocation> location); // create anonymous callable

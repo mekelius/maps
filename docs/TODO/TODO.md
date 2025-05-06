@@ -10,20 +10,21 @@
 | ---                                                   | ---       | ---            |
 | Operator definitions                                  | testing   | parsing        |
 | Parsing needs a lot of work                           | in progress | bits and pieces |
-| Print expressions and statements in messages nicely   | done | Callables? |
+| Print expressions and statements in messages nicely   | done      | Callables?     |
 | Runtime casts                               | in progress | rest of the compile time |
-| Function calls need to work and be smooth | testing | partial application rust style at least |
+| Function calls need to work and be smooth             | testing   | partial application |
 | Arithmetic stuff working and smooth  | in progress | builtin definitions maps side |
-| Blocks and parentheses should work well               | testing | parsing messy |
-| repl improvements                                     | getting there | directly evaluate args |
-| clean up IR_Generator                                 | total mess | order |
-| restore mapsc functionality                           | ???       | testing |
+| Blocks and parentheses should work well               | testing   | parsing messy |
+| repl improvements                                     | done?     |               |
+| clean up IR_Generator                                 | total mess | refactor     |
+| restore mapsc functionality                           | ???       | testing       |
 
 #### Accumulated tweaks
 
 - Clean up the responsibilities of converting values
     - now IR_gen does some and earlier passes do some
 - Name resolution should return false on fail
+- rename TypeRegistry to TypeStore
 - Fix pragmas when we do multiple files
 - move simplifying blocks and other ast nodes out of layer1
 - rename AST to AST_Store

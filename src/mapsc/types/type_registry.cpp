@@ -23,6 +23,14 @@ TypeRegistry::TypeRegistry() {
     // }
 }
 
+bool TypeRegistry::empty() const {
+    return types_.empty();
+}
+
+size_t TypeRegistry::size() const {
+    return types_.size();
+}
+
 optional<const Type*> TypeRegistry::get(const std::string& identifier) {
     auto it = types_by_identifier_.find(identifier);
     if (it == types_by_identifier_.end())

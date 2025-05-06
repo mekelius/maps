@@ -18,6 +18,12 @@ class TypeRegistry {
 public:
     TypeRegistry();
 
+    // checks if the TypeRegistry contains any types besides the builtin ones
+    bool empty() const;
+    // builtin types don't count
+    size_t size() const;
+
+    // TODO: move this to be private, callers should use get instead
     std::optional<const Type*> create_type(const std::string& identifier, const TypeTemplate& template_);
     
     std::optional<const Type*> get(const std::string& identifier);

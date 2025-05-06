@@ -13,6 +13,12 @@ using Logging::log_error;
 
 namespace Maps {
 
+Callable Callable::testing_callable(const Type* type) {
+    Callable callable{std::monostate{}, "DUMMY_CALLABLE", TEST_SOURCE_LOCATION};
+    callable.set_type(*type);
+    return callable;
+}
+
 // ----- CALLABLE -----
 
 Callable::Callable(CallableBody body, const std::string& name, 
@@ -114,7 +120,7 @@ void Callable::attempt_inline(Expression* call) {
 
 const Type* Callable::get_type() const {
     switch (body.index()) {
-        case 0: // uninitialized
+        case 0: // std::monostate
             return type_ ? *type_ : &Hole;
         
         case 1: // expression
