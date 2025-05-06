@@ -5,6 +5,20 @@
 using std::holds_alternative, std::get;
 using namespace Maps;
 
+TEST_CASE("Should be able to cast a string into Float") {
+    Expression expr{
+        ExpressionType::value,
+        TEST_SOURCE_LOCATION,
+        "324.63",
+        &String
+    };
+
+    CHECK(String.cast_to(&Float, expr));
+    CHECK(*expr.type == Float);
+    CHECK(holds_alternative<double>(expr.value));
+    CHECK(get<double>(expr.value) == 324.63);
+}
+
 TEST_CASE("Type concretizer should handle an Int Number") {
     Expression expr{
         ExpressionType::value,
@@ -37,7 +51,7 @@ TEST_CASE("Type concretizer should handle a Float Number") {
     CHECK(get<double>(expr.value) == 3.4);
 }
 
-TEST_CASE("Type concretizer should handle a Float NumberLitera") {
+TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
     Expression expr{
         ExpressionType::value,
         TEST_SOURCE_LOCATION,

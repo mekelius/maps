@@ -35,7 +35,7 @@ std::optional<int> string_to_int(std::string str) {
 std::optional<double> string_to_double(std::string str) {
     errno = 0;
     char* end = nullptr;
-    int result = std::strtod(str.c_str(), &end);
+    double result = std::strtod(str.c_str(), &end);
 
     if (*end)
         return std::nullopt;
@@ -61,17 +61,14 @@ bool not_castable(const Type*, Expression&) {
 
 bool cast_from_Int(const Type* target_type, Expression& expression) {
     assert(false && "not implemented");
-    if (*target_type == Float) {
+    if (*target_type == Float)
         return true;
-    }
 
-    if (*target_type == Number) {
+    if (*target_type == Number)
         return true;
-    }
 
-    if (*target_type == String) {
+    if (*target_type == String)
         return true;
-    }
 
     return false;
 }
@@ -79,9 +76,8 @@ bool cast_from_Int(const Type* target_type, Expression& expression) {
 bool cast_from_Float(const Type* target_type, Expression& expression) {
     assert(false && "not implemented");
 
-    if (*target_type == String) {
+    if (*target_type == String)
         return true;
-    }
 
     return false;
 }
@@ -117,7 +113,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
         if (!result)
             return false;
 
-        cast_value<double>(expression, &Int, *result);
+        cast_value<double>(expression, &Float, *result);
         return true;
     }
 
