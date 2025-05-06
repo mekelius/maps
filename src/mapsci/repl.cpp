@@ -147,10 +147,10 @@ void REPL::run() {
         }
     
         if (!ir_success && !options_.ignore_errors)
-            return;
+            continue;
 
         if (options_.stop_after == Stage::ir)
-            return;
+            continue;
 
         eval(std::move(module_));
     }
