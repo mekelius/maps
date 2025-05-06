@@ -12,6 +12,47 @@ namespace Maps {
 
 // ----- EXPRESSION -----
 
+bool Expression::convert_to_native_types() {
+    if (is_reduced_value()) {
+        if (type->is_native() == db_true)
+            return true;
+
+        return true;
+    }
+
+    if (has_native_representation() == db_false)
+        return false;
+
+    // !!!
+    return true;
+
+    // try to inline
+    if (expression_type == ExpressionType::call || expression_type == ExpressionType::identifier) {
+        return false;
+    }
+
+    // handle non-inlinable call
+    // if (???) {
+    //     expression_type->convert_to_native();
+    // }
+
+    return false;
+}
+
+DeferredBool Expression::has_native_representation() {    
+    return type->is_castable_to_native();
+}
+
+std::vector<Expression*>& Expression::terms() {
+    return std::get<TermedExpressionValue>(value).terms;
+}
+CallExpressionValue& Expression::call_value() {
+    return std::get<CallExpressionValue>(value);
+}
+Callable* Expression::reference_value() const {
+    return std::get<Callable*>(value);
+}
+
 bool Expression::is_partial_call() const {
     if (expression_type != ExpressionType::call)
         return false;

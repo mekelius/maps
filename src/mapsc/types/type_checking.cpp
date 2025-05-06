@@ -13,29 +13,36 @@ using Logging::log_error;
 
 namespace Maps {
 
-// TODO: move to Expression
-bool has_native_representation(const Type* type) {    
-    if (type->is_native())
-        return true;
-
-    if (!type->is_function())
-        return false;
-
-    auto function_type = dynamic_cast<const FunctionType*>(type);
-
-    if (!has_native_representation(function_type->return_type_))
-        return false;
-
-    for (auto arg: function_type->arg_types_) {
-        if (!has_native_representation(arg))
-            return false;
-    }
-
-    return true;
-}
-
 optional<const Type*> handle_declared_type(const Type* actual_type, const Type* declared_type) {
     return nullopt;
+}
+
+bool TypeConcretizer::concretize_expression(Expression& expression) {
+    switch (expression.expression_type) {
+        case ExpressionType::call:
+            return concretize_call(expression);
+        case ExpressionType::value:
+            return concretize_value(expression);
+        default:
+            return false;
+    }
+}
+
+bool TypeConcretizer::concretize_call(Expression& call) {
+    return false;
+}
+
+bool TypeConcretizer::concretize_value(Expression& value) {
+    if (value.type->is_native() == db_true)
+        return true;
+
+    if (value.type->is_castable_to_native() == db_false)
+        return false;
+
+    if (!value.type->concretize(value))
+        return false;
+
+    return true;
 }
 
 bool SimpleTypeChecker::visit_expression(Expression* expression) {
@@ -45,22 +52,22 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
         if (!deduced_type)
             return false;
 
-        if (!has_native_representation(*deduced_type))
+        if ((*deduced_type)->is_castable_to_native() == db_false)
             return false;
 
         expression->type = *deduced_type;
         return true;
     }
 
-    if (has_native_representation(expression->type))
+    if (expression->type->is_native() == db_true)
         return true;
 
     // first try to cast it into an int, then a float
     if (*expression->type == NumberLiteral) {
-        if (expression->type->cast_to(&Int, expression))
+        if (expression->type->cast_to(&Int, *expression))
             return true;
 
-        if (expression->type->cast_to(&Float, expression))
+        if (expression->type->cast_to(&Float, *expression))
             return true;
 
         log_error(expression->string_value() + " is not a valid number", expression->location);
@@ -93,14 +100,14 @@ bool SimpleTypeChecker::visit_callable(Callable* callable) {
         if (!deduced_type)
             return false;
 
-        if (!has_native_representation(*deduced_type))
+        if ((*deduced_type)->is_castable_to_native() == db_false)
             return false;
 
         callable->set_type(**deduced_type);
         return true;
     }
 
-    return has_native_representation(callable->get_type());
+    return (callable->get_type()->is_castable_to_native() == db_true);
 }
 
 // Note, statements shouldn't mess with contained expressions, since they will be visited

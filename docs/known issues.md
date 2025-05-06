@@ -11,3 +11,4 @@
 - ReverseParser looks like a stream but can't handle a lot of stuff and doesn't inherit from ostream
     - also stack overflow if you feed it a pointer??
         - sounds like a disaster
+- Expression::has_native_representation atm. hard codes functions as the only complex type

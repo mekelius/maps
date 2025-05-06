@@ -108,7 +108,7 @@ add_executable(verify_mapsc
 
 target_link_libraries(verify_mapsc parser)
 
-# ----------------- PARSER UNIT_TESTS -----------------
+# --------------------- UNIT_TESTS ---------------------
 
 add_executable(tests
     tests/tests_main.cpp
@@ -117,6 +117,7 @@ add_executable(tests
     tests/layer1.cpp
     tests/layer2.cpp
     tests/type_specifiers.cpp
+    tests/type_casts.cpp
 )
 
 target_link_libraries(tests parser)

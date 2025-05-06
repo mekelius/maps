@@ -802,7 +802,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
                     *lhs = *expression;
                     expression->terms() = {lhs};
                     std::get<TermedExpressionValue>(expression->value).is_type_declaration = 
-                        DeferredBool::maybe;
+                        DeferredBool::maybe_;
                 }
 
                 // eat the ":" and any following ones as they wouldn't do anything

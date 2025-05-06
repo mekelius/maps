@@ -20,22 +20,42 @@ std::string Type::to_string() const {
     return static_cast<std::string>(name());
 }
 
-bool Type::cast_to(const Type* target_type, Expression* expression) const {
+bool Type::cast_to(const Type* target_type, Expression& expression) const {
     
-    if (*expression->type == *target_type)
+    if (*expression.type == *target_type)
         return true;
 
-    if (!expression->is_castable_expression()) {
-        log_error("expression " + expression->log_message_string() + ", is not castable");
+    if (!expression.is_castable_expression()) {
+        log_error("expression " + expression.log_message_string() + ", is not castable");
         return false;
     }
     
     return cast_to_(target_type, expression);
 }
 
+bool Type::concretize(Expression& expression) const {
+    if (*expression.type != *this) {
+        log_error("Type::concretize called with an expression of another type", expression.location);
+        assert(false && "Type::concretize called with an expression of another type");
+        return false;
+    }
+
+    return concretize_(expression);
+}
+
+// cast_to above does some safety checks that shouldn't be overridden
+bool Type::cast_to_(const Type* type, Expression& expression) const {
+    return (*cast_function_)(type, expression);
+}
+
+// concretize above does some safety checks that shouldn't be overridden
+bool Type::concretize_(Expression& expression) const {
+    return (*concretize_function_)(expression);
+}
+
 FunctionType::FunctionType(const ID id, const TypeTemplate* type_template, const Type* return_type, 
     const std::vector<const Type*>& arg_types, bool is_pure)
-    :Type(id, type_template, not_castable), return_type_(return_type), arg_types_(arg_types), is_pure_(is_pure) {
+    :Type(id, type_template, not_castable, not_concretizable), return_type_(return_type), arg_types_(arg_types), is_pure_(is_pure) {
 }
 
 std::string FunctionType::to_string() const {

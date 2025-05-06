@@ -507,7 +507,7 @@ void TermedExpressionParser::initial_type_reference_state() {
             ast_->delete_expression(type_term);
 
             shift();
-            current_term()->type->cast_to(type_value, current_term());
+            current_term()->type->cast_to(type_value, *current_term());
             current_term()->declared_type = type_value;
             current_term()->location = type_term->location;
             return initial_value_state();

@@ -1,0 +1,54 @@
+#include "doctest.h"
+
+#include "mapsc/types/type_checking.hh"
+
+using std::holds_alternative, std::get;
+using namespace Maps;
+
+TEST_CASE("Type concretizer should handle an Int Number") {
+    Expression expr{
+        ExpressionType::value,
+        TEST_SOURCE_LOCATION,
+        "34",
+        &Number
+    };
+    
+    bool success = TypeConcretizer{}.concretize_value(expr);
+
+    CHECK(success);
+    CHECK(*expr.type == Int);
+    CHECK(holds_alternative<int>(expr.value));
+    CHECK(get<int>(expr.value) == 34);
+}
+
+TEST_CASE("Type concretizer should handle a Float Number") {
+    Expression expr{
+        ExpressionType::value,
+        TEST_SOURCE_LOCATION,
+        "3.4",
+        &Number
+    };
+    
+    bool success = TypeConcretizer{}.concretize_value(expr);
+
+    CHECK(success);
+    CHECK(*expr.type == Float);
+    CHECK(holds_alternative<double>(expr.value));
+    CHECK(get<double>(expr.value) == 3.4);
+}
+
+TEST_CASE("Type concretizer should handle a Float NumberLitera") {
+    Expression expr{
+        ExpressionType::value,
+        TEST_SOURCE_LOCATION,
+        "3.4",
+        &NumberLiteral
+    };
+    
+    bool success = TypeConcretizer{}.concretize_value(expr);
+
+    CHECK(success);
+    CHECK(*expr.type == Float);
+    CHECK(holds_alternative<double>(expr.value));
+    CHECK(get<double>(expr.value) == 3.4);
+}

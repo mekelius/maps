@@ -10,7 +10,7 @@
 namespace Maps {
 
 class Type;
-class Expression;
+struct Expression;
 struct Statement;
 struct Builtin;
 struct Operator;

@@ -20,14 +20,14 @@ struct Builtin {
 };
 
 class Callable;
-class Expression;
+struct Expression;
 struct Statement;
 
 // ----- EXPRESSIONS -----
 
 // NOTE: references and calls are created by scopes, rest are created by AST
 // See: 'docs/internals/ast\ nodes' for description of what these mean 
-enum class ExpressionType {
+enum struct ExpressionType {
     string_literal = 0,             // value: string
     numeric_literal,
 
@@ -73,7 +73,7 @@ using TypeConstruct = std::tuple<
 
 struct TermedExpressionValue {
     std::vector<Expression*> terms;
-    DeferredBool is_type_declaration = DeferredBool::maybe;
+    DeferredBool is_type_declaration = DeferredBool::maybe_;
 
     bool operator==(const TermedExpressionValue&) const = default;
 
@@ -94,28 +94,24 @@ using ExpressionValue = std::variant<
     TypeConstruct
 >;
 
-class Expression {
+struct Expression {
 public:
-    // TODO: move initializing expression values from AST::create_expression
-    Expression(ExpressionType expr_type, SourceLocation location, const Type& type): 
-        expression_type(expr_type), location(location), type(&type) {};
-    
     ExpressionType expression_type; 
     SourceLocation location;
 
-    const Type* type; // this is the inferred "de facto"-one
-    std::optional<const Type*> declared_type;
     ExpressionValue value;
 
-    std::vector<Expression*>& terms() {
-        return std::get<TermedExpressionValue>(value).terms;
-    }
-    CallExpressionValue& call_value() {
-        return std::get<CallExpressionValue>(value);
-    }
-    Callable* reference_value() const {
-        return std::get<Callable*>(value);
-    }
+    const Type* type = &Hole; // this is the "de facto"-one
+    std::optional<const Type*> declared_type = std::nullopt;
+    
+    // ----- METHODS -----
+    bool convert_to_native_types();
+
+    // ----- GETTERS etc. -----
+    std::vector<Expression*>& terms();
+    CallExpressionValue& call_value();
+    Callable* reference_value() const;
+
     bool is_partial_call() const;
     bool is_reduced_value() const;
 
@@ -123,9 +119,9 @@ public:
     DeferredBool is_type_declaration();
 
     const std::string& string_value() const;
-
-    bool operator==(const Expression& other) const = default;
-
+    std::string log_message_string() const;
+    
+    DeferredBool has_native_representation();
     bool is_literal() const;
     bool is_illegal() const;
     bool is_reference() const;
@@ -135,7 +131,7 @@ public:
     bool is_castable_expression() const;
     bool is_allowed_in_type_declaration() const;
 
-    std::string log_message_string() const;
+    bool operator==(const Expression& other) const = default;
 };
 
 // ----- STATEMENTS -----

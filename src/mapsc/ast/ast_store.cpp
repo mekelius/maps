@@ -168,7 +168,7 @@ Callable* AST_Store::create_builtin_unary_operator(const std::string& name, cons
 Expression* AST_Store::create_expression(ExpressionType expression_type, 
     ExpressionValue value, const Type& type, SourceLocation location) {        
 
-    expressions_.push_back(std::make_unique<Expression>(expression_type, location, type));
+    expressions_.push_back(std::make_unique<Expression>(expression_type, location, value, &type));
     Expression* expression = expressions_.back().get();
 
     expression->value = value;

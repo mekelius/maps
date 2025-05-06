@@ -508,9 +508,6 @@ llvm::GlobalVariable* IR_Generator::handle_string_literal(const Expression& expr
 
 // ??? shouldn;t this have been done earlier
 optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& expression) {
-    assert(expression.type->is_numeric() == Maps::DeferredBool::true_ 
-        && "convert_numeric_literal called with a non-num value");
-    
     double num_value;
     if (!(std::stringstream{expression.string_value()} >> num_value))
         return nullopt;
