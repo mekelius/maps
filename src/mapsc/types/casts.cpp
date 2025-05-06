@@ -5,46 +5,24 @@
 #include <cstdlib>
 #include <optional>
 
+extern "C" {
+
+#include "corelib.h"
+
+}
+
 #include "mapsc/logging.hh"
-
 #include "mapsc/types/type_defs.hh"
-
 #include "mapsc/ast/ast_node.hh"
 
 using std::nullopt;
 using Logging::log_error;
 
+
 namespace Maps {
 
+
 namespace {
-
-std::optional<maps_Int> string_to_long(std::string str) {
-    errno = 0;
-    char* end = nullptr;
-    long result = std::strtol(str.c_str(), &end, 10);
-
-    if (*end)
-        return std::nullopt;
-
-    if (errno != 0 && result == 0)
-        return std::nullopt;
-
-    return result;
-}
-
-std::optional<maps_Float> string_to_double(std::string str) {
-    errno = 0;
-    char* end = nullptr;
-    double result = std::strtod(str.c_str(), &end);
-
-    if (*end)
-        return std::nullopt;
-
-    if (errno != 0 && result == 0)
-        return std::nullopt;
-
-    return result;
-}
 
 template<typename T>
 void cast_value(Expression& expression, const Type* type, T value) {
@@ -54,6 +32,7 @@ void cast_value(Expression& expression, const Type* type, T value) {
 }
 
 } // anonymous namespace
+
 
 bool not_castable(const Type*, Expression&) {
     return false;
@@ -113,20 +92,20 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
         return true;
 
     if (*target_type == Int) {
-        auto result = string_to_long(expression.string_value());
-        if (!result)
+        maps_Int result;
+        if (!const_String_to_Int(expression.string_value().c_str(), &result))
             return false;
 
-        cast_value<int>(expression, &Int, *result);
+        cast_value<int>(expression, &Int, result);
         return true;
     }
 
     if (*target_type == Float) {
-        auto result = string_to_double(expression.string_value());
-        if (!result)
+        maps_Float result;
+        if (!const_String_to_Float(expression.string_value().c_str(), &result))
             return false;
 
-        cast_value<maps_Float>(expression, &Float, *result);
+        cast_value<maps_Float>(expression, &Float, result);
         return true;
     }
 
@@ -153,11 +132,11 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
         if (!std::holds_alternative<std::string>(expression.value))
             return false;
 
-        std::optional<maps_Int> result = string_to_long(expression.string_value());
-        if (!result)
+        maps_Int result;
+        if (!const_String_to_Int(expression.string_value().c_str(), &result))
             return false;
 
-        cast_value<maps_Int>(expression, &Int, *result);
+        cast_value<maps_Int>(expression, &Int, result);
         return true;
     }
 

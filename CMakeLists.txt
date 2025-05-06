@@ -19,13 +19,17 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
-include_directories(src)
+include_directories(
+    src 
+    corelib
+)
 
-# ------------------- MAPSC BUILTINS ------------------
+# ------------------- MAPSC CORELIB ------------------
 
-add_library(maps_builtins SHARED
-    maps_builtins/maps_builtins.h
-    maps_builtins/maps_builtins.c
+add_library(maps_core SHARED
+    corelib/maps_datatypes.h
+    corelib/corelib.h
+    corelib/corelib.c
 )
 
 # ------------------- MAPSC PARSER -------------------
@@ -57,6 +61,8 @@ add_library(parser OBJECT
     src/mapsc/parser/full_parse.cpp
 )
 
+target_link_libraries(parser maps_core)
+
 # ---------------------- IR_GEN ------------------------
 
 add_library(ir_gen OBJECT
@@ -76,7 +82,7 @@ add_executable(mapsc
     src/mapsc/llvm/obj_output.cpp
 )
 
-target_link_libraries(mapsc parser ir_gen maps_builtins -lLLVM-19)
+target_link_libraries(mapsc parser ir_gen maps_core -lLLVM-19)
 target_include_directories(mapsc SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 target_compile_options(mapsc PRIVATE 
@@ -91,7 +97,7 @@ add_executable(mapsci
     src/mapsci/repl.cpp
 )
 
-target_link_libraries(mapsci parser ir_gen maps_builtins -lLLVM-19 -ledit -lncurses)
+target_link_libraries(mapsci parser ir_gen maps_core -lLLVM-19 -ledit -lncurses)
 target_include_directories(mapsci SYSTEM PUBLIC 
     /usr/lib/llvm-19/include
     /usr/include/editline
