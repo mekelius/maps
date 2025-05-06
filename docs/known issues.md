@@ -8,3 +8,5 @@
 - PragmaStore WILL break silently when we get to multiple source files
 - Callable::attempt_simplify doesn't delete the nodes properly. Really Callables should hold a pointer to their store.
 - anticipated issue: Callable::attempt_simplify messes with the nodes in a way that is likely to lead to some references to deleted nodes sooner or later
+- ReverseParser looks like a stream but can't handle a lot of stuff and doesn't inherit from ostream
+    - also stack overflow if you feed it a pointer??

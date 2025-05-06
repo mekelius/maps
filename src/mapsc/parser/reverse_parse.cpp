@@ -11,75 +11,83 @@ struct ReverseParseOptions {
 
 constexpr ReverseParseOptions default_options{};
 
-unsigned int indent_stack = 0;
-
-std::string linebreak() {
-    return "\n" + std::string(indent_stack * default_options.indent_width, ' ');
+void ReverseParser::reset() {
+    skipped_initial_linebreak_doubling_ = false;
+    indent_stack_ = 0;
 }
 
-std::ostream& operator<<(std::ostream& ostream, Maps::CallableBody body);
-std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression);
+std::string ReverseParser::linebreak() {
+    return "\n" + std::string(indent_stack_ * default_options.indent_width, ' ');
+}
 
-std::ostream& operator<<(std::ostream& ostream, Maps::Statement* statement) {
-    if (default_options.debug_separators) ostream << "$";
+ReverseParser& ReverseParser::reverse_parse(Maps::AST_Store& ast) {
+    reset();
+    return *this << ast.root_->body << '\n';
+}
 
-    assert(statement && "Reverse parse encountered a nullptr statement");
-    ostream << linebreak();
+ReverseParser& ReverseParser::print_statement(const Maps::Statement& statement) {
+    if (default_options.debug_separators) *this << "$";
 
-    switch (statement->statement_type) {
+    if (skipped_initial_linebreak_doubling_) {
+        *this << linebreak();
+    } else {
+        skipped_initial_linebreak_doubling_ = true;
+    }
+
+    switch (statement.statement_type) {
         case Maps::StatementType::deleted:
             assert(false && "deleted statement encountered in-tree");
-            ostream << "@deleted statement@";
+            *this << "@deleted statement@";
             break;
         case Maps::StatementType::broken:
-            ostream << "@broken statement@";
+            *this << "@broken statement@";
             break;
         case Maps::StatementType::illegal:
-            ostream << "@illegal statement@";
+            *this << "@illegal statement@";
             break;
         case Maps::StatementType::empty:
             break;
 
         case Maps::StatementType::expression_statement:
-            ostream << std::get<Maps::Expression*>(statement->value);
+            *this << std::get<Maps::Expression*>(statement.value);
             break;
 
         case Maps::StatementType::block: {
-            ostream << '{';
-            indent_stack++;
+            *this << '{';
+            indent_stack_++;
 
             for (Maps::Statement* substatement: 
-                    std::get<Maps::Block>(statement->value)) {
-                ostream << substatement;
+                    std::get<Maps::Block>(statement.value)) {
+                *this << substatement;
             }
 
-            indent_stack--;
-            ostream << linebreak() << '}';
+            indent_stack_--;
+            *this << linebreak() << '}';
             break;
         }
 
         case Maps::StatementType::let: {
-            auto [name, body] = std::get<Maps::Let>(statement->value);
+            auto [name, body] = std::get<Maps::Let>(statement.value);
             // assume top level identifiers are created by let-statements
-            ostream << "let " << name;
+            *this << "let " << name;
             
             // noninitialized
             if (!body.index())
                 break;
 
-            ostream << " = " << body;
+            *this << " = " << body;
                 
             // for (const AST::Type* arg_type: arg_types) {
-            //     ostream << arg_type->name << " -> ";
+            //     *this << arg_type->name << " -> ";
             // }
-            // ostream << return type
+            // *this << return type
             break;
         }
 
         case Maps::StatementType::operator_definition: {
-            auto [name, arity, body] = std::get<Maps::OperatorStatementValue>(statement->value);
+            auto [name, arity, body] = std::get<Maps::OperatorStatementValue>(statement.value);
 
-            ostream << "operator " << name << " = "
+            *this << "operator " << name << " = "
                     << (arity == 2 ? "binary" : "unary")
                     << " something something:"
                     << linebreak()
@@ -88,164 +96,160 @@ std::ostream& operator<<(std::ostream& ostream, Maps::Statement* statement) {
         }
         
         case Maps::StatementType::assignment: {
-            auto [name, body] = std::get<Maps::Assignment>(statement->value);
-            ostream << name << " = " << body;
+            auto [name, body] = std::get<Maps::Assignment>(statement.value);
+            *this << name << " = " << body;
             break;
         }
 
         case Maps::StatementType::return_:
-            ostream << "return" 
-                    << std::get<Maps::Expression*>(statement->value);
+            *this << "return" 
+                    << std::get<Maps::Expression*>(statement.value);
             break;
     }
 
-    return ostream << ';';
+    return *this << ';';
 }
 
-std::ostream& operator<<(std::ostream& ostream, Maps::Expression* expression) {
-    assert(expression && "Reverse parse encountered a nullptr expression");
-    if (default_options.debug_separators) ostream << "£";
+ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
+    if (default_options.debug_separators) *this << "£";
 
-    switch (expression->expression_type) {
+    switch (expression.expression_type) {
         case Maps::ExpressionType::string_literal:
-            return ostream << "\"" << std::get<std::string>(expression->value) << "\"";
+            return *this << "\"" << std::get<std::string>(expression.value) << "\"";
         
         case Maps::ExpressionType::numeric_literal:
-            return ostream << std::get<std::string>(expression->value);
+            return *this << std::get<std::string>(expression.value);
 
         case Maps::ExpressionType::termed_expression: {
             // indent_stack++;
-            // ostream << linebreak();
-            ostream << "( ";
+            // *this << linebreak();
+            *this << "( ";
 
             bool pad_left = false;
-            for (Maps::Expression* term: expression->terms()) {
-                ostream << (pad_left ? " " : "");
+            for (Maps::Expression* term: expression.terms()) {
+                *this << (pad_left ? " " : "");
                 
                 if (default_options.include_debug_info)
-                    ostream << "/*term:*/";
+                    *this << "/*term:*/";
 
-                ostream << term;
+                *this << term;
                 pad_left = true; 
             }
             
             // indent_stack--;
-            return ostream << " )";
+            return *this << " )";
         }
 
         case Maps::ExpressionType::operator_reference:
             if (default_options.include_debug_info)
-                ostream << "/*operator-ref:*/ ";
-            return ostream << expression->reference_value()->name;
+                *this << "/*operator-ref:*/ ";
+            return *this << expression.reference_value()->name;
         
         case Maps::ExpressionType::reference:
         case Maps::ExpressionType::type_reference:
         case Maps::ExpressionType::type_operator_reference:
         case Maps::ExpressionType::type_constructor_reference:
             if (default_options.include_debug_info)
-                ostream << "/*reference to:*/ ";
-            return ostream << expression->reference_value()->name;
+                *this << "/*reference to:*/ ";
+            return *this << expression.reference_value()->name;
 
         case Maps::ExpressionType::not_implemented:
-            return ostream << "Expression type not implemented in parser: " + expression->string_value();
+            return *this << "Expression type not implemented in parser: " + expression.string_value();
 
         case Maps::ExpressionType::identifier:
             if (default_options.include_debug_info)
-                ostream << "/*unresolved identifier:*/ ";
-            return ostream << std::get<std::string>(expression->value);
+                *this << "/*unresolved identifier:*/ ";
+            return *this << std::get<std::string>(expression.value);
             
         case Maps::ExpressionType::value:
-            if (*expression->type == Maps::Int)
-                return ostream << std::get<int>(expression->value);
+            if (*expression.type == Maps::Int)
+                return *this << std::get<int>(expression.value);
             
-            if (*expression->type == Maps::Float)
-                return ostream << std::get<double>(expression->value);
+            if (*expression.type == Maps::Float)
+                return *this << std::get<double>(expression.value);
 
-            if (*expression->type == Maps::Boolean)
-                return ostream << (std::get<bool>(expression->value) ? "true" : "false");
+            if (*expression.type == Maps::Boolean)
+                return *this << (std::get<bool>(expression.value) ? "true" : "false");
 
-            if (*expression->type == Maps::String)
-                return ostream << std::get<std::string>(expression->value);
+            if (*expression.type == Maps::String)
+                return *this << std::get<std::string>(expression.value);
 
             assert(false && "valuetype not implemented in reverse parser");
-            return ostream;
+            return *this;
 
         case Maps::ExpressionType::type_field_name:
             if (default_options.include_debug_info)
-                ostream << "/*type field name:*/ ";
-            return ostream << expression->string_value();
+                *this << "/*type field name:*/ ";
+            return *this << expression.string_value();
         case Maps::ExpressionType::type_identifier:
         case Maps::ExpressionType::type_operator_identifier:
         case Maps::ExpressionType::operator_identifier:
             if (default_options.include_debug_info)
-                ostream << "/*unresolved identifier:*/ ";
-            return ostream << expression->string_value();
+                *this << "/*unresolved identifier:*/ ";
+            return *this << expression.string_value();
 
         case Maps::ExpressionType::syntax_error:
-            return ostream << "@SYNTAX ERROR@";
+            return *this << "@SYNTAX ERROR@";
 
         case Maps::ExpressionType::type_construct:
-            return ostream << "@type construct reverse parsing not implemented@";
+            return *this << "@type construct reverse parsing not implemented@";
 
         case Maps::ExpressionType::type_argument: {
-            auto [arg, name] = std::get<Maps::TypeArgument>(expression->value);
-            return ostream << arg << " " << (name ? *name : ""); 
+            auto [arg, name] = std::get<Maps::TypeArgument>(expression.value);
+            return *this << arg << " " << (name ? *name : ""); 
         }
 
         case Maps::ExpressionType::call: {
-            auto [callee, args] = expression->call_value();
+            auto [callee, args] = expression.call_value();
 
             // print as an operator expression
             if (callee->is_operator() && args.size() <= 2) {
                 switch (args.size()) {
                     case 2:
-                        return ostream << "( " << args.at(0) << " " << callee->name << " " << args.at(1) << " )";
+                        return *this << "( " << args.at(0) << " " << callee->name << " " << args.at(1) << " )";
 
                     case 1:
-                        return ostream << "( " << callee->name << args.at(0) << " )";
+                        return *this << "( " << callee->name << args.at(0) << " )";
                    
                     case 0:
-                        return ostream << "(" << callee->name << ")";
+                        return *this << "(" << callee->name << ")";
                 }
             }
 
-            ostream << callee->name << '(';
+            *this << callee->name << '(';
             
             bool first_arg = true;
             for (Maps::Expression* arg_expression: args) {
-                ostream << (first_arg ? "" : ", ") << arg_expression;
+                *this << (first_arg ? "" : ", ") << arg_expression;
                 first_arg = false;
             }            
 
-            return ostream << ')';
+            return *this << ')';
         }
 
         case Maps::ExpressionType::deleted:
-            return ostream << "@deleted expression@";
+            return *this << "@deleted expression@";
 
         case Maps::ExpressionType::missing_arg:
-            return ostream << "@missing arg@";
+            return *this << "@missing arg@";
     }
 }
 
 // reverse-parse expression into the stream
-std::ostream& operator<<(std::ostream& ostream, Maps::CallableBody body) {
+ReverseParser& ReverseParser::print_callable(Maps::CallableBody body) {
     switch (body.index()) {
         case 0:
-            return ostream << "@empty callable body@";
+            return *this << "@empty callable body@";
 
         case 1: // expression
-            return ostream << std::get<Maps::Expression*>(body);
+            return *this << *std::get<Maps::Expression*>(body);
 
         case 2: // statement
-            return ostream << std::get<Maps::Statement*>(body);
+            return *this << *std::get<Maps::Statement*>(body);
 
         default:
             assert(false && "unhandled callable body type in reverse_parse");
-            return ostream;
+            return *this;
     }
 }
 
-void reverse_parse(Maps::AST_Store& ast, std::ostream& ostream) {
-    ostream << ast.root_->body;
-}

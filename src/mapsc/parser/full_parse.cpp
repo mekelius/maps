@@ -18,9 +18,10 @@ using Maps::resolve_identifiers;
 // except if ignore errors is true returns the broken ast
 tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
     parse_source(std::istream& source_is, const ParseOptions& options, std::ostream& debug_ostream) {
-            
+
     unique_ptr<PragmaStore> pragmas = make_unique<PragmaStore>();
-    unique_ptr<AST_Store> ast = make_unique<AST_Store>(); 
+    unique_ptr<AST_Store> ast = make_unique<AST_Store>();
+    ReverseParser reverse_parser{&debug_ostream};
     
     if (!ast->init_builtins()) {
         Logging::log_error("Initializing builtins failed");
@@ -39,8 +40,8 @@ tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
     }
 
     if (options.print_layer1) {
-        debug_ostream <<   "\n------- layer1 -------";
-        reverse_parse(*ast, debug_ostream);
+        debug_ostream <<   "\n------- layer1 -------\n\n";
+        reverse_parser << *ast;
         debug_ostream << "\n----- layer1 end -----\n\n";
     }
 
@@ -60,8 +61,8 @@ tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
     ParserLayer2{ast.get(), pragmas.get()}.run();
 
     if (options.print_layer2) {
-        debug_ostream <<   "------- layer2 -------";
-        reverse_parse(*ast, debug_ostream);
+        debug_ostream <<   "------- layer2 -------\n\n";
+        reverse_parser << *ast;
         debug_ostream << "\n----- layer2 end -----\n\n";
     }
 

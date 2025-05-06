@@ -129,7 +129,7 @@ void REPL::run() {
 
         if (options_.print_reverse_parse) {
             std::cerr << "parsed into:\n";
-            reverse_parse(*ast, std::cout);
+            ReverseParser{&std::cout} << *ast;
             std::cerr << "\n" << std::endl;
         }
 
