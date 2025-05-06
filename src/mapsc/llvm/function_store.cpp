@@ -1,6 +1,9 @@
 #include "function_store.hh"
 
+#include <variant>
+
 #include "mapsc/logging.hh"
+#include "mapsc/types/function_type.hh"
 
 using Logging::log_error, Logging::log_info;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;

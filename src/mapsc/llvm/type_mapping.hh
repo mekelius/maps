@@ -9,6 +9,12 @@
 
 #include "mapsc/types/type.hh"
 
+namespace Maps {
+
+class FunctionType;
+
+} // namespace Maps
+
 namespace IR {
 
 class TypeMap {
@@ -41,6 +47,6 @@ private:
     std::unordered_map<Maps::Type::HashableSignature, llvm::Type*> type_map_;
 };
 
-}
+} // namespace IR
 
 #endif

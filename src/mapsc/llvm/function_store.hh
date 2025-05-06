@@ -5,6 +5,12 @@
 
 #include "mapsc/types/type.hh"
 
+namespace Maps {
+
+class FunctionType;
+    
+} // namespace Maps    
+
 namespace IR {
 
 class FunctionStore {

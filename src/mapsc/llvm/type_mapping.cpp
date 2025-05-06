@@ -2,6 +2,7 @@
 
 #include "mapsc/logging.hh"
 #include "mapsc/types/type_defs.hh"
+#include "mapsc/types/function_type.hh"
 
 using Logging::log_error, Logging::log_info;
 using std::optional, std::nullopt, std::vector;

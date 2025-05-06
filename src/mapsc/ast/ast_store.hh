@@ -9,6 +9,7 @@
 #include <cassert>
 
 #include "mapsc/types/type.hh"
+#include "mapsc/types/type_registry.hh"
 #include "mapsc/types/type_defs.hh"
 
 #include "mapsc/ast/ast_node.hh"

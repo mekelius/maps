@@ -41,6 +41,8 @@ add_library(parser OBJECT
     src/mapsc/types/type_defs.cpp
     src/mapsc/types/casts.cpp
     src/mapsc/types/type_checking.cpp
+    src/mapsc/types/function_type.cpp
+    src/mapsc/types/type_registry.cpp
     
     src/mapsc/ast/ast_node.cpp
     src/mapsc/ast/callable.cpp
@@ -118,6 +120,7 @@ add_executable(tests
     tests/layer2.cpp
     tests/type_specifiers.cpp
     tests/type_casts.cpp
+    tests/function_casts.cpp
 )
 
 target_link_libraries(tests parser)

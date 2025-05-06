@@ -6,6 +6,7 @@
 
 #include "mapsc/logging.hh"
 #include "mapsc/types/type_defs.hh"
+#include "mapsc/types/function_type.hh"
 #include "mapsc/ast/ast_node.hh"
 
 using Logging::log_error;
