@@ -1,4 +1,4 @@
-#include "type_registry.hh"
+#include "type_store.hh"
 
 #include <cassert>
 
@@ -9,7 +9,7 @@ using std::optional, std::nullopt;
 namespace Maps {
 
 // builtin types are inserted so that they can be looked up nicely
-TypeRegistry::TypeRegistry() {
+TypeStore::TypeStore() {
     next_id_ = BUILTIN_TYPES.size();
 
     for (auto type: BUILTIN_TYPES) {
@@ -23,15 +23,15 @@ TypeRegistry::TypeRegistry() {
     // }
 }
 
-bool TypeRegistry::empty() const {
+bool TypeStore::empty() const {
     return types_.empty();
 }
 
-size_t TypeRegistry::size() const {
+size_t TypeStore::size() const {
     return types_.size();
 }
 
-optional<const Type*> TypeRegistry::get(const std::string& identifier) {
+optional<const Type*> TypeStore::get(const std::string& identifier) {
     auto it = types_by_identifier_.find(identifier);
     if (it == types_by_identifier_.end())
         return nullopt;
@@ -39,7 +39,7 @@ optional<const Type*> TypeRegistry::get(const std::string& identifier) {
     return it->second;
 }
 
-const FunctionType* TypeRegistry::get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
+const FunctionType* TypeStore::get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
     bool is_pure) {
 
     Type::HashableSignature signature = make_function_signature(return_type, arg_types, is_pure);
@@ -53,7 +53,7 @@ const FunctionType* TypeRegistry::get_function_type(const Type& return_type, con
     return create_function_type(signature, return_type, arg_types, is_pure);
 }
 
-Type::HashableSignature TypeRegistry::make_function_signature(const Type& return_type, 
+Type::HashableSignature TypeStore::make_function_signature(const Type& return_type, 
     const std::vector<const Type*>& arg_types, bool is_pure) const {
 
     // // nullary pure function is just a value
@@ -82,7 +82,7 @@ Type::HashableSignature TypeRegistry::make_function_signature(const Type& return
 // NOTE: This actually doesn't work. The type structure notation idea is extremely ambiguous...
 // we need to do this by pattern matching instead, but it is what it is
 // TODO: mark purity
-const FunctionType* TypeRegistry::create_function_type(const Type::HashableSignature& signature, 
+const FunctionType* TypeStore::create_function_type(const Type::HashableSignature& signature, 
     const Type& return_type, const std::vector<const Type*>& arg_types, bool is_pure) {
 
     assert(types_by_id_.size() == static_cast<size_t>(next_id_) && 

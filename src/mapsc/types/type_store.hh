@@ -14,9 +14,9 @@ namespace Maps {
 
 // class for holding the shared type information such as traits
 // See identifying_types text file for better description
-class TypeRegistry {
+class TypeStore {
 public:
-    TypeRegistry();
+    TypeStore();
 
     // checks if the TypeRegistry contains any types besides the builtin ones
     bool empty() const;

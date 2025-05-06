@@ -2,7 +2,7 @@
 
 #include "mapsc/ast/ast_node.hh"
 #include "mapsc/types/function_type.hh"
-#include "mapsc/types/type_registry.hh"
+#include "mapsc/types/type_store.hh"
 #include "mapsc/types/type_checking.hh"
 
 using namespace Maps;
@@ -10,7 +10,7 @@ using namespace Maps;
 constexpr auto TSL = TEST_SOURCE_LOCATION;
 
 TEST_CASE("Concretizer should be able to concretize function calls based on arguments") {
-    TypeRegistry types{};
+    TypeStore types{};
     REQUIRE(types.empty());
 
     auto IntIntInt = types.get_function_type(Int, {&Int, &Int});

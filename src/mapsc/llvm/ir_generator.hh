@@ -107,7 +107,7 @@ private:
 
     Maps::PragmaStore* pragmas_;
     const Maps::AST_Store* ast_;
-    Maps::TypeRegistry* maps_types_;
+    Maps::TypeStore* maps_types_;
     
     std::unique_ptr<FunctionStore> function_store_ = std::make_unique<FunctionStore>();
     

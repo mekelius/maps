@@ -9,7 +9,7 @@
 #include <cassert>
 
 #include "mapsc/types/type.hh"
-#include "mapsc/types/type_registry.hh"
+#include "mapsc/types/type_store.hh"
 #include "mapsc/types/type_defs.hh"
 
 #include "mapsc/ast/ast_node.hh"
@@ -104,7 +104,7 @@ public:
     std::unique_ptr<Scope> globals_ = std::make_unique<Scope>(this);
     std::unique_ptr<Scope> builtins_scope_ = std::make_unique<Scope>(this);
 
-    std::unique_ptr<TypeRegistry> types_ = std::make_unique<TypeRegistry>();
+    std::unique_ptr<TypeStore> types_ = std::make_unique<TypeStore>();
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
     // need to walk the tree to find them
