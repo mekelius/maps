@@ -60,24 +60,37 @@ bool not_castable(const Type*, Expression&) {
 }
 
 bool cast_from_Int(const Type* target_type, Expression& expression) {
-    assert(false && "not implemented");
-    if (*target_type == Float)
+    int int_value = std::get<int>(expression.value);
+    if (*target_type == Float) {
+        cast_value<double>(expression, &Float, static_cast<double>(int_value));
         return true;
+    }
 
-    if (*target_type == Number)
+    if (*target_type == Number) {
+        cast_value<std::string>(expression, &Number, std::to_string(int_value));
         return true;
+    }
 
-    if (*target_type == String)
+    if (*target_type == String) {
+        cast_value<std::string>(expression, &String, std::to_string(int_value));
         return true;
+    }
 
     return false;
 }
 
 bool cast_from_Float(const Type* target_type, Expression& expression) {
-    assert(false && "not implemented");
+    double double_value = std::get<double>(expression.value);
 
-    if (*target_type == String)
+    if (*target_type == Number) {
+        cast_value<std::string>(expression, &Number, std::to_string(double_value));
         return true;
+    }
+
+    if (*target_type == String) {
+        cast_value<std::string>(expression, &String, std::to_string(double_value));
+        return true;
+    }
 
     return false;
 }
@@ -122,10 +135,12 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
 }
 
 bool cast_from_Boolean(const Type* target_type, Expression& expression) {
-    assert(false && "not implemented");
+    if (*target_type == String) {
+        std::string str_value = std::get<bool>(expression.value) ? "true" : "false";
+        cast_value<std::string>(expression, &String, str_value);
 
-    if (*target_type == String)
         return true;
+    }
 
     return false;
 }
