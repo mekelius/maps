@@ -155,7 +155,7 @@ ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
             
         case Maps::ExpressionType::value:
             if (*expression.type == Maps::Int)
-                return *this << std::get<int>(expression.value);
+                return *this << std::get<long>(expression.value);
             
             if (*expression.type == Maps::Float)
                 return *this << std::get<double>(expression.value);

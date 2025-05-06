@@ -18,10 +18,10 @@ namespace Maps {
 
 namespace {
 
-std::optional<int> string_to_int(std::string str) {
+std::optional<long> string_to_long(std::string str) {
     errno = 0;
     char* end = nullptr;
-    int result = std::strtol(str.c_str(), &end, 10);
+    long result = std::strtol(str.c_str(), &end, 10);
 
     if (*end)
         return std::nullopt;
@@ -60,7 +60,7 @@ bool not_castable(const Type*, Expression&) {
 }
 
 bool cast_from_Int(const Type* target_type, Expression& expression) {
-    int int_value = std::get<int>(expression.value);
+    int int_value = std::get<long>(expression.value);
     if (*target_type == Float) {
         cast_value<double>(expression, &Float, static_cast<double>(int_value));
         return true;
@@ -113,7 +113,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
         return true;
 
     if (*target_type == Int) {
-        auto result = string_to_int(expression.string_value());
+        auto result = string_to_long(expression.string_value());
         if (!result)
             return false;
 
@@ -153,11 +153,11 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
         if (!std::holds_alternative<std::string>(expression.value))
             return false;
 
-        std::optional<int> result = string_to_int(expression.string_value());
+        std::optional<long> result = string_to_long(expression.string_value());
         if (!result)
             return false;
 
-        cast_value<int>(expression, &Int, *result);
+        cast_value<long>(expression, &Int, *result);
         return true;
     }
 

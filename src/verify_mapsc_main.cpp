@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
         std::cout << "layer2 done\n\n";
 
         std::cout << separator('-', "Parsed into"); 
-        reverse_parse(*ast, std::cout);
+        ReverseParser{&std::cout} << *ast;
         std::cout << "\n" << std::endl;
     }
 

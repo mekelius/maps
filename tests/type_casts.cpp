@@ -87,8 +87,8 @@ TEST_CASE("Type concretizer should handle an Int Number") {
 
     CHECK(success);
     CHECK(*expr.type == Int);
-    CHECK(holds_alternative<int>(expr.value));
-    CHECK(get<int>(expr.value) == 34);
+    CHECK(holds_alternative<long>(expr.value));
+    CHECK(get<long>(expr.value) == 34);
 }
 
 TEST_CASE("Type concretizer should handle a Float Number") {

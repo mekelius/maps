@@ -431,10 +431,10 @@ llvm::Value* IR_Generator::handle_call(const Maps::CallExpressionValue& call) {
 llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
     // TODO: make typeids known at compile time so this can be a switch
     if (*expression.type == Maps::Int) {
-        assert(std::holds_alternative<int>(expression.value) && 
+        assert(std::holds_alternative<long>(expression.value) && 
             "type on expression didn't match value");
         return llvm::ConstantInt::get(*context_, 
-            llvm::APInt(64, std::get<int>(expression.value), true));
+            llvm::APInt(64, std::get<long>(expression.value), true));
     // } else if (*expression.type == Maps::String) {
 
     } else {
@@ -447,9 +447,9 @@ llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
 optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression) {
     switch (expression.type->id_) {
         case Maps::Int.id_:
-            assert(std::holds_alternative<int>(expression.value) && 
+            assert(std::holds_alternative<long>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
-            return llvm::ConstantInt::get(*context_, llvm::APInt(64, std::get<int>(expression.value)));
+            return llvm::ConstantInt::get(*context_, llvm::APInt(64, std::get<long>(expression.value)));
 
         case Maps::Float.id_:
             assert(std::holds_alternative<double>(expression.value) && 

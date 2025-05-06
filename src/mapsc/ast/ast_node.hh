@@ -82,7 +82,7 @@ struct TermedExpressionValue {
 
 using ExpressionValue = std::variant<
     std::monostate,
-    int,
+    long,
     double,
     bool,
     std::string,
