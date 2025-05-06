@@ -29,6 +29,12 @@ bool TypeConcretizer::concretize_expression(Expression& expression) {
 }
 
 bool TypeConcretizer::concretize_call(Expression& call) {
+    if (call.type->is_native() == db_true)
+        return true;
+    
+    if (call.type->is_castable_to_native() == db_false)
+        return false;
+
     return false;
 }
 
