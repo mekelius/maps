@@ -7,7 +7,18 @@
 
 class ReverseParser final {
 public:
-    ReverseParser(std::ostream* ostream): ostream_(ostream) {}
+    struct Options {
+        bool include_debug_info = false;
+        bool debug_separators = false;
+        unsigned int indent_width = 4;
+    };
+
+    ReverseParser(std::ostream* ostream)
+        :ostream_(ostream) {}
+    ReverseParser(std::ostream* ostream, const Options& options)
+        :ostream_(ostream), options_(options) {}
+
+    void set_options(const Options& options) { options_ = options; }
 
     ReverseParser& operator<<(const std::string& str) { *ostream_ << str; return *this; }
     ReverseParser& operator<<(const char ch) { *ostream_ << ch; return *this; }
@@ -25,6 +36,8 @@ private:
     ReverseParser& print_callable(Maps::CallableBody body);
 
     std::ostream* ostream_;
+
+    Options options_ = {};
     
     bool skipped_initial_linebreak_doubling_ = false;
     unsigned int indent_stack_ = 0;

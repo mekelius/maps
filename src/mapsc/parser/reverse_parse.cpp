@@ -3,21 +3,13 @@
 #include "mapsc/logging.hh"
 #include "reverse_parse.hh"
 
-struct ReverseParseOptions {
-    bool include_debug_info = false;
-    bool debug_separators = false;
-    unsigned int indent_width = 4;
-};
-
-constexpr ReverseParseOptions default_options{};
-
 void ReverseParser::reset() {
     skipped_initial_linebreak_doubling_ = false;
     indent_stack_ = 0;
 }
 
 std::string ReverseParser::linebreak() {
-    return "\n" + std::string(indent_stack_ * default_options.indent_width, ' ');
+    return "\n" + std::string(indent_stack_ * options_.indent_width, ' ');
 }
 
 ReverseParser& ReverseParser::reverse_parse(Maps::AST_Store& ast) {
@@ -26,7 +18,7 @@ ReverseParser& ReverseParser::reverse_parse(Maps::AST_Store& ast) {
 }
 
 ReverseParser& ReverseParser::print_statement(const Maps::Statement& statement) {
-    if (default_options.debug_separators) *this << "$";
+    if (options_.debug_separators) *this << "$";
 
     if (skipped_initial_linebreak_doubling_) {
         *this << linebreak();
@@ -111,7 +103,7 @@ ReverseParser& ReverseParser::print_statement(const Maps::Statement& statement) 
 }
 
 ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
-    if (default_options.debug_separators) *this << "£";
+    if (options_.debug_separators) *this << "£";
 
     switch (expression.expression_type) {
         case Maps::ExpressionType::string_literal:
@@ -129,7 +121,7 @@ ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
             for (Maps::Expression* term: expression.terms()) {
                 *this << (pad_left ? " " : "");
                 
-                if (default_options.include_debug_info)
+                if (options_.include_debug_info)
                     *this << "/*term:*/";
 
                 *this << term;
@@ -141,7 +133,7 @@ ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
         }
 
         case Maps::ExpressionType::operator_reference:
-            if (default_options.include_debug_info)
+            if (options_.include_debug_info)
                 *this << "/*operator-ref:*/ ";
             return *this << expression.reference_value()->name;
         
@@ -149,7 +141,7 @@ ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
         case Maps::ExpressionType::type_reference:
         case Maps::ExpressionType::type_operator_reference:
         case Maps::ExpressionType::type_constructor_reference:
-            if (default_options.include_debug_info)
+            if (options_.include_debug_info)
                 *this << "/*reference to:*/ ";
             return *this << expression.reference_value()->name;
 
@@ -157,7 +149,7 @@ ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
             return *this << "Expression type not implemented in parser: " + expression.string_value();
 
         case Maps::ExpressionType::identifier:
-            if (default_options.include_debug_info)
+            if (options_.include_debug_info)
                 *this << "/*unresolved identifier:*/ ";
             return *this << std::get<std::string>(expression.value);
             
@@ -178,13 +170,13 @@ ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
             return *this;
 
         case Maps::ExpressionType::type_field_name:
-            if (default_options.include_debug_info)
+            if (options_.include_debug_info)
                 *this << "/*type field name:*/ ";
             return *this << expression.string_value();
         case Maps::ExpressionType::type_identifier:
         case Maps::ExpressionType::type_operator_identifier:
         case Maps::ExpressionType::operator_identifier:
-            if (default_options.include_debug_info)
+            if (options_.include_debug_info)
                 *this << "/*unresolved identifier:*/ ";
             return *this << expression.string_value();
 
