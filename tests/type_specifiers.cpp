@@ -34,7 +34,7 @@ TEST_CASE("Should be able to cast a string literal into Int") {
     TermedExpressionParser{&ast, expr}.run();
 
     CHECK(*expr->type == Int);
-    CHECK(std::get<long>(expr->value) == 23);
+    CHECK(std::get<int_t>(expr->value) == 23);
 }
 
 TEST_CASE("Integration test: parse_source should parse a numberliteral with the correct type") {

@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     
     std::cerr << "Parsing source file(s)...\n";
 
-    auto [success, ast, pragmas] = parse_source(source_is);
+    auto [success, ast, pragmas] = Maps::parse_source(source_is);
     if (!success) {
         Logging::log_error("parsing failed");
         return EXIT_FAILURE;

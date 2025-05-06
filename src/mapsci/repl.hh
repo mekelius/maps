@@ -77,7 +77,7 @@ private:
     JIT_Manager* jit_;
     llvm::raw_ostream* error_stream_;
     Options options_ = {};
-    ParseOptions parse_options_ = {};
+    Maps::ParseOptions parse_options_ = {};
 
     // std::unique_ptr<Mapsc::Pragmas> pragmas_{};
 };

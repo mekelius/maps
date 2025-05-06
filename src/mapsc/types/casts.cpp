@@ -18,7 +18,7 @@ namespace Maps {
 
 namespace {
 
-std::optional<long> string_to_long(std::string str) {
+std::optional<int_t> string_to_long(std::string str) {
     errno = 0;
     char* end = nullptr;
     long result = std::strtol(str.c_str(), &end, 10);
@@ -32,7 +32,7 @@ std::optional<long> string_to_long(std::string str) {
     return result;
 }
 
-std::optional<double> string_to_double(std::string str) {
+std::optional<float_t> string_to_double(std::string str) {
     errno = 0;
     char* end = nullptr;
     double result = std::strtod(str.c_str(), &end);
@@ -60,9 +60,9 @@ bool not_castable(const Type*, Expression&) {
 }
 
 bool cast_from_Int(const Type* target_type, Expression& expression) {
-    int int_value = std::get<long>(expression.value);
+    int int_value = std::get<int_t>(expression.value);
     if (*target_type == Float) {
-        cast_value<double>(expression, &Float, static_cast<double>(int_value));
+        cast_value<float_t>(expression, &Float, static_cast<float_t>(int_value));
         return true;
     }
 
@@ -80,7 +80,7 @@ bool cast_from_Int(const Type* target_type, Expression& expression) {
 }
 
 bool cast_from_Float(const Type* target_type, Expression& expression) {
-    double double_value = std::get<double>(expression.value);
+    double double_value = std::get<float_t>(expression.value);
 
     if (*target_type == Number) {
         cast_value<std::string>(expression, &Number, std::to_string(double_value));
@@ -126,7 +126,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
         if (!result)
             return false;
 
-        cast_value<double>(expression, &Float, *result);
+        cast_value<float_t>(expression, &Float, *result);
         return true;
     }
 
@@ -153,11 +153,11 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
         if (!std::holds_alternative<std::string>(expression.value))
             return false;
 
-        std::optional<long> result = string_to_long(expression.string_value());
+        std::optional<int_t> result = string_to_long(expression.string_value());
         if (!result)
             return false;
 
-        cast_value<long>(expression, &Int, *result);
+        cast_value<int_t>(expression, &Int, *result);
         return true;
     }
 

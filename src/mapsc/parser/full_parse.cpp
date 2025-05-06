@@ -11,8 +11,8 @@
 
 using std::tuple, std::optional, std::make_optional, std::nullopt;
 using std::unique_ptr, std::make_unique;
-using Maps::AST_Store, Maps::PragmaStore, Maps::ParserLayer1, Maps::ParserLayer2, Maps::SimpleTypeChecker;
-using Maps::resolve_identifiers;
+
+namespace Maps {
 
 // if parse fails at any point, returns nullopt, 
 // except if ignore errors is true returns the broken ast
@@ -81,3 +81,5 @@ tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
 
     return {true, std::move(ast), std::move(pragmas)};
 }
+
+} // namespace Maps

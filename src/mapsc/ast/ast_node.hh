@@ -4,6 +4,8 @@
 #include <string>
 #include <tuple>
 
+#include "mapsc/types/number_types_used.hh"
+
 #include "mapsc/source.hh"
 
 #include "mapsc/types/type_defs.hh"
@@ -82,8 +84,8 @@ struct TermedExpressionValue {
 
 using ExpressionValue = std::variant<
     std::monostate,
-    long,
-    double,
+    int_t,
+    float_t,
     bool,
     std::string,
     Callable*,                       // for references to operators and functions

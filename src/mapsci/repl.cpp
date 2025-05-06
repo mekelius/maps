@@ -28,6 +28,7 @@
 
 using std::optional, std::nullopt;
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple;
+using Maps::ParseOptions, Maps::ReverseParser, Maps::ParseStage;
 
 constexpr std::string_view DEFAULT_MODULE_NAME = "interpreted";
 constexpr std::string_view PROMPT = "mapsci> ";

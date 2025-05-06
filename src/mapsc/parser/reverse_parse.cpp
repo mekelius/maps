@@ -3,6 +3,8 @@
 #include "mapsc/logging.hh"
 #include "reverse_parse.hh"
 
+namespace Maps {
+
 void ReverseParser::reset() {
     skipped_initial_linebreak_doubling_ = false;
     indent_stack_ = 0;
@@ -12,12 +14,12 @@ std::string ReverseParser::linebreak() {
     return "\n" + std::string(indent_stack_ * options_.indent_width, ' ');
 }
 
-ReverseParser& ReverseParser::reverse_parse(Maps::AST_Store& ast) {
+ReverseParser& ReverseParser::reverse_parse(AST_Store& ast) {
     reset();
     return *this << ast.root_->body << '\n';
 }
 
-ReverseParser& ReverseParser::print_statement(const Maps::Statement& statement) {
+ReverseParser& ReverseParser::print_statement(const Statement& statement) {
     if (options_.debug_separators) *this << "$";
 
     if (skipped_initial_linebreak_doubling_) {
@@ -27,29 +29,29 @@ ReverseParser& ReverseParser::print_statement(const Maps::Statement& statement) 
     }
 
     switch (statement.statement_type) {
-        case Maps::StatementType::deleted:
+        case StatementType::deleted:
             assert(false && "deleted statement encountered in-tree");
             *this << "@deleted statement@";
             break;
-        case Maps::StatementType::broken:
+        case StatementType::broken:
             *this << "@broken statement@";
             break;
-        case Maps::StatementType::illegal:
+        case StatementType::illegal:
             *this << "@illegal statement@";
             break;
-        case Maps::StatementType::empty:
+        case StatementType::empty:
             break;
 
-        case Maps::StatementType::expression_statement:
-            *this << std::get<Maps::Expression*>(statement.value);
+        case StatementType::expression_statement:
+            *this << std::get<Expression*>(statement.value);
             break;
 
-        case Maps::StatementType::block: {
+        case StatementType::block: {
             *this << '{';
             indent_stack_++;
 
-            for (Maps::Statement* substatement: 
-                    std::get<Maps::Block>(statement.value)) {
+            for (Statement* substatement: 
+                    std::get<Block>(statement.value)) {
                 *this << substatement;
             }
 
@@ -58,8 +60,8 @@ ReverseParser& ReverseParser::print_statement(const Maps::Statement& statement) 
             break;
         }
 
-        case Maps::StatementType::let: {
-            auto [name, body] = std::get<Maps::Let>(statement.value);
+        case StatementType::let: {
+            auto [name, body] = std::get<Let>(statement.value);
             // assume top level identifiers are created by let-statements
             *this << "let " << name;
             
@@ -76,8 +78,8 @@ ReverseParser& ReverseParser::print_statement(const Maps::Statement& statement) 
             break;
         }
 
-        case Maps::StatementType::operator_definition: {
-            auto [name, arity, body] = std::get<Maps::OperatorStatementValue>(statement.value);
+        case StatementType::operator_definition: {
+            auto [name, arity, body] = std::get<OperatorStatementValue>(statement.value);
 
             *this << "operator " << name << " = "
                     << (arity == 2 ? "binary" : "unary")
@@ -87,38 +89,38 @@ ReverseParser& ReverseParser::print_statement(const Maps::Statement& statement) 
             break;
         }
         
-        case Maps::StatementType::assignment: {
-            auto [name, body] = std::get<Maps::Assignment>(statement.value);
+        case StatementType::assignment: {
+            auto [name, body] = std::get<Assignment>(statement.value);
             *this << name << " = " << body;
             break;
         }
 
-        case Maps::StatementType::return_:
+        case StatementType::return_:
             *this << "return" 
-                    << std::get<Maps::Expression*>(statement.value);
+                    << std::get<Expression*>(statement.value);
             break;
     }
 
     return *this << ';';
 }
 
-ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
+ReverseParser& ReverseParser::print_expression(Expression& expression) {
     if (options_.debug_separators) *this << "£";
 
     switch (expression.expression_type) {
-        case Maps::ExpressionType::string_literal:
+        case ExpressionType::string_literal:
             return *this << "\"" << std::get<std::string>(expression.value) << "\"";
         
-        case Maps::ExpressionType::numeric_literal:
+        case ExpressionType::numeric_literal:
             return *this << std::get<std::string>(expression.value);
 
-        case Maps::ExpressionType::termed_expression: {
+        case ExpressionType::termed_expression: {
             // indent_stack++;
             // *this << linebreak();
             *this << "( ";
 
             bool pad_left = false;
-            for (Maps::Expression* term: expression.terms()) {
+            for (Expression* term: expression.terms()) {
                 *this << (pad_left ? " " : "");
                 
                 if (options_.include_debug_info)
@@ -132,66 +134,66 @@ ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
             return *this << " )";
         }
 
-        case Maps::ExpressionType::operator_reference:
+        case ExpressionType::operator_reference:
             if (options_.include_debug_info)
                 *this << "/*operator-ref:*/ ";
             return *this << expression.reference_value()->name;
         
-        case Maps::ExpressionType::reference:
-        case Maps::ExpressionType::type_reference:
-        case Maps::ExpressionType::type_operator_reference:
-        case Maps::ExpressionType::type_constructor_reference:
+        case ExpressionType::reference:
+        case ExpressionType::type_reference:
+        case ExpressionType::type_operator_reference:
+        case ExpressionType::type_constructor_reference:
             if (options_.include_debug_info)
                 *this << "/*reference to:*/ ";
             return *this << expression.reference_value()->name;
 
-        case Maps::ExpressionType::not_implemented:
+        case ExpressionType::not_implemented:
             return *this << "Expression type not implemented in parser: " + expression.string_value();
 
-        case Maps::ExpressionType::identifier:
+        case ExpressionType::identifier:
             if (options_.include_debug_info)
                 *this << "/*unresolved identifier:*/ ";
             return *this << std::get<std::string>(expression.value);
             
-        case Maps::ExpressionType::value:
-            if (*expression.type == Maps::Int)
-                return *this << std::get<long>(expression.value);
+        case ExpressionType::value:
+            if (*expression.type == Int)
+                return *this << std::get<int_t>(expression.value);
             
-            if (*expression.type == Maps::Float)
-                return *this << std::get<double>(expression.value);
+            if (*expression.type == Float)
+                return *this << std::get<float_t>(expression.value);
 
-            if (*expression.type == Maps::Boolean)
+            if (*expression.type == Boolean)
                 return *this << (std::get<bool>(expression.value) ? "true" : "false");
 
-            if (*expression.type == Maps::String)
+            if (*expression.type == String)
                 return *this << std::get<std::string>(expression.value);
 
             assert(false && "valuetype not implemented in reverse parser");
             return *this;
 
-        case Maps::ExpressionType::type_field_name:
+        case ExpressionType::type_field_name:
             if (options_.include_debug_info)
                 *this << "/*type field name:*/ ";
             return *this << expression.string_value();
-        case Maps::ExpressionType::type_identifier:
-        case Maps::ExpressionType::type_operator_identifier:
-        case Maps::ExpressionType::operator_identifier:
+        case ExpressionType::type_identifier:
+        case ExpressionType::type_operator_identifier:
+        case ExpressionType::operator_identifier:
             if (options_.include_debug_info)
                 *this << "/*unresolved identifier:*/ ";
             return *this << expression.string_value();
 
-        case Maps::ExpressionType::syntax_error:
+        case ExpressionType::syntax_error:
             return *this << "@SYNTAX ERROR@";
 
-        case Maps::ExpressionType::type_construct:
+        case ExpressionType::type_construct:
             return *this << "@type construct reverse parsing not implemented@";
 
-        case Maps::ExpressionType::type_argument: {
-            auto [arg, name] = std::get<Maps::TypeArgument>(expression.value);
+        case ExpressionType::type_argument: {
+            auto [arg, name] = std::get<TypeArgument>(expression.value);
             return *this << arg << " " << (name ? *name : ""); 
         }
 
-        case Maps::ExpressionType::call: {
+        case ExpressionType::call: {
             auto [callee, args] = expression.call_value();
 
             // print as an operator expression
@@ -211,7 +213,7 @@ ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
             *this << callee->name << '(';
             
             bool first_arg = true;
-            for (Maps::Expression* arg_expression: args) {
+            for (Expression* arg_expression: args) {
                 *this << (first_arg ? "" : ", ") << arg_expression;
                 first_arg = false;
             }            
@@ -219,25 +221,25 @@ ReverseParser& ReverseParser::print_expression(Maps::Expression& expression) {
             return *this << ')';
         }
 
-        case Maps::ExpressionType::deleted:
+        case ExpressionType::deleted:
             return *this << "@deleted expression@";
 
-        case Maps::ExpressionType::missing_arg:
+        case ExpressionType::missing_arg:
             return *this << "@missing arg@";
     }
 }
 
 // reverse-parse expression into the stream
-ReverseParser& ReverseParser::print_callable(Maps::CallableBody body) {
+ReverseParser& ReverseParser::print_callable(CallableBody body) {
     switch (body.index()) {
         case 0:
             return *this << "@empty callable body@";
 
         case 1: // expression
-            return *this << *std::get<Maps::Expression*>(body);
+            return *this << *std::get<Expression*>(body);
 
         case 2: // statement
-            return *this << *std::get<Maps::Statement*>(body);
+            return *this << *std::get<Statement*>(body);
 
         default:
             assert(false && "unhandled callable body type in reverse_parse");
@@ -245,3 +247,4 @@ ReverseParser& ReverseParser::print_callable(Maps::CallableBody body) {
     }
 }
 
+} // namespace Maps
