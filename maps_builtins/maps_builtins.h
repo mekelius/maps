@@ -1,11 +1,11 @@
 #ifndef __MAPS_BUILTINS_H
 #define __MAPS_BUILTINS_H
 
-#include <stdbool.h>
+#include "maps_datatypes.h"
 
-void print_Boolean(bool b);
-void print_Int(int i);
-void print_String(const char* str);
-void print_Float(double d);
+void print_Boolean(maps_Boolean b);
+void print_Int(maps_Int i);
+void print_String(maps_const_String str);
+void print_Float(maps_Float d);
 
 #endif

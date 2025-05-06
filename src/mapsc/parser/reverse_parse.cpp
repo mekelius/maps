@@ -157,10 +157,10 @@ ReverseParser& ReverseParser::print_expression(Expression& expression) {
             
         case ExpressionType::value:
             if (*expression.type == Int)
-                return *this << std::get<int_t>(expression.value);
+                return *this << std::get<maps_Int>(expression.value);
             
             if (*expression.type == Float)
-                return *this << std::get<float_t>(expression.value);
+                return *this << std::get<maps_Float>(expression.value);
 
             if (*expression.type == Boolean)
                 return *this << (std::get<bool>(expression.value) ? "true" : "false");

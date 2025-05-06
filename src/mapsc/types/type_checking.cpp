@@ -35,6 +35,10 @@ bool TypeConcretizer::concretize_call(Expression& call) {
     if (call.type->is_castable_to_native() == db_false)
         return false;
 
+    // assuming no inline, we can't do much to the return value
+    // 
+    // take the return value and 
+
     return false;
 }
 

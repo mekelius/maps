@@ -32,7 +32,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     }
 
     // insert arithmetic functions
-    const Maps::FunctionType* maps_IntIntInt = generator.maps_types_->get_function_type(
+    const Maps::FunctionType* IntIntInt = generator.maps_types_->get_function_type(
         Maps::Int, {&Maps::Int, &Maps::Int});
     llvm::FunctionType* llvm_IntIntInt = llvm::FunctionType::get(generator.types_.int_t, {generator.types_.int_t, generator.types_.int_t}, false);
     
@@ -40,7 +40,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         Maps::Float, {&Maps::Float, &Maps::Float});
     llvm::FunctionType* llvm_FloatFloatFloat = llvm::FunctionType::get(generator.types_.double_t, {generator.types_.double_t, generator.types_.double_t}, false);
     
-    optional<llvm::Function*> int_add = generator.function_definition("+", *maps_IntIntInt, llvm_IntIntInt);
+    optional<llvm::Function*> int_add = generator.function_definition("+", *IntIntInt, llvm_IntIntInt);
 
     if (!int_add) {
         log_error("creating builtin + failed");
@@ -53,7 +53,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
-    optional<llvm::Function*> int_mul = generator.function_definition("*", *maps_IntIntInt, llvm_IntIntInt);
+    optional<llvm::Function*> int_mul = generator.function_definition("*", *IntIntInt, llvm_IntIntInt);
 
     if (!int_mul) {
         log_error("creating builtin * failed");
@@ -66,7 +66,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
-    optional<llvm::Function*> int_sub = generator.function_definition("-", *maps_IntIntInt, llvm_IntIntInt);
+    optional<llvm::Function*> int_sub = generator.function_definition("-", *IntIntInt, llvm_IntIntInt);
 
     if (!int_sub) {
         log_error("creating builtin - failed");

@@ -431,10 +431,10 @@ llvm::Value* IR_Generator::handle_call(const Maps::CallExpressionValue& call) {
 llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
     // TODO: make typeids known at compile time so this can be a switch
     if (*expression.type == Maps::Int) {
-        assert(std::holds_alternative<Maps::int_t>(expression.value) && 
+        assert(std::holds_alternative<maps_Int>(expression.value) && 
             "type on expression didn't match value");
         return llvm::ConstantInt::get(*context_, 
-            llvm::APInt(64, std::get<Maps::int_t>(expression.value), true));
+            llvm::APInt(64, std::get<maps_Int>(expression.value), true));
     // } else if (*expression.type == Maps::String) {
 
     } else {
@@ -447,14 +447,14 @@ llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
 optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression) {
     switch (expression.type->id_) {
         case Maps::Int.id_:
-            assert(std::holds_alternative<Maps::int_t>(expression.value) && 
+            assert(std::holds_alternative<maps_Int>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
-            return llvm::ConstantInt::get(*context_, llvm::APInt(64, std::get<Maps::int_t>(expression.value)));
+            return llvm::ConstantInt::get(*context_, llvm::APInt(64, std::get<maps_Int>(expression.value)));
 
         case Maps::Float.id_:
-            assert(std::holds_alternative<Maps::float_t>(expression.value) && 
+            assert(std::holds_alternative<maps_Float>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
-            return llvm::ConstantFP::get(*context_, llvm::APFloat(std::get<Maps::float_t>(expression.value)));
+            return llvm::ConstantFP::get(*context_, llvm::APFloat(std::get<maps_Float>(expression.value)));
 
         case Maps::String.id_:
             assert(std::holds_alternative<std::string>(expression.value) && 

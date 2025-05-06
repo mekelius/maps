@@ -15,8 +15,8 @@ TEST_CASE("Should be able to cast a string into Float") {
 
     CHECK(String.cast_to(&Float, expr));
     CHECK(*expr.type == Float);
-    CHECK(holds_alternative<float_t>(expr.value));
-    CHECK(get<float_t>(expr.value) == 324.63);
+    CHECK(holds_alternative<maps_Float>(expr.value));
+    CHECK(get<maps_Float>(expr.value) == 324.63);
 }
 
 TEST_CASE("Should be able to cast a Boolean into String") {
@@ -43,8 +43,8 @@ TEST_CASE("Should be able to cast an Int into Float") {
 
     CHECK(Int.cast_to(&Float, expr));
     CHECK(*expr.type == Float);
-    CHECK(holds_alternative<float_t>(expr.value));
-    CHECK(get<float_t>(expr.value) == 324);
+    CHECK(holds_alternative<maps_Float>(expr.value));
+    CHECK(get<maps_Float>(expr.value) == 324);
 }
 
 TEST_CASE("Should be able to cast a Float into String") {
@@ -71,8 +71,8 @@ TEST_CASE("Should be able to cast a Number with an int value into Float") {
 
     CHECK(Number.cast_to(&Float, expr));
     CHECK(*expr.type == Float);
-    CHECK(holds_alternative<float_t>(expr.value));
-    CHECK(get<float_t>(expr.value) == 999);
+    CHECK(holds_alternative<maps_Float>(expr.value));
+    CHECK(get<maps_Float>(expr.value) == 999);
 }
 
 TEST_CASE("Type concretizer should handle an Int Number") {
@@ -87,8 +87,8 @@ TEST_CASE("Type concretizer should handle an Int Number") {
 
     CHECK(success);
     CHECK(*expr.type == Int);
-    CHECK(holds_alternative<int_t>(expr.value));
-    CHECK(get<int_t>(expr.value) == 34);
+    CHECK(holds_alternative<maps_Int>(expr.value));
+    CHECK(get<maps_Int>(expr.value) == 34);
 }
 
 TEST_CASE("Type concretizer should handle a Float Number") {
@@ -103,8 +103,8 @@ TEST_CASE("Type concretizer should handle a Float Number") {
 
     CHECK(success);
     CHECK(*expr.type == Float);
-    CHECK(holds_alternative<float_t>(expr.value));
-    CHECK(get<float_t>(expr.value) == 3.4);
+    CHECK(holds_alternative<maps_Float>(expr.value));
+    CHECK(get<maps_Float>(expr.value) == 3.4);
 }
 
 TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
@@ -119,6 +119,6 @@ TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
 
     CHECK(success);
     CHECK(*expr.type == Float);
-    CHECK(holds_alternative<float_t>(expr.value));
-    CHECK(get<float_t>(expr.value) == 3.4);
+    CHECK(holds_alternative<maps_Float>(expr.value));
+    CHECK(get<maps_Float>(expr.value) == 3.4);
 }

@@ -74,6 +74,9 @@
 - Defining mapping providers
 - Laziness
 
+#### At some point
+
+- Add Int64 (and Int32 as an alias for Int)
 
 #### Possible simplifications
 

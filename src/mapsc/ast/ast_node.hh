@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "mapsc/types/number_types_used.hh"
+#include "common/maps_datatypes.h"
 
 #include "mapsc/source.hh"
 
@@ -85,8 +85,8 @@ struct TermedExpressionValue {
 
 using ExpressionValue = std::variant<
     std::monostate,
-    int_t,
-    float_t,
+    maps_Int,
+    maps_Float,
     bool,
     std::string,
     Callable*,                       // for references to operators and functions
