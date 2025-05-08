@@ -30,6 +30,7 @@ void LogLevel::init(LogLevel log_level) {
     LogLevel::debug.set_message_type(MessageType::parser_debug_identifier, true);
     LogLevel::debug.set_message_type(MessageType::pragma_debug, true);
     LogLevel::debug.set_message_type(MessageType::ir_gen_debug, true);
+    LogLevel::debug.set_message_type(MessageType::post_parse_debug, true);
 
     Settings::set_loglevel(log_level);
 }

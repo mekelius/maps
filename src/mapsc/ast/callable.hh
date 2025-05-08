@@ -40,9 +40,9 @@ public:
 
     // tries to remove braces etc.
     // !!!: this may mark the node pointed to as deleted
-    void attempt_simplify();
+    bool attempt_simplify();
     // the parameter must be a call expression
-    void attempt_inline(Expression* call);
+    [[nodiscard]] bool attempt_inline(Expression* call);
 
     CallableBody body;
     std::string name;

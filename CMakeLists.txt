@@ -43,6 +43,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/builtins.cpp
     src/mapsc/name_resolution.cpp
     src/mapsc/inline.cpp
+    src/mapsc/simplify.cpp
 
     src/mapsc/types/type.cpp
     src/mapsc/types/type_defs.cpp
@@ -130,6 +131,7 @@ add_executable(tests
     tests/type_specifiers.cpp
     tests/type_casts.cpp
     tests/function_casts.cpp
+    tests/inline.cpp
 )
 
 target_link_libraries(tests mapsc_frontend)

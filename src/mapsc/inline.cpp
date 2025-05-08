@@ -1,12 +1,13 @@
 #include "inline.hh"
 
 #include <cassert>
+#include <variant>
 
 #include "mapsc/logging.hh"
 #include "mapsc/ast/ast_node.hh"
 #include "mapsc/types/function_type.hh"
 
-using Logging::log_error;
+using Logging::log_error, Logging::MessageType;
 
 namespace Maps {
 
@@ -22,18 +23,17 @@ bool inline_call(Expression& expression, Callable& callable) {
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
 
-    return false;
     auto [callee, args] = expression.call_value();
-
     
-    // if (!callee->get_type()->is_function()) {
-    //     if (!args.empty()) {
-
-    //     }
-    //     return false
-    // }
+    if (args.empty()) {
+        log_info("Changed nullary call back to a reference", 
+            MessageType::post_parse_debug, expression.location);
+        expression.expression_type = ExpressionType::reference;
+        return substitute_value_reference(expression, callable);
+    }
 
     // auto callee_type = dynamic_cast<const FunctionType*>(callee->get_type());
+    return false;
 
 
     // for (int i = 0; Expression* arg: args) {
@@ -48,7 +48,7 @@ bool inline_call(Expression& expression, Callable& callable) {
 
 bool substitute_value_reference(Expression& expression) {
     assert(expression.expression_type == ExpressionType::reference && 
-        "inline_call called with not a reference");
+        "substitute_value_reference called with not a reference");
 
     auto callee = expression.reference_value();
     return substitute_value_reference(expression, *callee);
@@ -56,7 +56,7 @@ bool substitute_value_reference(Expression& expression) {
 
 bool substitute_value_reference(Expression& expression, Callable& callee) {
     assert(expression.expression_type == ExpressionType::reference && 
-        "inline_call called with not a reference");
+        "substitute_value_reference called with not a reference");
 
     // check that the callable has a value
     // ??? This should be done centrally?
@@ -66,9 +66,14 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
         return false;
     }
 
-
     // check that the types match, or try to cast
     auto callee_type = callee.get_type();
+    auto callee_declared_type = callee.get_declared_type();
+
+    if (callee_declared_type && expression.declared_type) {
+        if (callee_declared_type != expression.declared_type)
+            return false;
+    }
 
     if (*callee_type != *expression.type) {
         // try to cast
@@ -77,13 +82,31 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
         return false;
     }
 
-    if ( = std::get_if<Expression>()) {
+    if (auto inner_expression = std::get_if<Expression*>(&callee.body)) {
+        // substitute value
+        switch ((*inner_expression)->expression_type) {
+            case ExpressionType::value:
+                expression = **inner_expression;
+                return true;
+    
+            case ExpressionType::call:
+                return false;    
+                if (inline_call(**inner_expression)) {
+
+                } else {
+
+                }
+
+            default:
+                log_error("Unhandled expression: " + (*inner_expression)->log_message_string() + 
+                    " in substitute_value_reference", expression.location);
+                return false;
+        }
 
     }
 
-    // substitute value
-    expression.expression_type = ExpressionType::value;
-    expression.value = std::get<>(callee.body);
+    return false;
+
 }
 
 } // namespace Maps

@@ -27,6 +27,7 @@ enum class MessageType: unsigned int {
     pragma_debug = 6,
     parser_debug_termed_expression = 7,
     ir_gen_debug = 8,
+    post_parse_debug = 9
 };
 
 class LogLevel {
@@ -47,9 +48,10 @@ class LogLevel {
         message_types.at(static_cast<unsigned int>(message_type)) = value;
     }
 
-    std::array<bool, 9> message_types = {
+    std::array<bool, 10> message_types = {
         true,
         true,
+        false,
         false,
         false,
         false,

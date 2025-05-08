@@ -8,6 +8,7 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/function_type.hh"
 #include "mapsc/ast/ast_node.hh"
+#include "mapsc/inline.hh"
 
 using Logging::log_error;
 
@@ -29,10 +30,10 @@ Callable::Callable(CallableBody body, std::optional<SourceLocation> location)
 :body(body), name("anonymous callable"), location(location) {}
 
 // TODO: delete the simplified nodes properly
-void Callable::attempt_simplify() {
+bool Callable::attempt_simplify() {
     return std::visit(overloaded {
-        [](std::monostate&) { return; },
-        [](Builtin*) { return; },
+        [](std::monostate&) { return true; },
+        [](Builtin*) { return true; },
 
         [this](Statement* statement) {
             switch (statement->statement_type) {                
@@ -50,7 +51,7 @@ void Callable::attempt_simplify() {
                     if (block->size() == 0) {
                         this->body = std::monostate{};
                         statement->statement_type = StatementType::deleted;
-                        return;
+                        return true;
                     }
 
                     if (block->size() == 1) {
@@ -60,7 +61,7 @@ void Callable::attempt_simplify() {
                         return this->attempt_simplify();
                     }
 
-                    return;
+                    return false;
                 }
 
                 // pure functions and non-function return statements get converted to expressions
@@ -79,16 +80,16 @@ void Callable::attempt_simplify() {
                         return this->attempt_simplify();
                     }
 
-                    return;
+                    return false;
                 }
 
                 case StatementType::empty:
                     statement->statement_type = StatementType::deleted;
                     this->body = std::monostate{};
-                    return;
+                    return true;
 
                 default:
-                    return;
+                    return false;
             }
         },
 
@@ -103,14 +104,19 @@ void Callable::attempt_simplify() {
                     if (function_type->is_pure_ && function_type->arity() == 0)
                         return this->attempt_inline(expression);
 
-                    return;
+                    return false;
                 }
 
                 default:
-                    return;
+                    return false;
             }
         },
     }, body);
+}
+
+// !!!: wrong file for this
+bool Callable::attempt_inline(Expression* call) {
+    return inline_call(*call, *this);
 }
 
 const Type* Callable::get_type() const {
