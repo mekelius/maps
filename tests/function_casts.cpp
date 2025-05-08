@@ -20,8 +20,8 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
         Expression arg1{ExpressionType::value, TSL, "12", &Number};
         Expression arg2{ExpressionType::value, TSL, "14", &Number};
 
-        Expression call{ExpressionType::call, TSL, CallExpressionValue{&dummy_callable, {&arg1, &arg2}}, 
-            types.get_function_type(Number, {&Number, &Number})};
+        Expression call{ExpressionType::call, TSL, 
+            CallExpressionValue{&dummy_callable, {&arg1, &arg2}}, &Number};
 
         CHECK(TypeConcretizer{}.concretize_call(call));
 

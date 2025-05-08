@@ -60,6 +60,7 @@ public:
     bool set_declared_type(const Type& type);
 
     // checks if the name is an operator style name
+    bool is_undefined() const;
     bool is_operator() const;
     bool is_binary_operator() const;
     bool is_unary_operator() const;

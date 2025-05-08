@@ -26,20 +26,23 @@ include_directories(
 
 # ------------------- MAPSC CORELIB ------------------
 
-add_library(maps_core SHARED
+add_library(corelib SHARED
     corelib/maps_datatypes.h
     corelib/corelib.h
     corelib/corelib.c
 )
 
+set_property(TARGET corelib PROPERTY OUTPUT_NAME maps_core)
+
 # ------------------- MAPSC PARSER -------------------
 
-add_library(parser OBJECT
+add_library(mapsc_frontend OBJECT
     src/mapsc/logging.cpp
 
     src/mapsc/pragma.cpp
     src/mapsc/builtins.cpp
     src/mapsc/name_resolution.cpp
+    src/mapsc/inline.cpp
 
     src/mapsc/types/type.cpp
     src/mapsc/types/type_defs.cpp
@@ -61,7 +64,7 @@ add_library(parser OBJECT
     src/mapsc/parser/full_parse.cpp
 )
 
-target_link_libraries(parser maps_core)
+target_link_libraries(mapsc_frontend corelib)
 
 # ---------------------- IR_GEN ------------------------
 
@@ -82,7 +85,7 @@ add_executable(mapsc
     src/mapsc/llvm/obj_output.cpp
 )
 
-target_link_libraries(mapsc parser ir_gen maps_core -lLLVM-19)
+target_link_libraries(mapsc mapsc_frontend ir_gen corelib -lLLVM-19)
 target_include_directories(mapsc SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 target_compile_options(mapsc PRIVATE 
@@ -97,7 +100,7 @@ add_executable(mapsci
     src/mapsci/repl.cpp
 )
 
-target_link_libraries(mapsci parser ir_gen maps_core -lLLVM-19 -ledit -lncurses)
+target_link_libraries(mapsci mapsc_frontend ir_gen corelib -lLLVM-19 -ledit -lncurses)
 target_include_directories(mapsci SYSTEM PUBLIC 
     /usr/lib/llvm-19/include
     /usr/include/editline
@@ -114,7 +117,7 @@ add_executable(verify_mapsc
     src/verify_mapsc_main.cpp
 )
 
-target_link_libraries(verify_mapsc parser)
+target_link_libraries(verify_mapsc mapsc_frontend)
 
 # --------------------- UNIT_TESTS ---------------------
 
@@ -129,6 +132,6 @@ add_executable(tests
     tests/function_casts.cpp
 )
 
-target_link_libraries(tests parser)
+target_link_libraries(tests mapsc_frontend)
 
 target_include_directories(tests SYSTEM PRIVATE doctest tests)

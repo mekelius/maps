@@ -5,7 +5,7 @@
 #include <optional>
 
 #include "mapsc/logging.hh"
-
+#include "mapsc/inline.hh"
 #include "mapsc/types/casts.hh"
 
 using std::get, std::get_if, std::optional, std::nullopt;
@@ -29,11 +29,42 @@ bool TypeConcretizer::concretize_expression(Expression& expression) {
 }
 
 bool TypeConcretizer::concretize_call(Expression& call) {
-    if (call.type->is_native() == db_true)
+    auto [callee, args] = call.call_value();
+
+    if (!callee->get_type()->is_function()) {
+        if (!args.empty())
+            return false;
+
+        if (!inline_call(call, *callee))
+            return false;
+            
+        
+        //inline it
+    }
+
+    // TODO: callable should probably return a function type?
+    auto callee_type = dynamic_cast<const FunctionType*>(callee->get_type());
+
+    for (int i = 0; auto arg: args) {
+        if (*arg->type == *callee->get_type())
+
+        if (!concretize_expression(*arg))
+            return false;
+    }
+
+    if (callee_type->is_native() == db_true)
         return true;
     
-    if (call.type->is_castable_to_native() == db_false)
+    if (callee_type->is_castable_to_native() == db_false)
         return false;
+
+    if (callee_type->arity() == 0 && callee_type->is_pure_)
+        return inline_call(call, *callee);
+
+    if (call.type->arity() == 1) {
+        return false;
+    }
+
 
     // assuming no inline, we can't do much to the return value
     // 

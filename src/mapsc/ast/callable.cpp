@@ -113,11 +113,6 @@ void Callable::attempt_simplify() {
     }, body);
 }
 
-void Callable::attempt_inline(Expression* call) {
-    assert(false && "not implemented");
-}
-
-
 const Type* Callable::get_type() const {
     switch (body.index()) {
         case 0: // std::monostate
@@ -216,6 +211,11 @@ bool Callable::set_declared_type(const Type& type) {
 
     return false;
 }
+
+bool Callable::is_undefined() const {
+    return std::holds_alternative<std::monostate>(body);
+}
+
 
 bool Callable::is_operator() const {
     return static_cast<bool>(operator_props);
