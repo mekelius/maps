@@ -125,14 +125,18 @@ target_link_libraries(verify_mapsc mapsc_frontend)
 
 add_executable(tests
     tests/tests_main.cpp
-    tests/ast.cpp
+    
     tests/pragmas.cpp
-    tests/layer1.cpp
-    tests/layer2.cpp
-    tests/type_specifiers.cpp
-    tests/type_casts.cpp
-    tests/concretize.cpp
-    tests/inline.cpp
+    tests/ast/ast.cpp
+
+    tests/parser/layer1.cpp
+    tests/parser/layer2.cpp
+    
+    tests/types/type_casts.cpp
+    tests/types/type_specifiers.cpp
+    
+    tests/procedures/inline.cpp
+    tests/procedures/concretize.cpp
 )
 
 target_link_libraries(tests mapsc_frontend)
