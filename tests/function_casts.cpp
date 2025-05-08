@@ -10,6 +10,23 @@ using namespace Maps;
 constexpr auto TSL = TEST_SOURCE_LOCATION;
 
 
+TEST_CASE("Concretizer should run variable substitution with a concrete type") {
+    Expression value{ExpressionType::value, TSL, 1, &Int};
+    Callable callable{&value, ""};
+    Expression ref{ExpressionType::reference, TSL, &callable};
+
+    CHECK(TypeConcretizer{}.concretize_value(ref));
+    CHECK(ref == value);
+} 
+
+TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
+    Expression value{ExpressionType::value, TSL, 1, &Int};
+    Callable callable{&value, ""};
+    Expression call{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
+
+    CHECK(TypeConcretizer{}.concretize_call(call));
+    CHECK(call == value);
+}
 
 // TEST_CASE("Concretizer should be able to concretize  function calls based on arguments") {
 //     TypeStore types{};

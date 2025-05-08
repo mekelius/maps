@@ -24,12 +24,17 @@ bool TypeConcretizer::concretize_expression(Expression& expression) {
         case ExpressionType::value:
             return concretize_value(expression);
         default:
+            log_error("Concretizer encountered an expression that was not a value or a call", expression.location);
             return false;
     }
 }
 
 bool TypeConcretizer::concretize_call(Expression& call) {
     auto [callee, args] = call.call_value();
+
+    // attempt inline first
+    if (inline_call(call, *callee))
+        return concretize_expression(call);
 
     if (!callee->get_type()->is_function()) {
         if (!args.empty())
