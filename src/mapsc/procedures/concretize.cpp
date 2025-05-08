@@ -16,7 +16,7 @@ bool concretize_call(Expression& call) {
 
     // attempt inline first
     if (inline_call(call, *callee))
-        return concretize_expression(call);
+        return concretize(call);
 
     if (!callee->get_type()->is_function()) {
         if (!args.empty())
@@ -35,7 +35,7 @@ bool concretize_call(Expression& call) {
     for (int i = 0; auto arg: args) {
         if (*arg->type == *callee->get_type())
 
-        if (!concretize_expression(*arg))
+        if (!concretize(*arg))
             return false;
     }
 
@@ -87,7 +87,7 @@ bool concretize_value(Expression& value) {
     return true;
 }
 
-bool concretize_expression(Expression& expression) {
+bool concretize(Expression& expression) {
     switch (expression.expression_type) {
         case ExpressionType::call:
             return concretize_call(expression);

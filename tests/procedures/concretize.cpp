@@ -15,15 +15,13 @@ TEST_CASE("Type concretizer should handle an Int Number") {
         &Number
     };
     
-    bool success = concretize_expression(expr);
+    bool success = concretize(expr);
 
     CHECK(success);
     CHECK(*expr.type == Int);
     CHECK(holds_alternative<maps_Int>(expr.value));
     CHECK(get<maps_Int>(expr.value) == 34);
 }
-
-
 
 TEST_CASE("Type concretizer should handle a Float Number") {
     Expression expr{
@@ -33,7 +31,7 @@ TEST_CASE("Type concretizer should handle a Float Number") {
         &Number
     };
     
-    bool success = concretize_expression(expr);
+    bool success = concretize(expr);
 
     CHECK(success);
     CHECK(*expr.type == Float);
@@ -49,7 +47,7 @@ TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
         &NumberLiteral
     };
     
-    bool success = concretize_expression(expr);
+    bool success = concretize(expr);
 
     CHECK(success);
     CHECK(*expr.type == Float);
@@ -57,13 +55,12 @@ TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
     CHECK(get<maps_Float>(expr.value) == 3.4);
 }
 
-
 TEST_CASE("Concretizer should run variable substitution with a concrete type") {
     Expression value{ExpressionType::value, TSL, 1, &Int};
     Callable callable{&value, ""};
     Expression ref{ExpressionType::reference, TSL, &callable};
 
-    CHECK(concretize_expression(ref));
+    CHECK(concretize(ref));
     CHECK(ref == value);
 } 
 
@@ -72,7 +69,7 @@ TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
     Callable callable{&value, ""};
     Expression call{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
 
-    CHECK(concretize_expression(call));
+    CHECK(concretize(call));
     CHECK(call == value);
 }
 
@@ -89,13 +86,12 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the ca
 
     Expression call{ExpressionType::call, TSL, CallExpressionValue{&const_Int, {&arg}}};
 
-    CHECK(concretize_expression(call));
+    CHECK(concretize(call));
     CHECK(call != value);
     CHECK(*arg.type == Int);
     CHECK(std::holds_alternative<maps_Int>(arg.value));
     CHECK(std::get<maps_Int>(arg.value) == 5);
 }
-
 
 TEST_CASE("Concretizer should be able to concretize function calls based on arguments") {
     TypeStore types{};
@@ -111,7 +107,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
         Expression call{ExpressionType::call, TSL, 
             CallExpressionValue{&dummy_callable, {&arg1, &arg2}}, &Number};
 
-        CHECK(concretize_expression(call));
+        CHECK(concretize(call));
 
         CHECK(*call.type == *IntIntInt);
         CHECK(*arg1.type == Int);

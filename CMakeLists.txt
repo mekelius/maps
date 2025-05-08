@@ -34,10 +34,11 @@ add_library(corelib SHARED
 
 set_property(TARGET corelib PROPERTY OUTPUT_NAME maps_core)
 
-# ------------------- MAPSC PARSER -------------------
+# ------------------- MAPSC FRONTEND -------------------
 
 add_library(mapsc_frontend OBJECT
     src/mapsc/logging.cpp
+    src/mapsc/compiler_options.cpp
     src/mapsc/pragma.cpp
     src/mapsc/builtins.cpp
 
@@ -127,6 +128,8 @@ add_executable(tests
     tests/tests_main.cpp
     
     tests/pragmas.cpp
+    tests/compiler_options.cpp
+
     tests/ast/ast.cpp
 
     tests/parser/layer1.cpp

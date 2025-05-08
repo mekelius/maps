@@ -2,12 +2,11 @@
 #define __CONCRETIZE_HH
 
 namespace Maps {
-
 struct Expression;
 
-bool concretize_expression(Expression& expression);
-    
-} // namespace Maps
-    
+// tries to cast all types into concrete types
+// Also performs variable substitution (if allowed)
+bool concretize(Expression& expression);
 
+} // namespace Maps
 #endif

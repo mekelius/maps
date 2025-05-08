@@ -91,6 +91,7 @@
 #### At some point
 
 - Add Int64 (and Int32 as an alias for Int)
+- utf-8 support in Lexer
 
 #### Possible simplifications
 
