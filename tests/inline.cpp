@@ -2,6 +2,7 @@
 
 #include "mapsc/ast/ast_node.hh"
 #include "mapsc/inline.hh"
+#include "mapsc/types/type_store.hh"
 
 using namespace Maps;
 constexpr auto TSL = TEST_SOURCE_LOCATION;
@@ -41,10 +42,31 @@ TEST_CASE("Should be able to substitute a reference to a value") {
     COMMON_TESTS(substitute_value_reference);
 }
 
-TEST_CASE("Should be able to inline a nullary call as if a value") {
+TEST_CASE("Should be able to inline a nullary call to a value callable as if a reference") {
     Expression value{ExpressionType::value, TSL, 1};
     Callable callable{&value, ""};
     Expression ref{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
 
     COMMON_TESTS(inline_call);
+}
+
+TEST_CASE("Should be able to inline a nullary call to a nullary pure function callable as if a reference") {
+    TypeStore types{};
+    
+    Expression value{ExpressionType::value, TSL, 1, types.get_function_type(Hole, {}, true)};
+    Callable callable{&value, ""};
+    Expression ref{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
+
+    COMMON_TESTS(inline_call);
+}
+
+TEST_CASE("Should not be able to inline a nullary call to a nullary pure function callable as an expression") {
+    TypeStore types{};
+
+    Expression value{ExpressionType::value, TSL, 1, types.get_function_type(Hole, {}, false)};
+    Callable callable{&value, ""};
+    Expression ref{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
+
+    CHECK(!inline_call(ref, callable));
+    CHECK(ref != value);
 }

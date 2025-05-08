@@ -46,6 +46,20 @@ bool inline_call(Expression& expression, Callable& callable) {
     
 }
 
+namespace {
+
+// this should be ran after all the checks are cleared
+[[nodiscard]] bool perform_substitution(Expression& expression, Callable& callee) {
+    if (auto inner_expression = std::get_if<Expression*>(&callee.body)) {
+        expression = **inner_expression;
+        return true;   
+    }
+
+    return false;
+}
+
+} // anonymous namespace
+
 bool substitute_value_reference(Expression& expression) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
@@ -58,9 +72,6 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
 
-    // check that the callable has a value
-    // ??? This should be done centrally?
-
     if (callee.is_undefined()) {
         log_error("\"" + callee.name + "\" is undefined", expression.location);
         return false;
@@ -71,8 +82,37 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
     auto callee_declared_type = callee.get_declared_type();
 
     if (callee_declared_type && expression.declared_type) {
-        if (callee_declared_type != expression.declared_type)
+        if (**callee_declared_type != **expression.declared_type) {
+            log_info("Attempting substitution, but declared types don't match: " + 
+                (*expression.declared_type)->to_string() + " != " + (*callee_declared_type)->to_string(), 
+                MessageType::post_parse_debug, expression.location);
             return false;
+        }
+    }
+
+    if (callee_type->is_function()) {
+        auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
+
+        // reject impure functions (maybe we can get llvm to inline them?)
+        if (!callee_f_type->is_pure_) {
+            log_info("Impure functions aren't yet inlinable", 
+                MessageType::post_parse_debug, expression.location);
+            return false;
+        }
+
+        // --- pure function ---
+
+        // check if what we want is a function
+        if (expression.declared_type) {
+            if (**expression.declared_type == **callee_declared_type || 
+                **expression.declared_type == *callee_type)
+                    return perform_substitution(expression, callee);
+        }
+
+        if (callee_f_type->arity() == 0)
+            return perform_substitution(expression, callee);
+
+        return false;
     }
 
     if (*callee_type != *expression.type) {
@@ -82,31 +122,7 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
         return false;
     }
 
-    if (auto inner_expression = std::get_if<Expression*>(&callee.body)) {
-        // substitute value
-        switch ((*inner_expression)->expression_type) {
-            case ExpressionType::value:
-                expression = **inner_expression;
-                return true;
-    
-            case ExpressionType::call:
-                return false;    
-                if (inline_call(**inner_expression)) {
-
-                } else {
-
-                }
-
-            default:
-                log_error("Unhandled expression: " + (*inner_expression)->log_message_string() + 
-                    " in substitute_value_reference", expression.location);
-                return false;
-        }
-
-    }
-
-    return false;
-
+    return perform_substitution(expression, callee);
 }
 
 } // namespace Maps
