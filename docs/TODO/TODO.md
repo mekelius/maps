@@ -2,22 +2,34 @@
 
 ## Priorities
 
-#### Needed for 0.1
+#### Needed for 0.0.1
 
-0.1 focus is on expressions (parse, eval, print)
+0.0.1 focus is on expressions (parse, eval, print)
 
-| Feature                                               | State     | What's missing |
-| ---                                                   | ---       | ---            |
-| Operator definitions                                  | testing   | parsing        |
-| Parsing needs a lot of work                           | in progress | bits and pieces |
-| Print expressions and statements in messages nicely   | done      | Callables?     |
-| Runtime casts                               | in progress | rest of the compile time |
-| Function calls need to work and be smooth             | testing   | partial application |
-| Arithmetic stuff working and smooth  | in progress | builtin definitions maps side |
-| Blocks and parentheses should work well               | testing   | parsing messy |
-| repl improvements                                     | done?     |               |
-| clean up IR_Generator                                 | total mess | refactor     |
-| restore mapsc functionality                           | ???       | testing       |
+- language features
+    - immutable variables
+        - substitution
+    - Type casts and simple type declarations
+    - Arithmetic expressions
+    - Function calls (and definitions)
+        - inlining
+        - pure function inlining as substitution
+            - imperative pure function return value expression construction
+    - static typing
+        - type checking
+        - type concretization
+    - Blocks and parentheses
+    - if, for etc.
+    - polymorphic function definitions
+        - picking the right specialization
+
+- overall functionality
+    - restore mapsc functionality
+
+- architecture and code quality
+    - Print callables in messages nicely
+    - move code from callables.cpp to simplify.cpp
+    - clean up IR_Generator
 
 #### Accumulated tweaks
 
@@ -36,11 +48,13 @@
     - :toggle no-eval == :toggle eval
 - :no-eval and :eval
 
-## Planned for 0.2
+## Planned for 0.0.2
 
-#### Priority features for 0.2 and onward
+#### Priority features for 0.0.2 and onward
 
-- if, for etc.
+- memory and variables
+- strings
+- operator definitions
 - top-level-evaluation via pragma
 - Scopes and contexts (likely 0.2)
 - Retain definitions in REPL
@@ -57,7 +71,7 @@
 - Combine asts
 - Parser gc
 
-#### 0.3 and onward
+#### 0.0.3 and onward
 
 - ADT:s
 - Type constructors
