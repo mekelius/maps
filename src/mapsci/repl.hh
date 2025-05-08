@@ -3,15 +3,12 @@
 
 #include <filesystem>
 
-#include "llvm/Support/raw_os_ostream.h"
-
 #include "llvm/IR/LLVMContext.h"
-#include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
+#include "llvm/Support/raw_os_ostream.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
+#include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 
 #include "mapsc/parser/full_parse.hh"
-#include "mapsc/pragma.hh"
-#include "mapsc/ast/ast_store.hh"
 
 class JIT_Manager {
 public:

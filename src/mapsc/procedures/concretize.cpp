@@ -1,10 +1,10 @@
 #include "concretize.hh"
 
 #include "mapsc/logging.hh"
-#include "mapsc/inline.hh"
-#include "mapsc/types/casts.hh"
 #include "mapsc/ast/ast_node.hh"
+#include "mapsc/types/casts.hh"
 #include "mapsc/types/function_type.hh"
+#include "mapsc/procedures/inline.hh"
 
 using std::get, std::get_if, std::optional, std::nullopt;
 using Logging::log_error;

@@ -1,16 +1,23 @@
 #ifndef __PARSER_LAYER_2_HH
 #define __PARSER_LAYER_2_HH
 
+#include <vector>
+#include <optional>
+
+#include "mapsc/ast/operator.hh"
+
 /**
  * Parser layer 2 is responsible for:
  *  - parsing "termed expressions" i.e. binary and unary operators and access expressions
  *  - parsing mapping literals i.e. lists, enums, dictionaries etc.
  */
 
-#include "mapsc/pragma.hh"
-#include "mapsc/ast/ast_store.hh"
-
 namespace Maps {
+
+struct Expression;
+class Callable;
+class AST_Store;
+class PragmaStore;
 
 class TermedExpressionParser {
 public:

@@ -11,15 +11,15 @@
 #include <ostream>
 #include <iostream>
 
+#include "mapsc/pragma.hh" // NOTE: these need to be included since the user of unique_ptr needs to know how to destroy it
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/pragma.hh"
 
 namespace Maps {
 
 enum class ParseStage {
     layer1,
     layer2,
-    done,    
+    done,
 };
 
 struct ParseOptions {

@@ -3,11 +3,11 @@
 #include <memory>
 
 #include "mapsc/parser/lexer.hh"
-#include "mapsc/parser/reverse_parse.hh"
 #include "mapsc/parser/parser_layer1.hh"
-#include "mapsc/name_resolution.hh"
 #include "mapsc/parser/parser_layer2.hh"
-#include "mapsc/types/type_checking.hh"
+#include "mapsc/procedures/name_resolution.hh"
+#include "mapsc/procedures/type_check.hh"
+#include "mapsc/procedures/reverse_parse.hh"
 
 using std::tuple, std::optional, std::make_optional, std::nullopt;
 using std::unique_ptr, std::make_unique;

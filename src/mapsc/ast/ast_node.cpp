@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include "mapsc/logging.hh"
-#include "mapsc/parser/reverse_parse.hh"
+#include "mapsc/procedures/reverse_parse.hh"
 
 using Logging::log_error;
 

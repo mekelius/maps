@@ -8,7 +8,6 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/function_type.hh"
 #include "mapsc/ast/ast_node.hh"
-#include "mapsc/inline.hh"
 
 using Logging::log_error;
 
@@ -28,96 +27,6 @@ Callable::Callable(CallableBody body, const std::string& name,
 
 Callable::Callable(CallableBody body, std::optional<SourceLocation> location)
 :body(body), name("anonymous callable"), location(location) {}
-
-// TODO: delete the simplified nodes properly
-bool Callable::attempt_simplify() {
-    return std::visit(overloaded {
-        [](std::monostate&) { return true; },
-        [](Builtin*) { return true; },
-
-        [this](Statement* statement) {
-            switch (statement->statement_type) {                
-                // expression statements get replaced by their expressions
-                case StatementType::expression_statement:
-                    // TODO: check type
-                    this->body = std::get<Expression*>(statement->value);
-                    statement->statement_type = StatementType::deleted;
-                    return this->attempt_simplify();
-                    
-                case StatementType::block: {
-                    // TODO: check type
-                    auto block = &std::get<Block>(statement->value);
-
-                    if (block->size() == 0) {
-                        this->body = std::monostate{};
-                        statement->statement_type = StatementType::deleted;
-                        return true;
-                    }
-
-                    if (block->size() == 1) {
-                        *statement = *block->back();
-                        // THIS SEGFAULTS! ???:
-                        // block->back()->statement_type = StatementType::deleted;
-                        return this->attempt_simplify();
-                    }
-
-                    return false;
-                }
-
-                // pure functions and non-function return statements get converted to expressions
-                case StatementType::return_: {
-                    auto type = this->get_type();
-                    if (!type->is_function()) {
-                        statement->statement_type = StatementType::deleted;
-                        this->body = std::get<Expression*>(statement->value);
-                        return this->attempt_simplify();
-                    }
-
-                    auto function_type = dynamic_cast<const FunctionType*>(type);
-                    if (function_type->is_pure_ && function_type->arity() == 0) {
-                        this->body = std::get<Expression*>(statement->value);
-                        statement->statement_type = StatementType::deleted;
-                        return this->attempt_simplify();
-                    }
-
-                    return false;
-                }
-
-                case StatementType::empty:
-                    statement->statement_type = StatementType::deleted;
-                    this->body = std::monostate{};
-                    return true;
-
-                default:
-                    return false;
-            }
-        },
-
-        [this](Expression* expression) {
-            switch (expression->expression_type) {
-                case ExpressionType::call: {
-                    auto type = expression->type;
-                    if (!type->is_function())
-                        return this->attempt_inline(expression);
-
-                    auto function_type = dynamic_cast<const FunctionType*>(type);
-                    if (function_type->is_pure_ && function_type->arity() == 0)
-                        return this->attempt_inline(expression);
-
-                    return false;
-                }
-
-                default:
-                    return false;
-            }
-        },
-    }, body);
-}
-
-// !!!: wrong file for this
-bool Callable::attempt_inline(Expression* call) {
-    return inline_call(*call, *this);
-}
 
 const Type* Callable::get_type() const {
     switch (body.index()) {

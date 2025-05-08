@@ -13,7 +13,9 @@
 
 #include "mapsc/logging.hh"
 #include "mapsc/source.hh"
+#include "mapsc/ast/ast_store.hh"
 
+#include "mapsc/procedures/simplify.hh"
 #include "mapsc/parser/token.hh"
 
 using Logging::LogLevel;
@@ -38,7 +40,7 @@ optional<Callable*> ParserLayer1::eval_parse(std::istream& source_is) {
     force_top_level_eval_ = false;
 
     // if root is a single statement block or an expression statement, simplify it
-    ast_->root_->attempt_simplify();
+    attempt_simplify(*ast_->root_);
 
     return ast_->root_;
 }

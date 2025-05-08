@@ -1,6 +1,6 @@
 #include "doctest.h"
 
-#include "mapsc/concretize.hh"
+#include "mapsc/procedures/concretize.hh"
 #include "mapsc/ast/ast_node.hh"
 #include "mapsc/types/type_store.hh"
 

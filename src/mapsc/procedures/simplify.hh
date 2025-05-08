@@ -3,6 +3,10 @@
 
 namespace Maps {
 
+class Callable;
+
+bool attempt_simplify(Callable& callable);
+
 } // namespace Maps
 
 #endif

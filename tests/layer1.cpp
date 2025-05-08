@@ -2,6 +2,7 @@
 #include "doctest.h"
 
 #include "mapsc/parser/parser_layer1.hh"
+#include "mapsc/ast/ast_store.hh"
 
 using namespace Maps;
 

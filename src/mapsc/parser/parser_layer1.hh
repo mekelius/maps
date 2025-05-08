@@ -10,11 +10,13 @@
 
 #include "mapsc/logging.hh"
 
-#include "mapsc/ast/ast_store.hh"
 #include "mapsc/pragma.hh"
+#include "mapsc/ast/ast_node.hh"
 #include "mapsc/parser/lexer.hh"
 
 namespace Maps {
+
+class AST_Store;
 
 class ParserLayer1 {
 public:

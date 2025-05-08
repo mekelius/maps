@@ -16,15 +16,16 @@
 // ---------------------------------------------------
 
 #include "mapsc/logging.hh"
+#include "mapsc/pragma.hh"
+#include "mapsc/ast/ast_store.hh"
+
+#include "mapsc/parser/full_parse.hh"
+#include "mapsc/parser/full_parse.hh"
+#include "mapsc/procedures/reverse_parse.hh"
+
+#include "mapsc/procedures/name_resolution.hh"
 
 #include "mapsc/llvm/ir_generator.hh"
-
-#include "mapsc/name_resolution.hh"
-#include "mapsc/parser/reverse_parse.hh"
-#include "mapsc/parser/parser_layer2.hh"
-#include "mapsc/parser/parser_layer1.hh"
-#include "mapsc/parser/full_parse.hh"
-#include "mapsc/parser/lexer.hh"
 
 using std::optional, std::nullopt;
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple;

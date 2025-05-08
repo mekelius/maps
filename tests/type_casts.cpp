@@ -3,7 +3,7 @@
 #include <variant>
 
 #include "mapsc/ast/ast_node.hh"
-#include "mapsc/types/type_checking.hh"
+#include "mapsc/procedures/type_check.hh"
 
 using std::holds_alternative, std::get;
 using namespace Maps;

@@ -1,7 +1,7 @@
 #include "doctest.h"
 
 #include "mapsc/ast/ast_node.hh"
-#include "mapsc/inline.hh"
+#include "mapsc/procedures/inline.hh"
 #include "mapsc/types/type_store.hh"
 
 using namespace Maps;

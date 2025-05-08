@@ -3,8 +3,10 @@
 #include <cassert>
 
 #include "mapsc/logging.hh"
-#include "mapsc/name_resolution.hh"
+#include "mapsc/procedures/name_resolution.hh"
 
+#include "mapsc/ast/ast_node.hh"
+#include "mapsc/ast/ast_store.hh"
 #include "mapsc/types/casts.hh"
 
 using Logging::log_error, Logging::log_info;

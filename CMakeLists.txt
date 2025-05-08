@@ -38,20 +38,14 @@ set_property(TARGET corelib PROPERTY OUTPUT_NAME maps_core)
 
 add_library(mapsc_frontend OBJECT
     src/mapsc/logging.cpp
-
     src/mapsc/pragma.cpp
     src/mapsc/builtins.cpp
-    src/mapsc/name_resolution.cpp
-    src/mapsc/inline.cpp
-    src/mapsc/simplify.cpp
-    src/mapsc/concretize.cpp
 
     src/mapsc/types/type.cpp
-    src/mapsc/types/type_defs.cpp
-    src/mapsc/types/casts.cpp
-    src/mapsc/types/type_checking.cpp
     src/mapsc/types/function_type.cpp
+    src/mapsc/types/casts.cpp
     src/mapsc/types/type_store.cpp
+    src/mapsc/types/type_defs.cpp
     
     src/mapsc/ast/ast_node.cpp
     src/mapsc/ast/callable.cpp
@@ -62,8 +56,14 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/parser/lexer.cpp
     src/mapsc/parser/parser_layer1.cpp
     src/mapsc/parser/parser_layer2.cpp
-    src/mapsc/parser/reverse_parse.cpp
     src/mapsc/parser/full_parse.cpp
+
+    src/mapsc/procedures/inline.cpp
+    src/mapsc/procedures/simplify.cpp
+    src/mapsc/procedures/concretize.cpp
+    src/mapsc/procedures/type_check.cpp
+    src/mapsc/procedures/name_resolution.cpp
+    src/mapsc/procedures/reverse_parse.cpp
 )
 
 target_link_libraries(mapsc_frontend corelib)
@@ -77,7 +77,7 @@ add_library(ir_gen OBJECT
     src/mapsc/llvm/function_store.cpp
 )
 
-target_link_libraries(ir_gen parser -lLLVM-19)
+target_link_libraries(ir_gen mapsc_frontend -lLLVM-19)
 target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 # ----------------------- MAPSC ------------------------

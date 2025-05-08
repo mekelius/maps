@@ -1,4 +1,4 @@
-#include "type_checking.hh"
+#include "type_check.hh"
 
 #include <variant>
 #include <cassert>
