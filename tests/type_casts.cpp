@@ -1,5 +1,8 @@
 #include "doctest.h"
 
+#include <variant>
+
+#include "mapsc/ast/ast_node.hh"
 #include "mapsc/types/type_checking.hh"
 
 using std::holds_alternative, std::get;
@@ -73,52 +76,4 @@ TEST_CASE("Should be able to cast a Number with an int value into Float") {
     CHECK(*expr.type == Float);
     CHECK(holds_alternative<maps_Float>(expr.value));
     CHECK(get<maps_Float>(expr.value) == 999);
-}
-
-TEST_CASE("Type concretizer should handle an Int Number") {
-    Expression expr{
-        ExpressionType::value,
-        TEST_SOURCE_LOCATION,
-        "34",
-        &Number
-    };
-    
-    bool success = TypeConcretizer{}.concretize_value(expr);
-
-    CHECK(success);
-    CHECK(*expr.type == Int);
-    CHECK(holds_alternative<maps_Int>(expr.value));
-    CHECK(get<maps_Int>(expr.value) == 34);
-}
-
-TEST_CASE("Type concretizer should handle a Float Number") {
-    Expression expr{
-        ExpressionType::value,
-        TEST_SOURCE_LOCATION,
-        "3.4",
-        &Number
-    };
-    
-    bool success = TypeConcretizer{}.concretize_value(expr);
-
-    CHECK(success);
-    CHECK(*expr.type == Float);
-    CHECK(holds_alternative<maps_Float>(expr.value));
-    CHECK(get<maps_Float>(expr.value) == 3.4);
-}
-
-TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
-    Expression expr{
-        ExpressionType::value,
-        TEST_SOURCE_LOCATION,
-        "3.4",
-        &NumberLiteral
-    };
-    
-    bool success = TypeConcretizer{}.concretize_value(expr);
-
-    CHECK(success);
-    CHECK(*expr.type == Float);
-    CHECK(holds_alternative<maps_Float>(expr.value));
-    CHECK(get<maps_Float>(expr.value) == 3.4);
 }

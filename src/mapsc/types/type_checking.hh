@@ -1,16 +1,12 @@
 #ifndef __TYPE_INFERENCE_HH
 #define __TYPE_INFERENCE_HH
 
-#include "mapsc/ast/ast_store.hh"
-
 namespace Maps {
 
-class TypeConcretizer {
-public:
-    static bool concretize_expression(Expression& expression);
-    static bool concretize_call(Expression& call);
-    static bool concretize_value(Expression& value);
-};
+struct Expression;
+struct Statement;
+class Callable;
+class AST_Store;
 
 class SimpleTypeChecker {
 public:

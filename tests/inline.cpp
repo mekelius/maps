@@ -5,7 +5,6 @@
 #include "mapsc/types/type_store.hh"
 
 using namespace Maps;
-constexpr auto TSL = TEST_SOURCE_LOCATION;
 
 #define COMMON_TESTS(function)\
 \
