@@ -19,11 +19,12 @@
 
 #include "mapsc/logging.hh"
 #include "mapsc/pragma.hh"
+#include "mapsc/compiler_options.hh"
 
 #include "mapsci/repl.hh"
 
 using std::unique_ptr, std::make_unique;
-using Maps::MessageType, Maps::LogLevel, Maps::Logger;
+using Maps::MessageType, Maps::LogLevel, Maps::Logger, Maps::CompilerOptions, Maps::CompilerOption;
 
 const std::string DATA_SUBDIRECTORY = "mapsc";
 const std::string HISTORY_FILENAME = "mapsci_history";
@@ -88,6 +89,8 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> args = {argv + 1, argc + argv};
     std::vector<std::string> source_filenames{};
 
+    auto compiler_options = *CompilerOptions::lock();
+
     Logger::Options logger_options;
     REPL::Options repl_options;
     repl_options.save_history = true;
@@ -141,6 +144,9 @@ int main(int argc, char* argv[]) {
         } else if(key == "--ignore-errors" || key == "--ignore-error") {
             repl_options.ignore_errors = false;
 
+        } else if (key == "--print-all-types" || key == "--print-types" || key == "--include-all-types" || key == "--include-types") {
+            compiler_options->set(CompilerOption::print_all_types, "true");
+
         } else if(key == "--no-history") {
             repl_options.save_history = false;
 
@@ -183,9 +189,8 @@ int main(int argc, char* argv[]) {
     auto ts_context = make_unique<llvm::orc::ThreadSafeContext>(make_unique<llvm::LLVMContext>());
     JIT_Manager jit{ts_context.get(), &error_stream};
 
-    if (!jit.is_good) {
+    if (!jit.is_good)
         return EXIT_FAILURE;
-    }
 
     REPL{&jit, ts_context->getContext(), &error_stream, repl_options}.run();
     

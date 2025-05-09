@@ -16,10 +16,11 @@ namespace Maps {
 // clang-format off
 constexpr auto COMPILER_OPTIONS_START_LINE = __LINE__;
 enum class CompilerOption {
-    DEBUG_no_inline     = 0,
-    dummyvalue_1        = 1,
-    dummyvalue_2        = 2,
-    dummyvalue_3        = 3,
+    print_all_types     = 0,
+    DEBUG_no_inline     = 1,
+    dummyvalue_1        = 2,
+    dummyvalue_2        = 3,
+    dummyvalue_3        = 4,
 };
 constexpr auto COMPILER_OPTION_COUNT = __LINE__ - COMPILER_OPTIONS_START_LINE - 3;
 // clang-format on

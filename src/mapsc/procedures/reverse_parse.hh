@@ -13,12 +13,11 @@ public:
         bool include_debug_info = false;
         bool debug_separators = false;
         unsigned int indent_width = 4;
+        bool include_all_types = false;
     };
 
-    ReverseParser(std::ostream* ostream)
-        :ostream_(ostream) {}
-    ReverseParser(std::ostream* ostream, const Options& options)
-        :ostream_(ostream), options_(options) {}
+    ReverseParser(std::ostream* ostream);
+    ReverseParser(std::ostream* ostream, const Options& options);
 
     void set_options(const Options& options) { options_ = options; }
 
@@ -36,6 +35,8 @@ private:
     ReverseParser& print_statement(const Statement& statement);
     ReverseParser& print_expression(Expression& expression);
     ReverseParser& print_callable(CallableBody body);
+
+    ReverseParser& print_type_declaration(Expression& expression);
 
     std::ostream* ostream_;
 

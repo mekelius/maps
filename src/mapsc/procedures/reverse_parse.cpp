@@ -2,8 +2,22 @@
 
 #include "mapsc/logging.hh"
 #include "reverse_parse.hh"
+#include "mapsc/compiler_options.hh"
+
+#include <iostream>
 
 namespace Maps {
+
+
+ReverseParser::ReverseParser(std::ostream* ostream)
+:ReverseParser(ostream, {}) {}
+
+ReverseParser::ReverseParser(std::ostream* ostream, const Options& options)
+    :ostream_(ostream), options_(options) {
+
+    if (CompilerOptions::get(CompilerOption::print_all_types) == "true")
+        options_.include_all_types = true;
+}
 
 void ReverseParser::reset() {
     skipped_initial_linebreak_doubling_ = false;
@@ -106,6 +120,9 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
 
 ReverseParser& ReverseParser::print_expression(Expression& expression) {
     if (options_.debug_separators) *this << "£";
+
+    if (options_.include_all_types)
+        print_type_declaration(expression);
 
     switch (expression.expression_type) {
         case ExpressionType::string_literal:
@@ -245,6 +262,13 @@ ReverseParser& ReverseParser::print_callable(CallableBody body) {
             assert(false && "unhandled callable body type in reverse_parse");
             return *this;
     }
+}
+
+ReverseParser& ReverseParser::print_type_declaration(Expression& expression) {
+    if (*expression.type == Absurd)
+        return *this;
+    
+    return *this << expression.type->to_string() << " ";
 }
 
 } // namespace Maps
