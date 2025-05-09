@@ -33,6 +33,9 @@ Token Lexer::get_token() {
 
 // Read a character from the input stream
 char Lexer::read_char() {
+    if (source_is_->eof())
+        return EOF;
+
     if (current_char_ == '\n') {
         current_col_ = 1;
         current_line_++;
@@ -44,7 +47,7 @@ char Lexer::read_char() {
 
     // just pretend like CRLF doesn't exist
     // !!! untested on a windows machine
-    return current_char_ != '\r' ? current_char_ : read_char();
+    return (current_char_ != '\r') ? current_char_ : read_char();
 }
 
 char Lexer::peek_char() {
