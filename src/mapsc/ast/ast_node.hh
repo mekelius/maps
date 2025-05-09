@@ -106,9 +106,6 @@ public:
 
     const Type* type = &Hole; // this is the "de facto"-one
     std::optional<const Type*> declared_type = std::nullopt;
-    
-    // ----- METHODS -----
-    bool convert_to_native_types();
 
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();
