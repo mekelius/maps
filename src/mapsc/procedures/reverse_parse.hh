@@ -27,6 +27,9 @@ public:
     ReverseParser& operator<<(CallableBody body) { return print_callable(body); }
     ReverseParser& operator<<(Expression& expression) { return print_expression(expression); }
     ReverseParser& operator<<(Statement& statement) { return print_statement(statement); }
+    ReverseParser& operator<<(maps_Int val) { *ostream_ << val; return *this; }
+    ReverseParser& operator<<(maps_Float val) { *ostream_ << val; return *this; }
+
 private:
     void reset();
     std::string linebreak();

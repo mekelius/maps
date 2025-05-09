@@ -78,6 +78,8 @@ tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
     if (!SimpleTypeChecker{}.run(*ast) && !options.ignore_errors)
         return {false, std::move(ast), std::move(pragmas)};
 
+
+    reverse_parser << *ast;
     // ----- done -----
 
     return {true, std::move(ast), std::move(pragmas)};
