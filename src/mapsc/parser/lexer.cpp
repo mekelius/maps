@@ -100,19 +100,12 @@ Token Lexer::get_token_() {
             return read_pragma();
     
         case '/':
-            read_char();
-
-            // handle operators that begin with '/'
-            // TODO: just use peek
-            if (current_char_ != '/' && current_char_ != '*') {
-                buffer_.sputc('/');
-                return read_operator();
+            if (peek_char() == '/' || peek_char() == '*') {
+                read_char();
+                read_and_ignore_comment();
+                return get_token_();
             }
-
-            read_and_ignore_comment();
-            return get_token_();
-
-            // handle operator
+            
             return read_operator();
 
         case '-':
@@ -130,7 +123,8 @@ Token Lexer::get_token_() {
             
             if (is_operator_glyph(current_char_)) {
                 log_error("Syntax error: operator cannot start with \"" + buffer_.str() + "\"",
-                    {static_cast<int>(current_token_start_line_), static_cast<int>(current_token_start_col_)});
+                    {static_cast<int>(current_token_start_line_), 
+                        static_cast<int>(current_token_start_col_)});
                 return create_token(TokenType::unknown);
             }
             return create_token(TokenType::arrow_operator, buffer_.str());
@@ -223,7 +217,7 @@ Token Lexer::get_token_() {
                 return read_operator();
 
             // unknown token
-            assert(false && "unhandled token type in StreamingLexer::get_token_()");
+            assert(false && "unhandled token type in Lexer::get_token_()");
             read_char();
             return create_token(TokenType::unknown);
     }

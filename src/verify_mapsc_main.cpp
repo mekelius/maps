@@ -77,7 +77,6 @@ int main(int argc, char* argv[]) {
             continue;
         }
         
-        Lexer lexer{&source_file};
         std::unique_ptr<Maps::PragmaStore> pragmas = std::make_unique<Maps::PragmaStore>();
         
         std::cout << "run layer1\n\n";
