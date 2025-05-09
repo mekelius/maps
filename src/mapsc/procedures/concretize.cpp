@@ -1,5 +1,7 @@
 #include "concretize.hh"
 
+#include <cassert>
+
 #include "mapsc/logging.hh"
 #include "mapsc/ast/ast_node.hh"
 #include "mapsc/types/casts.hh"
@@ -7,7 +9,7 @@
 #include "mapsc/procedures/inline.hh"
 
 using std::get, std::get_if, std::optional, std::nullopt;
-using Maps::GlobalLogger::log_error;
+using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 namespace Maps {
 
@@ -18,44 +20,56 @@ bool concretize_call(Expression& call) {
     if (inline_call(call, *callee))
         return concretize(call);
 
-    if (!callee->get_type()->is_function()) {
-        if (!args.empty())
-            return false;
-
-        if (!inline_call(call, *callee))
-            return false;
-            
-        
-        //inline it
-    }
-
     // TODO: callable should probably return a function type?
     auto callee_type = dynamic_cast<const FunctionType*>(callee->get_type());
 
-    for (int i = 0; auto arg: args) {
-        if (*arg->type == *callee->get_type())
+    // if it's not a function, it should have been inlinable?
+    if (!callee_type) {
+        log_info("Concretizing a call failed", MessageType::post_parse_debug, call.location);
+        return false;
+    }
 
-        if (!concretize(*arg))
+    if (call.declared_type) {
+
+        if (**call.declared_type != *callee_type) {
+            assert(false && "mismathing declared type not implemented in concretize call");
+        }
+
+        if (!callee->get_type()->is_function()) {
+            if (!args.empty())
+                return false;
+    
+            // ???
+        }
+    }
+
+    // handle args
+    assert(args.size() <= callee_type->arity() && "call expression has too many args");
+    assert(args.size() == callee_type->arity() && "partial calls not implemented in concretize_call");
+
+    for (int i = 0; auto arg: args) {
+        auto param_type = callee_type->arg_types_.at(i);
+
+        if (*arg->type == *param_type)
+            continue;
+
+        if (!arg->type->cast_to(param_type, *arg))
             return false;
     }
 
-    if (callee_type->is_native() == db_true)
+    // handle return type
+    auto return_type = callee_type->return_type_;
+
+    if (return_type->is_native() == db_true)
         return true;
-    
-    if (callee_type->is_castable_to_native() == db_false)
+
+    if (return_type->is_castable_to_native() == db_false)
         return false;
 
-    if (callee_type->arity() == 0 && callee_type->is_pure_)
-        return inline_call(call, *callee);
-
-    if (call.type->arity() == 1) {
-        return false;
+    if (return_type->is_castable_to_native() == db_true) {
+        assert(false && "concretizing return values not implemented");
     }
-
-
-    // assuming no inline, we can't do much to the return value
-    // 
-    // take the return value and 
+    // create a call to cast function here
 
     return false;
 }
