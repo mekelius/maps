@@ -1,7 +1,6 @@
 #include "doctest.h"
 
 #include <sstream>
-#include <iostream>
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/parser/parser_layer2.hh"
@@ -374,6 +373,5 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
     CHECK(ast.is_valid);
     CHECK(expr->expression_type == ExpressionType::call);
     CHECK(expr->call_value() == CallExpressionValue{*test_op, {&lhs, &rhs}});
-    std::cout << expr->type->to_string();
     CHECK(*expr->type == String);
 }
