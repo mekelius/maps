@@ -19,8 +19,8 @@
 #include "mapsc/pragma.hh"
 #include "mapsc/ast/ast_store.hh"
 
-#include "mapsc/parser/full_parse.hh"
-#include "mapsc/parser/full_parse.hh"
+#include "mapsc/process_source.hh"
+#include "mapsc/process_source.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 
 #include "mapsc/procedures/name_resolution.hh"
@@ -29,7 +29,7 @@
 
 using std::optional, std::nullopt;
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple;
-using Maps::ParseOptions, Maps::ReverseParser, Maps::ParseStage;
+using Maps::ProcessSourceOptions, Maps::ReverseParser, Maps::CompilationLayer;
 
 constexpr std::string_view DEFAULT_MODULE_NAME = "interpreted";
 constexpr std::string_view PROMPT = "mapsci> ";
@@ -121,7 +121,7 @@ void REPL::run() {
         }
 
         std::stringstream input_s{*input};
-        auto [parse_success, ast, pragmas] = parse_source(input_s, parse_options_, std::cerr);
+        auto [parse_success, ast, pragmas] = process_source(input_s, parse_options_, std::cerr);
         
         if (
             (!parse_success && !options_.ignore_errors) || 
@@ -201,7 +201,7 @@ void REPL::eval(std::unique_ptr<llvm::Module> module_) {
 }
 
 std::string REPL::parse_type(std::istream& input_stream) {
-    auto [success, ast, pragmas] = parse_source(input_stream, parse_options_, std::cout);
+    auto [success, ast, pragmas] = process_source(input_stream, parse_options_, std::cout);
     
     if (!success && !options_.ignore_errors) {
         std::cout << "ERROR: parsing type failed" << std::endl;
@@ -326,14 +326,14 @@ void REPL::update_parse_options() {
     parse_options_.ignore_errors = options_.ignore_errors;
 
     if (options_.stop_after == Stage::layer1) {
-        parse_options_.stop_after = ParseStage::layer1;
+        parse_options_.stop_after = CompilationLayer::layer1;
         return;
     }
 
     if (options_.stop_after == Stage::layer2) {
-        parse_options_.stop_after = ParseStage::layer2;
+        parse_options_.stop_after = CompilationLayer::layer2;
         return;
     }
 
-    parse_options_.stop_after = ParseStage::done;
+    parse_options_.stop_after = CompilationLayer::done;
 }

@@ -8,7 +8,7 @@
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 
-#include "mapsc/parser/full_parse.hh"
+#include "mapsc/process_source.hh"
 
 class JIT_Manager {
 public:
@@ -74,7 +74,7 @@ private:
     JIT_Manager* jit_;
     llvm::raw_ostream* error_stream_;
     Options options_ = {};
-    Maps::ParseOptions parse_options_ = {};
+    Maps::ProcessSourceOptions parse_options_ = {};
 
     // std::unique_ptr<Mapsc::Pragmas> pragmas_{};
 };

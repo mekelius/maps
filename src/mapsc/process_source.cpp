@@ -1,4 +1,4 @@
-#include "full_parse.hh"
+#include "process_source.hh"
 
 #include <memory>
 
@@ -18,7 +18,7 @@ namespace Maps {
 // if parse fails at any point, returns nullopt, 
 // except if ignore errors is true returns the broken ast
 tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
-    parse_source(std::istream& source_is, const ParseOptions& options, std::ostream& debug_ostream) {
+    process_source(std::istream& source_is, const ProcessSourceOptions& options, std::ostream& debug_ostream) {
 
     unique_ptr<PragmaStore> pragmas = make_unique<PragmaStore>();
     unique_ptr<AST_Store> ast = make_unique<AST_Store>();
@@ -49,7 +49,7 @@ tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
     if (!ast->is_valid && !options.ignore_errors)
         return {false, std::move(ast), std::move(pragmas)};
 
-    if (options.stop_after == ParseStage::layer1)
+    if (options.stop_after == CompilationLayer::layer1)
         return {true, std::move(ast), std::move(pragmas)};
 
     // ----- name resolution -----
@@ -70,7 +70,7 @@ tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
     if (!ast->is_valid && !options.ignore_errors)
         return {false, std::move(ast), std::move(pragmas)};
 
-    if (options.stop_after == ParseStage::layer2)
+    if (options.stop_after == CompilationLayer::layer2)
         return {true, std::move(ast), std::move(pragmas)};
 
     // ----- type checks -----

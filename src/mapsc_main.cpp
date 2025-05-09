@@ -18,7 +18,7 @@
 
 #include "mapsc/ast/ast_store.hh"
 
-#include "mapsc/parser/full_parse.hh"
+#include "mapsc/process_source.hh"
 
 #include "mapsc/llvm/ir_generator.hh"
 #include "mapsc/llvm/ir_builtins.hh"
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
     
     std::cerr << "Parsing source file(s)...\n";
 
-    auto [success, ast, pragmas] = Maps::parse_source(source_is);
+    auto [success, ast, pragmas] = Maps::process_source(source_is);
     if (!success) {
         log_error("parsing failed");
         return EXIT_FAILURE;

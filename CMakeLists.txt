@@ -57,7 +57,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/parser/lexer.cpp
     src/mapsc/parser/parser_layer1.cpp
     src/mapsc/parser/parser_layer2.cpp
-    src/mapsc/parser/full_parse.cpp
+    src/mapsc/process_source.cpp
 
     src/mapsc/procedures/inline.cpp
     src/mapsc/procedures/simplify.cpp
