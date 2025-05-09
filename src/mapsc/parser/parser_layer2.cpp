@@ -9,7 +9,7 @@
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/types/casts.hh"
 
-using Logging::log_error, Logging::log_info;
+using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 namespace Maps {
 
@@ -67,7 +67,7 @@ void TermedExpressionParser::run() {
     *expression_ = *result;
 
     log_info("parsed a termed expression",
-        Logging::MessageType::parser_debug_termed_expression, result->location);
+        MessageType::parser_debug_termed_expression, result->location);
 }
 
 Expression* TermedExpressionParser::get_term() {

@@ -9,7 +9,7 @@
 #include "mapsc/logging.hh"
 #include "mapsc/words.hh"
 
-using Logging::log_error;
+using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_token;
 
 // ----- Public methods -----
 Lexer::Lexer(std::istream* source_is, SourceID source_id)
@@ -20,7 +20,7 @@ Lexer::Lexer(std::istream* source_is, SourceID source_id)
 Token Lexer::get_token() {
     Token token = get_token_();
 
-    Logging::log_token(prev_token_.get_string(), prev_token_.location);
+    log_token(prev_token_.get_string(), prev_token_.location);
     
     // a bit of a hack to keep the outputs in sync
     prev_token_ = token;

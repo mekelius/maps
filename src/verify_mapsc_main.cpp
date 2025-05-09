@@ -12,6 +12,8 @@
 
 #include "mapsc/procedures/name_resolution.hh"
 
+using Maps::LogLevel, Maps::Logger;
+
 constexpr unsigned int OUTPUT_WIDTH = 80;
 constexpr std::string_view USAGE = "USAGE: verify_mapsc inputfile... [ -v | --verbose | --parser-debug | --debug | -q | --quiet | -e | --everything ] [ -t | --tokens ]";
 
@@ -26,8 +28,6 @@ std::string separator(char character = '-', const std::string& title = "") {
 }
 
 int main(int argc, char* argv[]) {
-    using Logging::LogLevel, Logging::logs_since_last_check;
-    Logging::init_logging(&std::cout);
 
     if (argc < 2) {
         std::cerr << USAGE << std::endl;
@@ -38,25 +38,27 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> args = { argv + 1, argv + argc };
     std::vector<std::string> source_filenames{};
 
-    Logging::Settings::set_loglevel(LogLevel::default_);
+    Logger::Options logger_options;
 
     for (std::string arg : args) {
         if (arg == "-t" || arg == "--tokens") {
             // lexer_ostream = &std::cout;
 
         } else if (arg == "-v" || arg == "--verbose" || arg == "--debug" || arg == "--parser-debug") {
-            Logging::Settings::set_loglevel(LogLevel::debug);
+            logger_options.set(LogLevel::debug());
             
         } else if (arg == "-q" || arg == "--quiet") {
-            Logging::Settings::set_loglevel(LogLevel::quiet);
+            logger_options.set(LogLevel::quiet());
 
         } else if (arg == "-e" || arg == "--everything") {
-            Logging::Settings::set_loglevel(LogLevel::everything);
+            logger_options.set(LogLevel::everything());
 
         } else {
             source_filenames.push_back(arg);
         }
     }
+
+    Logger::set_global_options(logger_options);
 
     std::cout << separator('#') << separator('#', "VERIFY MAPSC") << "\n" 
               << "Running with " << source_filenames.size() << " input files\n\n";
@@ -82,7 +84,7 @@ int main(int argc, char* argv[]) {
         std::unique_ptr<Maps::AST_Store> ast = std::make_unique<Maps::AST_Store>();
         Maps::ParserLayer1{ast.get(), pragmas.get()}.run(source_file);
 
-        if (logs_since_last_check()) 
+        if (Logger::logs_since_last_check()) 
             std::cout << "\n";
         if (!ast->is_valid) {
             std::cerr << "layer1 failed\n\n";
@@ -93,7 +95,7 @@ int main(int argc, char* argv[]) {
 
         resolve_identifiers(*ast);
 
-        if(logs_since_last_check()) 
+        if(Logger::logs_since_last_check()) 
             std::cout << "\n";
         if (!ast->is_valid) {
             std::cerr << "name resolution failed\n\n";
@@ -104,7 +106,7 @@ int main(int argc, char* argv[]) {
 
         Maps::ParserLayer2{ast.get(), pragmas.get()}.run();
 
-        if(logs_since_last_check()) 
+        if(Logger::logs_since_last_check()) 
             std::cout << "\n";
         if (!ast->is_valid) {
             std::cerr << "layer2 failed\n\n";

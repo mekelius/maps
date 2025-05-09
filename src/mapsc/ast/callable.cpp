@@ -9,7 +9,7 @@
 #include "mapsc/types/function_type.hh"
 #include "mapsc/ast/ast_node.hh"
 
-using Logging::log_error;
+using Maps::GlobalLogger::log_error;
 
 namespace Maps {
 

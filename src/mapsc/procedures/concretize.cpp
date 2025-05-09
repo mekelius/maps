@@ -7,7 +7,7 @@
 #include "mapsc/procedures/inline.hh"
 
 using std::get, std::get_if, std::optional, std::nullopt;
-using Logging::log_error;
+using Maps::GlobalLogger::log_error;
 
 namespace Maps {
 

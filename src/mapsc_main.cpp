@@ -24,6 +24,10 @@
 #include "mapsc/llvm/ir_builtins.hh"
 #include "mapsc/llvm/obj_output.hh"
 
+
+using std::unique_ptr, std::make_unique;
+using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
+
 // TODO: handle multiple inputfiles
 constexpr std::string_view USAGE = "USAGE: testc inputfile [-o filename] [-ir filename]";
 
@@ -31,8 +35,6 @@ constexpr std::string_view DEFAULT_MODULE_NAME = "module";
 
 constexpr std::string_view DEFAULT_OBJ_FILE_PATH = "out.o";
 constexpr std::string_view DEFAULT_IR_FILE_PATH = "out.ll";
-
-using std::unique_ptr, std::make_unique;
 
 struct CL_Options {
     std::vector<std::string> input_file_paths = {};
@@ -86,8 +88,7 @@ std::optional<CL_Options> parse_cl_args(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-    Logging::init_logging(&std::cerr);
-    llvm::raw_os_ostream error_stream{std::cerr};
+    llvm::raw_os_ostream error_stream{std::cout};
 
     std::optional<CL_Options> cl_options = parse_cl_args(argc, argv);
 
@@ -114,7 +115,7 @@ int main(int argc, char** argv) {
 
     auto [success, ast, pragmas] = Maps::parse_source(source_is);
     if (!success) {
-        Logging::log_error("parsing failed");
+        log_error("parsing failed");
         return EXIT_FAILURE;
     }
 

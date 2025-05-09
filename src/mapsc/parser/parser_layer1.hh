@@ -44,9 +44,9 @@ protected:
     void fail(const std::string& message, SourceLocation location);
     
     void log_info(const std::string& message, 
-        Logging::MessageType message_type = Logging::MessageType::general_info) const;
+        MessageType message_type = MessageType::general_info) const;
     
-    void log_info(const std::string& message, Logging::MessageType message_type, 
+    void log_info(const std::string& message, MessageType message_type, 
         SourceLocation location) const;
 
     // ---- IDENTIFIERS -----

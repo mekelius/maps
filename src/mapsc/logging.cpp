@@ -1,92 +1,73 @@
 #include "mapsc/logging.hh"
 
-namespace Logging {
+using std::optional, std::nullopt, std::unique_ptr, std::make_unique;
 
-LogLevel LogLevel::nothing;
-LogLevel LogLevel::quiet;
-LogLevel LogLevel::default_;
-LogLevel LogLevel::debug;
-LogLevel LogLevel::everything;
+namespace Maps {
 
-LogLevel Settings::current_loglevel = LogLevel::default_;
+namespace {
 
-std::ostream* Settings::ostream;
-std::ofstream* Settings::tokens_ofstream;
+// at line 1000 the token stream is gonna shift right, but that's ok
+constexpr unsigned int LINE_COL_FORMAT_PADDING = 8;
 
 bool log_check_flag = false;
 
-void LogLevel::init(LogLevel log_level) {    
-    for (auto it = LogLevel::nothing.message_types.begin(); it != LogLevel::nothing.message_types.end(); it++) {
-        *it = false;
-    }
-    
-    LogLevel::quiet.set_message_type(MessageType::general_info, false);
-    
-    for (auto it = LogLevel::everything.message_types.begin(); it != LogLevel::everything.message_types.end(); it++) {
-        *it = true;
-    }
-    
-    LogLevel::debug.set_message_type(MessageType::parser_debug, true);
-    LogLevel::debug.set_message_type(MessageType::parser_debug_identifier, true);
-    LogLevel::debug.set_message_type(MessageType::pragma_debug, true);
-    LogLevel::debug.set_message_type(MessageType::ir_gen_debug, true);
-    LogLevel::debug.set_message_type(MessageType::post_parse_debug, true);
-
-    Settings::set_loglevel(log_level);
+std::string line_col_padding(unsigned int width) {
+    return width < LINE_COL_FORMAT_PADDING ? 
+        std::string(LINE_COL_FORMAT_PADDING - width, ' ') : " ";
 }
 
-void log_error(const std::string& message, SourceLocation location) {
-    if (!Settings::ostream)
-        return;
-    if (!Settings::current_loglevel.has_message_type(MessageType::error))
+} // namespace
+
+Logger::Options Logger::global_options = Logger::Options{};
+Logger Logger::global_logger = Logger{};
+
+Logger Logger::get() {
+    return Logger{};
+}
+void Logger::set_global_options(const Options& options) {
+    global_options = options;
+}
+
+void Logger::log_error(const std::string& message, SourceLocation location) {
+    if (!options_->has_message_type(MessageType::error))
         return;
     
     std::string location_string = location.to_string();
     
     log_check_flag = true;
 
-    *Settings::ostream
+    *options_->ostream
         << location_string << line_col_padding(location_string.size())
         << "error: " << message << "\n";
 }
 
-void log_info(const std::string& message, MessageType message_type, SourceLocation location) {
-    if (!Settings::ostream)
-        return;
-    if (!Settings::current_loglevel.has_message_type(message_type))
+void Logger::log_info(const std::string& message, MessageType message_type, SourceLocation location) {
+    if (!options_->has_message_type(message_type))
         return;
 
     std::string location_string = location.to_string();
 
     log_check_flag = true;
 
-    *Settings::ostream
+    *options_->ostream
         << location_string << line_col_padding(location_string.size())
         << "info:  " << message << '\n';
 }
 
-void log_token(const std::string& message, SourceLocation location) {
-    if (Settings::ostream && Settings::current_loglevel.has_message_type(MessageType::lexer_debug_token)) {
-        log_check_flag = true;
+void Logger::log_token(const std::string& message, SourceLocation location) {
+    if (!options_->has_message_type(MessageType::lexer_debug_token))
+        return;
+    log_check_flag = true;
 
-        *Settings::ostream
-            << location.to_string() << line_col_padding(location.to_string().size()) 
-            << "token: " << message << '\n';
-    }
-
-    if (Settings::tokens_ofstream) {
-        log_check_flag = true;
-
-        *Settings::ostream
-            << location.to_string() << line_col_padding(location.to_string().size()) 
-            << "token: " << message << '\n';
-    }
+    *options_->ostream
+        << location.to_string() << line_col_padding(location.to_string().size()) 
+        << "token: " << message << '\n';
 }
 
-bool logs_since_last_check() {
+bool Logger::logs_since_last_check() {
     bool value = log_check_flag;
     log_check_flag = false;
     return value;
 }
 
-} //namespace logging
+} //namespace Maps

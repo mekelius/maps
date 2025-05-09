@@ -6,7 +6,7 @@
 #include "mapsc/logging.hh"
 
 using std::optional;
-using Logging::log_error;
+using Maps::GlobalLogger::log_error;
 
 namespace IR {
 
@@ -26,7 +26,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
                 Maps::Void, {maps_type}),
             llvm::FunctionType::get(generator.types_.void_t, {llvm_type}, false))) {
         
-            Logging::log_error("Creating builtin functions failed");
+            log_error("Creating builtin functions failed");
             return false;
         }
     }

@@ -4,7 +4,7 @@
 
 #include "mapsc/logging.hh"
 
-using Logging::log_error, Logging::log_info;
+using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 namespace Maps {
 
@@ -46,7 +46,7 @@ bool resolve_identifier(AST_Store& ast, Expression* expression) {
     // check builtins
     std::optional<Callable*> builtin = ast.builtins_scope_->get_identifier(expression->string_value());
     if (builtin) {
-        log_info("Parsed built-in", Logging::MessageType::parser_debug_terminal, expression->location);
+        log_info("Parsed built-in", MessageType::parser_debug_terminal, expression->location);
         expression->expression_type = ExpressionType::reference;
         expression->type = (*builtin)->get_type();
         expression->value = *builtin;
@@ -92,7 +92,7 @@ bool resolve_operator(AST_Store& ast, Expression* expression) {
             return false;
         }
 
-        log_info("Parsed built-in operator", Logging::MessageType::parser_debug_terminal, expression->location);
+        log_info("Parsed built-in operator", MessageType::parser_debug_terminal, expression->location);
         expression->expression_type = ExpressionType::operator_reference;
         expression->value = *builtin;
         expression->type = (*builtin)->get_type();

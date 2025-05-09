@@ -16,11 +16,9 @@ extern "C" {
 #include "mapsc/ast/ast_node.hh"
 
 using std::nullopt;
-using Logging::log_error;
-
+using Maps::GlobalLogger::log_error;
 
 namespace Maps {
-
 
 namespace {
 

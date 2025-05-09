@@ -24,7 +24,7 @@ tuple<bool, unique_ptr<AST_Store>, unique_ptr<PragmaStore>>
     ReverseParser reverse_parser{&debug_ostream};
     
     if (!ast->init_builtins()) {
-        Logging::log_error("Initializing builtins failed");
+        GlobalLogger::log_error("Initializing builtins failed");
         assert(false && "Initializing builtins failed");
         return {false, std::move(ast), std::move(pragmas)};
     }

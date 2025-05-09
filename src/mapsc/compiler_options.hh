@@ -53,10 +53,10 @@ public:
 
 private:
     CompilerOptions(const Entries& entries, bool for_all_threads = false);
+    std::unique_ptr<Entries> entries_;
+    
     static std::string_view get_key_string(CompilerOption key);
     static std::string_view get_default(CompilerOption key);
-
-    std::unique_ptr<Entries> entries_;
 
     static std::optional<Entries*> global_entries_;
     static std::map<std::jthread::id, Entries*> entries_per_thread;

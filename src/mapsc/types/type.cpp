@@ -8,9 +8,9 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/casts.hh"
 
-using Logging::log_error;
-
 namespace Maps {
+
+using GlobalLogger::log_error;
 
 using std::optional, std::nullopt;
 

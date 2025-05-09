@@ -22,10 +22,11 @@
 
 using llvm::LLVMContext;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;
-using Logging::log_error, Logging::log_info;
+using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, Maps::StatementType, 
     Maps::PragmaStore;
 using Maps::Helpers::capitalize;
+using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 #define BAD_STATEMENT_TYPE StatementType::broken:\
                       case StatementType::illegal:\
@@ -277,7 +278,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Ca
     if (!signature) {
         assert(callable.location && 
             "in IR_Generator::handle_function: callable missing location, did it try to handle a builtin");
-        Logging::log_error("unable to convert type signature for " + callable.name, 
+        log_error("unable to convert type signature for " + callable.name, 
             *callable.location);
         return nullopt;
     }

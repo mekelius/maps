@@ -4,7 +4,7 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/function_type.hh"
 
-using Logging::log_error, Logging::log_info;
+using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info, Maps::MessageType;
 using std::optional, std::nullopt, std::vector;
 
 namespace IR {
@@ -46,7 +46,7 @@ bool TypeMap::insert(const Maps::Type* maps_type, llvm::Type* llvm_type) {
     
     if (contains(*maps_type)) {
         log_info("Attempting to store duplicate of \"" + maps_type->to_string() + "\" in TypeMap",
-            Logging::MessageType::ir_gen_debug);
+            MessageType::ir_gen_debug);
         return false;
     }
 

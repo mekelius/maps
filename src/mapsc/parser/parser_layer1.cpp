@@ -18,8 +18,6 @@
 #include "mapsc/procedures/simplify.hh"
 #include "mapsc/parser/token.hh"
 
-using Logging::LogLevel;
-using Logging::MessageType;
 using std::optional, std::nullopt, std::make_unique;
 
 namespace Maps {
@@ -127,18 +125,18 @@ void ParserLayer1::fail(const std::string& message) {
 }
 
 void ParserLayer1::fail(const std::string& message, SourceLocation location) {
-    Logging::log_error(message, location);
+    GlobalLogger::log_error(message, location);
     declare_invalid();
 }
 
-void ParserLayer1::log_info(const std::string& message, Logging::MessageType message_type) const {
-    log_info(message, message_type, current_token().location);
+void ParserLayer1::log_info(const std::string& message, MessageType message_type) const {
+    GlobalLogger::log_info(message, message_type, current_token().location);
 }
 
-void ParserLayer1::log_info(const std::string& message, Logging::MessageType message_type, 
+void ParserLayer1::log_info(const std::string& message, MessageType message_type, 
     SourceLocation location) const {
     
-    Logging::log_info(message, message_type, location);
+    GlobalLogger::log_info(message, message_type, location);
 }
 
 
@@ -154,7 +152,7 @@ void ParserLayer1::create_identifier(const std::string& name, SourceLocation loc
 
 void ParserLayer1::create_identifier(const std::string& name,
     CallableBody body, SourceLocation location) {
-    log_info("created identifier" + name, Logging::MessageType::parser_debug_identifier);
+    log_info("created identifier" + name, MessageType::parser_debug_identifier);
     ast_->globals_->create_callable(name, body, location);
 }
 

@@ -23,7 +23,7 @@
 #include "mapsci/repl.hh"
 
 using std::unique_ptr, std::make_unique;
-using Logging::LogLevel;
+using Maps::MessageType, Maps::LogLevel, Maps::Logger;
 
 const std::string DATA_SUBDIRECTORY = "mapsc";
 const std::string HISTORY_FILENAME = "mapsci_history";
@@ -83,12 +83,12 @@ std::optional<std::filesystem::path> get_default_history_file_path() {
 }
 
 int main(int argc, char* argv[]) {
-    Logging::init_logging(&std::cout);
     llvm::raw_os_ostream error_stream{std::cerr};
 
     std::vector<std::string> args = {argv + 1, argc + argv};
     std::vector<std::string> source_filenames{};
 
+    Logger::Options logger_options;
     REPL::Options repl_options;
     repl_options.save_history = true;
 
@@ -102,16 +102,16 @@ int main(int argc, char* argv[]) {
         std::getline(arg_s, value);
 
         if (key == "-t" || key == "--tokens") {
-            Logging::Settings::set_message_type(Logging::MessageType::lexer_debug_token, true);
+            logger_options.set(MessageType::lexer_debug_token, true);
 
         } else if (key == "--debug" || key == "--parser-debug") {
-            Logging::Settings::set_loglevel(LogLevel::debug);
+            logger_options.set(LogLevel::debug());
             
         } else if (key == "-q" || key == "--quiet") {
-            Logging::Settings::set_loglevel(LogLevel::quiet);
+            logger_options.set(LogLevel::quiet());
 
         } else if (key == "-e" || key == "--everything") {
-            Logging::Settings::set_loglevel(LogLevel::everything);
+            logger_options.set(LogLevel::everything());
 
         } else if (key == "--ir" || key == "--print-ir" || key == "--dump-ir") {
             repl_options.print_ir = true;
@@ -161,6 +161,8 @@ int main(int argc, char* argv[]) {
             source_filenames.push_back(key);
         }
     }
+
+    Logger::set_global_options(logger_options);
 
     if (repl_options.save_history && repl_options.history_file_path.empty()) {
         auto history_file_path = get_default_history_file_path();

@@ -6,7 +6,7 @@
 #include "mapsc/logging.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 
-using Logging::log_error;
+using Maps::GlobalLogger::log_error;
 
 namespace Maps {
 
