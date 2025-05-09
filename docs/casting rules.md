@@ -55,6 +55,7 @@ These are compile time static casts implemented either
 - Int >>> Number, Number >>> Int?
 - Float >>> Number, Number >>> Float?
 - Int >>> Float, Float >>> Int?
+    - Note that Int >>> FLoat is lossless since we require that Int is 32 and Float is 64 
 
 ### Booleans
 

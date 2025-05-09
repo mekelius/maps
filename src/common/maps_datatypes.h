@@ -28,6 +28,8 @@ typedef bool maps_Boolean;
 #ifndef __STDC_IEC_559__
 #error "64 bit floating point required"
 #endif
+// c++ version
+// static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 floating point");
 typedef double maps_Float;
 
 
