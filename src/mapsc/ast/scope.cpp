@@ -48,9 +48,18 @@ std::optional<Callable*> Scope::create_binary_operator(const std::string& name, 
     Callable* callable = *create_callable(name, body, location);
     callable->operator_props = operator_props;
 
-    // !!!
-    callable->set_type(*type);
+    // check that the target has a proper type
+    if (auto expression = std::get_if<Expression*>(&body)) {
+        if ((*expression)->type->arity() == 2)
+            return callable;
 
+        // TODO: deal with this
+        // if ((*expression)->type->arity() == 1) {
+            
+        // }
+    } 
+        
+    callable->set_type(*type);
     return callable;
 }
 
@@ -99,8 +108,13 @@ std::optional<Expression*> Scope::create_call_expression(
 
 Expression* Scope::create_call_expression(Callable* callee, std::vector<Expression*> args, 
         SourceLocation location /*, expected return type?*/) {
-    return ast_->create_expression(ExpressionType::call, CallExpressionValue{callee, args}, *callee->get_type(), 
-        location);
+    auto callee_type = callee->get_type();
+    auto return_type = callee_type;
+    if (callee_type->is_function())
+            return_type = dynamic_cast<const FunctionType*>(callee_type)->return_type_;
+
+    return ast_->create_expression(ExpressionType::call, CallExpressionValue{callee, args}, 
+        *return_type, location);
 }
 
 } // namespace AST

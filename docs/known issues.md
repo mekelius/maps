@@ -12,3 +12,7 @@
     - also stack overflow if you feed it a pointer??
         - sounds like a disaster
 - Expression::has_native_representation atm. hard codes functions as the only complex type
+- Scope::create_unary_operator forces the type into Hole->Hole
+- Scope::create_binary_operator should be combined with the logic used in layer2 CallState
+    - also only handles binary functions
+- :stop_at doesn't print error message on fail
