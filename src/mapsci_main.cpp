@@ -118,6 +118,9 @@ int main(int argc, char* argv[]) {
 
         } else if (key == "--ir" || key == "--print-ir" || key == "--dump-ir") {
             repl_options.print_ir = true;
+            
+        } else if (key == "--no-ir" || key == "--no-codegen") {
+            repl_options.stop_after = std::min(REPL::Stage::layer2, repl_options.stop_after);
 
         } else if(key == "--no-eval") {
             repl_options.eval = false;

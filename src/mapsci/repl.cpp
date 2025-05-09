@@ -151,7 +151,7 @@ void REPL::run() {
         if (!ir_success && !options_.ignore_errors)
             continue;
 
-        if (options_.stop_after == Stage::ir)
+        if (options_.stop_after == Stage::ir || !options_.eval)
             continue;
 
         eval(std::move(module_));
@@ -196,10 +196,8 @@ bool REPL::save_history() {
 void REPL::eval(std::unique_ptr<llvm::Module> module_) {
     jit_->reset();
 
-    if (options_.eval) {
-        jit_->compile_and_run(static_cast<std::string>(IR::REPL_WRAPPER_NAME), std::move(module_));
-        std::cout << std::endl;
-    }
+    jit_->compile_and_run(static_cast<std::string>(IR::REPL_WRAPPER_NAME), std::move(module_));
+    std::cout << std::endl;
 }
 
 std::string REPL::parse_type(std::istream& input_stream) {
