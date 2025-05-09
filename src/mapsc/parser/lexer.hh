@@ -47,8 +47,8 @@ private:
     Token prev_token_ = Token{TokenType::dummy, {0,0}}; // a bit of a hack to keep the tokens in sync with the parser
     std::vector<unsigned int> indent_stack_ = {0};
     
-    SourceID source_id_;
     std::istream* source_is_;
+    SourceID source_id_;
 };
 
 #endif

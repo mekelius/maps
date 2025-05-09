@@ -154,10 +154,12 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
 // ----- CONCRETIZATION FUNCTIONS -----
 
 bool is_concrete(Expression& expression) {
+    (void) expression;
     return true;
 }
 
 bool not_concretizable(Expression& expression) {
+    (void) expression;
     return false;
 }
 
