@@ -30,6 +30,11 @@ std::string ReverseParser::linebreak() {
 
 ReverseParser& ReverseParser::reverse_parse(AST_Store& ast) {
     reset();
+
+    for (auto [name, callable]: ast.globals_->identifiers_in_order_) {
+        *this << "let " << name << " = " << callable->body << ";\n\n";
+    }
+
     return *this << ast.root_->body << '\n';
 }
 

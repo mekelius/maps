@@ -17,3 +17,4 @@
     - also only handles binary functions
 - :stop_at doesn't print error message on fail
 - llvm generated code uses i64 instead of i32
+- lexer constructor eats a single character from the input stream, which is not ideal

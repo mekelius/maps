@@ -154,7 +154,7 @@ void ParserLayer1::create_identifier(const std::string& name, SourceLocation loc
 
 void ParserLayer1::create_identifier(const std::string& name,
     CallableBody body, SourceLocation location) {
-    log_info("created identifier" + name, MessageType::parser_debug_identifier);
+    log_info("created identifier " + name, MessageType::parser_debug_identifier);
     ast_->globals_->create_callable(name, body, location);
 }
 
