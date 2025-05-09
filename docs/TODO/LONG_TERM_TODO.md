@@ -36,16 +36,13 @@
 - Clean up the responsibilities of converting values
     - now IR_gen does some and earlier passes do some
 - Name resolution should return false on fail
-- rename TypeRegistry to TypeStore
 - Fix pragmas when we do multiple files
 - move simplifying blocks and other ast nodes out of layer1
-- rename AST to AST_Store
 - use vector or array instead of hashmap as TypeMap for efficiency
 
 #### UX tweaks
 
 - aliases
-    - :toggle no-eval == :toggle eval
 - :no-eval and :eval
 
 ## Planned for 0.0.2
