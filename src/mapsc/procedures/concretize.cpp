@@ -60,13 +60,9 @@ bool concretize_call(Expression& call) {
     return false;
 }
 
-
 bool concretize_reference(Expression& value) {
-    if (value.type->is_native() == db_true)
-        return true;
-
-    if (value.type->is_castable_to_native() == db_false)
-        return false;
+    if (!value.declared_type)
+        return substitute_value_reference(value);
 
     if (!value.type->concretize(value))
         return false;

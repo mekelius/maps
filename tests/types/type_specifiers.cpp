@@ -5,11 +5,9 @@
 
 #include "mapsc/types/type.hh"
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/parser/full_parse.hh"
 #include "mapsc/parser/parser_layer2.hh"
 
 using namespace Maps;
-
 
 TEST_CASE("Should parse a numberliteral with the correct type") {
     AST_Store ast{};
@@ -35,18 +33,4 @@ TEST_CASE("Should be able to cast a string literal into Int") {
 
     CHECK(*expr->type == Int);
     CHECK(std::get<maps_Int>(expr->value) == 23);
-}
-
-TEST_CASE("Integration test: parse_source should parse a numberliteral with the correct type") {
-    std::stringstream source{"let x = Int 34"};
-    
-    auto [success, ast, _1] = parse_source(source);
-
-    CHECK(success);
-
-    CHECK(ast->globals_->identifier_exists("x"));
-
-    auto x = (*ast->globals_->get_identifier("x"));
-
-    CHECK(*x->get_type() == Int);
 }

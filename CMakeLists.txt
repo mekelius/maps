@@ -122,11 +122,13 @@ add_executable(verify_mapsc
 
 target_link_libraries(verify_mapsc mapsc_frontend)
 
-# --------------------- UNIT_TESTS ---------------------
+# ----------------------- TESTS -----------------------
 
 add_executable(tests
     tests/tests_main.cpp
     
+    tests/full_runs.cpp
+
     tests/pragmas.cpp
     tests/compiler_options.cpp
 

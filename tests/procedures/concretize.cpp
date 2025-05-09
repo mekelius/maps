@@ -3,6 +3,7 @@
 #include "mapsc/procedures/concretize.hh"
 #include "mapsc/ast/ast_node.hh"
 #include "mapsc/types/type_store.hh"
+#include "mapsc/compiler_options.hh"
 
 using namespace Maps;
 using namespace std;
@@ -59,6 +60,7 @@ TEST_CASE("Concretizer should run variable substitution with a concrete type") {
     Expression value{ExpressionType::value, TSL, 1, &Int};
     Callable callable{&value, ""};
     Expression ref{ExpressionType::reference, TSL, &callable};
+    ref.type = &Int;
 
     CHECK(concretize(ref));
     CHECK(ref == value);
@@ -68,6 +70,7 @@ TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
     Expression value{ExpressionType::value, TSL, 1, &Int};
     Callable callable{&value, ""};
     Expression call{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
+    call.type = &Int;
 
     CHECK(concretize(call));
     CHECK(call == value);
