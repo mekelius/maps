@@ -17,10 +17,6 @@ let names_can_have_numbers2223
 
 let names_cannot_start_with_number = 213213asd // numeric literal
 
-let UpperCaseNames are_types
-
 let namesCanBeMixedCase
 
-ALL_CAPS_IS_CONST
-
-and_starting_with_a_reserved_word_is_ok
+let and_starting_with_a_reserved_word_is_ok

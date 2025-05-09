@@ -81,6 +81,13 @@ int main(int argc, char* argv[]) {
         
         std::cout << "run layer1\n\n";
         std::unique_ptr<Maps::AST_Store> ast = std::make_unique<Maps::AST_Store>();
+
+        if (!ast->init_builtins()) {
+            Maps::GlobalLogger::log_error("Initializing builtins failed");
+            assert(false && "Initializing builtins failed");
+            return EXIT_FAILURE;
+        }    
+
         Maps::ParserLayer1{ast.get(), pragmas.get()}.run(source_file);
 
         if (Logger::logs_since_last_check()) 
