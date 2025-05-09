@@ -8,6 +8,7 @@
 #include "mapsc/procedures/name_resolution.hh"
 #include "mapsc/procedures/type_check.hh"
 #include "mapsc/procedures/reverse_parse.hh"
+#include "mapsc/procedures/concretize.hh"
 
 using std::tuple, std::optional, std::make_optional, std::nullopt;
 using std::unique_ptr, std::make_unique;

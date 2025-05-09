@@ -12,7 +12,7 @@ AST_Store::AST_Store() {
 
 bool AST_Store::init_builtins() {
     // !!! this isn't good
-    return ::init_builtins(*this);
+    return Maps::init_builtins(*this);
 }
 
 void AST_Store::set_root(CallableBody root) {

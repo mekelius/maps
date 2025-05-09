@@ -123,8 +123,15 @@ bool cast_from_Boolean(const Type* target_type, Expression& expression) {
 }
 
 bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
-    if (*target_type == String)
+    if (*target_type == String) {
+        cast_value<std::string>(expression, &String, expression.string_value());
         return true;
+    }
+    
+    if (*target_type == Number) {
+        cast_value<std::string>(expression, &Number, expression.string_value());
+        return true;
+    }
 
     if (*target_type == Int) {
         if (!std::holds_alternative<std::string>(expression.value))
@@ -142,10 +149,6 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
 
     if (*target_type == Float) {
         
-    }
-
-    if (*target_type == Number) {
-
     }
 
     return false;

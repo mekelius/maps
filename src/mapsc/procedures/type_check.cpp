@@ -8,6 +8,7 @@
 #include "mapsc/types/casts.hh"
 #include "mapsc/ast/ast_node.hh"
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/procedures/concretize.hh"
 
 using std::get, std::get_if, std::optional, std::nullopt;
 using Maps::GlobalLogger::log_error;
@@ -46,6 +47,9 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
         log_error(expression->string_value() + " is not a valid number", expression->location);
         return false;
     }
+
+    if (concretize(*expression))
+        return true;
 
     log_error("Found a non-reduced type: " + static_cast<std::string>(expression->type->name()), 
         expression->location);
