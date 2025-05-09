@@ -239,7 +239,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(const s
     
     auto wrapper = function_definition(name, *maps_type, *llvm_type);
 
-    auto value = global_constant(expression);
+    auto value = handle_expression(expression);
 
     if (!value) {
         fail("Converting " + expression.log_message_string() + " to a value failed");

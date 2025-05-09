@@ -276,6 +276,9 @@ std::string Expression::log_message_string() const {
 
         case ExpressionType::deleted:
             return "deleted expession";
+
+        default:
+            assert(false && "unknown expression type");
     }
 }
 

@@ -16,3 +16,4 @@
 - Scope::create_binary_operator should be combined with the logic used in layer2 CallState
     - also only handles binary functions
 - :stop_at doesn't print error message on fail
+- llvm generated code uses i64 instead of i32
