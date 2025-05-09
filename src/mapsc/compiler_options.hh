@@ -29,6 +29,7 @@ constexpr auto COMPILER_OPTION_COUNT = __LINE__ - COMPILER_OPTIONS_START_LINE - 
 // instances, and will change the configuration for that thread specifically
 // When the instance destructor runs, the options return to their defaults
 // We'll see if this kind of hack works in the long run
+// The thread safety is mainly for multithreaded testing, if we want to do that at some point
 class CompilerOptions {
 public:
     using Entries = std::map<CompilerOption, std::string>;
@@ -37,7 +38,11 @@ public:
     // Obtain a CompilerOptions object that serves as a lock for options in this thread
     // Allows the owner to set options, but if it destructs the options will revert
     // Other threads will not be affected in any way
-    static std::optional<std::unique_ptr<CompilerOptions>> lock(const Entries& entries = {});
+    [[nodiscard]] static std::optional<std::unique_ptr<CompilerOptions>> 
+        lock(const Entries& entries = {}, bool for_all_threads = true);
+    
+    [[nodiscard]] static std::optional<std::unique_ptr<CompilerOptions>> 
+        lock_for_this_thread(const Entries& entries = {});
     
     static std::string_view get(CompilerOption key);
     static Entry get_key_val_pair(CompilerOption key);
@@ -47,12 +52,13 @@ public:
     ~CompilerOptions();
 
 private:
-    CompilerOptions(const Entries& entries);
+    CompilerOptions(const Entries& entries, bool for_all_threads = false);
     static std::string_view get_key_string(CompilerOption key);
     static std::string_view get_default(CompilerOption key);
 
     std::unique_ptr<Entries> entries_;
 
+    static std::optional<Entries*> global_entries_;
     static std::map<std::jthread::id, Entries*> entries_per_thread;
 };
 
