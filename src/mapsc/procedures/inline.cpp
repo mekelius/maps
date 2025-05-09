@@ -6,12 +6,18 @@
 #include "mapsc/logging.hh"
 #include "mapsc/ast/ast_node.hh"
 #include "mapsc/types/function_type.hh"
+#include "mapsc/compiler_options.hh"
 
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 namespace Maps {
 
 bool inline_call(Expression& expression) {
+    #ifndef NDEBUG
+    if (CompilerOptions::get(CompilerOption::DEBUG_no_inline) == "true")
+        return false;
+    #endif
+    
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
 
@@ -20,6 +26,11 @@ bool inline_call(Expression& expression) {
 }
 
 bool inline_call(Expression& expression, Callable& callable) {
+    #ifndef NDEBUG
+    if (CompilerOptions::get(CompilerOption::DEBUG_no_inline) == "true")
+        return false;
+    #endif
+
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
 

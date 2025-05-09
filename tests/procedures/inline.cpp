@@ -3,6 +3,7 @@
 #include "mapsc/ast/ast_node.hh"
 #include "mapsc/procedures/inline.hh"
 #include "mapsc/types/type_store.hh"
+#include "mapsc/compiler_options.hh"
 
 using namespace Maps;
 
@@ -47,6 +48,22 @@ TEST_CASE("Should be able to inline a nullary call to a value callable as if a r
     Expression ref{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
 
     COMMON_TESTS(inline_call);
+}
+
+TEST_CASE("DEBUG_no_inline should make it fail") {
+    auto opts = CompilerOptions::lock_for_this_thread({{CompilerOption::DEBUG_no_inline, "true"}});
+
+    Expression value{ExpressionType::value, TSL, 1};
+    Callable callable{&value, ""};
+    Expression ref{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
+
+    #ifndef NDEBUG
+    CHECK(!inline_call(ref, callable));
+    CHECK(ref != value);
+    #else
+    CHECK(inline_call(ref, callable));
+    CHECK(ref == value);
+    #endif
 }
 
 TEST_CASE("Should be able to inline a nullary call to a nullary pure function callable as if a reference") {

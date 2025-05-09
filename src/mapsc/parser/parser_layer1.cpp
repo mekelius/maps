@@ -53,7 +53,9 @@ void ParserLayer1::run_parse(std::istream& source_is) {
     ast_->set_root(root);
 
     while (current_token().token_type != TokenType::eof) {
+        #ifndef NDEBUG
         int prev_buf_slot = which_buf_slot_; // a bit of a hack, an easy way to do the assertion below
+        #endif
 
         parse_top_level_statement();
 
@@ -554,7 +556,9 @@ Statement* ParserLayer1::parse_block_statement() {
             ending_token = TokenType::indent_block_end;
             break;
         default:
+            fail("Something went wrong: " + current_token().get_string() + " is not a block starter");
             assert(false && "unhandled block started in parse_block_statement");
+            return ast_->create_statement(StatementType::broken, current_token().location);
     }
 
     get_token(); // eat start token
