@@ -42,7 +42,9 @@ void traverse_pre_order(Expression* tree, std::ostream& output) {
     }
 }
 
-void prime_terms(auto expr, const std::string& input, auto op1_ref, auto op2_ref, auto op3_ref, auto val) {
+void prime_terms(auto expr, const std::string& input, auto op1_ref, auto op2_ref, 
+    auto op3_ref, auto val) {
+    
     expr->terms().push_back(val);
     for (char c: input) {
         switch (c) {
@@ -374,4 +376,58 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
     CHECK(expr->expression_type == ExpressionType::call);
     CHECK(expr->call_value() == CallExpressionValue{*test_op, {&lhs, &rhs}});
     CHECK(*expr->type == String);
+}
+
+
+TEST_CASE("Layer2 should handle type specifiers") {
+    TypeStore types{};
+    AST_Store ast{};
+
+    auto type_specifier = Expression{ExpressionType::type_reference, TSL, &Int};
+    auto value = Expression{ExpressionType::string_literal, TSL, "32", &String};
+
+    SUBCASE("Int \"32\"") {
+        auto expr = Expression{ExpressionType::termed_expression, TSL, 
+            TermedExpressionValue{{&type_specifier, &value}, db_false}};
+
+        TermedExpressionParser{&ast, &expr}.run();
+
+        CHECK(ast.is_valid);
+
+        CHECK(*expr.type == Int);
+        CHECK(expr.expression_type == ExpressionType::value);
+
+        CHECK(*value.type == Int);
+        CHECK(std::holds_alternative<maps_Int>(value.value));
+        CHECK(std::get<maps_Int>(value.value) == 32);
+    }
+
+    SUBCASE("Int \"32\" + 987") {
+        auto builtin = Builtin{"+", types.get_function_type(Int, {&Int, &Int})};
+        auto op = Callable{&builtin, "+", TSL};
+        
+        auto operator_props = Operator{UnaryFixity::none, BinaryFixity::infix};
+        op.operator_props = &operator_props;
+
+        auto op_ref = Expression{ExpressionType::operator_reference, TSL, &op};
+        auto rhs = Expression{ExpressionType::numeric_literal, TSL, "987"};
+        auto expr = Expression{ExpressionType::termed_expression, TSL, 
+            TermedExpressionValue{{&type_specifier, &value, &op_ref, &rhs}, db_false}};
+
+        TermedExpressionParser{&ast, &expr}.run();
+
+        CHECK(ast.is_valid);
+        CHECK(*expr.type == Int);
+        CHECK(expr.expression_type == ExpressionType::call);
+
+        auto [callee, args] = expr.call_value();
+
+        CHECK(args.size() == 2);
+        CHECK(*callee == op);
+        CHECK(*value.type == Int);
+        CHECK(std::holds_alternative<maps_Int>(value.value));
+        CHECK(std::get<maps_Int>(value.value) == 32);
+        CHECK(*args.at(0) == value);
+    }
+
 }

@@ -101,6 +101,9 @@ bool concretize(Expression& expression) {
     switch (expression.expression_type) {
         case ExpressionType::call:
             return concretize_call(expression);
+        case ExpressionType::string_literal:
+            return true;
+        case ExpressionType::numeric_literal:
         case ExpressionType::value:
             return concretize_value(expression);
         case ExpressionType::reference:

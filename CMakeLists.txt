@@ -60,6 +60,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/process_source.cpp
 
     src/mapsc/procedures/inline.cpp
+    src/mapsc/procedures/coerce_type.cpp
     src/mapsc/procedures/simplify.cpp
     src/mapsc/procedures/concretize.cpp
     src/mapsc/procedures/type_check.cpp
