@@ -48,7 +48,6 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/types/type_store.cpp
     src/mapsc/types/type_defs.cpp
     
-    src/mapsc/ast/ast_node.cpp
     src/mapsc/ast/callable.cpp
     src/mapsc/ast/ast_store.cpp
     src/mapsc/ast/scope.cpp

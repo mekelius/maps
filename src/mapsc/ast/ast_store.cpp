@@ -66,12 +66,12 @@ Expression* AST_Store::allocate_expression(const Expression&& expression) {
     return expressions_.back().get();
 }
 
-// ---------- CREATING OTHER THINGS ----------
-
-Statement* AST_Store::create_statement(StatementType statement_type, SourceLocation location) {
-    statements_.push_back(std::make_unique<Statement>(statement_type, location));
+Statement* AST_Store::allocate_statement(const Statement&& statement) {
+    statements_.push_back(std::make_unique<Statement>(statement));
     return statements_.back().get();
 }
+
+// ---------- CREATING OTHER THINGS ----------
 
 Callable* AST_Store::create_builtin(const std::string& name, const Type& type) {
     builtins_.push_back(std::make_unique<Builtin>(name, &type));

@@ -4,7 +4,6 @@
 #include <variant>
 
 #include "mapsc/logging.hh"
-#include "mapsc/ast/ast_node.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/callable.hh"
 #include "mapsc/types/function_type.hh"

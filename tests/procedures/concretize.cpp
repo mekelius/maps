@@ -1,7 +1,6 @@
 #include "doctest.h"
 
 #include "mapsc/procedures/concretize.hh"
-#include "mapsc/ast/ast_node.hh"
 #include "mapsc/source.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/callable.hh"

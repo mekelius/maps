@@ -13,7 +13,6 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/ast/builtin.hh"
 
-#include "mapsc/ast/ast_node.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/scope.hh"
@@ -66,8 +65,8 @@ public:
     void delete_statement(Statement* statement);
     void delete_statement_recursive(Statement* statement);
 
-    //  ----- CREATING OTHER THINGS -----
-    Statement* create_statement(StatementType statement_type, SourceLocation location);
+    Expression* allocate_expression(const Expression&& expr);
+    Statement* allocate_statement(const Statement&& statement);
     
     // automatically creates an identifier and a global callable for the builtin
     Callable* create_builtin(const std::string& name, const Type& type);
@@ -95,7 +94,6 @@ public:
     std::vector<Expression*> possible_binding_type_declarations_ = {};
     std::vector<Expression*> unparsed_termed_expressions_ = {};
 
-    Expression* allocate_expression(const Expression&& expr);
 private:
     friend Scope; // scope is allowed to call create_expression directly to create call expressions
 

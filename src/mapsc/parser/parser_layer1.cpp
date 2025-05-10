@@ -51,7 +51,7 @@ void ParserLayer1::run_parse(std::istream& source_is) {
 
     prime_tokens();
 
-    Statement* root = ast_->create_statement(StatementType::block, {0,0});
+    Statement* root = ast_->allocate_statement({StatementType::block, {0,0}});
     ast_->set_root(root);
 
     while (current_token().token_type != TokenType::eof) {
@@ -185,9 +185,9 @@ void ParserLayer1::expression_end() {
 // or if it's not set, the current token location
 Statement* ParserLayer1::create_statement(StatementType statement_type) {
     if (current_statement_start_.empty())
-        return ast_->create_statement(statement_type, current_token().location);
+        return ast_->allocate_statement({statement_type, current_token().location});
 
-    Statement* statement = ast_->create_statement(statement_type, current_statement_start_.back());
+    Statement* statement = ast_->allocate_statement({statement_type, current_statement_start_.back()});
     current_statement_start_.pop_back();
     return statement;
 }
@@ -575,7 +575,7 @@ Statement* ParserLayer1::parse_block_statement() {
         default:
             fail("Something went wrong: " + current_token().get_string() + " is not a block starter");
             assert(false && "unhandled block started in parse_block_statement");
-            return ast_->create_statement(StatementType::broken, current_token().location);
+            return ast_->allocate_statement({StatementType::broken, current_token().location});
     }
 
     get_token(); // eat start token

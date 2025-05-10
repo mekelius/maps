@@ -3,7 +3,6 @@
 #include <cassert>
 
 #include "mapsc/logging.hh"
-#include "mapsc/ast/ast_node.hh"
 #include "mapsc/ast/expression.hh"
 
 #include "mapsc/types/type_defs.hh"

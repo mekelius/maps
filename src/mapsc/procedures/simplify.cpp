@@ -4,7 +4,6 @@
 
 #include "common/std_visit_helper.hh"
 
-#include "mapsc/ast/ast_node.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/types/function_type.hh"

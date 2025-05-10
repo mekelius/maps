@@ -7,7 +7,6 @@
 #include "common/std_visit_helper.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/types/casts.hh"
-#include "mapsc/ast/ast_node.hh"
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/procedures/concretize.hh"
 #include "mapsc/procedures/coerce_type.hh"

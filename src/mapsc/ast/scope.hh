@@ -8,7 +8,6 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/types/type.hh"
-#include "mapsc/ast/ast_node.hh"
 #include "mapsc/ast/callable.hh"
 #include "mapsc/ast/operator.hh"
 

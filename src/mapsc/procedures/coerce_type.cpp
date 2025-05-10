@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "type_check.hh"
-#include "mapsc/ast/ast_node.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
 

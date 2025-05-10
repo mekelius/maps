@@ -17,8 +17,8 @@ public:
 
         Layer1tests layer1{&ast, &pragmas};
 
-        Statement* block = ast.create_statement(StatementType::block, TEST_SOURCE_LOCATION);
-        Statement* inner = ast.create_statement(StatementType::expression_statement, TEST_SOURCE_LOCATION);
+        Statement* block = ast.allocate_statement({StatementType::block, TEST_SOURCE_LOCATION});
+        Statement* inner = ast.allocate_statement({StatementType::expression_statement, TEST_SOURCE_LOCATION});
         
         Expression* value = create_numeric_literal(ast, "4", TEST_SOURCE_LOCATION);
         inner->value = value;

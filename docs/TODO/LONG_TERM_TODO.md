@@ -25,11 +25,14 @@
 
 - overall functionality
     - restore mapsc functionality
+    - make repl preserve state
 
 - architecture and code quality
     - Print callables in messages nicely
-    - move code from callables.cpp to simplify.cpp
     - clean up IR_Generator
+    - what to do with ast nodes?
+        - how to convert between statements and expressions in-place
+    - create some sort of "compilation state" object to hold stuff that doen't belong to ast_store
 
 #### Accumulated tweaks
 
@@ -39,6 +42,9 @@
 - Fix pragmas when we do multiple files
 - move simplifying blocks and other ast nodes out of layer1
 - use vector or array instead of hashmap as TypeMap for efficiency
+- expression factory functions are a bit all over the place
+    - args not in consistent order
+    - need factories for the remaining types
 
 #### UX tweaks
 

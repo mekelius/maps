@@ -4,7 +4,6 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/ast/expression.hh"
-#include "mapsc/ast/ast_node.hh"
 #include "mapsc/procedures/type_check.hh"
 
 using std::holds_alternative, std::get;
