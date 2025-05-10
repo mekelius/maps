@@ -6,6 +6,7 @@
 #include "mapsc/logging.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 
+using std::optional, std::nullopt, std::to_string;
 using Maps::GlobalLogger::log_error;
 
 namespace Maps {
@@ -259,6 +260,131 @@ std::string TermedExpressionValue::to_string() const {
     std::stringstream output{"expression "};
     output << this;
     return output.str();
+}
+
+Expression* create_string_literal(AST_Store& store, const std::string& value, SourceLocation location) {
+    return store.allocate_expression({ExpressionType::string_literal, location, value, &String});
+}
+
+Expression* create_numeric_literal(AST_Store& store, const std::string& value, SourceLocation location) {
+    return store.allocate_expression({ExpressionType::numeric_literal, location, value, &NumberLiteral});
+}
+
+Expression* create_identifier_expression(AST_Store& store, const std::string& value, 
+    SourceLocation location) {
+    
+    Expression* expression = store.allocate_expression(
+        {ExpressionType::identifier, location, value, &Hole});
+    store.unresolved_identifiers_.push_back(expression);
+    return expression;
+}
+
+Expression* create_type_identifier_expression(AST_Store& store, const std::string& value, 
+    SourceLocation location) {
+    
+    Expression* expression = store.allocate_expression({ExpressionType::type_identifier, location, 
+        value, &Hole});
+    store.unresolved_identifiers_.push_back(expression);
+    return expression;
+}
+
+Expression* create_operator_identifier(AST_Store& store, const std::string& value, 
+    SourceLocation location) {
+    
+    Expression* expression = store.allocate_expression({ExpressionType::operator_identifier, location, 
+        value, &Hole});
+    store.unresolved_identifiers_.push_back(expression);
+    return expression;
+}
+
+Expression* create_type_operator_expression(AST_Store& store, const std::string& value, 
+    SourceLocation location) {
+    
+    Expression* expression = store.allocate_expression({ExpressionType::type_operator_identifier, 
+        location, value, &Void});
+    store.unresolved_type_identifiers_.push_back(expression);
+    return expression;
+}
+
+Expression* create_termed_expression(AST_Store& store, std::vector<Expression*>&& terms, 
+    SourceLocation location) {
+    
+    return store.allocate_expression({ExpressionType::termed_expression, location, 
+        TermedExpressionValue{terms}, &Hole});
+}
+
+Expression* create_type_reference(AST_Store& store, const Type* type, SourceLocation location) {
+    return store.allocate_expression({ExpressionType::type_reference, location, type, &Void});
+}
+
+std::optional<Expression*> create_operator_ref(AST_Store& store, const std::string& name, 
+    SourceLocation location) {
+    
+    // TODO: check user_defined operators as well
+    std::optional<Callable*> callable = store.builtins_scope_->get_identifier(name);
+    
+    if (!callable)
+        return std::nullopt;
+    
+    return create_operator_ref(store, *callable, location);
+}
+
+Expression* create_operator_ref(AST_Store& store, Callable* callable, SourceLocation location) {
+    assert(callable->is_operator() && "AST::create_operator_ref called with not an operator");
+
+    return store.allocate_expression(
+        {ExpressionType::operator_reference, location, callable, callable->get_type()});
+}
+
+// valueless expression types are tie, empty, syntax_error and not_implemented
+Expression* create_valueless_expression(AST_Store& store, ExpressionType expression_type, 
+    SourceLocation location) {
+    
+    return store.allocate_expression({expression_type, location, std::monostate{}, &Absurd});
+}
+
+Expression* create_missing_argument(AST_Store& store, SourceLocation location, const Type* type) {
+    return store.allocate_expression({ExpressionType::missing_arg, location, std::monostate{}, type});
+}
+
+optional<Expression*> create_call_expression(AST_Store& store, SourceLocation location, Callable* callable, 
+    const std::vector<Expression*>& args) {
+
+    auto callee_type = callable->get_type();
+    
+    if (!callee_type->is_function() && args.size() > 0) {
+        log_error(callable->name + " cannot take arguments, tried giving " + to_string(args.size()));
+        return nullopt;
+    }
+
+    // TODO: move this to like typecheck file
+
+    if (!callee_type->is_function())
+        return store.allocate_expression(
+            {ExpressionType::call, location, CallExpressionValue{callable, args}, callee_type});
+
+    auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
+    auto return_type = callee_f_type->return_type_;
+    auto param_types = callee_f_type->param_types_;
+
+    if (args.size() == param_types.size())
+        return store.allocate_expression(
+            {ExpressionType::call, location, CallExpressionValue{callable, args}, return_type});
+
+    if (args.size() > param_types.size()) {
+        log_error(callable->name + " takes a maximum of " + to_string(param_types.size()) + 
+            " arguments, tried giving " + to_string(args.size()));
+        return nullopt;
+    }
+    // TODO: deal with partial calls
+    // TODO: deal with declared types
+    assert(false && "parial calls and all that not implemented");
+
+    // for (int i = 0; auto arg: args) {
+    //     auto param_type = param_types.at(i);
+
+    //     if(arg->type )
+    // }
 }
 
 } // namespace Maps

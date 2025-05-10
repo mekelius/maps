@@ -92,7 +92,7 @@ std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Fu
     if (!type.is_function())
         return nullopt;
 
-    return convert_function_type(*type.return_type_, type.arg_types_);
+    return convert_function_type(*type.return_type_, type.param_types_);
 }
 
 } // namespace IR

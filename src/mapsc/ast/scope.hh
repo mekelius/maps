@@ -44,10 +44,10 @@ public:
     std::optional<Expression*> create_reference_expression(const std::string& name, SourceLocation location);
     Expression* create_reference_expression(Callable* callable, SourceLocation location);
 
-    std::optional<Expression*> create_call_expression(
-        const std::string& callee_name, std::vector<Expression*> args, SourceLocation location /*, expected return type?*/);
-    Expression* create_call_expression(Callable* callee, std::vector<Expression*> args, 
-        SourceLocation location /*, expected return type?*/);
+    // std::optional<Expression*> create_call_expression(
+    //     const std::string& callee_name, std::vector<Expression*> args, SourceLocation location /*, expected return type?*/);
+    // Expression* create_call_expression(Callable* callee, const std::vector<Expression*>& args, 
+    //     SourceLocation location /*, expected return type?*/);
 
     std::vector<std::pair<std::string, Callable*>> identifiers_in_order_ = {};
 

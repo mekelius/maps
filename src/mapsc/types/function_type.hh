@@ -19,7 +19,7 @@ public:
         const std::vector<const Type*>& arg_types, bool is_pure = false);
 
     const Type* return_type_;
-    std::vector<const Type*> arg_types_;
+    std::vector<const Type*> param_types_;
     bool is_pure_ = false;
 
     // DO NOTE!: string representation is (currently) used as the basis for function overload specialization
@@ -35,7 +35,7 @@ public:
     virtual bool is_complex() const { return true; };
     virtual bool is_function() const { return true; }
     unsigned int arity() const {
-        return arg_types_.size();
+        return param_types_.size();
     }
 
     bool operator==(const FunctionType& other) {
@@ -45,7 +45,7 @@ public:
         if (this->return_type_ != other.return_type_)
             return false;
 
-        return this->arg_types_ == other.arg_types_;
+        return this->param_types_ == other.param_types_;
     }
 };    
 

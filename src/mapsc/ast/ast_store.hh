@@ -58,29 +58,7 @@ public:
 
     // This will at some point be replaced with something that supports nested scopes
     const_iterator begin() const { return globals_->begin(); }
-    const_iterator end() const {return globals_->end(); }
-
-    // ----- CREATING (AND DELETING) EXPRESSIONS -----
-    Expression* create_string_literal(const std::string& value, SourceLocation location);
-    Expression* create_numeric_literal(const std::string& value, SourceLocation location);
-    
-    // These automatically add the identifier into unresolved list as a convenience
-    Expression* create_identifier_expression(const std::string& value, SourceLocation location);
-    Expression* create_type_identifier_expression(const std::string& value, SourceLocation location);
-    Expression* create_operator_expression(const std::string& value, SourceLocation location);
-    Expression* create_type_operator_expression(const std::string& value, SourceLocation location);
-
-    Expression* create_termed_expression(std::vector<Expression*>&& terms, SourceLocation location);
-
-    [[nodiscard]] std::optional<Expression*> create_type_operator_ref(const std::string& name, SourceLocation location);
-
-    Expression* create_type_reference(const Type* type, SourceLocation location);
-    [[nodiscard]] std::optional<Expression*> create_operator_ref(const std::string& name, SourceLocation location);
-    Expression* create_operator_ref(Callable* callable, SourceLocation location);
-
-    // valueless expression types are tie, empty, syntax_error and not_implemented
-    Expression* create_valueless_expression(ExpressionType expression_type, SourceLocation location);
-    Expression* create_missing_argument(const Type& type, SourceLocation location);
+    const_iterator end() const { return globals_->end(); }
     
     void delete_expression(Expression* expression);
     void delete_expression_recursive(Expression* expression);
@@ -93,8 +71,8 @@ public:
     
     // automatically creates an identifier and a global callable for the builtin
     Callable* create_builtin(const std::string& name, const Type& type);
-    Callable* create_builtin_binary_operator(const std::string& name, const Type& type, Precedence precedence, 
-        Associativity Associativity = Associativity::left);
+    Callable* create_builtin_binary_operator(const std::string& name, const Type& type, 
+        Precedence precedence, Associativity Associativity = Associativity::left);
     Callable* create_builtin_unary_operator(const std::string& name, const Type& type, 
         UnaryFixity fixity = UnaryFixity::prefix);
 
@@ -117,10 +95,9 @@ public:
     std::vector<Expression*> possible_binding_type_declarations_ = {};
     std::vector<Expression*> unparsed_termed_expressions_ = {};
 
+    Expression* allocate_expression(const Expression&& expr);
 private:
     friend Scope; // scope is allowed to call create_expression directly to create call expressions
-    Expression* create_expression(ExpressionType expression_type, 
-        ExpressionValue value, const Type& type, SourceLocation location);
 
     Callable* create_callable(CallableBody body, const std::string& name, 
         std::optional<SourceLocation> location = std::nullopt);

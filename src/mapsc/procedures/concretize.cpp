@@ -50,7 +50,7 @@ bool concretize_call(Expression& call) {
     assert(args.size() == callee_type->arity() && "partial calls not implemented in concretize_call");
 
     for (int i = 0; auto arg: args) {
-        auto param_type = callee_type->arg_types_.at(i);
+        auto param_type = callee_type->param_types_.at(i);
 
         if (*arg->type == *param_type)
             continue;

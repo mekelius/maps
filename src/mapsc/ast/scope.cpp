@@ -91,30 +91,30 @@ std::optional<Expression*> Scope::create_reference_expression(const std::string&
     return create_reference_expression(*callable, location);
 }
 
+// !!! move to expression
 Expression* Scope::create_reference_expression(Callable* callable, SourceLocation location) {
-    return ast_->create_expression(ExpressionType::reference, callable, *callable->get_type(), location);
+    return ast_->allocate_expression({ExpressionType::reference, location, callable, callable->get_type()});
 }
 
-std::optional<Expression*> Scope::create_call_expression(
-    const std::string& callee_name, std::vector<Expression*> args, SourceLocation location /*, expected return type?*/) {
+// std::optional<Expression*> Scope::create_call_expression(
+//     const std::string& callee_name, std::vector<Expression*> args, SourceLocation location /*, expected return type?*/) {
     
-    std::optional<Callable*> callee = get_identifier(callee_name);
+//     std::optional<Callable*> callee = get_identifier(callee_name);
     
-    if (!callee)
-        return std::nullopt;
+//     if (!callee)
+//         return std::nullopt;
 
-    return create_call_expression(*callee, args, location);
-}
+//     return create_call_expression(*callee, args, location);
+// }
 
-Expression* Scope::create_call_expression(Callable* callee, std::vector<Expression*> args, 
-        SourceLocation location /*, expected return type?*/) {
-    auto callee_type = callee->get_type();
-    auto return_type = callee_type;
-    if (callee_type->is_function())
-            return_type = dynamic_cast<const FunctionType*>(callee_type)->return_type_;
+// Expression* Scope::create_call_expression(Callable* callee, const std::vector<Expression*>& args, 
+//         SourceLocation location /*, expected return type?*/) {
+//     auto callee_type = callee->get_type();
+//     auto return_type = callee_type;
+//     if (callee_type->is_function())
+//             return_type = dynamic_cast<const FunctionType*>(callee_type)->return_type_;
 
-    return ast_->create_expression(ExpressionType::call, CallExpressionValue{callee, args}, 
-        *return_type, location);
-}
+//     return Maps::create_call_expression(*ast_, location, callee, args);
+// }
 
 } // namespace AST

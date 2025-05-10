@@ -20,7 +20,7 @@ public:
         Statement* block = ast.create_statement(StatementType::block, TEST_SOURCE_LOCATION);
         Statement* inner = ast.create_statement(StatementType::expression_statement, TEST_SOURCE_LOCATION);
         
-        Expression* value = ast.create_numeric_literal("4", TEST_SOURCE_LOCATION);
+        Expression* value = create_numeric_literal(ast, "4", TEST_SOURCE_LOCATION);
         inner->value = value;
 
         std::get<Block>(block->value).push_back(inner);

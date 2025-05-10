@@ -11,9 +11,9 @@ using namespace Maps;
 
 TEST_CASE("Should parse a numberliteral with the correct type") {
     AST_Store ast{};
-    auto expr = ast.create_termed_expression({
-        ast.create_type_reference(&Int, {0,0}),
-        ast.create_numeric_literal("23", {0,0})
+    auto expr = create_termed_expression(ast, {
+        create_type_reference(ast, &Int, {0,0}),
+        create_numeric_literal(ast, "23", {0,0})
     }, {0,0});
 
     TermedExpressionParser{&ast, expr}.run();
@@ -24,9 +24,9 @@ TEST_CASE("Should parse a numberliteral with the correct type") {
 TEST_CASE("Should be able to cast a string literal into Int") {
     AST_Store ast{};
     
-    auto expr = ast.create_termed_expression({
-        ast.create_type_reference(&Int, {0,0}),
-        ast.create_string_literal("23", {0,0})
+    auto expr = create_termed_expression(ast, {
+        create_type_reference(ast, &Int, {0,0}),
+        create_string_literal(ast, "23", {0,0})
     }, {0,0});
 
     TermedExpressionParser{&ast, expr}.run();

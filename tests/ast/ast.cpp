@@ -29,7 +29,7 @@ TEST_CASE("Operator_ref:s should pass their type correctly") {
     Maps::Callable* op = ast.create_builtin_binary_operator("*", 
         *ast.types_->get_function_type(Maps::Void, {&Maps::Number, &Maps::Number}), PRECEDENCE);
 
-    Maps::Expression* op_ref = ast.create_operator_ref(op, {0,0});
+    Maps::Expression* op_ref = create_operator_ref(ast, op, {0,0});
 
     CHECK(op_ref->reference_value()->is_binary_operator());
     

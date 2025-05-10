@@ -47,70 +47,6 @@ size_t AST_Store::size() const {
     );
 }
 
-// ---------- CREATING (AND DELETING) EXPRESSIONS ----------
-
-Expression* AST_Store::create_string_literal(const std::string& value, SourceLocation location) {
-    return create_expression(ExpressionType::string_literal, value, String, location);
-}
-
-Expression* AST_Store::create_numeric_literal(const std::string& value, SourceLocation location) {
-    return create_expression(ExpressionType::numeric_literal, value, NumberLiteral, location);
-}
-
-Expression* AST_Store::create_identifier_expression(const std::string& value, SourceLocation location) {
-    Expression* expression = create_expression(ExpressionType::identifier, value, Hole, location);
-    unresolved_identifiers_.push_back(expression);
-    return expression;
-}
-Expression* AST_Store::create_type_identifier_expression(const std::string& value, SourceLocation location) {
-    Expression* expression = create_expression(ExpressionType::type_identifier, value, Hole, location);
-    unresolved_identifiers_.push_back(expression);
-    return expression;
-}
-Expression* AST_Store::create_operator_expression(const std::string& value, SourceLocation location) {
-    Expression* expression = create_expression(ExpressionType::operator_identifier, value, Hole, location);
-    unresolved_identifiers_.push_back(expression);
-    return expression;
-}
-
-Expression* AST_Store::create_type_operator_expression(const std::string& value, SourceLocation location) {
-    Expression* expression = create_expression(ExpressionType::type_operator_identifier, value, Void, location);
-    unresolved_type_identifiers_.push_back(expression);
-    return expression;
-}
-
-Expression* AST_Store::create_termed_expression(std::vector<Expression*>&& terms, SourceLocation location) {
-    return create_expression(ExpressionType::termed_expression, TermedExpressionValue{terms}, Hole, location);
-}
-
-Expression* AST_Store::create_type_reference(const Type* type, SourceLocation location) {
-    return create_expression(ExpressionType::type_reference, type, Void, location);
-}
-
-std::optional<Expression*> AST_Store::create_operator_ref(const std::string& name, SourceLocation location) {
-    // TODO: check user_defined operators as well
-    std::optional<Callable*> callable = builtins_scope_->get_identifier(name);
-    
-    if (!callable)
-        return std::nullopt;
-    
-    return create_operator_ref(*callable, location);
-}
-
-Expression* AST_Store::create_operator_ref(Callable* callable, SourceLocation location) {
-    assert(callable->is_operator() && "AST::create_operator_ref called with not an operator");
-
-    return create_expression(ExpressionType::operator_reference, callable, *callable->get_type(), location);
-}
-
-// valueless expression types are tie, empty, syntax_error and not_implemented
-Expression* AST_Store::create_valueless_expression(ExpressionType expression_type, SourceLocation location) {
-    return create_expression(expression_type, std::monostate{}, Absurd, location);
-}
-Expression* AST_Store::create_missing_argument(const Type& type, SourceLocation location) {
-    return create_expression(ExpressionType::missing_arg, std::monostate{}, type, location);
-}
-
 void AST_Store::delete_expression(Expression* expression) {
     expression->expression_type = ExpressionType::deleted;
 }
@@ -123,6 +59,11 @@ void AST_Store::delete_statement(Statement* statement) {
 }
 void AST_Store::delete_statement_recursive(Statement* statement) {
     assert(false && "not implemented");
+}
+
+Expression* AST_Store::allocate_expression(const Expression&& expression) {        
+    expressions_.push_back(std::make_unique<Expression>(expression));
+    return expressions_.back().get();
 }
 
 // ---------- CREATING OTHER THINGS ----------
@@ -165,17 +106,6 @@ Callable* AST_Store::create_builtin_unary_operator(const std::string& name, cons
 }
 
 // --------- PRIVATE NODE MANAGEMENT ---------
-
-Expression* AST_Store::create_expression(ExpressionType expression_type, 
-    ExpressionValue value, const Type& type, SourceLocation location) {        
-
-    expressions_.push_back(std::make_unique<Expression>(expression_type, location, value, &type));
-    Expression* expression = expressions_.back().get();
-
-    expression->value = value;
-
-    return expression;
-}
 
 Callable* AST_Store::create_callable(CallableBody body, const std::string& name, 
     std::optional<SourceLocation> location) {

@@ -13,6 +13,7 @@
 
 namespace Maps {
 
+class AST_Store;
 class Callable;
 
 // ----- EXPRESSIONS -----
@@ -87,12 +88,11 @@ using ExpressionValue = std::variant<
 >;
 
 struct Expression {
-public:
     ExpressionType expression_type; 
     SourceLocation location;
-
+    
     ExpressionValue value;
-
+    
     const Type* type = &Hole; // this is the "de facto"-one
     std::optional<const Type*> declared_type = std::nullopt;
 
@@ -122,6 +122,39 @@ public:
 
     bool operator==(const Expression& other) const = default;
 };
+
+// ----- CREATING (AND DELETING) EXPRESSIONS -----
+Expression* create_string_literal(AST_Store& store, const std::string& value, SourceLocation location);
+Expression* create_numeric_literal(AST_Store& store, const std::string& value, SourceLocation location);
+
+// These automatically add the identifier into unresolved list as a convenience
+Expression* create_identifier_expression(AST_Store& store, const std::string& value, 
+    SourceLocation location);
+Expression* create_type_identifier_expression(AST_Store& store, const std::string& value, 
+    SourceLocation location);
+Expression* create_operator_identifier(AST_Store& store, const std::string& value, 
+    SourceLocation location);
+Expression* create_type_operator_expression(AST_Store& store, const std::string& value, 
+    SourceLocation location);
+
+Expression* create_termed_expression(AST_Store& store, std::vector<Expression*>&& terms, 
+    SourceLocation location);
+
+[[nodiscard]] std::optional<Expression*> create_type_operator_ref(AST_Store& store, 
+    const std::string& name, SourceLocation location, const Type* type);
+
+Expression* create_type_reference(AST_Store& store, const Type* type, SourceLocation location);
+[[nodiscard]] std::optional<Expression*> create_operator_ref(AST_Store& store, const std::string& name, 
+    SourceLocation location, const Type* type);
+Expression* create_operator_ref(AST_Store& store, Callable* callable, SourceLocation location);
+
+// valueless expression types are tie, empty, syntax_error and not_implemented
+Expression* create_valueless_expression(AST_Store& store, ExpressionType expression_type, 
+    SourceLocation location);
+Expression* create_missing_argument(AST_Store& store, SourceLocation location, const Type* type);
+
+std::optional<Expression*> create_call_expression(AST_Store& store, SourceLocation location, Callable* callable, 
+    const std::vector<Expression*>& args);
 
 } // namespace Maps
 

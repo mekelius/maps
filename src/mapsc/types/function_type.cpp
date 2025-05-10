@@ -6,7 +6,7 @@ namespace Maps {
 
 FunctionType::FunctionType(const ID id, const TypeTemplate* type_template, const Type* return_type, 
     const std::vector<const Type*>& arg_types, bool is_pure)
-    :Type(id, type_template, not_castable, not_concretizable), return_type_(return_type), arg_types_(arg_types), is_pure_(is_pure) {
+    :Type(id, type_template, not_castable, not_concretizable), return_type_(return_type), param_types_(arg_types), is_pure_(is_pure) {
 }
 
 std::string FunctionType::to_string() const {
@@ -17,7 +17,7 @@ std::string FunctionType::to_string() const {
 
     std::string output = "";
 
-    for (const Type* arg: arg_types_) {
+    for (const Type* arg: param_types_) {
         output += arg->to_string();
         output += " -> ";
     }
