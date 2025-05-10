@@ -761,7 +761,9 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     expression_start();
     Expression* expression = ast_->create_termed_expression({}, current_token().location);
 
-    log_info("start parsing termed expression", MessageType::parser_debug);
+    log_info(
+        in_tied_expression ? "start parsing tied expression" : "start parsing termed expression", 
+        MessageType::parser_debug);
 
     expression->terms().push_back(parse_term(in_tied_expression));
     
@@ -978,7 +980,6 @@ Expression* ParserLayer1::handle_string_literal() {
         current_token().location);
 
     get_token();
-    get_token(); // eat closing '"'
     
     log_info("parsed string literal", MessageType::parser_debug_terminal);
     return expression;

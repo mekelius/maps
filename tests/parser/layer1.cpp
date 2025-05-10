@@ -39,10 +39,9 @@ public:
 
 TEST_CASE("layer1 eval should simplify single statement blocks") {
     AST_Store ast;
+    PragmaStore pragmas;
 
     CHECK(ast.empty());
-
-    PragmaStore pragmas;
 
     ParserLayer1 layer1{&ast, &pragmas};
 
@@ -69,4 +68,93 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
     CURLY_BRACE_SUBCASE("{ 4 }");
     CURLY_BRACE_SUBCASE("{4}");
     CURLY_BRACE_SUBCASE("{{ {4} }}");
+}
+
+TEST_CASE("Should handle various cases") {
+    AST_Store ast;
+    PragmaStore pragmas;
+
+    REQUIRE(ast.empty());
+    ParserLayer1 layer1{&ast, &pragmas};
+    
+    SUBCASE("(\"asd\")") {
+        auto source = std::stringstream{"(\"asd\")"};
+        auto callable = layer1.eval_parse(source);
+    
+        CHECK(ast.is_valid);
+        CHECK(callable);
+        CHECK(std::holds_alternative<Expression*>((*callable)->body));
+        auto expression = std::get<Expression*>((*callable)->body);
+        CHECK(expression->expression_type == ExpressionType::string_literal);
+        CHECK(expression->string_value() == "asd");
+    }
+
+    SUBCASE("\"10\" + 5") {
+        auto source = std::stringstream{"\"10\" + 5"};
+        auto callable = layer1.eval_parse(source);
+        
+        CHECK(ast.is_valid);
+        CHECK(callable);
+        CHECK(std::holds_alternative<Expression*>((*callable)->body));
+        auto expression = std::get<Expression*>((*callable)->body);
+        
+        CHECK(expression->expression_type == ExpressionType::termed_expression);
+        
+        auto terms = expression->terms();
+        CHECK(terms.size() == 3);
+        
+        auto lhs = terms.at(0);
+        auto op = terms.at(1);
+        auto rhs = terms.at(2);
+
+        CHECK(lhs->expression_type == ExpressionType::value);
+        CHECK(op->expression_type == ExpressionType::operator_reference);
+        CHECK(rhs->expression_type == ExpressionType::value);
+    }
+
+    SUBCASE("\"10\"+5") {
+        auto source = std::stringstream{"\"10\"+5"};
+        auto callable = layer1.eval_parse(source);
+
+        CHECK(ast.is_valid);
+        CHECK(callable);
+        CHECK(std::holds_alternative<Expression*>((*callable)->body));
+        auto expression = std::get<Expression*>((*callable)->body);
+
+        CHECK(expression->expression_type == ExpressionType::termed_expression);
+        
+        auto terms = expression->terms();
+        CHECK(terms.size() == 3);
+        
+        auto lhs = terms.at(0);
+        auto op = terms.at(1);
+        auto rhs = terms.at(2);
+
+        CHECK(lhs->expression_type == ExpressionType::value);
+        CHECK(op->expression_type == ExpressionType::operator_reference);
+        CHECK(rhs->expression_type == ExpressionType::value);
+    }
+
+    SUBCASE("(\"10\"+5)") {
+        auto source = std::stringstream{"\"10\"+5"};
+        auto callable = layer1.eval_parse(source);
+
+        CHECK(ast.is_valid);
+        CHECK(callable);
+        CHECK(std::holds_alternative<Expression*>((*callable)->body));
+        auto expression = std::get<Expression*>((*callable)->body);
+
+        CHECK(expression->expression_type == ExpressionType::termed_expression);
+        
+        auto terms = expression->terms();
+        CHECK(terms.size() == 3);
+        
+        auto lhs = terms.at(0);
+        auto op = terms.at(1);
+        auto rhs = terms.at(2);
+
+        CHECK(lhs->expression_type == ExpressionType::value);
+        CHECK(op->expression_type == ExpressionType::operator_reference);
+        CHECK(rhs->expression_type == ExpressionType::value);
+    }
 }

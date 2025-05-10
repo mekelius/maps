@@ -50,7 +50,7 @@ bool is_assignment_operator(const Token& token);
 bool is_statement_separator(const Token& token);
 bool is_access_operator(const Token& token);
 bool is_block_starter(const Token& token);
-bool is_tieable_token(const Token& token);  
+bool is_right_tieable_token(const Token& token);  
 bool is_term_token(const Token& token);
 
 #endif

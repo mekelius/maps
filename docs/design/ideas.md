@@ -35,6 +35,8 @@ Enum mapping types should be iterable, how to do that?
     - some way to define invariants for a type as assertions, then some descriptive way to check them at
         the start of a function at correct times
 - marking purity of individual args? does this make sense?
+- pre-hashed static hashmaps and prebuilt static trees
+    - for example cl args
 
 ## inpurity and purity, strictness, laziness
 - {}-access denotes lazy access

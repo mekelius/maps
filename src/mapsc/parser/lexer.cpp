@@ -24,7 +24,7 @@ Token Lexer::get_token() {
     
     // a bit of a hack to keep the outputs in sync
     prev_token_ = token;
-    tie_possible_ = is_tieable_token(token);
+    tie_possible_ = is_right_tieable_token(token);
 
     return token;
 }

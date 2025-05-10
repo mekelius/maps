@@ -133,7 +133,7 @@ bool is_block_starter(const Token& token) {
 }
 
 // these can be FOLLOWED by a tie
-bool is_tieable_token(const Token& token) {
+bool is_right_tieable_token(const Token& token) {
     // ? should type identifiers be tieable?
     return (
         token.token_type == TokenType::operator_t      ||
