@@ -2,6 +2,9 @@
 
 #include "mapsc/procedures/concretize.hh"
 #include "mapsc/ast/ast_node.hh"
+#include "mapsc/source.hh"
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/callable.hh"
 #include "mapsc/types/type_store.hh"
 #include "mapsc/compiler_options.hh"
 

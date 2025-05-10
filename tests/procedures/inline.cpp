@@ -1,6 +1,8 @@
 #include "doctest.h"
 
 #include "mapsc/ast/ast_node.hh"
+#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/expression.hh"
 #include "mapsc/procedures/inline.hh"
 #include "mapsc/types/type_store.hh"
 #include "mapsc/compiler_options.hh"

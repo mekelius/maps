@@ -14,6 +14,8 @@
 #include "mapsc/logging.hh"
 #include "mapsc/source.hh"
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/statement.hh"
+#include "mapsc/ast/expression.hh"
 
 #include "mapsc/procedures/simplify.hh"
 #include "mapsc/parser/token.hh"

@@ -12,6 +12,9 @@
 
 #include "mapsc/pragma.hh"
 #include "mapsc/ast/ast_node.hh"
+#include "mapsc/ast/statement.hh"
+#include "mapsc/ast/expression.hh"
+
 #include "mapsc/parser/lexer.hh"
 
 namespace Maps {

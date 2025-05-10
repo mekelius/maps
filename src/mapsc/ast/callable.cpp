@@ -8,6 +8,9 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/function_type.hh"
 #include "mapsc/ast/ast_node.hh"
+#include "mapsc/ast/statement.hh"
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/builtin.hh"
 
 using Maps::GlobalLogger::log_error;
 
