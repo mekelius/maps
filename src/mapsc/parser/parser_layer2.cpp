@@ -174,7 +174,8 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         case ExpressionType::type_constructor_reference:
         case BAD_TERM:
             // TODO: make expressions print out nice
-            log_error("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), expression_->location);
+            log_error("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), 
+                expression_->location);
             assert(false && "bad term in TermedExpressionParser::parse_termed_expression");
     }
 
@@ -483,7 +484,8 @@ void TermedExpressionParser::reduce_operator_left() {
 
     Expression* reduced = ast_->globals_->create_call_expression(
         std::get<Callable*>(operator_->value), {lhs, rhs}, lhs->location);
-    reduced->value = CallExpressionValue{std::get<Callable*>(operator_->value), std::vector<Expression*>{lhs, rhs}};
+    reduced->value = CallExpressionValue{std::get<Callable*>(operator_->value), 
+        std::vector<Expression*>{lhs, rhs}};
 
     parse_stack_.push_back(reduced);
 }
