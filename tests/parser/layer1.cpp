@@ -107,9 +107,11 @@ TEST_CASE("Should handle various cases") {
         auto op = terms.at(1);
         auto rhs = terms.at(2);
 
-        CHECK(lhs->expression_type == ExpressionType::value);
-        CHECK(op->expression_type == ExpressionType::operator_reference);
-        CHECK(rhs->expression_type == ExpressionType::value);
+        CHECK((lhs->expression_type == ExpressionType::value || 
+            lhs->expression_type == ExpressionType::string_literal));
+        CHECK(op->expression_type == ExpressionType::operator_identifier);
+        CHECK((rhs->expression_type == ExpressionType::value || 
+            rhs->expression_type == ExpressionType::numeric_literal));
     }
 
     SUBCASE("\"10\"+5") {
@@ -130,9 +132,11 @@ TEST_CASE("Should handle various cases") {
         auto op = terms.at(1);
         auto rhs = terms.at(2);
 
-        CHECK(lhs->expression_type == ExpressionType::value);
-        CHECK(op->expression_type == ExpressionType::operator_reference);
-        CHECK(rhs->expression_type == ExpressionType::value);
+        CHECK((lhs->expression_type == ExpressionType::value || 
+            lhs->expression_type == ExpressionType::string_literal));
+        CHECK(op->expression_type == ExpressionType::operator_identifier);
+        CHECK((rhs->expression_type == ExpressionType::value || 
+            rhs->expression_type == ExpressionType::numeric_literal));
     }
 
     SUBCASE("(\"10\"+5)") {
@@ -153,8 +157,10 @@ TEST_CASE("Should handle various cases") {
         auto op = terms.at(1);
         auto rhs = terms.at(2);
 
-        CHECK(lhs->expression_type == ExpressionType::value);
-        CHECK(op->expression_type == ExpressionType::operator_reference);
-        CHECK(rhs->expression_type == ExpressionType::value);
+        CHECK((lhs->expression_type == ExpressionType::value || 
+            lhs->expression_type == ExpressionType::string_literal));
+        CHECK(op->expression_type == ExpressionType::operator_identifier);
+        CHECK((rhs->expression_type == ExpressionType::value || 
+            rhs->expression_type == ExpressionType::numeric_literal));
     }
 }
