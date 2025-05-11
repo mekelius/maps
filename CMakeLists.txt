@@ -24,7 +24,7 @@ include_directories(
     corelib
 )
 
-# ------------------- MAPSC CORELIB ------------------
+# --------------------- MAPSC CORELIB -------------------
 
 add_library(corelib SHARED
     corelib/maps_datatypes.h
@@ -34,7 +34,7 @@ add_library(corelib SHARED
 
 set_property(TARGET corelib PROPERTY OUTPUT_NAME maps_core)
 
-# ------------------- MAPSC FRONTEND -------------------
+# -------------------- MAPSC FRONTEND --------------------
 
 add_library(mapsc_frontend OBJECT
     src/mapsc/logging.cpp
@@ -71,7 +71,7 @@ add_library(mapsc_frontend OBJECT
 
 target_link_libraries(mapsc_frontend corelib)
 
-# ---------------------- IR_GEN ------------------------
+# ------------------------ IR_GEN -------------------------
 
 add_library(ir_gen OBJECT
     src/mapsc/llvm/ir_generator.cpp
@@ -83,7 +83,7 @@ add_library(ir_gen OBJECT
 target_link_libraries(ir_gen mapsc_frontend -lLLVM-19)
 target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
-# ----------------------- MAPSC ------------------------
+# ------------------------- MAPSC -------------------------
 
 add_executable(mapsc
     src/mapsc_main.cpp
@@ -98,7 +98,7 @@ target_compile_options(mapsc PRIVATE
     -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
 )
 
-# ----------------------- MAPSCi -----------------------
+# ------------------------- MAPSCi ------------------------
 
 add_executable(mapsci
     src/mapsci_main.cpp
@@ -116,17 +116,17 @@ target_compile_options(mapsci PRIVATE
     -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
 )
 
-# -------------------- VERIFY MAPSC --------------------
+# ---------------------- VERIFY MAPSC ----------------------
 
-add_executable(verify_mapsc
-    src/verify_mapsc_main.cpp
+add_executable(mapsc-verify
+    src/mapsc_verify_main.cpp
 )
 
-target_link_libraries(verify_mapsc mapsc_frontend)
+target_link_libraries(mapsc-verify mapsc_frontend)
 
-# ----------------------- TESTS -----------------------
+# ----------------------- UNIT TESTS -----------------------
 
-add_executable(tests
+add_executable(unit_tests
     tests/tests_main.cpp
     
     tests/full_runs.cpp
@@ -146,6 +146,26 @@ add_executable(tests
     tests/procedures/concretize.cpp
 )
 
-target_link_libraries(tests mapsc_frontend)
+set_property(TARGET unit_tests 
+    PROPERTY EXCLUDE_FROM_ALL True)
 
-target_include_directories(tests SYSTEM PRIVATE doctest tests)
+target_link_libraries(unit_tests mapsc_frontend)
+target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
+
+# ------------------------ E2E TESTS ------------------------
+
+configure_file(tests/e2e/lit.site.cfg.py.in lit.site.cfg.py @ONLY)
+configure_file(tests/e2e/run_lit.py tests/e2e/run_lit.py)
+
+add_custom_target(e2e_tests
+    COMMAND ./tests/e2e/run_lit.py "${CMAKE_CURRENT_BINARY_DIR}" -v
+    DEPENDS mapsc)
+
+set_property(TARGET e2e_tests 
+    PROPERTY EXCLUDE_FROM_ALL True)
+
+
+# ------------------------ E2E TESTS ------------------------
+
+add_custom_target(tests)
+add_dependencies(tests unit_tests e2e_tests)

@@ -1,0 +1,4 @@
+// RUN: %mapsc %s -o %t
+// RUN: %t | grep "Hello World!"
+
+let main = print "Hello World!"
