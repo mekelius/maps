@@ -445,7 +445,17 @@ llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
             "type on expression didn't match value");
         return llvm::ConstantInt::get(*context_, 
             llvm::APInt(64, std::get<maps_Int>(expression.value), true));
-    // } else if (*expression.type == Maps::String) {
+
+    } else if (*expression.type == Maps::Float) {
+        return llvm::ConstantFP::get(*context_, 
+            llvm::APFloat(std::get<maps_Float>(expression.value)));
+        
+    } else if (*expression.type == Maps::Boolean) {
+        return llvm::ConstantInt::get(*context_, 
+            llvm::APInt(8, std::get<maps_Boolean>(expression.value), true));
+                
+    } else if (*expression.type == Maps::String) {
+        return builder_->CreateGlobalString(std::get<std::string>(expression.value)); 
 
     } else {
         assert(false && "type not implemented in IR_Generator::handle_value");

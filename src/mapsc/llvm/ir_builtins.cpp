@@ -36,11 +36,13 @@ bool insert_builtins(IR::IR_Generator& generator) {
     // insert arithmetic functions
     const Maps::FunctionType* IntIntInt = generator.maps_types_->get_function_type(
         Maps::Int, {&Maps::Int, &Maps::Int});
-    llvm::FunctionType* llvm_IntIntInt = llvm::FunctionType::get(generator.types_.int_t, {generator.types_.int_t, generator.types_.int_t}, false);
+    llvm::FunctionType* llvm_IntIntInt = llvm::FunctionType::get(generator.types_.int_t, 
+        {generator.types_.int_t, generator.types_.int_t}, false);
     
     const Maps::FunctionType* maps_FloatFloatFloat = generator.maps_types_->get_function_type(
         Maps::Float, {&Maps::Float, &Maps::Float});
-    llvm::FunctionType* llvm_FloatFloatFloat = llvm::FunctionType::get(generator.types_.double_t, {generator.types_.double_t, generator.types_.double_t}, false);
+    llvm::FunctionType* llvm_FloatFloatFloat = llvm::FunctionType::get(generator.types_.double_t, 
+        {generator.types_.double_t, generator.types_.double_t}, false);
     
     optional<llvm::Function*> int_add = generator.function_definition("+", *IntIntInt, llvm_IntIntInt);
 
@@ -81,7 +83,8 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
-    optional<llvm::Function*> float_add = generator.function_definition("+", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
+    optional<llvm::Function*> float_add = generator.function_definition(
+        "+", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_add) {
         log_error("creating builtin + failed");
@@ -94,7 +97,8 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
-    optional<llvm::Function*> float_mul = generator.function_definition("*", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
+    optional<llvm::Function*> float_mul = generator.function_definition(
+        "*", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_mul) {
         log_error("creating builtin * failed");
@@ -107,7 +111,8 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
-    optional<llvm::Function*> float_sub = generator.function_definition("-", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
+    optional<llvm::Function*> float_sub = generator.function_definition(
+        "-", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_sub) {
         log_error("creating builtin - failed");
@@ -120,7 +125,8 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
-    optional<llvm::Function*> float_div = generator.function_definition("/", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
+    optional<llvm::Function*> float_div = generator.function_definition(
+        "/", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_div) {
         log_error("creating builtin - failed");
