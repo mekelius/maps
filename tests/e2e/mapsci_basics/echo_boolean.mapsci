@@ -1,4 +1,4 @@
 
-// RUN: cat %s | %mapsci | grep "65"
+// RUN: cat %s | %mapsci | grep "true"
 
 true
