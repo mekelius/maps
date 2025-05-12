@@ -17,7 +17,7 @@ std::optional<Callable*> Scope::get_identifier(const std::string& name) const {
 }
 
 std::optional<Callable*> Scope::create_identifier(Callable* callable) {
-    auto name = callable->name;
+    auto name = callable->name_;
 
     if (identifier_exists(name))
         return std::nullopt;

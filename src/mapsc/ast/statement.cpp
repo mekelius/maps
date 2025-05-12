@@ -16,7 +16,7 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
         case StatementType::deleted:
             assert(false && "why are we creating statements pre-deleted?");
         case StatementType::empty:
-            value = std::monostate{};
+            value = Undefined{};
             break;               
 
         case StatementType::expression_statement:

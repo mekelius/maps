@@ -10,7 +10,6 @@
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_store.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/ast/builtin.hh"
 
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"

@@ -1,5 +1,5 @@
 
-// RUN: cat %s | %mapsci | grep "23" | grep "jii" | grep "true"
+// RUN: cat %s | %mapsci --no-history | grep "23" | grep "jii" | grep "true"
 
 23
 "jii"

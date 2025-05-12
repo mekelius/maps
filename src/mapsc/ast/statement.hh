@@ -69,19 +69,19 @@ enum class StatementType {
 };
 
 using StatementValue = std::variant<
-    std::monostate,
     std::string,
     Expression*,
 
     Let,
     OperatorStatementValue,
     Assignment,
-    Block
+    Block,
+    Undefined
 >;
 
 struct Statement {
     Statement(StatementType statement_type, SourceLocation location);
-    
+
     StatementType statement_type;
     SourceLocation location;
     StatementValue value;
@@ -90,7 +90,9 @@ struct Statement {
 
     bool is_illegal_as_single_statement_block() const;
 
-    bool operator==(const Statement& other) const = default;
+    bool operator==(const Statement& other) const {
+        return std::tie(statement_type, value) == std::tie(other.statement_type, other.value);
+    };
 };
 
 } // namespace Maps

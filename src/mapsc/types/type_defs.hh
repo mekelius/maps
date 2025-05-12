@@ -3,8 +3,9 @@
 
 #include <array>
 
-#include "casts.hh"
-#include "type.hh"
+#include "mapsc/types/type.hh"
+#include "mapsc/types/casts.hh"
+#include "mapsc/types/function_type.hh"
 
 namespace Maps {
 
@@ -22,7 +23,7 @@ constexpr TypeTemplate Hole_ {
     db_false,
 };
 constexpr Type::ID Hole_ID = 1;
-constexpr Type Hole = { Hole_ID, &Hole_, not_castable, not_concretizable };
+constexpr Type Hole{ Hole_ID, &Hole_, not_castable, not_concretizable };
 
 constexpr TypeTemplate Void_ {
     "Void",
@@ -30,7 +31,7 @@ constexpr TypeTemplate Void_ {
     db_true,
 };
 constexpr Type::ID Void_ID = 2;
-constexpr Type Void = { Void_ID, &Void_, not_castable, is_concrete };
+constexpr Type Void{ Void_ID, &Void_, not_castable, is_concrete };
 
 constexpr TypeTemplate Boolean_ {
     "Boolean",
@@ -79,10 +80,10 @@ constexpr TypeTemplate NumberLiteral_ {
     db_true,
 };
 constexpr Type::ID NumberLiteral_ID = 8;
-constexpr Type NumberLiteral = { 
+constexpr Type NumberLiteral{ 
     NumberLiteral_ID, &NumberLiteral_, cast_from_NumberLiteral, concretize_NumberLiteral};
 
-static const std::array<const Type*, 9> BUILTIN_TYPES = {
+constexpr std::array<const Type*, 9> BUILTIN_TYPES = {
     &Absurd,
     &Hole,
     &Void,
@@ -99,6 +100,11 @@ constexpr TypeTemplate Function_ {
     db_maybe,
     db_maybe,
 };
+
+#ifndef __TYPE_DEFS_CPP
+extern FunctionType String_to_void;
+extern std::array<const FunctionType*, 1> BUILTIN_FUNCTION_TYPES;
+#endif
 
 } // namespace Maps
 

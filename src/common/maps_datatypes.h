@@ -36,6 +36,6 @@ typedef double maps_Float;
 // ----- STRING TYPE -----
 
 // null terminated constant strings
-typedef const char* maps_const_String;
+typedef const char* maps_String;
 
 #endif

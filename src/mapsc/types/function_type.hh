@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "mapsc/types/casts.hh"
 #include "mapsc/types/type.hh"
 
 namespace Maps {
@@ -15,12 +16,16 @@ public:
     // this is what is used as the basis for function specialization
     using HashableSignature = std::string;
 
-    FunctionType(const ID id, const TypeTemplate* type_template, const Type* return_type, 
-        const std::vector<const Type*>& arg_types, bool is_pure = false);
+    constexpr FunctionType(const ID id, const TypeTemplate* type_template, const Type* return_type, 
+        const std::vector<const Type*>& arg_types, bool is_pure = false)
+    :Type(id, type_template, not_castable, not_concretizable), 
+     return_type_(return_type), 
+     param_types_(arg_types), 
+     is_pure_(is_pure) {}
 
-    const Type* return_type_;
-    std::vector<const Type*> param_types_;
-    bool is_pure_ = false;
+    const Type* const return_type_;
+    const std::vector<const Type*> param_types_;
+    const bool is_pure_ = false;
 
     // DO NOTE!: string representation is (currently) used as the basis for function overload specialization
     // IF YOU CREATE TYPES THAT HAVE IDENTICAL STRINGS THEIR FUNCTIONS WILL COLLIDE

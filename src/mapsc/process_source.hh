@@ -14,7 +14,6 @@
 #include "mapsc/compilation_state.hh"
 #include "mapsc/pragma.hh" // NOTE: these need to be included since the user of unique_ptr needs to know how to destroy it
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/ast/builtin.hh"
 
 namespace Maps {
 

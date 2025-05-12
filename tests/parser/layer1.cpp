@@ -56,9 +56,9 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
             \
             CHECK(state.is_valid);\
             CHECK(callable);\
-            CHECK(std::holds_alternative<Expression*>((*callable)->body));\
+            CHECK(std::holds_alternative<Expression*>((*callable)->body_));\
             \
-            auto expression = std::get<Expression*>((*callable)->body);\
+            auto expression = std::get<Expression*>((*callable)->body_);\
             \
             CHECK(expression->expression_type == ExpressionType::numeric_literal);\
             CHECK(expression->string_value() == "4");\
@@ -83,8 +83,8 @@ TEST_CASE("Should handle various cases") {
     
         CHECK(state.is_valid);
         CHECK(callable);
-        CHECK(std::holds_alternative<Expression*>((*callable)->body));
-        auto expression = std::get<Expression*>((*callable)->body);
+        CHECK(std::holds_alternative<Expression*>((*callable)->body_));
+        auto expression = std::get<Expression*>((*callable)->body_);
         CHECK(expression->expression_type == ExpressionType::string_literal);
         CHECK(expression->string_value() == "asd");
     }
@@ -95,8 +95,8 @@ TEST_CASE("Should handle various cases") {
         
         CHECK(state.is_valid);
         CHECK(callable);
-        CHECK(std::holds_alternative<Expression*>((*callable)->body));
-        auto expression = std::get<Expression*>((*callable)->body);
+        CHECK(std::holds_alternative<Expression*>((*callable)->body_));
+        auto expression = std::get<Expression*>((*callable)->body_);
         
         CHECK(expression->expression_type == ExpressionType::termed_expression);
         
@@ -120,8 +120,8 @@ TEST_CASE("Should handle various cases") {
 
         CHECK(state.is_valid);
         CHECK(callable);
-        CHECK(std::holds_alternative<Expression*>((*callable)->body));
-        auto expression = std::get<Expression*>((*callable)->body);
+        CHECK(std::holds_alternative<Expression*>((*callable)->body_));
+        auto expression = std::get<Expression*>((*callable)->body_);
 
         CHECK(expression->expression_type == ExpressionType::termed_expression);
         
@@ -145,8 +145,8 @@ TEST_CASE("Should handle various cases") {
 
         CHECK(state.is_valid);
         CHECK(callable);
-        CHECK(std::holds_alternative<Expression*>((*callable)->body));
-        auto expression = std::get<Expression*>((*callable)->body);
+        CHECK(std::holds_alternative<Expression*>((*callable)->body_));
+        auto expression = std::get<Expression*>((*callable)->body_);
 
         CHECK(expression->expression_type == ExpressionType::termed_expression);
         

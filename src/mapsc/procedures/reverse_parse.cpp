@@ -33,11 +33,11 @@ ReverseParser& ReverseParser::reverse_parse(const CompilationState& state) {
     reset();
 
     for (auto [name, callable]: state.globals_->identifiers_in_order_) {
-        *this << "let " << name << " = " << callable->body << ";\n\n";
+        *this << "let " << name << " = " << callable->body_ << ";\n\n";
     }
 
     if (state.entry_point_)
-        return *this << (*state.entry_point_)->body << '\n';
+        return *this << (*state.entry_point_)->body_ << '\n';
 
     return *this;
 }
@@ -163,7 +163,7 @@ ReverseParser& ReverseParser::print_expression(Expression& expression) {
         case ExpressionType::operator_reference:
             if (options_.include_debug_info)
                 *this << "/*operator-ref:*/ ";
-            return *this << expression.reference_value()->name;
+            return *this << expression.reference_value()->name_;
         
         case ExpressionType::reference:
         case ExpressionType::type_reference:
@@ -171,7 +171,7 @@ ReverseParser& ReverseParser::print_expression(Expression& expression) {
         case ExpressionType::type_constructor_reference:
             if (options_.include_debug_info)
                 *this << "/*reference to:*/ ";
-            return *this << expression.reference_value()->name;
+            return *this << expression.reference_value()->name_;
 
         case ExpressionType::not_implemented:
             return *this << "Expression type not implemented in parser: " + expression.string_value();
@@ -226,17 +226,17 @@ ReverseParser& ReverseParser::print_expression(Expression& expression) {
             if (callee->is_operator() && args.size() <= 2) {
                 switch (args.size()) {
                     case 2:
-                        return *this << "( " << args.at(0) << " " << callee->name << " " << args.at(1) << " )";
+                        return *this << "( " << args.at(0) << " " << callee->name_ << " " << args.at(1) << " )";
 
                     case 1:
-                        return *this << "( " << callee->name << args.at(0) << " )";
+                        return *this << "( " << callee->name_ << args.at(0) << " )";
                    
                     case 0:
-                        return *this << "(" << callee->name << ")";
+                        return *this << "(" << callee->name_ << ")";
                 }
             }
 
-            *this << callee->name << '(';
+            *this << callee->name_ << '(';
             
             bool first_arg = true;
             for (Expression* arg_expression: args) {

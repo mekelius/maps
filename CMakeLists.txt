@@ -169,4 +169,4 @@ set_property(TARGET e2e_tests
 # ------------------------ E2E TESTS ------------------------
 
 add_custom_target(tests
-    DEPENDS unit_tests e2e_tests)
+    DEPENDS unit_tests DEPENDS e2e_tests)

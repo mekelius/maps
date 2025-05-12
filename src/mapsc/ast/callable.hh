@@ -17,7 +17,17 @@ struct Statement;
 struct Builtin;
 struct OperatorProps;
 
-using CallableBody = std::variant<std::monostate, Expression*, Statement*, Builtin*>;
+struct External {
+    template<typename T>
+    bool operator==(T&) const { return false; }
+};
+
+struct Undefined {
+    template<typename T>
+    bool operator==(T&) const { return false; }
+};
+
+using CallableBody = std::variant<Undefined, Expression*, Statement*, External>;
 
 /**
  * Callables represent either expressions or statements, along with extra info like
@@ -34,18 +44,17 @@ public:
     Callable(const std::string& name, CallableBody body, SourceLocation location);
     Callable(CallableBody body, SourceLocation location); // create anonymous callable
 
-    // This mustn't be used if the body is an expression
+    // anonymous callables
     Callable(const std::string& name, CallableBody body, const Type& type, SourceLocation location);
+    Callable(CallableBody body, const Type& type, SourceLocation location);
 
     Callable(const Callable& other) = default;
     Callable& operator=(const Callable& other) = default;
     virtual ~Callable() = default;
 
-    CallableBody body;
-    std::string name;
-    SourceLocation location;
-
-    std::optional<const Type*> declared_type;
+    std::string name_;
+    CallableBody body_;
+    SourceLocation location_;
 
     // since statements don't store types, we'll have to store them here
     // if the body is an expression, the type will just mirror it's type
@@ -64,6 +73,7 @@ public:
     bool operator==(const Callable&) const = default;
 
 private:
+    std::optional<const Type*> declared_type_;
     std::optional<const Type*> type_;
 };
 
@@ -71,10 +81,18 @@ class Operator: public Callable {
 public:
     static Operator create_binary(const std::string& name, CallableBody body, 
         Precedence precedence, Associativity associativity, SourceLocation location);
+    
+    static Operator create_binary(const std::string& name, CallableBody body, const Type& type,
+        Precedence precedence, Associativity associativity, SourceLocation location);
+
+    Operator(const std::string& name, CallableBody body, const Type& type, 
+        OperatorProps operator_props, SourceLocation location)
+     :Callable(name, body, type, location), 
+      operator_props_(operator_props) {}
 
     Operator(const std::string& name, CallableBody body, 
         OperatorProps operator_props, SourceLocation location)
-    :Callable(name, body, location), operator_props_(operator_props) {}
+     :Callable(name, body, location), operator_props_(operator_props) {}
 
     Operator(const Operator& other) = default;
     Operator& operator=(const Operator& other) = default;

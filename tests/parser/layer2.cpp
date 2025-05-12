@@ -16,8 +16,7 @@ inline tuple<Expression*, Callable*> create_operator_helper(CompilationState& st
 
     const Type* type = state.types_->get_function_type(Void, {&Number, &Number});
     Callable* op_callable = state.ast_store_->allocate_operator(
-        Operator::create_binary(op_string, monostate{}, precedence, Associativity::left, TSL));
-    op_callable->set_type(*type);
+        Operator::create_binary(op_string, External{}, *type, precedence, Associativity::left, TSL));
 
     Expression* op_ref = create_operator_ref(*state.ast_store_, op_callable, {0,0});
 
@@ -31,7 +30,7 @@ void traverse_pre_order(Expression* tree, ostream& output) {
     Expression* lhs = args.at(0);
     Expression* rhs = args.at(1);
 
-    output << op->name;
+    output << op->name_;
 
     if (lhs->expression_type == ExpressionType::call) {
         traverse_pre_order(lhs, output);
@@ -238,7 +237,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     SUBCASE("1 arg") {    
         const Type* function_type = types->get_function_type(Void, {&String});
 
-        Callable function{"test_f", monostate{}, *function_type, TSL};
+        Callable function{"test_f", External{}, *function_type, TSL};
         state.globals_->create_identifier(&function);
 
         Expression* id = create_reference_expression(ast, &function, {0,0});
@@ -251,7 +250,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         
         CHECK(expr->expression_type == ExpressionType::call);
         auto [callee, args] = expr->call_value();
-        CHECK(callee->name == "test_f");
+        CHECK(callee->name_ == "test_f");
         CHECK(args.size() == 1);
         CHECK(args.at(0) == arg1);
     }
@@ -260,7 +259,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Type* function_type = types->get_function_type(Void, 
             {&String, &String, &String, &String});
         
-        Callable function{"test_f", monostate{}, *function_type, TSL};
+        Callable function{"test_f", External{}, *function_type, TSL};
         Expression* id{create_reference_expression(ast, &function, {0,0})};
         id->type = function_type;
     
@@ -279,7 +278,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         
         CHECK(expr->expression_type == ExpressionType::call);
         auto [callee, args] = expr->call_value();
-        CHECK(callee->name == "test_f");
+        CHECK(callee->name_ == "test_f");
         CHECK(args.size() == 4);
         CHECK(args.at(0) == arg1);
         CHECK(args.at(1) == arg2);

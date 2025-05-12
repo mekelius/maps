@@ -90,7 +90,7 @@ DeferredBool Expression::is_type_declaration() {
 const std::string& Expression::string_value() const {
     if (std::holds_alternative<Callable*>(value)) {
         // !!! this will cause crashes when lambdas come in
-        return std::get<Callable*>(value)->name;
+        return std::get<Callable*>(value)->name_;
     }
     return std::get<std::string>(value);
 }
@@ -225,15 +225,15 @@ std::string Expression::log_message_string() const {
             return "type identifier " + string_value();
 
         case ExpressionType::reference:
-            return "reference to " + reference_value()->name;
+            return "reference to " + reference_value()->name_;
         case ExpressionType::type_reference:
-            return "reference to type " + reference_value()->name;
+            return "reference to type " + reference_value()->name_;
         case ExpressionType::operator_reference:
-            return "operator " + reference_value()->name;
+            return "operator " + reference_value()->name_;
         case ExpressionType::type_operator_reference:
-            return "type operator " + reference_value()->name;
+            return "type operator " + reference_value()->name_;
         case ExpressionType::type_constructor_reference:
-            return "reference to type constructor " + reference_value()->name;
+            return "reference to type constructor " + reference_value()->name_;
    
         case ExpressionType::type_field_name:
             return "named field" + string_value();
@@ -358,7 +358,7 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
     auto callee_type = callable->get_type();
     
     if (!callee_type->is_function() && args.size() > 0) {
-        log_error(callable->name + " cannot take arguments, tried giving " + to_string(args.size()));
+        log_error(callable->name_ + " cannot take arguments, tried giving " + to_string(args.size()));
         return nullopt;
     }
 
@@ -377,7 +377,7 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
             {ExpressionType::call, location, CallExpressionValue{callable, args}, return_type});
 
     if (args.size() > param_types.size()) {
-        log_error(callable->name + " takes a maximum of " + to_string(param_types.size()) + 
+        log_error(callable->name_ + " takes a maximum of " + to_string(param_types.size()) + 
             " arguments, tried giving " + to_string(args.size()));
         return nullopt;
     }

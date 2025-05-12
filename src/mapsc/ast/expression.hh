@@ -160,6 +160,11 @@ Expression* create_valueless_expression(AST_Store& store, ExpressionType express
     SourceLocation location);
 Expression* create_missing_argument(AST_Store& store, SourceLocation location, const Type* type);
 
+// !!! how could we make this constexpr
+inline Expression create_builtin_expression(const ExpressionValue& value, const Type& type) {
+    return Expression{ExpressionType::value, BUILTIN_SOURCE_LOCATION, value, &type};
+}
+
 std::optional<Expression*> create_call_expression(AST_Store& store, SourceLocation location, Callable* callable, 
     const std::vector<Expression*>& args);
 

@@ -1,7 +1,6 @@
 #include "ast_store.hh"
 
 #include "mapsc/builtins.hh"
-#include "mapsc/ast/builtin.hh"
 
 #include <cassert>
 

@@ -31,7 +31,8 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
 
 bool SimpleTypeChecker::visit_callable(Callable* callable) {
     return std::visit(overloaded{
-        [](std::monostate&) { return true; },
+        [](External) { return true; },
+        [](Undefined) { return true; },
         [](Builtin*) { return true; },
         [](Expression*) { return true; },
         [callable](Statement* statement) {                        
@@ -50,7 +51,7 @@ bool SimpleTypeChecker::visit_callable(Callable* callable) {
 
             return coerce_return_type(*statement, type);
         }
-    }, callable->body);
+    }, callable->body_);
 }
 
 // Note, statements shouldn't mess with contained expressions, since they will be visited
@@ -61,7 +62,7 @@ bool SimpleTypeChecker::visit_statement(Statement* statement) {
 bool SimpleTypeChecker::run(CompilationState& state) {
     // return ast.walk_tree(*this);
     // !!! ignoring failures
-    state.globals_->walk_tree(*this);
+    state.walk_tree(*this);
     return true;
 }
 

@@ -162,7 +162,7 @@ bool ParserLayer1::identifier_exists(const std::string& identifier) const {
 }
 
 void ParserLayer1::create_identifier(const std::string& name, SourceLocation location) {
-    create_identifier(name, std::monostate{}, location);
+    create_identifier(name, Undefined{}, location);
 }
 
 void ParserLayer1::create_identifier(const std::string& name,
@@ -268,7 +268,7 @@ void ParserLayer1::parse_top_level_statement() {
             if (statement->statement_type != StatementType::empty && 
                 (pragmas_->check_flag_value("top-level evaluation", statement->location) || 
                     force_top_level_eval_)) {            
-                std::get<Block>(std::get<Statement*>((*compilation_state_->entry_point_)->body)->value).push_back(statement);
+                std::get<Block>(std::get<Statement*>((*compilation_state_->entry_point_)->body_)->value).push_back(statement);
             }
             return;
     }
@@ -400,8 +400,8 @@ Statement* ParserLayer1::parse_let_statement() {
                     Statement* statement = create_statement(StatementType::let);
 
                     // create an unitialized identifier
-                    create_identifier(name, std::monostate{}, statement->location);
-                    statement->value = Let{ name , std::monostate{} };
+                    create_identifier(name, Undefined{}, statement->location);
+                    statement->value = Let{ name , Undefined{} };
 
                     return statement;
                 }
@@ -529,7 +529,8 @@ Statement* ParserLayer1::parse_operator_definition() {
 
             compilation_state_->globals_->create_identifier(ast_store_->allocate_callable(
                 Operator{op_string, body, 
-                    OperatorProps::Binary(precedence, Associativity::left), statement->location}));
+                    OperatorProps::Binary(precedence, Associativity::left), 
+                        statement->location}));
             log_info("parsed let statement", MessageType::parser_debug);
             return statement;   
 
@@ -626,7 +627,7 @@ Statement* ParserLayer1::parse_block_statement() {
         // attempt to simplify
         if (!simplify_single_statement_block(statement)) {
             statement->statement_type = StatementType::illegal;
-            statement->value = std::monostate{};
+            statement->value = Undefined{};
             return statement;
         }
     }
@@ -634,7 +635,7 @@ Statement* ParserLayer1::parse_block_statement() {
     // simplify empty block
     if (substatements->empty()) {
         statement->statement_type = StatementType::empty;
-        statement->value = std::monostate{};
+        statement->value = Undefined{};
         return statement;
     }
 

@@ -9,7 +9,6 @@
 #include "mapsc/types/function_type.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"
-#include "mapsc/ast/builtin.hh"
 
 using Maps::GlobalLogger::log_error;
 
@@ -21,37 +20,43 @@ Operator Operator::create_binary(const std::string& name, CallableBody body, Pre
     return Operator{name, body, OperatorProps::Binary(precedence, associativity), location};
 }
 
+Operator Operator::create_binary(const std::string& name, CallableBody body, const Type& type, 
+    Precedence precedence, Associativity associativity, SourceLocation location) {
+
+    return Operator{name, body, type, OperatorProps::Binary(precedence, associativity), location};
+}
 
 Callable Callable::testing_callable(const Type* type) {
-    Callable callable{"DUMMY_CALLABLE", std::monostate{}, TEST_SOURCE_LOCATION};
-    callable.set_type(*type);
-    return callable;
+    return Callable{"DUMMY_CALLABLE", External{}, *type, TEST_SOURCE_LOCATION};
 }
 
 Callable::Callable(const std::string& name, CallableBody body, const Type& type, SourceLocation location)
-:Callable(name, body, location) {
-    assert(!std::holds_alternative<Expression*>(body) &&
-        "Tried to initialize expression-bodied callable with a type, type should be set on the expression");
-    
-    set_type(type);
+: name_(name), body_(body), location_(location), type_(&type) {
+    assert((!std::holds_alternative<Expression*>(body)  || 
+            type == Hole                                ||
+            type == *std::get<Expression*>(body)->type) &&
+            "Tried to initialize expression-bodied callable with a type, type should be set on the expression");
 }
 
 Callable::Callable(const std::string& name, CallableBody body, SourceLocation location)
-:body(body), name(name), location(location) {}
+:Callable(name, body, Hole, location) {}
 
 Callable::Callable(CallableBody body, SourceLocation location)
-:body(body), name("anonymous callable"), location(location) {}
+: name_("anonymous callable"), body_(body), location_(location) {}
+
+Callable::Callable(CallableBody body, const Type& type, SourceLocation location)
+: name_("anonymous callable"), body_(body), location_(location), type_(&type) {}
 
 const Type* Callable::get_type() const {
-    switch (body.index()) {
-        case 0: // std::monostate
+    switch (body_.index()) {
+        case 0: // Undefined
             return type_ ? *type_ : &Hole;
         
         case 1: // expression
-            return std::get<Expression*>(body)->type;
+            return std::get<Expression*>(body_)->type;
 
         case 2: { // statement
-            Statement* statement = std::get<Statement*>(body);
+            Statement* statement = std::get<Statement*>(body_);
 
             if (statement->statement_type == StatementType::expression_statement) {
                 return std::get<Expression*>(statement->value)->type;
@@ -59,10 +64,9 @@ const Type* Callable::get_type() const {
 
             return type_ ? *type_ : &Hole;
         }
-        case 3: // Builtin
-            return std::get<Builtin*>(body)->type;
-
-        default:
+        case 3: // External
+            return *type_; 
+        default: 
             assert(false && "unhandled CallableBody in CallableBody::get_type");
             return &Hole;
     }
@@ -70,17 +74,17 @@ const Type* Callable::get_type() const {
 
 // !!! this feels pretty sus, manipulating state with way too many layers of indirection
 void Callable::set_type(const Type& type) {
-    switch (body.index()) {
+    switch (body_.index()) {
         case 0: // uninitialized
             type_ = std::make_optional<const Type*>(&type);
             return;
         
         case 1: // expression
-            std::get<Expression*>(body)->type = &type;
+            std::get<Expression*>(body_)->type = &type;
             return;
 
         case 2: { // statement
-            Statement* statement = std::get<Statement*>(body);
+            Statement* statement = std::get<Statement*>(body_);
 
             if (statement->statement_type == StatementType::expression_statement) {
                 std::get<Expression*>(statement->value)->type = &type;
@@ -90,7 +94,7 @@ void Callable::set_type(const Type& type) {
             type_ = std::make_optional<const Type *>(&type);
             return;
         }
-        case 3: // Cannot set type of a builtin
+        case 3: // Cannot set type of an external
             assert(false && "tried to set_type of a builtin callable");
             return;
 
@@ -100,17 +104,17 @@ void Callable::set_type(const Type& type) {
 }
 
 std::optional<const Type*> Callable::get_declared_type() const {
-    if (Expression* const* expression = std::get_if<Expression*>(&body)) {
+    if (Expression* const* expression = std::get_if<Expression*>(&body_)) {
         return (*expression)->declared_type;
 
-    } else if (Statement* const* statement = std::get_if<Statement*>(&body)) {
+    } else if (Statement* const* statement = std::get_if<Statement*>(&body_)) {
         if ((*statement)->statement_type == StatementType::expression_statement)
             return std::get<Expression*>((*statement)->value)->declared_type;
 
-        return declared_type;
+        return declared_type_;
 
-    } else if (Builtin* const* builtin = std::get_if<Builtin*>(&body)) {
-        return (*builtin)->type;
+    } else if (auto builtin = std::get_if<External>(&body_)) {
+        return type_;
     }
 
     assert(false && "unhandled callable type in Callable::get_declared_type");
@@ -118,21 +122,21 @@ std::optional<const Type*> Callable::get_declared_type() const {
 }
 
 bool Callable::set_declared_type(const Type& type) {
-    if (Expression* const* expression = std::get_if<Expression*>(&body)) {
+    if (Expression* const* expression = std::get_if<Expression*>(&body_)) {
         (*expression)->declared_type = &type;
         return true;
 
-    } else if (Statement* const* statement = std::get_if<Statement*>(&body)) {
+    } else if (Statement* const* statement = std::get_if<Statement*>(&body_)) {
         if ((*statement)->statement_type == StatementType::expression_statement) {
             auto expression = std::get<Expression*>((*statement)->value);
             expression->declared_type = &type;
             return true;
         }
 
-        declared_type = &type;
+        declared_type_ = &type;
         return true;
 
-    } else if (Builtin* const* builtin = std::get_if<Builtin*>(&body)) {
+    } else if (auto external = std::get_if<External>(&body_)) {
         log_error("tried to set the declared type on a builtin");
         assert(false && "tried to set the declared type on a builtin");
         return false;
@@ -142,7 +146,7 @@ bool Callable::set_declared_type(const Type& type) {
 }
 
 bool Callable::is_undefined() const {
-    return std::holds_alternative<std::monostate>(body);
+    return std::holds_alternative<Undefined>(body_);
 }
 
 bool Callable::is_operator() const {
