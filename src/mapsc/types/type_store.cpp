@@ -10,10 +10,16 @@ namespace Maps {
 
 // builtin types are inserted so that they can be looked up nicely
 TypeStore::TypeStore() {
-    next_id_ = BUILTIN_TYPES.size();
+    next_id_ = BUILTIN_TYPES.size() + BUILTIN_FUNCTION_TYPES.size();
 
     for (auto type: BUILTIN_TYPES) {
         types_by_identifier_.insert({static_cast<std::string>(type->name()), type});
+        types_by_id_.push_back(type);
+    }
+
+    for (auto type: BUILTIN_FUNCTION_TYPES) {
+        types_by_structure_.insert(
+            {make_function_signature(*type->return_type_, type->param_types_), type});
         types_by_id_.push_back(type);
     }
 

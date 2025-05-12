@@ -36,15 +36,43 @@ public:
 };
 
 
+class BuiltinOperator: public Operator {
+public:
+    BuiltinOperator(const std::string& name, const Expression&& expression, 
+        OperatorProps operator_props)
+    :Operator(name, Undefined{}, operator_props, BUILTIN_SOURCE_LOCATION), 
+     builtin_body_(expression) {
+        body_ = &std::get<Expression>(builtin_body_);
+    }
+
+    // Builtin(const std::string& name, const Statement&& statement, const Type& type)
+    // :Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION),
+    //  builtin_body_(statement) {
+    //     body_ = &std::get<Statement>(builtin_body_);
+    // }
+
+    BuiltinOperator(const std::string& name, External external, const Type& type, 
+        OperatorProps operator_props)
+    :Operator(name, Undefined{}, type, operator_props, BUILTIN_SOURCE_LOCATION), builtin_body_(external) {
+        body_ = std::get<External>(builtin_body_);
+    }
+
+    BuiltinBody builtin_body_;
+};
+
+
 Builtin maps_true{"true", create_builtin_expression(true, Boolean)};
 Builtin maps_false{"false", create_builtin_expression(false, Boolean)};
 
-// Builtin maps_true{"+", create_builtin_expression(true, )};
-// Builtin maps_true{"-", create_builtin_expression(true, Boolean)};
-// Builtin maps_true{"*", create_builtin_expression(true, Boolean)};
+BuiltinOperator maps_plus_Int{"+", External{}, IntInt_to_Int, 
+    OperatorProps::Binary(500, Associativity::left)};
+BuiltinOperator maps_minus_Int{"-", External{}, IntInt_to_Int, 
+    OperatorProps::Binary(510, Associativity::left)};
+BuiltinOperator maps_mult_Int{"*", External{}, IntInt_to_Int, 
+    OperatorProps::Binary(520, Associativity::left)};
 // Builtin maps_true{"/", create_builtin_expression(true, Boolean)};
 
-Builtin maps_print{"print", External{}, String_to_void};
+Builtin maps_print{"print", External{}, String_to_Void};
 
 static Scope builtins;
 
@@ -57,9 +85,12 @@ bool init_builtins(Scope& scope) {
     builtins_initialized = true;
 
     return (
-        scope.create_identifier(&maps_true )  &&
-        scope.create_identifier(&maps_false)  &&
-        scope.create_identifier(&maps_print)
+        scope.create_identifier(&maps_true     ) &&
+        scope.create_identifier(&maps_false    ) &&
+        scope.create_identifier(&maps_print    ) &&
+        scope.create_identifier(&maps_plus_Int ) &&
+        scope.create_identifier(&maps_minus_Int) &&
+        scope.create_identifier(&maps_mult_Int )
     );
 
     // if (!ast.create_builtin_binary_operator("+", *ast.types_->get_function_type(Int, 

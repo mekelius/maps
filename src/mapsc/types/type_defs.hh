@@ -102,8 +102,10 @@ constexpr TypeTemplate Function_ {
 };
 
 #ifndef __TYPE_DEFS_CPP
-extern FunctionType String_to_void;
-extern std::array<const FunctionType*, 1> BUILTIN_FUNCTION_TYPES;
+extern FunctionType String_to_Void;
+extern FunctionType IntInt_to_Int;
+extern FunctionType FloatFloat_to_Float;
+extern std::array<const FunctionType*, 3> BUILTIN_FUNCTION_TYPES;
 #endif
 
 } // namespace Maps
