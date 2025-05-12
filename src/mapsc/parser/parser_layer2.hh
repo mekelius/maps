@@ -17,12 +17,13 @@ namespace Maps {
 
 struct Expression;
 class Callable;
+class CompilationState;
 class AST_Store;
 class PragmaStore;
 
 class TermedExpressionParser {
 public:
-    TermedExpressionParser(AST_Store* ast, Expression* expression);
+    TermedExpressionParser(CompilationState* compilation_state, Expression* expression);
     // parses the expression in-place
     void run();
 
@@ -75,11 +76,11 @@ private:
     void partial_call_state();
     Expression* handle_arg_state(Callable* callee, const std::vector<Expression*>& args);
 
-    AST_Store* ast_;
-
-    Expression* expression_;
+    Expression* const expression_;
     std::vector<Expression*>* expression_terms_;
     std::vector<Expression*>::iterator next_term_it_;
+    CompilationState* const compilation_state_;
+    AST_Store* const ast_;
 
     bool possibly_type_expression_ = true;
     std::vector<Expression*> parse_stack_ = {};
@@ -90,15 +91,14 @@ private:
 // in the ast and runs them
 class ParserLayer2 {
 public:
-    ParserLayer2(AST_Store* ast, PragmaStore* pragmas);
+    ParserLayer2(CompilationState* compilation_state);
     void run();
 
 private:
 
     // Selects a termed expression to parse. That expressions terms become the tokenstream
     void select_expression(Expression* expression);
-    AST_Store* ast_;
-    PragmaStore* pragmas_;
+    CompilationState* compilation_state_;
 };
 
 } // namespace Maps

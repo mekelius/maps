@@ -23,7 +23,7 @@ public:
 
     ReverseParser& operator<<(const std::string& str) { *ostream_ << str; return *this; }
     ReverseParser& operator<<(const char ch) { *ostream_ << ch; return *this; }
-    ReverseParser& operator<<(AST_Store& ast) { return reverse_parse(ast); }
+    ReverseParser& operator<<(const CompilationState& state) { return reverse_parse(state); }
     ReverseParser& operator<<(CallableBody body) { return print_callable(body); }
     ReverseParser& operator<<(Expression& expression) { return print_expression(expression); }
     ReverseParser& operator<<(Statement& statement) { return print_statement(statement); }
@@ -34,7 +34,7 @@ private:
     void reset();
     std::string linebreak();
 
-    ReverseParser& reverse_parse(AST_Store& ast);
+    ReverseParser& reverse_parse(const CompilationState& state);
     ReverseParser& print_statement(const Statement& statement);
     ReverseParser& print_expression(Expression& expression);
     ReverseParser& print_callable(CallableBody body);

@@ -1,37 +1,28 @@
 #include "doctest.h"
 
 #include "mapsc/types/type.hh"
+#include "mapsc/types/type_defs.hh"
+#include "mapsc/types/type_store.hh"
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/compilation_state.hh"
 
-using Maps::Expression, Maps::ExpressionType, Maps::Callable;
+using namespace Maps;
+using namespace std;
 
 TEST_CASE("AST should be empty when created") {
-    Maps::AST_Store ast{};
+    AST_Store ast{};
     CHECK(ast.empty());
     CHECK(ast.size() == 0);
 }
 
-TEST_CASE("Callables should pass their type correctly") {
-    const unsigned int PRECEDENCE = 756;
-    Maps::AST_Store ast{};
-    
-    Maps::Callable* op = ast.create_builtin_binary_operator("*", 
-        *ast.types_->get_function_type(Maps::Void, {&Maps::Number, &Maps::Number}), PRECEDENCE);
+TEST_CASE("Operator::create_binary should create an operator") {
+    auto [state, _0, _1] = CompilationState::create_test_state();
 
-    CHECK(op->is_binary_operator());
-    CHECK((*op->operator_props)->precedence == PRECEDENCE);
-}
+    Callable* op_callable = state.ast_store_->allocate_operator(
+        Operator::create_binary("+", monostate{}, 2, Associativity::left, TSL));
 
-TEST_CASE("Operator_ref:s should pass their type correctly") {
-    const unsigned int PRECEDENCE = 243;
-    Maps::AST_Store ast{};
-    
-    Maps::Callable* op = ast.create_builtin_binary_operator("*", 
-        *ast.types_->get_function_type(Maps::Void, {&Maps::Number, &Maps::Number}), PRECEDENCE);
+    CHECK(dynamic_cast<Operator*>(op_callable));
 
-    Maps::Expression* op_ref = create_operator_ref(ast, op, {0,0});
-
-    CHECK(op_ref->reference_value()->is_binary_operator());
-    
-    CHECK((*op_ref->reference_value()->operator_props)->precedence == PRECEDENCE);
+    CHECK(op_callable->is_operator());
+    CHECK(op_callable->is_binary_operator());
 }

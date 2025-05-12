@@ -7,7 +7,7 @@
 #include "common/std_visit_helper.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/types/casts.hh"
-#include "mapsc/ast/ast_store.hh"
+#include "mapsc/compilation_state.hh"
 #include "mapsc/procedures/concretize.hh"
 #include "mapsc/procedures/coerce_type.hh"
 
@@ -58,10 +58,10 @@ bool SimpleTypeChecker::visit_statement(Statement* statement) {
     return true; 
 }
 
-bool SimpleTypeChecker::run(AST_Store& ast) {
+bool SimpleTypeChecker::run(CompilationState& state) {
     // return ast.walk_tree(*this);
     // !!! ignoring failures
-    ast.walk_tree(*this);
+    state.globals_->walk_tree(*this);
     return true;
 }
 

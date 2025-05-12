@@ -17,11 +17,13 @@
 
 #include "mapsc/logging.hh"
 #include "mapsc/pragma.hh"
+#include "mapsc/builtins.hh"
 #include "mapsc/ast/ast_store.hh"
 
 #include "mapsc/process_source.hh"
 #include "mapsc/process_source.hh"
 #include "mapsc/procedures/reverse_parse.hh"
+#include "mapsc/types/type_store.hh"
 
 #include "mapsc/procedures/name_resolution.hh"
 
@@ -121,24 +123,25 @@ void REPL::run() {
         }
 
         std::stringstream input_s{*input};
-        auto [parse_success, ast, pragmas] = process_source(input_s, parse_options_, std::cerr);
+        Maps::TypeStore types{};
+        auto compilation_state = process_source(Maps::get_builtins(), &types, input_s, parse_options_, std::cerr);
         
         if (
-            (!parse_success && !options_.ignore_errors) || 
+            (!compilation_state->is_valid && !options_.ignore_errors) || 
             options_.stop_after == Stage::layer1 ||
             options_.stop_after == Stage::layer2
         ) continue;
 
         if (options_.print_reverse_parse) {
             std::cerr << "parsed into:\n";
-            ReverseParser{&std::cout} << *ast;
+            ReverseParser{&std::cout} << *compilation_state;
             std::cerr << "\n" << std::endl;
         }
 
         unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
         unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), 
-            *ast, *pragmas, error_stream_);
-    
+            compilation_state.get(), error_stream_);
+
         insert_builtins(*generator);
         bool ir_success = generator->repl_run();
     
@@ -201,14 +204,19 @@ void REPL::eval(std::unique_ptr<llvm::Module> module_) {
 }
 
 std::string REPL::parse_type(std::istream& input_stream) {
-    auto [success, ast, pragmas] = process_source(input_stream, parse_options_, std::cout);
+    Maps::TypeStore types{};
+
+    auto compilation_state = process_source(Maps::get_builtins(), &types, input_stream, parse_options_, std::cout);
     
-    if (!success && !options_.ignore_errors) {
+    if (!compilation_state->is_valid && !options_.ignore_errors) {
         std::cout << "ERROR: parsing type failed" << std::endl;
         return "";
     }
 
-    auto type = ast->root_->get_type();
+    if (!compilation_state->entry_point_)
+        return "Compilation didn't produce a value";
+
+    auto type = (*compilation_state->entry_point_)->get_type();
 
     return type->to_string();
 }

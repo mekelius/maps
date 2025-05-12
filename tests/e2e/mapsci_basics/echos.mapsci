@@ -1,0 +1,6 @@
+
+// RUN: cat %s | %mapsci | grep "23" | grep "jii" | grep "true"
+
+23
+"jii"
+true

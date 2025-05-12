@@ -15,19 +15,31 @@ using Maps::GlobalLogger::log_error;
 
 namespace Maps {
 
+Operator Operator::create_binary(const std::string& name, CallableBody body, Precedence precedence, 
+    Associativity associativity, SourceLocation location) {
+
+    return Operator{name, body, OperatorProps::Binary(precedence, associativity), location};
+}
+
+
 Callable Callable::testing_callable(const Type* type) {
-    Callable callable{std::monostate{}, "DUMMY_CALLABLE", TEST_SOURCE_LOCATION};
+    Callable callable{"DUMMY_CALLABLE", std::monostate{}, TEST_SOURCE_LOCATION};
     callable.set_type(*type);
     return callable;
 }
 
-// ----- CALLABLE -----
+Callable::Callable(const std::string& name, CallableBody body, const Type& type, SourceLocation location)
+:Callable(name, body, location) {
+    assert(!std::holds_alternative<Expression*>(body) &&
+        "Tried to initialize expression-bodied callable with a type, type should be set on the expression");
+    
+    set_type(type);
+}
 
-Callable::Callable(CallableBody body, const std::string& name, 
-    std::optional<SourceLocation> location)
+Callable::Callable(const std::string& name, CallableBody body, SourceLocation location)
 :body(body), name(name), location(location) {}
 
-Callable::Callable(CallableBody body, std::optional<SourceLocation> location)
+Callable::Callable(CallableBody body, SourceLocation location)
 :body(body), name("anonymous callable"), location(location) {}
 
 const Type* Callable::get_type() const {
@@ -133,23 +145,33 @@ bool Callable::is_undefined() const {
     return std::holds_alternative<std::monostate>(body);
 }
 
-
 bool Callable::is_operator() const {
-    return static_cast<bool>(operator_props);
+    return false;
 }
 
 bool Callable::is_binary_operator() const {
-    if (!is_operator())
-        return false;
-
-    return (*operator_props)->is_binary();
+    return false;
 }
 
 bool Callable::is_unary_operator() const {
-    if (!is_operator())
-        return false;
-
-    return (*operator_props)->is_unary();
+    return false;
 }
+
+bool Operator::is_operator() const {
+    return true;
+}
+
+bool Operator::is_binary_operator() const {
+    return operator_props_.is_binary();
+}
+
+bool Operator::is_unary_operator() const {
+    return operator_props_.is_unary();
+}
+
+Precedence Operator::get_precedence() {
+    return operator_props_.precedence;
+}
+
 
 } // namespace Maps

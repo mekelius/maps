@@ -32,15 +32,21 @@ enum class Associativity {
     // both,
 };
 
-struct Operator {
+struct OperatorProps {
+    static OperatorProps Binary(Precedence precedence, Associativity associativity) {
+        return OperatorProps{UnaryFixity::none, BinaryFixity::infix, precedence, associativity};
+    }
+
+    static OperatorProps Unary() {
+        return OperatorProps{UnaryFixity::prefix};
+    }
+
     UnaryFixity unary_fixity = UnaryFixity::prefix;
     BinaryFixity binary_fixity = BinaryFixity::infix;
     
     Precedence precedence = 999;
     Associativity associativity = Associativity::left;
 
-    std::optional<SourceLocation> location = std::nullopt;
-    
     bool is_unary() const { return unary_fixity != UnaryFixity::none; };
     bool is_binary() const { return binary_fixity != BinaryFixity::none; };
 };

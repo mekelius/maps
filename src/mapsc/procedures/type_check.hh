@@ -6,7 +6,7 @@ namespace Maps {
 struct Expression;
 struct Statement;
 class Callable;
-class AST_Store;
+class CompilationState;
 
 class SimpleTypeChecker {
 public:
@@ -14,7 +14,7 @@ public:
     bool visit_statement(Statement*);
     bool visit_callable(Callable*);
 
-    bool run(AST_Store& ast);
+    bool run(CompilationState& state);
 };
 
 } // namespace Maps

@@ -3,6 +3,7 @@
 #include "mapsc/logging.hh"
 #include "reverse_parse.hh"
 #include "mapsc/compiler_options.hh"
+#include "mapsc/compilation_state.hh"
 
 #include <iostream>
 
@@ -28,14 +29,17 @@ std::string ReverseParser::linebreak() {
     return "\n" + std::string(indent_stack_ * options_.indent_width, ' ');
 }
 
-ReverseParser& ReverseParser::reverse_parse(AST_Store& ast) {
+ReverseParser& ReverseParser::reverse_parse(const CompilationState& state) {
     reset();
 
-    for (auto [name, callable]: ast.globals_->identifiers_in_order_) {
+    for (auto [name, callable]: state.globals_->identifiers_in_order_) {
         *this << "let " << name << " = " << callable->body << ";\n\n";
     }
 
-    return *this << ast.root_->body << '\n';
+    if (state.entry_point_)
+        return *this << (*state.entry_point_)->body << '\n';
+
+    return *this;
 }
 
 ReverseParser& ReverseParser::print_statement(const Statement& statement) {

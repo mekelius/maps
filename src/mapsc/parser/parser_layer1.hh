@@ -22,7 +22,7 @@ class AST_Store;
 
 class ParserLayer1 {
 public:
-    ParserLayer1(AST_Store* ast, PragmaStore* pragmas);
+    ParserLayer1(CompilationState* const state);
 
     // if fails, sets ast->is_valid to false
     bool run(std::istream& source_is);
@@ -108,8 +108,9 @@ protected:
     void reset_to_top_level();
     
     std::unique_ptr<Lexer> lexer_;
-    AST_Store* ast_;
-    PragmaStore* pragmas_;
+    CompilationState* const compilation_state_;
+    AST_Store* const ast_store_;
+    PragmaStore* const pragmas_;
     
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_ = { Token::dummy_token, Token::dummy_token };

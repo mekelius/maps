@@ -1,14 +1,15 @@
 #ifndef __NAME_RESOLUTION_HH
 #define __NAME_RESOLUTION_HH
 
-#include "mapsc/ast/ast_store.hh"
-
 namespace Maps {
 
-bool resolve_identifiers(AST_Store& ast);
-bool resolve_identifier(AST_Store& ast, Expression* expression);
-bool resolve_operator(AST_Store& ast, Expression* expression);
-bool resolve_type_identifier(AST_Store& ast, Expression* expression);
+class CompilationState;
+struct Expression;
+
+bool resolve_identifiers(CompilationState& state);
+bool resolve_identifier(CompilationState& state, Expression* expression);
+bool resolve_operator(CompilationState& state, Expression* expression);
+bool resolve_type_identifier(CompilationState& state, Expression* expression);
 
 } //namespace Maps
 

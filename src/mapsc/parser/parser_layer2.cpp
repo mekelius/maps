@@ -5,6 +5,7 @@
 #include "mapsc/logging.hh"
 #include "mapsc/procedures/name_resolution.hh"
 
+#include "mapsc/compilation_state.hh"
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/types/casts.hh"
 
@@ -39,22 +40,22 @@ namespace Maps {
                       case ExpressionType::reference: \
                       case ExpressionType::termed_expression
 
-ParserLayer2::ParserLayer2(AST_Store* ast, PragmaStore* pragmas)
-: ast_(ast), pragmas_(pragmas) {
+ParserLayer2::ParserLayer2(CompilationState* compilation_state)
+: compilation_state_(compilation_state) {
 }
 
 void ParserLayer2::run() {
-    for (Expression* expression: ast_->unparsed_termed_expressions_) {
+    for (Expression* expression: compilation_state_->unparsed_termed_expressions_) {
         // some expressions might be parsed early as sub-expressions
         if (expression->expression_type != ExpressionType::termed_expression)
             continue;
         
-        TermedExpressionParser{ast_, expression}.run();
+        TermedExpressionParser{compilation_state_, expression}.run();
     }
 }
 
-TermedExpressionParser::TermedExpressionParser(AST_Store* ast, Expression* expression)
-:ast_(ast), expression_(expression) {
+TermedExpressionParser::TermedExpressionParser(CompilationState* compilation_state, Expression* expression)
+:expression_(expression), compilation_state_(compilation_state), ast_(compilation_state->ast_store_.get()) {
     expression_terms_ = &expression->terms();
     next_term_it_ = expression_terms_->begin();    
 }
@@ -92,7 +93,7 @@ Precedence TermedExpressionParser::peek_precedence() const {
     assert(peek()->reference_value()->is_binary_operator() && 
         "TermedExpressionParser::peek_precedence encountered an operator ref that was not a binary operator");
 
-    return (*peek()->reference_value()->operator_props)->precedence;
+    return get_operator_precedence(*peek());
 }
 
 
@@ -111,7 +112,7 @@ std::optional<Expression*> TermedExpressionParser::pop_term() {
 
 void TermedExpressionParser::fail(const std::string& message, SourceLocation location) {
     log_error(message, location);
-    ast_->declare_invalid();
+    compilation_state_->declare_invalid();
 }
 
 bool TermedExpressionParser::at_expression_end() const {
@@ -138,8 +139,7 @@ bool is_value_literal(Expression* expression) {
 
 Expression* TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
-        log_error("layer2 tried to parse an empty expression", expression_->location);
-        ast_->declare_invalid();
+        fail("layer2 tried to parse an empty expression", expression_->location);
         return create_valueless_expression(*ast_, ExpressionType::syntax_error, expression_->location);
     }
 
@@ -183,22 +183,20 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             assert(false && "bad term in TermedExpressionParser::parse_termed_expression");
     }
 
-    if (!ast_->is_valid) {
+    if (!compilation_state_->is_valid) {
         log_error("parsing termed expression failed", expression_->location);
         return create_valueless_expression(*ast_, ExpressionType::syntax_error, expression_->location);
     }
 
     if (!at_expression_end()) {
         assert(false && "parse_termed_expression didn't parse the whole expression");
-        log_error("parse_termed_expression didn't parse the whole expression", expression_->location);
-        ast_->declare_invalid();
+        fail("parse_termed_expression didn't parse the whole expression", expression_->location);
         return expression_;
     }
     
     if (!parse_stack_reduced()) {
         assert(false && "parse_termed_expression failed to reduce completely");
-        log_error("parse_termed_expression failed to reduce the stack", expression_->location);
-        ast_->declare_invalid();
+        fail("parse_termed_expression failed to reduce the stack", expression_->location);
         return expression_;
     }
 
@@ -210,7 +208,7 @@ Expression* TermedExpressionParser::handle_termed_sub_expression(Expression* exp
         && "handle_sub_termed_expression called with non-termed expression");
 
     // TODO: pass some kind of type hint
-    TermedExpressionParser{ast_, expression}.run();
+    TermedExpressionParser{compilation_state_, expression}.run();
 
     return expression;
 }
@@ -232,8 +230,7 @@ void TermedExpressionParser::initial_reference_state() {
                 return post_binary_operator_state();                
 
             default:
-                log_error("unexpected non-operator in termed expression", peek()->location);
-                ast_->declare_invalid();
+                fail("unexpected non-operator in termed expression", peek()->location);
                 return;
         }
     }
@@ -276,10 +273,8 @@ void TermedExpressionParser::initial_value_state() {
         case ExpressionType::reference:
         case ExpressionType::call:
         case GUARANTEED_VALUE:
-            log_error("unexpected value expression in termed expression, expected an operator", 
-                peek()->location);
-            ast_->declare_invalid();
-            return;
+            return fail("unexpected value expression " + peek()->log_message_string() +
+                " in termed expression, expected an operator", peek()->location);
 
         case ExpressionType::type_reference:
         case ExpressionType::type_operator_reference:
@@ -291,8 +286,7 @@ void TermedExpressionParser::initial_value_state() {
         case ExpressionType::type_field_name:
         case BAD_TERM:
             // TODO: make expression to_str
-            log_error("bad term in initial value state", peek()->location);
-            ast_->declare_invalid();
+            fail("bad term "+ peek()->log_message_string() + " in initial value state", peek()->location);
             return;
     }
 }
@@ -513,8 +507,7 @@ void TermedExpressionParser::initial_type_reference_state() {
 
     if (at_expression_end()) {
         if (!possibly_type_expression_) {
-            log_error("Unexpected type expression at expression end", current_term()->location);
-            ast_->declare_invalid();
+            fail("Unexpected type expression at expression end", current_term()->location);
         }
         return;
     }
@@ -564,9 +557,8 @@ void TermedExpressionParser::initial_type_reference_state() {
             assert(false && "-.-"); // !!!
 
         case BAD_TERM:
-            log_error("bad term encountered in TermedExpressoinParser", current_term()->location);
+            fail("bad term encountered in TermedExpressoinParser", current_term()->location);
             assert(false && "bad term encountered in TermedExpressoinParser");
-            ast_->declare_invalid();
             return;
     }
 }
@@ -666,8 +658,7 @@ Expression* TermedExpressionParser::handle_arg_state(Callable* callee, const std
         case ExpressionType::call:
             if (!is_acceptable_next_arg(callee, args/*, current_term()*/)) {
                 // TODO: try all kinds of partial application
-                log_error("possible type-error", current_term()->location);
-                ast_->declare_invalid();
+                fail("possible type-error", current_term()->location);
                 return *pop_term();
             }
 

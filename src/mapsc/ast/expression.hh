@@ -8,13 +8,17 @@
 
 #include "common/maps_datatypes.h"
 #include "mapsc/source.hh"
+#include "operator.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
 
 namespace Maps {
 
+class Scope;
+class CompilationState;
 class AST_Store;
 class Callable;
+class Operator;
 
 // ----- EXPRESSIONS -----
 
@@ -100,6 +104,7 @@ struct Expression {
     std::vector<Expression*>& terms();
     CallExpressionValue& call_value();
     Callable* reference_value() const;
+    Operator* operator_reference_value() const;
 
     bool is_partial_call() const;
     bool is_reduced_value() const;
@@ -127,18 +132,20 @@ struct Expression {
 Expression* create_string_literal(AST_Store& store, const std::string& value, SourceLocation location);
 Expression* create_numeric_literal(AST_Store& store, const std::string& value, SourceLocation location);
 
-// These automatically add the identifier into unresolved list as a convenience
-Expression* create_identifier_expression(AST_Store& store, const std::string& value, 
+Expression* create_identifier_expression(CompilationState& state, const std::string& value,
     SourceLocation location);
-Expression* create_type_identifier_expression(AST_Store& store, const std::string& value, 
+Expression* create_type_identifier_expression(CompilationState& state, const std::string& value, 
     SourceLocation location);
-Expression* create_operator_identifier(AST_Store& store, const std::string& value, 
+Expression* create_operator_identifier_expression(CompilationState& state, const std::string& value, 
     SourceLocation location);
-Expression* create_type_operator_expression(AST_Store& store, const std::string& value, 
+Expression* create_type_operator_identifier_expression(CompilationState& state, const std::string& value, 
     SourceLocation location);
 
 Expression* create_termed_expression(AST_Store& store, std::vector<Expression*>&& terms, 
     SourceLocation location);
+
+Expression* create_reference_expression(AST_Store& store, Callable* callable, SourceLocation location);
+std::optional<Expression*> create_reference_expression(AST_Store& store, const Scope& scope, const std::string& name, SourceLocation location);
 
 [[nodiscard]] std::optional<Expression*> create_type_operator_ref(AST_Store& store, 
     const std::string& name, SourceLocation location, const Type* type);
@@ -155,6 +162,8 @@ Expression* create_missing_argument(AST_Store& store, SourceLocation location, c
 
 std::optional<Expression*> create_call_expression(AST_Store& store, SourceLocation location, Callable* callable, 
     const std::vector<Expression*>& args);
+
+Precedence get_operator_precedence(const Expression& operator_ref);
 
 } // namespace Maps
 

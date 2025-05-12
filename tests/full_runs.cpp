@@ -3,21 +3,23 @@
 #include <sstream>
 
 #include "mapsc/process_source.hh"
+#include "mapsc/builtins.hh"
 
 using namespace Maps;
 using namespace std;
 
-
 TEST_CASE("Integration test: parse_source should parse a numberliteral with the correct type") {
+    TypeStore types{};
+    
     std::stringstream source{"let x = Int 34"};
     
-    auto [success, ast, _1] = process_source(source);
+    auto compilation_state = process_source(get_builtins(), &types, source);
 
-    CHECK(success);
+    CHECK(compilation_state->is_valid);
 
-    CHECK(ast->globals_->identifier_exists("x"));
+    CHECK(compilation_state->globals_->identifier_exists("x"));
 
-    auto x = (*ast->globals_->get_identifier("x"));
+    auto x = (*compilation_state->globals_->get_identifier("x"));
 
     CHECK(*x->get_type() == Int);
 }

@@ -14,15 +14,15 @@ constexpr std::string_view OPERATOR_GLYPHS = "+-*/^=!?|<>.$&€£@¬§¤";
 
 // OPT: roll these into a single enum
 constexpr std::array<std::string_view, 42> RESERVED_WORDS = {
+    "return",
+    "let", "mut", "const", "type", "class",
     "if", "else",
     "for", "while", "do",
-    "return",
     "match", "case", "switch", "default",
     "from",
-    "let", "const", "var", "type", "class",
     "has", "in", "of",                          // has could be a builtin
     "with",
-    "not", "and", "or", "xor", "nor", "nand",   // these could be builtins 
+    "not", "and", "or", "xor", "nor", "nand",   // these could be builtins
     "is", "typeof", "derives", "from",
     "extern",
     "async", "await", "maybe", "value", "fail", // might be builtins

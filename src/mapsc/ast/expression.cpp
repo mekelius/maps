@@ -5,6 +5,7 @@
 
 #include "mapsc/logging.hh"
 #include "mapsc/procedures/reverse_parse.hh"
+#include "mapsc/compilation_state.hh"
 
 using std::optional, std::nullopt, std::to_string;
 using Maps::GlobalLogger::log_error;
@@ -26,6 +27,10 @@ CallExpressionValue& Expression::call_value() {
 Callable* Expression::reference_value() const {
     return std::get<Callable*>(value);
 }
+Operator* Expression::operator_reference_value() const {
+    return dynamic_cast<Operator*>(std::get<Callable*>(value));
+}
+
 
 bool Expression::is_partial_call() const {
     if (expression_type != ExpressionType::call)
@@ -270,39 +275,39 @@ Expression* create_numeric_literal(AST_Store& store, const std::string& value, S
     return store.allocate_expression({ExpressionType::numeric_literal, location, value, &NumberLiteral});
 }
 
-Expression* create_identifier_expression(AST_Store& store, const std::string& value, 
+Expression* create_identifier_expression(CompilationState& state, const std::string& value, 
     SourceLocation location) {
     
-    Expression* expression = store.allocate_expression(
+    Expression* expression = state.ast_store_->allocate_expression(
         {ExpressionType::identifier, location, value, &Hole});
-    store.unresolved_identifiers_.push_back(expression);
+    state.unresolved_identifiers_.push_back(expression);
     return expression;
 }
 
-Expression* create_type_identifier_expression(AST_Store& store, const std::string& value, 
-    SourceLocation location) {
+Expression* create_type_identifier_expression(CompilationState& state, 
+    const std::string& value, SourceLocation location) {
     
-    Expression* expression = store.allocate_expression({ExpressionType::type_identifier, location, 
-        value, &Hole});
-    store.unresolved_identifiers_.push_back(expression);
+    Expression* expression = state.ast_store_->allocate_expression(
+        {ExpressionType::type_identifier, location, value, &Hole});
+    state.unresolved_identifiers_.push_back(expression);
     return expression;
 }
 
-Expression* create_operator_identifier(AST_Store& store, const std::string& value, 
+Expression* create_operator_identifier_expression(CompilationState& state, const std::string& value, 
     SourceLocation location) {
     
-    Expression* expression = store.allocate_expression({ExpressionType::operator_identifier, location, 
-        value, &Hole});
-    store.unresolved_identifiers_.push_back(expression);
+    Expression* expression = state.ast_store_->allocate_expression({ExpressionType::operator_identifier, 
+        location, value, &Hole});
+    state.unresolved_identifiers_.push_back(expression);
     return expression;
 }
 
-Expression* create_type_operator_expression(AST_Store& store, const std::string& value, 
+Expression* create_type_operator_identifier_expression(CompilationState& state, const std::string& value, 
     SourceLocation location) {
     
-    Expression* expression = store.allocate_expression({ExpressionType::type_operator_identifier, 
+    Expression* expression = state.ast_store_->allocate_expression({ExpressionType::type_operator_identifier, 
         location, value, &Void});
-    store.unresolved_type_identifiers_.push_back(expression);
+    state.unresolved_type_identifiers_.push_back(expression);
     return expression;
 }
 
@@ -313,20 +318,20 @@ Expression* create_termed_expression(AST_Store& store, std::vector<Expression*>&
         TermedExpressionValue{terms}, &Hole});
 }
 
-Expression* create_type_reference(AST_Store& store, const Type* type, SourceLocation location) {
-    return store.allocate_expression({ExpressionType::type_reference, location, type, &Void});
+Expression* create_reference_expression(AST_Store& store, Callable* callable, SourceLocation location) {
+    
+    return store.allocate_expression({ExpressionType::reference, location, callable, callable->get_type()});
 }
 
-std::optional<Expression*> create_operator_ref(AST_Store& store, const std::string& name, 
-    SourceLocation location) {
-    
-    // TODO: check user_defined operators as well
-    std::optional<Callable*> callable = store.builtins_scope_->get_identifier(name);
-    
-    if (!callable)
-        return std::nullopt;
-    
-    return create_operator_ref(store, *callable, location);
+std::optional<Expression*> create_reference_expression(AST_Store& store, const Scope& scope, const std::string& name, SourceLocation location) {
+    if (auto callable = scope.get_identifier(name))
+        return create_reference_expression(store, *callable, location);
+
+    return nullopt;
+}
+
+Expression* create_type_reference(AST_Store& store, const Type* type, SourceLocation location) {
+    return store.allocate_expression({ExpressionType::type_reference, location, type, &Void});
 }
 
 Expression* create_operator_ref(AST_Store& store, Callable* callable, SourceLocation location) {
@@ -385,6 +390,16 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
 
     //     if(arg->type )
     // }
+}
+
+Precedence get_operator_precedence(const Expression& operator_ref) {
+    assert(operator_ref.expression_type == ExpressionType::operator_reference && 
+        "get_operator_precedence called with not an operator reference");
+
+    assert(operator_ref.reference_value()->is_binary_operator() && 
+        "get_operator_precedence called with not a binary operator");
+
+    return operator_ref.operator_reference_value()->get_precedence();
 }
 
 } // namespace Maps

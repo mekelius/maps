@@ -17,7 +17,7 @@
 #include "mapsc/logging.hh"
 
 #include "mapsc/ast/ast_store.hh"
-
+#include "mapsc/builtins.hh"
 #include "mapsc/process_source.hh"
 
 #include "mapsc/llvm/ir_generator.hh"
@@ -112,9 +112,13 @@ int main(int argc, char** argv) {
     // ----- parse the source -----
     
     std::cerr << "Parsing source file(s)...\n";
+ 
+    Maps::TypeStore types{};
+    const Maps::Scope* builtins = Maps::get_builtins();
+    unique_ptr<Maps::CompilationState> compilation_state = 
+        Maps::process_source(builtins, &types,source_is);
 
-    auto [success, ast, pragmas] = Maps::process_source(source_is);
-    if (!success) {
+    if (!compilation_state->is_valid) {
         log_error("parsing failed");
         return EXIT_FAILURE;
     }
@@ -131,7 +135,7 @@ int main(int argc, char** argv) {
     unique_ptr<llvm::LLVMContext> context = make_unique<llvm::LLVMContext>();
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context);
 
-    IR::IR_Generator ir_generator{context.get(), module_.get(), *ast, *pragmas, &error_stream};
+    IR::IR_Generator ir_generator{context.get(), module_.get(), compilation_state.get(), &error_stream};
     insert_builtins(ir_generator);
     
     // ----- run codegen -----

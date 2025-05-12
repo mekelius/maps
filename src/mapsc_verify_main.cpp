@@ -9,6 +9,9 @@
 #include "mapsc/procedures/reverse_parse.hh"
 #include "mapsc/parser/parser_layer1.hh"
 #include "mapsc/parser/parser_layer2.hh"
+#include "mapsc/builtins.hh"
+#include "mapsc/compilation_state.hh"
+#include "mapsc/types/type_store.hh"
 
 #include "mapsc/procedures/name_resolution.hh"
 
@@ -77,51 +80,45 @@ int main(int argc, char* argv[]) {
             continue;
         }
         
-        std::unique_ptr<Maps::PragmaStore> pragmas = std::make_unique<Maps::PragmaStore>();
-        
         std::cout << "run layer1\n\n";
-        std::unique_ptr<Maps::AST_Store> ast = std::make_unique<Maps::AST_Store>();
 
-        if (!ast->init_builtins()) {
-            Maps::GlobalLogger::log_error("Initializing builtins failed");
-            assert(false && "Initializing builtins failed");
-            return EXIT_FAILURE;
-        }    
+        Maps::TypeStore types{};
+        Maps::CompilationState compilation_state{Maps::get_builtins(), &types};
 
-        Maps::ParserLayer1{ast.get(), pragmas.get()}.run(source_file);
+        Maps::ParserLayer1{&compilation_state}.run(source_file);
 
         if (Logger::logs_since_last_check()) 
             std::cout << "\n";
-        if (!ast->is_valid) {
+        if (!compilation_state.is_valid) {
             std::cerr << "layer1 failed\n\n";
             continue;
         }
         std::cout << "layer1 done\n\n";
         std::cout << "run name resolution\n\n";
 
-        resolve_identifiers(*ast);
+        resolve_identifiers(compilation_state);
 
         if(Logger::logs_since_last_check()) 
             std::cout << "\n";
-        if (!ast->is_valid) {
+        if (!compilation_state.is_valid) {
             std::cerr << "name resolution failed\n\n";
             continue;
         }
         std::cout << "name resolution done\n\n";
         std::cout << "run layer 2\n\n";
 
-        Maps::ParserLayer2{ast.get(), pragmas.get()}.run();
+        Maps::ParserLayer2{&compilation_state}.run();
 
         if(Logger::logs_since_last_check()) 
             std::cout << "\n";
-        if (!ast->is_valid) {
+        if (!compilation_state.is_valid) {
             std::cerr << "layer2 failed\n\n";
             continue;
         }
         std::cout << "layer2 done\n\n";
 
         std::cout << separator('-', "Parsed into"); 
-        Maps::ReverseParser{&std::cout} << *ast;
+        Maps::ReverseParser{&std::cout} << compilation_state;
         std::cout << "\n" << std::endl;
     }
 

@@ -4,6 +4,8 @@
 #include <optional>
 
 #include "mapsc/logging.hh"
+#include "mapsc/types/type_defs.hh"
+#include "mapsc/types/type_store.hh"
 
 using std::optional;
 using Maps::GlobalLogger::log_error;

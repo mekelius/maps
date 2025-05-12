@@ -1,17 +1,30 @@
 #ifndef __IR_GEN_HH
 #define __IR_GEN_HH
 
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-
 #include <ostream>
 
-#include "mapsc/ast/ast_store.hh"
 #include "mapsc/pragma.hh"
 
 #include "type_mapping.hh"
 #include "mapsc/llvm/function_store.hh"
+
+namespace llvm {
+
+class raw_ostream;
+class Module;
+class LLVMContext;
+class Function;
+
+} // namespace llvm
+
+namespace Maps {
+
+struct Statement;
+class CompilationState;
+class Callable;
+class TypeStore;
+
+} // namespace Maps
 
 namespace IR {
 
@@ -29,13 +42,13 @@ public:
     };
 
     // ----- CONSTRUCTORS -----
-    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST_Store& ast, 
-        Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream, Options options);
+    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, 
+        const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream, Options options);
 
     // delegating contructor to make options optional
-    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST_Store& ast, 
-        Maps::PragmaStore& pragmas, llvm::raw_ostream* error_stream)
-    :IR_Generator(IR_Generator(context, module, ast, pragmas, error_stream, Options{})) {}
+    IR_Generator(llvm::LLVMContext* context, llvm::Module* module, 
+        const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream)
+    :IR_Generator(context, module, compilation_state, error_stream, Options{}) {}
 
     // ----- RUNNING THE GENERATOR -----
     bool run();
@@ -92,7 +105,7 @@ private:
     
     // ----- EXPRESSION HANDLERS -----
     std::optional<llvm::Value*> handle_expression(const Maps::Expression& expression);
-    llvm::Value* handle_call(const Maps::CallExpressionValue& call);
+    llvm::Value* handle_call(const Maps::Expression& call);
 
     // ----- VALUE HANDLERS -----
     llvm::Value* handle_value(const Maps::Expression& expression);
@@ -105,8 +118,8 @@ private:
     // ----- PRIVATE FIELDS -----
     Options options_;
 
+    const Maps::CompilationState* compilation_state_;
     Maps::PragmaStore* pragmas_;
-    const Maps::AST_Store* ast_;
     Maps::TypeStore* maps_types_;
     
     std::unique_ptr<FunctionStore> function_store_ = std::make_unique<FunctionStore>();

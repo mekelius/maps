@@ -1,0 +1,4 @@
+
+// RUN: cat %s | %mapsci | grep "65"
+
+23 + 42

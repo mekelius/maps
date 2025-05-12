@@ -4,6 +4,9 @@
 #include <variant>
 #include <sstream>
 
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/FileSystem.h"
 
@@ -16,7 +19,7 @@
 #include "common/string_helpers.hh"
 
 #include "mapsc/logging.hh"
-#include "mapsc/ast/ast_store.hh"
+#include "mapsc/compilation_state.hh"
 
 #include "mapsc/llvm/ir_builtins.hh"
 
@@ -55,16 +58,16 @@ std::string create_internal_name(const std::string& name, const Maps::FunctionTy
 
 // ----- IR GENERATOR -----
 
-IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module, const Maps::AST_Store& ast, 
-    PragmaStore& pragmas, llvm::raw_ostream* error_stream, Options options)
-:errs_(error_stream), 
- context_(context), 
- module_(module), 
- types_({*context_}), 
- options_(options), 
- pragmas_(&pragmas), 
- ast_(&ast), 
- maps_types_(ast.types_.get()) {
+IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module,
+    const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream, Options options)
+:errs_(error_stream),
+ context_(context),
+ module_(module),
+ types_({*context_}),
+ options_(options),
+ compilation_state_(compilation_state), 
+ pragmas_(compilation_state->pragmas_.get()),
+ maps_types_(compilation_state->types_) {
 
     if (!types_.is_good_)
         fail("Initializing type map failed");
@@ -188,12 +191,21 @@ bool IR_Generator::verify_module() {
 // --------- HIGH-LEVEL HANDLERS ---------
 
 optional<llvm::Function*> IR_Generator::eval_and_print_root() {
-    if (holds_alternative<std::monostate>(ast_->root_->body))
+    if (!compilation_state_->entry_point_) {
+        log_info("IR_Generator::eval_and_print_root called with no entry point on CompilationState", 
+            Maps::MessageType::ir_gen_debug);
+        fail("No entry point");
+        return nullopt;
+    }
+
+    auto entry_point = *compilation_state_->entry_point_;
+
+    if (holds_alternative<std::monostate>(entry_point->body))
         return nullopt;
 
     optional<llvm::Function*> top_level_function;
 
-    auto root_function = handle_global_definition(*ast_->root_);
+    auto root_function = handle_global_definition(*entry_point);
 
     if (!root_function) {
         fail("Creating REPL wrapper failed");
@@ -201,10 +213,10 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
     }
 
     top_level_function = function_definition(static_cast<std::string>(REPL_WRAPPER_NAME), 
-        *ast_->types_->get_function_type(Maps::Void, {}), types_.repl_wrapper_signature);
+        *maps_types_->get_function_type(Maps::Void, {}), types_.repl_wrapper_signature);
     
     optional<llvm::FunctionCallee> print = 
-        function_store_->get("print", *ast_->types_->get_function_type(Maps::Void, {ast_->root_->get_type()}));
+        function_store_->get("print", *maps_types_->get_function_type(Maps::Void, {entry_point->get_type()}));
     
     builder_->CreateCall(*print, builder_->CreateCall(*root_function));
 
@@ -217,7 +229,7 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
 }
 
 bool IR_Generator::handle_global_functions() {
-    for (auto [_1, callable]: *ast_) {
+    for (auto [_1, callable]: *compilation_state_->globals_) {
         if (!handle_global_definition(*callable))
             return false;
     }
@@ -227,7 +239,7 @@ bool IR_Generator::handle_global_functions() {
 
 std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(const std::string& name, const Maps::Expression& expression) {
     const Maps::FunctionType* maps_type = 
-        ast_->types_->get_function_type(*expression.type, {});
+        maps_types_->get_function_type(*expression.type, {});
 
     optional<llvm::FunctionType*> llvm_type = types_.convert_function_type(
         *maps_type->return_type_, maps_type->param_types_);
@@ -276,10 +288,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Ca
         *function_type->return_type_, function_type->param_types_);
 
     if (!signature) {
-        assert(callable.location && 
-            "in IR_Generator::handle_function: callable missing location, did it try to handle a builtin");
-        log_error("unable to convert type signature for " + callable.name, 
-            *callable.location);
+        log_error("unable to convert type signature for " + callable.name, callable.location);
         return nullopt;
     }
 
@@ -384,7 +393,7 @@ std::optional<llvm::Value*> IR_Generator::handle_expression_statement(const Maps
 optional<llvm::Value*> IR_Generator::handle_expression(const Expression& expression) {
     switch (expression.expression_type) {
         case ExpressionType::call:
-            return handle_call(std::get<Maps::CallExpressionValue>(expression.value));
+            return handle_call(expression);
 
         case ExpressionType::value:
             return handle_value(expression);
@@ -404,8 +413,8 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
     }
 }
 
-llvm::Value* IR_Generator::handle_call(const Maps::CallExpressionValue& call) {
-    auto [callee, args] = call;
+llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
+    auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
 
     std::optional<llvm::FunctionCallee> function = function_store_->get(
         callee->name, *dynamic_cast<const Maps::FunctionType*>(callee->get_type()));

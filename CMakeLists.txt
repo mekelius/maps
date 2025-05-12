@@ -41,6 +41,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/compiler_options.cpp
     src/mapsc/pragma.cpp
     src/mapsc/builtins.cpp
+    src/mapsc/compilation_state.cpp
 
     src/mapsc/types/type.cpp
     src/mapsc/types/function_type.cpp
@@ -159,7 +160,7 @@ configure_file(tests/e2e/run_lit.py tests/e2e/run_lit.py)
 
 add_custom_target(e2e_tests
     COMMAND ./tests/e2e/run_lit.py "${CMAKE_CURRENT_BINARY_DIR}" -v
-    DEPENDS mapsc)
+    DEPENDS mapsc mapsci)
 
 set_property(TARGET e2e_tests 
     PROPERTY EXCLUDE_FROM_ALL True)
@@ -167,5 +168,5 @@ set_property(TARGET e2e_tests
 
 # ------------------------ E2E TESTS ------------------------
 
-add_custom_target(tests)
-add_dependencies(tests unit_tests e2e_tests)
+add_custom_target(tests
+    DEPENDS unit_tests e2e_tests)

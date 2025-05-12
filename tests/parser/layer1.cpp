@@ -2,25 +2,28 @@
 #include "doctest.h"
 
 #include "mapsc/parser/parser_layer1.hh"
-#include "mapsc/ast/ast_store.hh"
+#include "mapsc/compilation_state.hh"
+#include "mapsc/types/type_store.hh"
+#include "mapsc/builtins.hh"
 
 using namespace Maps;
 
 class Layer1tests: public ParserLayer1 {
 public:
 
-    Layer1tests(auto ast, auto pragmas): ParserLayer1(ast, pragmas) {}
+    Layer1tests(CompilationState* state): ParserLayer1{state} {}
 
     TEST_CASE_CLASS("simplify_single_statement_block") {
-        AST_Store ast;
-        PragmaStore pragmas;
+        TypeStore types{};
+        CompilationState state{get_builtins(), &types};
 
-        Layer1tests layer1{&ast, &pragmas};
+        Layer1tests layer1{&state};
+        auto ast = state.ast_store_.get();
 
-        Statement* block = ast.allocate_statement({StatementType::block, TEST_SOURCE_LOCATION});
-        Statement* inner = ast.allocate_statement({StatementType::expression_statement, TEST_SOURCE_LOCATION});
+        Statement* block = ast->allocate_statement({StatementType::block, TEST_SOURCE_LOCATION});
+        Statement* inner = ast->allocate_statement({StatementType::expression_statement, TEST_SOURCE_LOCATION});
         
-        Expression* value = create_numeric_literal(ast, "4", TEST_SOURCE_LOCATION);
+        Expression* value = create_numeric_literal(*ast, "4", TEST_SOURCE_LOCATION);
         inner->value = value;
 
         std::get<Block>(block->value).push_back(inner);
@@ -29,24 +32,20 @@ public:
         auto success = layer1.simplify_single_statement_block(block);
 
         CHECK(success);
-        CHECK(ast.is_valid);
+        CHECK(state.is_valid);
         CHECK(block->statement_type == StatementType::expression_statement);
         CHECK(std::get<Expression*>(block->value) == value);
         CHECK(*block == inner_copy);
     };
-
 };
 
 TEST_CASE("layer1 eval should simplify single statement blocks") {
-    AST_Store ast;
-    PragmaStore pragmas;
+    TypeStore types{};
+    CompilationState state{get_builtins(), &types};
+    
+    ParserLayer1 layer1{&state};
 
-    CHECK(ast.empty());
-
-    ParserLayer1 layer1{&ast, &pragmas};
-
-    REQUIRE(ast.empty());
-    REQUIRE(pragmas.empty());
+    REQUIRE(state.ast_store_->empty());
 
     #define CURLY_BRACE_SUBCASE(test_string)\
         SUBCASE(test_string) {\
@@ -55,7 +54,7 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
             \
             auto callable = layer1.eval_parse(source_s);\
             \
-            CHECK(ast.is_valid);\
+            CHECK(state.is_valid);\
             CHECK(callable);\
             CHECK(std::holds_alternative<Expression*>((*callable)->body));\
             \
@@ -71,17 +70,18 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
 }
 
 TEST_CASE("Should handle various cases") {
-    AST_Store ast;
-    PragmaStore pragmas;
+    TypeStore types{};
+    CompilationState state{get_builtins(), &types};
 
-    REQUIRE(ast.empty());
-    ParserLayer1 layer1{&ast, &pragmas};
+    ParserLayer1 layer1{&state};
+
+    REQUIRE(state.ast_store_->empty());
     
     SUBCASE("(\"asd\")") {
         auto source = std::stringstream{"(\"asd\")"};
         auto callable = layer1.eval_parse(source);
     
-        CHECK(ast.is_valid);
+        CHECK(state.is_valid);
         CHECK(callable);
         CHECK(std::holds_alternative<Expression*>((*callable)->body));
         auto expression = std::get<Expression*>((*callable)->body);
@@ -93,7 +93,7 @@ TEST_CASE("Should handle various cases") {
         auto source = std::stringstream{"\"10\" + 5"};
         auto callable = layer1.eval_parse(source);
         
-        CHECK(ast.is_valid);
+        CHECK(state.is_valid);
         CHECK(callable);
         CHECK(std::holds_alternative<Expression*>((*callable)->body));
         auto expression = std::get<Expression*>((*callable)->body);
@@ -118,7 +118,7 @@ TEST_CASE("Should handle various cases") {
         auto source = std::stringstream{"\"10\"+5"};
         auto callable = layer1.eval_parse(source);
 
-        CHECK(ast.is_valid);
+        CHECK(state.is_valid);
         CHECK(callable);
         CHECK(std::holds_alternative<Expression*>((*callable)->body));
         auto expression = std::get<Expression*>((*callable)->body);
@@ -143,7 +143,7 @@ TEST_CASE("Should handle various cases") {
         auto source = std::stringstream{"\"10\"+5"};
         auto callable = layer1.eval_parse(source);
 
-        CHECK(ast.is_valid);
+        CHECK(state.is_valid);
         CHECK(callable);
         CHECK(std::holds_alternative<Expression*>((*callable)->body));
         auto expression = std::get<Expression*>((*callable)->body);
