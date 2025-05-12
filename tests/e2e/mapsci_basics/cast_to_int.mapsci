@@ -1,4 +1,4 @@
 
-// RUN: cat %s | %mapsci --no-history | grep "32"
+// RUN: cat %s | %mapsci | grep "32"
 
 Int "23" + 9

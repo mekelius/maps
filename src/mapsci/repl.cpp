@@ -109,7 +109,7 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
     REPL(jit, context, error_stream, {});
 }
 
-void REPL::run() {    
+bool REPL::run() {    
     while (running_) {
         
         optional<std::string> input = get_input();
@@ -126,9 +126,15 @@ void REPL::run() {
         Maps::TypeStore types{};
         auto compilation_state = process_source(Maps::get_builtins(), &types, input_s, parse_options_, std::cerr);
         
-        if (
-            (!compilation_state->is_valid && !options_.ignore_errors) || 
-            options_.stop_after == Stage::layer1 ||
+        if (!compilation_state->is_valid) {
+            if (options_.quit_on_error)
+                return false;
+
+            if (!options_.ignore_errors) 
+                continue;
+        }
+
+        if (options_.stop_after == Stage::layer1 ||
             options_.stop_after == Stage::layer2
         ) continue;
 
@@ -151,14 +157,21 @@ void REPL::run() {
             std::cerr << "\n---IR END---\n";
         }
     
-        if (!ir_success && !options_.ignore_errors)
-            continue;
+        if (!ir_success) {
+            if (options_.quit_on_error)
+                return false;
+        
+            if (!options_.ignore_errors)
+                continue;
+        }
 
         if (options_.stop_after == Stage::ir || !options_.eval)
             continue;
 
         eval(std::move(module_));
     }
+
+    return true;
 }
 
 std::optional<std::string> REPL::get_input() {

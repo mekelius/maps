@@ -128,6 +128,9 @@ int main(int argc, char* argv[]) {
         } else if(key == "--parsed" || key == "--print-parsed" || key == "--reverse-parse") {
             repl_options.print_reverse_parse = true;
 
+        } else if(key == "--quit-on-error" || key == "--exit-on-error") {
+            repl_options.quit_on_error = true;
+
         } else if(key == "--layer1") {
             repl_options.print_layer1 = true;
 
@@ -195,7 +198,8 @@ int main(int argc, char* argv[]) {
     if (!jit.is_good)
         return EXIT_FAILURE;
 
-    REPL{&jit, ts_context->getContext(), &error_stream, repl_options}.run();
+    if (!REPL{&jit, ts_context->getContext(), &error_stream, repl_options}.run())
+        return EXIT_FAILURE;
     
     return EXIT_SUCCESS;
 }

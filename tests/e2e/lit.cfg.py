@@ -15,7 +15,7 @@ config.substitutions.append(('%mapsc',
     os.path.join(config.build_dir, 'mapsc')))
 
 config.substitutions.append(('%mapsci',
-    os.path.join(config.build_dir, 'mapsci')))
+    os.path.join(config.build_dir, 'mapsci -s --no-history --quit-on-error')))
 
 config.substitutions.append(('%mapsc-verify',
     os.path.join(config.build_dir, 'mapsc-verify')))

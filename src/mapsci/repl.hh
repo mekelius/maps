@@ -52,12 +52,13 @@ public:
 
         bool save_history = false;
         std::filesystem::path history_file_path;
+        bool quit_on_error = false;
     };
 
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options);
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream);
 
-    void run();
+    bool run();
     
 private:
     std::optional<std::string> get_input();

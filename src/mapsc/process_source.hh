@@ -27,6 +27,7 @@ enum class CompilationLayer {
 struct ProcessSourceOptions {
     bool print_layer1 = false;
     bool print_layer2 = false;
+    bool print_layer3 = false;
     
     bool ignore_errors = false;
     CompilationLayer stop_after = CompilationLayer::done;

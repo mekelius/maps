@@ -70,9 +70,11 @@ std::unique_ptr<CompilationState> process_source(const Scope* builtins, TypeStor
     if (!SimpleTypeChecker{}.run(*compilation_state) && !options.ignore_errors)
         return compilation_state;
 
-
-    reverse_parser << *compilation_state;
-    // ----- done -----
+    if (options.print_layer3) {
+        debug_ostream <<   "------- layer3 -------\n\n";
+        reverse_parser << *compilation_state;
+        debug_ostream << "\n----- layer3 end -----\n\n";
+    }
 
     return compilation_state;
 }
