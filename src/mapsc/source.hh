@@ -4,11 +4,12 @@
 #include <optional>
 #include <string>
 
-using SourceID = int;
+using SourceFileID = int;
 
-constexpr SourceID DEFAULT_SOURCE_ID = 0;
-constexpr SourceID NULL_SOURCE_ID = -1;
-constexpr SourceID BUILTIN_SOURCE_ID = -2;
+constexpr SourceFileID DEFAULT_SOURCE_FILE = 0;
+constexpr SourceFileID NULL_SOURCE_FILE = -1;
+constexpr SourceFileID BUILTIN_SOURCE_FILE = -2;
+constexpr SourceFileID EXTERNAL_SOURCE_FILE = -3;
 
 struct SourceLocation {
     static constexpr int OUT_OF_SOURCE = -1;
@@ -16,7 +17,7 @@ struct SourceLocation {
     int line;
     int column;
 
-    SourceID source_id = DEFAULT_SOURCE_ID;
+    SourceFileID source_id = DEFAULT_SOURCE_FILE;
     
     auto operator<=>(const SourceLocation&) const = default;
 
@@ -28,12 +29,15 @@ struct SourceLocation {
 };
 
 constexpr SourceLocation NO_SOURCE_LOCATION{
-    SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, NULL_SOURCE_ID};
+    SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, NULL_SOURCE_FILE};
 
-constexpr SourceLocation TEST_SOURCE_LOCATION{0, 0, NULL_SOURCE_ID};    
+constexpr SourceLocation TEST_SOURCE_LOCATION{0, 0, NULL_SOURCE_FILE};    
 constexpr auto TSL = TEST_SOURCE_LOCATION;
 
 constexpr SourceLocation BUILTIN_SOURCE_LOCATION{
-    SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, BUILTIN_SOURCE_ID};
+    SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, BUILTIN_SOURCE_FILE};
+
+constexpr SourceLocation EXTERNAL_SOURCE_LOCATION{
+    SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, EXTERNAL_SOURCE_FILE};
 
 #endif

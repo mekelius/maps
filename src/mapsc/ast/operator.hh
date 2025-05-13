@@ -33,11 +33,11 @@ enum class Associativity {
 };
 
 struct OperatorProps {
-    static OperatorProps Binary(Precedence precedence, Associativity associativity) {
+    constexpr static OperatorProps Binary(Precedence precedence, Associativity associativity) {
         return OperatorProps{UnaryFixity::none, BinaryFixity::infix, precedence, associativity};
     }
 
-    static OperatorProps Unary() {
+    constexpr static OperatorProps Unary() {
         return OperatorProps{UnaryFixity::prefix};
     }
 

@@ -86,10 +86,10 @@ DeferredBool Expression::is_type_declaration() {
 }
 
 // TODO: clean this up
-const std::string& Expression::string_value() const {
+std::string Expression::string_value() const {
     if (std::holds_alternative<Callable*>(value)) {
         // !!! this will cause crashes when lambdas come in
-        return std::get<Callable*>(value)->name_;
+        return std::string{std::get<Callable*>(value)->name_};
     }
     return std::get<std::string>(value);
 }
@@ -224,15 +224,15 @@ std::string Expression::log_message_string() const {
             return "type identifier " + string_value();
 
         case ExpressionType::reference:
-            return "reference to " + reference_value()->name_;
+            return "reference to " + std::string{reference_value()->name_};
         case ExpressionType::type_reference:
-            return "reference to type " + reference_value()->name_;
+            return "reference to type " + std::string{reference_value()->name_};
         case ExpressionType::operator_reference:
-            return "operator " + reference_value()->name_;
+            return "operator " + std::string{reference_value()->name_};
         case ExpressionType::type_operator_reference:
-            return "type operator " + reference_value()->name_;
+            return "type operator " + std::string{reference_value()->name_};
         case ExpressionType::type_constructor_reference:
-            return "reference to type constructor " + reference_value()->name_;
+            return "reference to type constructor " + std::string{reference_value()->name_};
    
         case ExpressionType::type_field_name:
             return "named field" + string_value();
@@ -322,13 +322,6 @@ Expression* create_reference_expression(AST_Store& store, Callable* callable, So
     return store.allocate_expression({ExpressionType::reference, location, callable, callable->get_type()});
 }
 
-std::optional<Expression*> create_reference_expression(AST_Store& store, const Scope& scope, const std::string& name, SourceLocation location) {
-    if (auto callable = scope.get_identifier(name))
-        return create_reference_expression(store, *callable, location);
-
-    return nullopt;
-}
-
 Expression* create_type_reference(AST_Store& store, const Type* type, SourceLocation location) {
     return store.allocate_expression({ExpressionType::type_reference, location, type, &Void});
 }
@@ -357,7 +350,7 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
     auto callee_type = callable->get_type();
     
     if (!callee_type->is_function() && args.size() > 0) {
-        log_error(callable->name_ + " cannot take arguments, tried giving " + to_string(args.size()));
+        log_error(std::string{callable->name_} + " cannot take arguments, tried giving " + to_string(args.size()));
         return nullopt;
     }
 
@@ -376,7 +369,7 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
             {ExpressionType::call, location, CallExpressionValue{callable, args}, return_type});
 
     if (args.size() > param_types.size()) {
-        log_error(callable->name_ + " takes a maximum of " + to_string(param_types.size()) + 
+        log_error(std::string{callable->name_} + " takes a maximum of " + to_string(param_types.size()) + 
             " arguments, tried giving " + to_string(args.size()));
         return nullopt;
     }

@@ -12,7 +12,7 @@
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_token;
 
 // ----- Public methods -----
-Lexer::Lexer(std::istream* source_is, SourceID source_id)
+Lexer::Lexer(std::istream* source_is, SourceFileID source_id)
 :source_is_(source_is), source_id_(source_id) {
     read_char();
 }

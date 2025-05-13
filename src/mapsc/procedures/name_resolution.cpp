@@ -45,8 +45,7 @@ bool resolve_identifiers(CompilationState& state) {
 // this should be scope's responsibility
 bool resolve_identifier(CompilationState& state, Expression* expression) {
     // check builtins
-    std::optional<Callable*> builtin = state.builtins_->get_identifier(expression->string_value());
-    if (builtin) {
+    if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
         log_info("Parsed built-in", MessageType::parser_debug_terminal, expression->location);
         expression->expression_type = ExpressionType::reference;
         expression->type = (*builtin)->get_type();
@@ -83,8 +82,7 @@ bool resolve_type_identifier(CompilationState& state, Expression* expression) {
 }
 
 bool resolve_operator(CompilationState& state, Expression* expression) {
-    std::optional<Callable*> builtin = state.builtins_->get_identifier(expression->string_value());
-    if (builtin) {
+    if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
         if (!(*builtin)->is_operator()) {
             log_error("during name resolution: encountered a builtin operator_e that pointed to not an operator");
             assert(false && 

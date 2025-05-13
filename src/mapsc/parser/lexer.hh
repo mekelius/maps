@@ -10,7 +10,7 @@
 
 class Lexer {
 public:
-    Lexer(std::istream* source_is, SourceID source_id = DEFAULT_SOURCE_ID);
+    Lexer(std::istream* source_is, SourceFileID source_id = DEFAULT_SOURCE_FILE);
 
     // extracts the next token from the stream
     Token get_token();
@@ -48,7 +48,7 @@ private:
     std::vector<unsigned int> indent_stack_ = {0};
     
     std::istream* source_is_;
-    SourceID source_id_;
+    SourceFileID source_id_;
 };
 
 #endif

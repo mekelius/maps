@@ -3,11 +3,11 @@
 
 #include <memory>
 
+#include "mapsc/ast/scope.hh"
+
 namespace Maps {
 
-class Scope;
-
-const Scope* get_builtins();
+const ConstScope* get_builtins();
 
 } // namespace Maps
 

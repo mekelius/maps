@@ -50,7 +50,6 @@ add_library(mapsc_frontend OBJECT
     
     src/mapsc/ast/callable.cpp
     src/mapsc/ast/ast_store.cpp
-    src/mapsc/ast/scope.cpp
     src/mapsc/ast/expression.cpp
     src/mapsc/ast/statement.cpp
     

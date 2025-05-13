@@ -40,7 +40,6 @@ public:
     Callable* allocate_operator(const Operator&& op);
 
 private:
-    friend Scope; // scope is allowed to call create_expression directly to create call expressions
 
     // currently these guys, once created, stay in memory forever
     // we could create a way to sweep them by having some sort of "alive"-flag

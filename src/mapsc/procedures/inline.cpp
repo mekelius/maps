@@ -85,7 +85,7 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
         "substitute_value_reference called with not a reference");
 
     if (callee.is_undefined()) {
-        log_error("\"" + callee.name_ + "\" is undefined", expression.location);
+        log_error("\"" + std::string{callee.name_} + "\" is undefined", expression.location);
         return false;
     }
 

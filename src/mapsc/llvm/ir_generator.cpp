@@ -270,7 +270,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
         return handle_function(callable);
     
     if (const Expression* const* expression = std::get_if<Maps::Expression*>(&callable.body_)) {
-        return wrap_value_in_function(callable.name_, **expression);
+        return wrap_value_in_function(std::string{callable.name_}, **expression);
     }
 
     fail("In IR_Generator::handle_global_definition: callable didn't have a function type but wasn't an expression");
@@ -288,11 +288,11 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Ca
         *function_type->return_type_, function_type->get_params());
 
     if (!signature) {
-        log_error("unable to convert type signature for " + callable.name_, callable.location_);
+        log_error("unable to convert type signature for " + std::string{callable.name_}, callable.location_);
         return nullopt;
     }
 
-    optional<llvm::Function*> function = function_definition(callable.name_, 
+    optional<llvm::Function*> function = function_definition(std::string{callable.name_}, 
         *dynamic_cast<const Maps::FunctionType*>(callable.get_type()), *signature);
 
     if (!function)
@@ -417,10 +417,10 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
 
     std::optional<llvm::FunctionCallee> function = function_store_->get(
-        callee->name_, *dynamic_cast<const Maps::FunctionType*>(callee->get_type()));
+        std::string{callee->name_}, *dynamic_cast<const Maps::FunctionType*>(callee->get_type()));
 
     if (!function) {
-        fail("attempt to call unknown function: \"" + callee->name_ + "\"");
+        fail("attempt to call unknown function: \"" + std::string{callee->name_} + "\"");
         return nullptr;
     }
 

@@ -11,10 +11,10 @@
 #include "operator.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
+#include "mapsc/ast/scope.hh"
 
 namespace Maps {
 
-class Scope;
 class CompilationState;
 class AST_Store;
 class Callable;
@@ -83,6 +83,7 @@ using ExpressionValue = std::variant<
     maps_Float,
     bool,
     std::string,
+    const Callable*,
     Callable*,                       // for references to operators and functions
     const Type*,                     // for type expressions
     TermedExpressionValue,
@@ -112,7 +113,7 @@ struct Expression {
     void mark_not_type_declaration();
     DeferredBool is_type_declaration();
 
-    const std::string& string_value() const;
+    std::string string_value() const;
     std::string log_message_string() const;
     
     DeferredBool has_native_representation();
@@ -145,7 +146,16 @@ Expression* create_termed_expression(AST_Store& store, std::vector<Expression*>&
     SourceLocation location);
 
 Expression* create_reference_expression(AST_Store& store, Callable* callable, SourceLocation location);
-std::optional<Expression*> create_reference_expression(AST_Store& store, const Scope& scope, const std::string& name, SourceLocation location);
+
+template <typename Ptr_t>
+std::optional<Expression*> create_reference_expression(AST_Store& store, const BaseScope<Ptr_t>& scope, 
+    const std::string& name, SourceLocation location) {
+    
+    if (auto callable = scope.get_identifier(name))
+        return create_reference_expression(store, *callable, location);
+
+    return std::nullopt;
+}
 
 [[nodiscard]] std::optional<Expression*> create_type_operator_ref(AST_Store& store, 
     const std::string& name, SourceLocation location, const Type* type);
@@ -160,8 +170,7 @@ Expression* create_valueless_expression(AST_Store& store, ExpressionType express
     SourceLocation location);
 Expression* create_missing_argument(AST_Store& store, SourceLocation location, const Type* type);
 
-// !!! how could we make this constexpr
-inline Expression create_builtin_expression(const ExpressionValue& value, const Type& type) {
+inline const Expression create_builtin_expression(const ExpressionValue& value, const Type& type) {
     return Expression{ExpressionType::value, BUILTIN_SOURCE_LOCATION, value, &type};
 }
 

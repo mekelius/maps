@@ -124,7 +124,8 @@ bool REPL::run() {
 
         std::stringstream input_s{*input};
         Maps::TypeStore types{};
-        auto compilation_state = process_source(Maps::get_builtins(), &types, input_s, parse_options_, std::cerr);
+        auto compilation_state = process_source(Maps::get_builtins(), &types, input_s, 
+            parse_options_, std::cerr);
         
         if (!compilation_state->is_valid) {
             if (options_.quit_on_error)
