@@ -99,12 +99,14 @@ constexpr std::array<const Type*, 10> BUILTIN_TYPES = {
     &NumberLiteral
 };
 
-#ifndef __TYPE_DEFS_CPP
-extern CTFunctionType<1> String_to_Void;
-extern CTFunctionType<2> IntInt_to_Int;
-extern CTFunctionType<2> FloatFloat_to_Float;
-extern std::array<const FunctionType*, 3> BUILTIN_FUNCTION_TYPES;
-#endif
+constexpr CTFunctionType<1> String_to_Void{10, &Void, {&String}, false};
+constexpr CTFunctionType<2> IntInt_to_Int{11, &Int, {&Int, &Int}, true};
+constexpr CTFunctionType<2> FloatFloat_to_Float{12, &Float, {&Float, &Float}, true};
+constexpr std::array<const FunctionType*, 3> BUILTIN_FUNCTION_TYPES = {
+    &String_to_Void,
+    &IntInt_to_Int,
+    &FloatFloat_to_Float
+};
 
 } // namespace Maps
 
