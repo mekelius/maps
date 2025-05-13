@@ -2,6 +2,7 @@
 #define __IR_TYPES_HH
 
 #include <optional>
+#include <span>
 
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
@@ -38,7 +39,7 @@ public:
 
     std::optional<llvm::Type*> convert_type(const Maps::Type& type) const;
     std::optional<llvm::FunctionType*> convert_function_type(
-        const Maps::Type& return_type, const std::vector<const Maps::Type*>& arg_types) const;
+        const Maps::Type& return_type, std::span<const Maps::Type* const> arg_types) const;
     std::optional<llvm::FunctionType*> convert_function_type(const Maps::FunctionType& type) const;
 
     bool is_good_ = true;

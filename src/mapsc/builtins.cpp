@@ -60,7 +60,6 @@ public:
     BuiltinBody builtin_body_;
 };
 
-
 Builtin maps_true{"true", create_builtin_expression(true, Boolean)};
 Builtin maps_false{"false", create_builtin_expression(false, Boolean)};
 

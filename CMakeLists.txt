@@ -141,7 +141,9 @@ add_executable(unit_tests
     tests/parser/layer2.cpp
     
     tests/types/type_casts.cpp
+    tests/types/type_store.cpp
     tests/types/type_specifiers.cpp
+    tests/types/function_type.cpp
     
     tests/procedures/inline.cpp
     tests/procedures/concretize.cpp

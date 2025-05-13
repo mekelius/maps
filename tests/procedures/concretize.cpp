@@ -104,6 +104,8 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
     auto IntIntInt = types.get_function_type(Int, {&Int, &Int});
     Callable dummy_callable = Callable::testing_callable(IntIntInt);
 
+    REQUIRE(*dummy_callable.get_type() == *IntIntInt);
+
     SUBCASE("Number -> Number -> Number into Int -> Int -> Int") {
         Expression arg1{ExpressionType::value, TSL, "12", &Number};
         Expression arg2{ExpressionType::value, TSL, "14", &Number};
@@ -124,7 +126,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
         Expression arg1{ExpressionType::value, TSL, "12", &Number};
         Expression arg2{ExpressionType::value, TSL, 14, &Int};
 
-        Expression call{ExpressionType::call, TSL, 
+        Expression call{ExpressionType::call, TSL,
             CallExpressionValue{&dummy_callable, {&arg1, &arg2}}, &Int};
 
         CHECK(concretize(call));

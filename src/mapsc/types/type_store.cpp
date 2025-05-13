@@ -9,17 +9,19 @@ using std::optional, std::nullopt;
 namespace Maps {
 
 // builtin types are inserted so that they can be looked up nicely
-TypeStore::TypeStore() {
-    next_id_ = BUILTIN_TYPES.size() + BUILTIN_FUNCTION_TYPES.size();
+TypeStore::TypeStore(const std::span<const Type* const> builtin_simple_types, 
+    const std::span<const FunctionType* const> builtin_function_types) {
+    
+    next_id_ = builtin_simple_types.size() + builtin_function_types.size();
 
-    for (auto type: BUILTIN_TYPES) {
+    for (auto type: builtin_simple_types) {
         types_by_identifier_.insert({static_cast<std::string>(type->name()), type});
         types_by_id_.push_back(type);
     }
 
-    for (auto type: BUILTIN_FUNCTION_TYPES) {
+    for (auto type: builtin_function_types) {
         types_by_structure_.insert(
-            {make_function_signature(*type->return_type_, type->param_types_), type});
+            {make_function_signature(*type->return_type_, type->get_params()), type});
         types_by_id_.push_back(type);
     }
 
@@ -45,8 +47,8 @@ optional<const Type*> TypeStore::get(const std::string& identifier) {
     return it->second;
 }
 
-const FunctionType* TypeStore::get_function_type(const Type& return_type, const std::vector<const Type*>& arg_types, 
-    bool is_pure) {
+const FunctionType* TypeStore::get_function_type(const Type& return_type, 
+    const std::vector<const Type*>& arg_types, bool is_pure) {
 
     Type::HashableSignature signature = make_function_signature(return_type, arg_types, is_pure);
     auto existing_it = types_by_structure_.find(signature);
@@ -60,16 +62,15 @@ const FunctionType* TypeStore::get_function_type(const Type& return_type, const 
 }
 
 Type::HashableSignature TypeStore::make_function_signature(const Type& return_type, 
-    const std::vector<const Type*>& arg_types, bool is_pure) const {
+    const std::span<const Type* const> arg_types, bool is_pure) const {
 
-    // // nullary pure function is just a value
+    // nullary pure function is just a value
     if (arg_types.size() == 0 && is_pure)
         return std::to_string(return_type.id_);
 
-    // // nullary impure function gets the special type =>return_type
+    // nullary impure function gets the special type =>return_type
     if (arg_types.size() == 0)
         return "=>" + std::to_string(return_type.id_);
-         
 
     std::string signature = "";
     bool first = true;
@@ -87,22 +88,20 @@ Type::HashableSignature TypeStore::make_function_signature(const Type& return_ty
 
 // NOTE: This actually doesn't work. The type structure notation idea is extremely ambiguous...
 // we need to do this by pattern matching instead, but it is what it is
-// TODO: mark purity
-const FunctionType* TypeStore::create_function_type(const Type::HashableSignature& signature, 
+const FunctionType* TypeStore::create_function_type(const Type::HashableSignature& signature,
     const Type& return_type, const std::vector<const Type*>& arg_types, bool is_pure) {
 
-    assert(types_by_id_.size() == static_cast<size_t>(next_id_) && 
+    assert(types_by_id_.size() == static_cast<size_t>(next_id_) &&
         "TypeRegistry types_by_id_ not in sync with id:s");
+    std::unique_ptr<const Type> up = make_unique<const RTFunctionType>(get_id(), 
+        &return_type, arg_types, is_pure);
+    types_.push_back(std::move(up));
+    auto raw_ptr = types_.back().get();
 
-    auto type = make_unique<FunctionType>(get_id(), &Function_, &return_type, arg_types, is_pure);
-    auto raw_ptr = type.get();
-
-    types_.push_back(std::move(type));
     types_by_structure_.insert({signature, raw_ptr});
     types_by_id_.push_back(raw_ptr);
 
-    return raw_ptr;
+    return dynamic_cast<const FunctionType*>(raw_ptr);
 }
-
 
 } // namespace Maps

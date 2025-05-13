@@ -17,12 +17,15 @@ constexpr TypeTemplate Absurd_ {
 constexpr Type::ID Absurd_ID = 0;
 constexpr Type Absurd{ Absurd_ID, &Absurd_, not_castable, not_concretizable };
 
+constexpr Type::ID TestingType_ID = 1;
+constexpr Type TestingType{ TestingType_ID, &Absurd_, not_castable, not_concretizable };
+
 constexpr TypeTemplate Hole_ {
     "Hole",
     db_false,
     db_false,
 };
-constexpr Type::ID Hole_ID = 1;
+constexpr Type::ID Hole_ID = 2;
 constexpr Type Hole{ Hole_ID, &Hole_, not_castable, not_concretizable };
 
 constexpr TypeTemplate Void_ {
@@ -30,7 +33,7 @@ constexpr TypeTemplate Void_ {
     db_true,
     db_true,
 };
-constexpr Type::ID Void_ID = 2;
+constexpr Type::ID Void_ID = 3;
 constexpr Type Void{ Void_ID, &Void_, not_castable, is_concrete };
 
 constexpr TypeTemplate Boolean_ {
@@ -38,7 +41,7 @@ constexpr TypeTemplate Boolean_ {
     db_true,
     db_true,
 };
-constexpr Type::ID Boolean_ID = 3;
+constexpr Type::ID Boolean_ID = 4;
 constexpr Type Boolean = { Boolean_ID, &Boolean_, cast_from_Boolean, is_concrete };
 
 constexpr TypeTemplate Int_ {
@@ -46,7 +49,7 @@ constexpr TypeTemplate Int_ {
     db_true,
     db_true,
 };
-constexpr Type::ID Int_ID = 4;
+constexpr Type::ID Int_ID = 5;
 constexpr Type Int{ Int_ID, &Int_, cast_from_Int, is_concrete };
 
 constexpr TypeTemplate Float_ {
@@ -54,7 +57,7 @@ constexpr TypeTemplate Float_ {
     db_true,
     db_true,
 };
-constexpr Type::ID Float_ID = 5;
+constexpr Type::ID Float_ID = 6;
 constexpr Type Float{ Float_ID, &Float_, cast_from_Float, is_concrete };
 
 constexpr TypeTemplate String_ {
@@ -62,7 +65,7 @@ constexpr TypeTemplate String_ {
     db_true,
     db_true,
 };
-constexpr Type::ID String_ID = 6;
+constexpr Type::ID String_ID = 7;
 constexpr Type String{ String_ID, &String_, cast_from_String, is_concrete };
 
 constexpr TypeTemplate Number_ {
@@ -70,7 +73,7 @@ constexpr TypeTemplate Number_ {
     db_false,
     db_true,
 };
-constexpr Type::ID Number_ID = 7;
+constexpr Type::ID Number_ID = 8;
 constexpr Type Number{ Number_ID, &Number_, cast_from_Number, concretize_Number };
 
 // a number who's type hasn't yet been determined
@@ -79,12 +82,13 @@ constexpr TypeTemplate NumberLiteral_ {
     db_false,
     db_true,
 };
-constexpr Type::ID NumberLiteral_ID = 8;
+constexpr Type::ID NumberLiteral_ID = 9;
 constexpr Type NumberLiteral{ 
     NumberLiteral_ID, &NumberLiteral_, cast_from_NumberLiteral, concretize_NumberLiteral};
 
-constexpr std::array<const Type*, 9> BUILTIN_TYPES = {
+constexpr std::array<const Type*, 10> BUILTIN_TYPES = {
     &Absurd,
+    &TestingType,
     &Hole,
     &Void,
     &Boolean,
@@ -95,16 +99,10 @@ constexpr std::array<const Type*, 9> BUILTIN_TYPES = {
     &NumberLiteral
 };
 
-constexpr TypeTemplate Function_ {
-    "Function",
-    db_maybe,
-    db_maybe,
-};
-
 #ifndef __TYPE_DEFS_CPP
-extern FunctionType String_to_Void;
-extern FunctionType IntInt_to_Int;
-extern FunctionType FloatFloat_to_Float;
+extern CTFunctionType<1> String_to_Void;
+extern CTFunctionType<2> IntInt_to_Int;
+extern CTFunctionType<2> FloatFloat_to_Float;
 extern std::array<const FunctionType*, 3> BUILTIN_FUNCTION_TYPES;
 #endif
 

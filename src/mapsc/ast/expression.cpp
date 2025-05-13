@@ -31,7 +31,6 @@ Operator* Expression::operator_reference_value() const {
     return dynamic_cast<Operator*>(std::get<Callable*>(value));
 }
 
-
 bool Expression::is_partial_call() const {
     if (expression_type != ExpressionType::call)
         return false;
@@ -370,7 +369,7 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
 
     auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
     auto return_type = callee_f_type->return_type_;
-    auto param_types = callee_f_type->param_types_;
+    auto param_types = callee_f_type->get_params();
 
     if (args.size() == param_types.size())
         return store.allocate_expression(

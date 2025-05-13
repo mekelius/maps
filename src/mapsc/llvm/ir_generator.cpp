@@ -47,7 +47,7 @@ std::string create_internal_name(const std::string& name, const Maps::FunctionTy
     std::string internal_name = name;
 
     // prepend arg names
-    for (const Maps::Type* arg_type: ast_type.param_types_) {
+    for (const Maps::Type* arg_type: ast_type.get_params()) {
         internal_name += "_" + static_cast<std::string>(arg_type->name());
     }
 
@@ -242,7 +242,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(const s
         maps_types_->get_function_type(*expression.type, {});
 
     optional<llvm::FunctionType*> llvm_type = types_.convert_function_type(
-        *maps_type->return_type_, maps_type->param_types_);
+        *maps_type->return_type_, maps_type->get_params());
 
     if (!llvm_type) {
         fail("Converting \" Void -> " + maps_type->to_string() + "\" into an llvm type failed");
@@ -285,7 +285,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Ca
         callable.get_type());
 
     optional<llvm::FunctionType*> signature = types_.convert_function_type(
-        *function_type->return_type_, function_type->param_types_);
+        *function_type->return_type_, function_type->get_params());
 
     if (!signature) {
         log_error("unable to convert type signature for " + callable.name_, callable.location_);

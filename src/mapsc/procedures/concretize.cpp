@@ -31,7 +31,6 @@ bool concretize_call(Expression& call) {
     }
 
     if (call.declared_type) {
-
         if (**call.declared_type != *callee_type) {
             assert(false && "mismathing declared type not implemented in concretize call");
         }
@@ -48,8 +47,8 @@ bool concretize_call(Expression& call) {
     assert(args.size() <= callee_type->arity() && "call expression has too many args");
     assert(args.size() == callee_type->arity() && "partial calls not implemented in concretize_call");
 
-    for (int i = 0; auto arg: args) {
-        auto param_type = callee_type->param_types_.at(i);
+    for (int i = 0; auto param_type: callee_type->get_params()) {
+        auto arg = args.at(i++);
 
         if (*arg->type == *param_type)
             continue;
@@ -110,7 +109,8 @@ bool concretize(Expression& expression) {
         case ExpressionType::reference:
             return concretize_reference(expression);
         default:
-            log_error("Concretizer encountered an expression that was not a value or a call", expression.location);
+            log_error("Concretizer encountered an expression that was not a value or a call", 
+                expression.location);
             return false;
     }
 }

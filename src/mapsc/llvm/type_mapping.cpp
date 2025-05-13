@@ -64,7 +64,7 @@ std::optional<llvm::Type*> TypeMap::convert_type(const Maps::Type& type) const {
 }
 
 std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Type& return_type, 
-    const std::vector<const Maps::Type*>& arg_types) const {
+    std::span<const Maps::Type* const> arg_types) const {
     
     optional<llvm::Type*> llvm_return_type = convert_type(return_type);
     
@@ -92,7 +92,7 @@ std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Fu
     if (!type.is_function())
         return nullopt;
 
-    return convert_function_type(*type.return_type_, type.param_types_);
+    return convert_function_type(*type.return_type_, type.get_params());
 }
 
 } // namespace IR

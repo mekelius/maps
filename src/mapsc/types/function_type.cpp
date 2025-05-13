@@ -4,7 +4,7 @@
 
 namespace Maps {
 
-std::string FunctionType::to_string() const {
+std::string RTFunctionType::to_string() const {
     // TODO: check pureness here
     if (arity() == 0) {
         return "Void -> " + return_type_->to_string();
