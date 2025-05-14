@@ -1,14 +1,24 @@
-#include <cassert>
-
-#include "mapsc/logging.hh"
 #include "reverse_parse.hh"
+
+#include <cassert>
+#include <memory>
+#include <optional>
+#include <string_view>
+#include <tuple>
+#include <utility>
+#include <variant>
+#include <vector>
+#include <string>
+
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/scope.hh"
+#include "mapsc/ast/statement.hh"
+#include "mapsc/types/type.hh"
+#include "mapsc/types/type_defs.hh"
 #include "mapsc/compiler_options.hh"
 #include "mapsc/compilation_state.hh"
 
-#include <iostream>
-
 namespace Maps {
-
 
 ReverseParser::ReverseParser(std::ostream* ostream)
 :ReverseParser(ostream, {}) {}

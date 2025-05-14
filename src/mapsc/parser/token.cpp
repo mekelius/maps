@@ -1,7 +1,6 @@
-#include <cassert>
-
 #include "token.hh"
-#include "mapsc/logging.hh"
+
+#include <cassert>
 
 Token::Token(TokenType token_type, const std::string& value, SourceLocation location)
 :token_type(token_type), value(value), location(location) {}

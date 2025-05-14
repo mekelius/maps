@@ -1,16 +1,26 @@
 #include "concretize.hh"
 
 #include <cassert>
+#include <optional>
+#include <span>
+#include <string>
+#include <variant>
+#include <vector>
 
+#include "mapsc/source.hh"
 #include "mapsc/logging.hh"
+#include "mapsc/loglevel_defs.hh"
+
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/callable.hh"
-#include "mapsc/types/casts.hh"
+#include "mapsc/types/type.hh"
 #include "mapsc/types/function_type.hh"
+
 #include "mapsc/procedures/inline.hh"
 
 using std::get, std::get_if, std::optional, std::nullopt;
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
+
 
 namespace Maps {
 

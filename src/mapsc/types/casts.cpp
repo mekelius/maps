@@ -1,9 +1,9 @@
 #include "casts.hh"
 
 #include <cassert>
-#include <cerrno>
-#include <cstdlib>
 #include <optional>
+#include <string>
+#include <variant>
 
 extern "C" {
 
@@ -11,7 +11,10 @@ extern "C" {
 
 }
 
+#include "common/maps_datatypes.h"
 #include "mapsc/logging.hh"
+
+#include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/ast/expression.hh"
 

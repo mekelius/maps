@@ -3,21 +3,17 @@
 
 #include <string>
 #include <tuple>
+#include <utility>
+#include <variant>
 #include <vector>
 
-#include "common/maps_datatypes.h"
-
 #include "mapsc/source.hh"
-
-#include "mapsc/types/type_defs.hh"
 #include "mapsc/ast/callable.hh"
-#include "mapsc/ast/operator.hh"
 
 namespace Maps {
 
 // ----- BUILTINS -----
 
-class Callable;
 struct Expression;
 struct Statement;
 

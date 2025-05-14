@@ -1,10 +1,11 @@
 #ifndef __PARSER_LAYER_2_HH
 #define __PARSER_LAYER_2_HH
 
-#include <vector>
-#include <string>
 #include <optional>
+#include <string>
+#include <vector>
 
+#include "mapsc/source.hh"
 #include "mapsc/ast/operator.hh"
 
 /**
@@ -19,7 +20,6 @@ struct Expression;
 class Callable;
 class CompilationState;
 class AST_Store;
-class PragmaStore;
 
 class TermedExpressionParser {
 public:

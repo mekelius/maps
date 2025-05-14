@@ -1,14 +1,33 @@
 #include "ir_builtins.hh"
 
-#include <tuple>
+#include <array>
+#include <iterator>
+#include <memory>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/IR/Argument.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
 
 #include "mapsc/logging.hh"
+
+#include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/type_store.hh"
 
+#include "mapsc/llvm/ir_generator.hh"
+#include "mapsc/llvm/type_mapping.hh"
+
 using std::optional;
 using Maps::GlobalLogger::log_error;
+
+namespace llvm { class Type; }
+namespace Maps { class FunctionType; }
 
 namespace IR {
 

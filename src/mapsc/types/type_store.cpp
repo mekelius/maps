@@ -1,8 +1,9 @@
 #include "type_store.hh"
 
 #include <cassert>
+#include <utility>
 
-#include "type_defs.hh"
+#include "mapsc/types/function_type.hh"
 
 using std::optional, std::nullopt;
 

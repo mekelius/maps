@@ -1,13 +1,26 @@
 #include "name_resolution.hh"
 
 #include <cassert>
+#include <initializer_list>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
-#include "mapsc/logging.hh"
+#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/scope.hh"
 #include "mapsc/compilation_state.hh"
+#include "mapsc/logging.hh"
+#include "mapsc/loglevel_defs.hh"
+#include "mapsc/source.hh"
+#include "mapsc/types/type_store.hh"
 
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 namespace Maps {
+
+class Type;
 
 // Replaces all identifiers and operators with references to the correct callables
 bool resolve_identifiers(CompilationState& state) {

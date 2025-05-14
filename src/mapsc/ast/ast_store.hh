@@ -1,19 +1,13 @@
 #ifndef __AST_HH
 #define __AST_HH
 
-#include <string>
+#include <cstddef>
 #include <memory>
-#include <optional>
+#include <vector>
 
-#include <cassert>
-
-#include "mapsc/types/type.hh"
-#include "mapsc/types/type_store.hh"
-#include "mapsc/types/type_defs.hh"
-
-#include "mapsc/ast/statement.hh"
+#include "mapsc/ast/callable.hh"
 #include "mapsc/ast/expression.hh"
-#include "mapsc/ast/scope.hh"
+#include "mapsc/ast/statement.hh"
 
 namespace Maps {
 

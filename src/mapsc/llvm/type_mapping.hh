@@ -3,18 +3,17 @@
 
 #include <optional>
 #include <span>
+#include <string>
+#include <unordered_map>
 
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
-#include "llvm/IR/LLVMContext.h"
 
 #include "mapsc/types/type.hh"
 
-namespace Maps {
+namespace llvm { class LLVMContext; }
+namespace Maps { class FunctionType; }
 
-class FunctionType;
-
-} // namespace Maps
 
 namespace IR {
 

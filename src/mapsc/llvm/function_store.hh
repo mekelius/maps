@@ -1,15 +1,17 @@
 #ifndef __FUNCTION_STORE_HH
 #define __FUNCTION_STORE_HH
 
-#include "llvm/IR/IRBuilder.h"
+#include <memory>
+#include <optional>
+#include <string>
+#include <unordered_map>
+
+#include "llvm/IR/DerivedTypes.h"
 
 #include "mapsc/types/type.hh"
 
-namespace Maps {
+namespace Maps { class FunctionType; }
 
-class FunctionType;
-    
-} // namespace Maps    
 
 namespace IR {
 

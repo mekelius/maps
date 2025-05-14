@@ -1,12 +1,10 @@
 #ifndef __CASTS_HH
 #define __CASTS_HH
 
-#include <optional>
-
 namespace Maps {
 
-struct Expression;
 class Type;
+struct Expression;
 
 // take an expression and tries to cast it in place into target type
 // argument const value should be used if this is a new expression created from a known const value

@@ -1,12 +1,12 @@
 #include "callable.hh"
 
 #include <cassert>
-
-#include "common/std_visit_helper.hh"
+#include <string>
 
 #include "mapsc/logging.hh"
+
+#include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/types/function_type.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"
 

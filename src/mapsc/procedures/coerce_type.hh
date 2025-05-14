@@ -1,13 +1,13 @@
 #ifndef __COERCE_TYPE_HH
 #define __COERCE_TYPE_HH
 
-#include <tuple>
+#include <utility>
 
 namespace Maps {
 
 class Type;
-struct Statement;
 struct Expression;
+struct Statement;
 
 bool handle_declared_type(Expression& expression, const Type* declared_type);
 

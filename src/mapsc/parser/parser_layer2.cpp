@@ -1,13 +1,22 @@
 #include "parser_layer2.hh"
 
 #include <cassert>
+#include <compare>
+#include <memory>
+#include <span>
+#include <variant>
 
+#include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/procedures/name_resolution.hh"
-
+#include "mapsc/loglevel_defs.hh"
 #include "mapsc/compilation_state.hh"
+
+#include "mapsc/types/type.hh"
+#include "mapsc/types/function_type.hh"
+
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/callable.hh"
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/types/casts.hh"
 
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 

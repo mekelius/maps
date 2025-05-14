@@ -1,17 +1,20 @@
 #ifndef __EXPRESSION_HH
 #define __EXPRESSION_HH
 
-#include <variant>
-#include <tuple>
 #include <optional>
+#include <string>
+#include <tuple>
+#include <variant>
 #include <vector>
 
 #include "common/maps_datatypes.h"
+
 #include "mapsc/source.hh"
-#include "operator.hh"
+
+#include "mapsc/ast/operator.hh"
+#include "mapsc/ast/scope.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/ast/scope.hh"
 
 namespace Maps {
 
@@ -19,6 +22,7 @@ class CompilationState;
 class AST_Store;
 class Callable;
 class Operator;
+struct Expression;
 
 // ----- EXPRESSIONS -----
 

@@ -1,29 +1,29 @@
-
-#include <algorithm>
-#include <cassert>
-#include <map>
-#include <tuple>
-#include <memory>
-#include <string>
-#include <vector>
-#include <optional>
-#include <iostream>
+#include <compare>
+#include <cstdlib>
 #include <fstream>
-#include <sstream>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "llvm/IR/Module.h"
+#include "llvm/IR/LLVMContext.h"
 #include "llvm/Support/raw_os_ostream.h"
 
 #include "mapsc/logging.hh"
-
-#include "mapsc/ast/ast_store.hh"
 #include "mapsc/builtins.hh"
+#include "mapsc/compilation_state.hh"
 #include "mapsc/process_source.hh"
+
+#include "mapsc/types/type_store.hh"
 
 #include "mapsc/llvm/ir_generator.hh"
 #include "mapsc/llvm/ir_builtins.hh"
 #include "mapsc/llvm/obj_output.hh"
 
+namespace Maps { class Scope; }
 
 using std::unique_ptr, std::make_unique;
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;

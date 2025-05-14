@@ -1,12 +1,12 @@
 #include "type.hh"
 
 #include <cassert>
+#include <optional>
 
+#include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/ast/expression.hh"
 
-#include "mapsc/types/type_defs.hh"
-#include "mapsc/types/casts.hh"
+#include "mapsc/ast/expression.hh"
 
 namespace Maps {
 

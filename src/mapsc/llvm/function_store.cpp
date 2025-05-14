@@ -1,11 +1,15 @@
 #include "function_store.hh"
 
+#include <utility>
+#include <vector>
 #include <variant>
+
+#include "llvm/IR/DerivedTypes.h"
 
 #include "mapsc/logging.hh"
 #include "mapsc/types/function_type.hh"
 
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info, Maps::MessageType;
+using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;
 
 namespace IR {

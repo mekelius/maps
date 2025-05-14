@@ -1,30 +1,40 @@
 #ifndef __IR_GEN_HH
 #define __IR_GEN_HH
 
-#include <ostream>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
 
-#include "mapsc/pragma.hh"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Value.h"
 
-#include "type_mapping.hh"
+#include "mapsc/llvm/type_mapping.hh"
 #include "mapsc/llvm/function_store.hh"
 
 namespace llvm {
 
-class raw_ostream;
-class Module;
+class GlobalVariable;
 class LLVMContext;
-class Function;
+class Module;
+class raw_ostream;
 
 } // namespace llvm
 
 namespace Maps {
 
+struct Expression;
 struct Statement;
-class CompilationState;
 class Callable;
+class FunctionType;
 class TypeStore;
+class PragmaStore;
+class CompilationState;
 
 } // namespace Maps
+
 
 namespace IR {
 

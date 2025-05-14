@@ -1,10 +1,11 @@
 #ifndef __FUNCTION_TYPE_HH
 #define __FUNCTION_TYPE_HH
 
-#include <string>
-#include <vector>
 #include <array>
 #include <span>
+#include <string>
+#include <vector>
+#include <sys/types.h>
 
 #include "mapsc/types/casts.hh"
 #include "mapsc/types/type.hh"

@@ -1,12 +1,16 @@
 #ifndef __LEXER_HH
 #define __LEXER_HH
 
-#include <istream>
-#include <memory>
-#include <array>
+#include <sstream>
+#include <string>
 #include <vector>
 
-#include "token.hh"
+#include "mapsc/source.hh"
+
+#include "mapsc/parser/token.hh"
+
+
+namespace Maps {
 
 class Lexer {
 public:
@@ -50,5 +54,7 @@ private:
     std::istream* source_is_;
     SourceFileID source_id_;
 };
+
+} // namespace Maps
 
 #endif

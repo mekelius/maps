@@ -19,6 +19,11 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
+# # Uncomment temporarily to run iwyu (if installed)
+# # DO NOT commit with these uncommented
+# find_program(IWYU include-what-you-use REQUIRED)
+# set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU})
+
 include_directories(
     src 
     corelib
@@ -40,24 +45,19 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/logging.cpp
     src/mapsc/compiler_options.cpp
     src/mapsc/pragma.cpp
-    src/mapsc/builtins.cpp
     src/mapsc/compilation_state.cpp
 
     src/mapsc/types/type.cpp
-    src/mapsc/types/function_type.cpp
     src/mapsc/types/casts.cpp
+    src/mapsc/types/function_type.cpp
     src/mapsc/types/type_store.cpp
-    
-    src/mapsc/ast/callable.cpp
-    src/mapsc/ast/ast_store.cpp
+
     src/mapsc/ast/expression.cpp
     src/mapsc/ast/statement.cpp
-    
-    src/mapsc/parser/token.cpp
-    src/mapsc/parser/lexer.cpp
-    src/mapsc/parser/parser_layer1.cpp
-    src/mapsc/parser/parser_layer2.cpp
-    src/mapsc/process_source.cpp
+    src/mapsc/ast/callable.cpp
+    src/mapsc/ast/ast_store.cpp
+
+    src/mapsc/builtins.cpp
 
     src/mapsc/procedures/inline.cpp
     src/mapsc/procedures/coerce_type.cpp
@@ -66,6 +66,13 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/procedures/type_check.cpp
     src/mapsc/procedures/name_resolution.cpp
     src/mapsc/procedures/reverse_parse.cpp
+
+    src/mapsc/parser/token.cpp
+    src/mapsc/parser/lexer.cpp
+    src/mapsc/parser/parser_layer1.cpp
+    src/mapsc/parser/parser_layer2.cpp
+
+    src/mapsc/process_source.cpp
 )
 
 target_link_libraries(mapsc_frontend corelib)
@@ -85,8 +92,8 @@ target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
 # ------------------------- MAPSC -------------------------
 
 add_executable(mapsc
-    src/mapsc_main.cpp
     src/mapsc/llvm/obj_output.cpp
+    src/mapsc_main.cpp
 )
 
 target_link_libraries(mapsc mapsc_frontend ir_gen corelib -lLLVM-19)
@@ -100,8 +107,8 @@ target_compile_options(mapsc PRIVATE
 # ------------------------- MAPSCi ------------------------
 
 add_executable(mapsci
-    src/mapsci_main.cpp
     src/mapsci/repl.cpp
+    src/mapsci_main.cpp
 )
 
 target_link_libraries(mapsci mapsc_frontend ir_gen corelib -lLLVM-19 -ledit -lncurses)

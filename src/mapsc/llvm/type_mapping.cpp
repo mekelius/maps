@@ -1,11 +1,23 @@
 #include "type_mapping.hh"
 
+#include <utility>
+#include <vector>
+
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Type.h"
+
 #include "mapsc/logging.hh"
+#include "mapsc/loglevel_defs.hh"
+
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/function_type.hh"
 
+namespace llvm { class LLVMContext; }
+
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info, Maps::MessageType;
 using std::optional, std::nullopt, std::vector;
+
 
 namespace IR {
 

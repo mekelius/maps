@@ -1,18 +1,19 @@
 #include "process_source.hh"
 
 #include <memory>
+#include <optional>
+#include <variant>
 
-#include "mapsc/parser/lexer.hh"
+#include "mapsc/procedures/name_resolution.hh"
+#include "mapsc/procedures/reverse_parse.hh"
+#include "mapsc/procedures/type_check.hh"
+
 #include "mapsc/parser/parser_layer1.hh"
 #include "mapsc/parser/parser_layer2.hh"
-#include "mapsc/procedures/name_resolution.hh"
-#include "mapsc/procedures/type_check.hh"
-#include "mapsc/procedures/reverse_parse.hh"
-#include "mapsc/procedures/concretize.hh"
-#include "mapsc/ast/scope.hh"
 
 using std::tuple, std::optional, std::make_optional, std::nullopt;
 using std::unique_ptr, std::make_unique;
+
 
 namespace Maps {
 

@@ -1,7 +1,5 @@
 #include "ast_store.hh"
 
-#include "mapsc/builtins.hh"
-
 #include <cassert>
 
 namespace Maps {

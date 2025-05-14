@@ -1,15 +1,19 @@
 #include "lexer.hh"
 
+#include <cassert>
 #include <cctype>
+#include <cstdio>
+#include <cwctype>
 #include <sstream>
 #include <string>
-#include <algorithm>
-#include <cassert>
 
 #include "mapsc/logging.hh"
 #include "mapsc/words.hh"
 
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_token;
+
+
+namespace Maps {
 
 // ----- Public methods -----
 Lexer::Lexer(std::istream* source_is, SourceFileID source_id)
@@ -416,3 +420,5 @@ void Lexer::read_and_ignore_comment() {
 
     return;
 }
+
+} // namespace Maps

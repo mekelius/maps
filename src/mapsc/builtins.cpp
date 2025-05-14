@@ -1,18 +1,34 @@
 #include "builtins.hh"
 
-#include <iostream>
+#include <cassert>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <variant>
 
+#include "common/maps_datatypes.h"
+
+#include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/ast/ast_store.hh"
-#include "mapsc/types/type.hh"
+
+#include "mapsc/types/function_type.hh"
 #include "mapsc/types/type_defs.hh"
+
 #include "mapsc/ast/callable.hh"
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/operator.hh"
+#include "mapsc/ast/scope.hh"
+#include "mapsc/ast/statement.hh"
 
 using std::monostate;
 using Maps::GlobalLogger::log_error;
 
 namespace Maps {
+
+class Type;
+
 namespace {
+
 
 using BuiltinValue = std::variant<maps_Boolean, maps_String, maps_Int, maps_Float>;
 using BuiltinBody = std::variant<External, Expression, Statement>;

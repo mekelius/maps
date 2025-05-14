@@ -2,13 +2,25 @@
 #define __REPL_HH
 
 #include <filesystem>
+#include <memory>
+#include <optional>
+#include <string>
+#include <istream>
 
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/Support/raw_os_ostream.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
-#include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 
 #include "mapsc/process_source.hh"
+
+namespace llvm {
+
+class LLVMContext;
+class Module;
+class raw_ostream;
+
+namespace orc { class ThreadSafeContext; }
+
+} // namespace llvm
+
 
 class JIT_Manager {
 public:

@@ -1,7 +1,10 @@
+#include "pragma.hh"
+
 #include <cassert>
+#include <utility>
 
 #include "mapsc/logging.hh"
-#include "mapsc/pragma.hh"
+#include "mapsc/loglevel_defs.hh"
 
 namespace Maps {
 

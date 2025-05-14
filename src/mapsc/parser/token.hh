@@ -2,9 +2,9 @@
 #define __TOKENS_HH
 
 #include <sstream>
-#include <variant>
+#include <string>
 
-#include "mapsc/logging.hh"
+#include "mapsc/source.hh"
 
 enum class TokenType: int {
     eof,

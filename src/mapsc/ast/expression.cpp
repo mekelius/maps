@@ -1,11 +1,16 @@
 #include "expression.hh"
 
+#include <memory>
+#include <span>
 #include <cassert>
 #include <sstream>
 
 #include "mapsc/logging.hh"
-#include "mapsc/procedures/reverse_parse.hh"
 #include "mapsc/compilation_state.hh"
+
+#include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/callable.hh"
+#include "mapsc/types/function_type.hh"
 
 using std::optional, std::nullopt, std::to_string;
 using Maps::GlobalLogger::log_error;

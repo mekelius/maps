@@ -1,27 +1,25 @@
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <memory>
+#include <algorithm>
+#include <cstdlib>
 #include <filesystem>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
 
-#include "pwd.h"
-#include "sys/types.h"
-#include "unistd.h"
-
-#include "llvm/IR/Module.h"
+#include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 #include "llvm/IR/LLVMContext.h"
-
 #include "llvm/Support/TargetSelect.h"
-
-// -----------------------------------
+#include "llvm/Support/raw_os_ostream.h"
 
 #include "mapsc/logging.hh"
-#include "mapsc/pragma.hh"
+#include "mapsc/loglevel_defs.hh"
 #include "mapsc/compiler_options.hh"
 
 #include "mapsci/repl.hh"
+
 
 using std::unique_ptr, std::make_unique;
 using Maps::MessageType, Maps::LogLevel, Maps::Logger, Maps::CompilerOptions, Maps::CompilerOption;

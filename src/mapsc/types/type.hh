@@ -2,6 +2,7 @@
 #define __TYPES_HH
 
 #include <string>
+#include <string_view>
 
 namespace Maps {
 

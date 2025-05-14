@@ -1,24 +1,34 @@
+#include <cstdlib>
+#include <string>
+#include <string_view>
+#include <vector>
 #include <iostream>
-#include <memory>
 #include <fstream>
 
 #include "mapsc/logging.hh"
-
-#include "mapsc/ast/ast_store.hh"
-
-#include "mapsc/procedures/reverse_parse.hh"
-#include "mapsc/parser/parser_layer1.hh"
-#include "mapsc/parser/parser_layer2.hh"
+#include "mapsc/loglevel_defs.hh"
 #include "mapsc/builtins.hh"
 #include "mapsc/compilation_state.hh"
+
 #include "mapsc/types/type_store.hh"
 
+#include "mapsc/parser/parser_layer1.hh"
+#include "mapsc/parser/parser_layer2.hh"
+
+#include "mapsc/procedures/reverse_parse.hh"
 #include "mapsc/procedures/name_resolution.hh"
+
 
 using Maps::LogLevel, Maps::Logger;
 
 constexpr unsigned int OUTPUT_WIDTH = 80;
-constexpr std::string_view USAGE = "USAGE: verify_mapsc inputfile... [ -v | --verbose | --parser-debug | --debug | -q | --quiet | -e | --everything ] [ -t | --tokens ]";
+constexpr std::string_view USAGE = "\n\
+USAGE: verify_mapsc inputfile... [options]\n\
+\n\
+options:\n\
+    -v | --verbose | --parser-debug | --debug | -q | --quiet | -e | --everything\n\
+    -t | --tokens\n\
+";
 
 std::string separator(char character = '-', const std::string& title = "") {
     if (title == "")

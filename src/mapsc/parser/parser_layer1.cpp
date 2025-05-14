@@ -8,20 +8,29 @@
  */
 #include "parser_layer1.hh"
 
-#include <variant>
 #include <cassert>
+#include <initializer_list>
+#include <sstream>
+#include <variant>
 
-#include "mapsc/compilation_state.hh"
-#include "mapsc/logging.hh"
 #include "mapsc/source.hh"
-#include "mapsc/ast/ast_store.hh"
-#include "mapsc/ast/statement.hh"
-#include "mapsc/ast/expression.hh"
+#include "mapsc/logging.hh"
+#include "mapsc/loglevel_defs.hh"
+#include "mapsc/pragma.hh"
+#include "mapsc/compilation_state.hh"
 
-#include "mapsc/procedures/simplify.hh"
+#include "mapsc/types/type.hh"
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/statement.hh"
+#include "mapsc/ast/operator.hh"
+#include "mapsc/ast/scope.hh"
+#include "mapsc/ast/ast_store.hh"
+
 #include "mapsc/parser/token.hh"
+#include "mapsc/procedures/simplify.hh"
 
 using std::optional, std::nullopt, std::make_unique;
+
 
 namespace Maps {
 

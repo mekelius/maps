@@ -1,15 +1,25 @@
 #ifndef __COMPILATION_STATE_HH
 #define __COMPILATION_STATE_HH
 
-#include <vector>
+#include <cassert>
+#include <concepts>
 #include <memory>
+#include <optional>
 #include <string>
+#include <tuple>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "mapsc/pragma.hh"
 
-#include "mapsc/ast/ast_store.hh"
 #include "mapsc/types/type_store.hh"
+
+#include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/expression.hh"
 #include "mapsc/ast/scope.hh"
+#include "mapsc/ast/statement.hh" 
 
 namespace Maps {
 

@@ -1,13 +1,9 @@
 #ifndef __LOGGING_HH
 #define __LOGGING_HH
 
-#include <memory>
-#include <string>
-#include <ostream>
 #include <array>
 #include <iostream>
-#include <map>
-#include <thread>
+#include <string>
 
 #include "loglevel_defs.hh"
 #include "mapsc/source.hh"

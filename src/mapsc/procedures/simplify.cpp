@@ -1,12 +1,16 @@
 #include "simplify.hh"
 
 #include <variant>
+#include <vector>
 
 #include "common/std_visit_helper.hh"
 
+#include "mapsc/ast/callable.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"
+#include "mapsc/types/type.hh"
 #include "mapsc/types/function_type.hh"
+
 #include "mapsc/procedures/inline.hh"
 
 namespace Maps {

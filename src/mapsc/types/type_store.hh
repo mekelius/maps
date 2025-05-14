@@ -1,6 +1,8 @@
 #ifndef __TYPE_REGISTRY_HH
 #define __TYPE_REGISTRY_HH
 
+#include <cstddef>
+#include <span>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -9,9 +11,10 @@
 
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/types/function_type.hh"
 
 namespace Maps {
+
+class FunctionType;
 
 // class for holding the shared type information such as traits
 // See identifying_types text file for better description

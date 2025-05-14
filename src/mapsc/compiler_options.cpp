@@ -1,6 +1,13 @@
 #include "compiler_options.hh"
 
 #include <array>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <utility>
 
 #include "compiler_option_defs.inc"
 

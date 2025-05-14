@@ -5,17 +5,15 @@
  * This file contains the high level wrapper to run the whole parsing procedure
  */
 
-#include <tuple>
 #include <memory>
-#include <optional>
-#include <ostream>
 #include <iostream>
 
 #include "mapsc/compilation_state.hh"
-#include "mapsc/pragma.hh" // NOTE: these need to be included since the user of unique_ptr needs to know how to destroy it
-#include "mapsc/ast/ast_store.hh"
 
 namespace Maps {
+
+class Scope;
+class TypeStore;
 
 enum class CompilationLayer {
     layer1,

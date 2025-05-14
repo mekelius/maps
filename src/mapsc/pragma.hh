@@ -1,10 +1,13 @@
 #ifndef __PRAGMA_HH
 #define __PRAGMA_HH
 
-#include <string_view>
-#include <map>
-#include <unordered_map>
+#include <cstddef>
 #include <array>
+#include <functional>
+#include <map>
+#include <string>
+#include <string_view>
+#include <unordered_map>
 
 #include "mapsc/source.hh"
 

@@ -1,11 +1,15 @@
 #ifndef __IR_BUILTINS_HH
 #define __IR_BUILTINS_HH
 
-#include "llvm/IR/Function.h"
+namespace llvm {
 
-#include "mapsc/llvm/ir_generator.hh"
+class Function;
+
+} // namespace llvm
 
 namespace IR {
+
+class IR_Generator;
 
 struct Builtins {
     // builtin functions

@@ -1,9 +1,9 @@
 #ifndef __CALLABLE_HH
 #define __CALLABLE_HH
 
-#include <variant>
 #include <optional>
-#include <string>
+#include <string_view>
+#include <variant>
 
 #include "mapsc/source.hh"
 #include "mapsc/types/type_defs.hh"
@@ -14,8 +14,6 @@ namespace Maps {
 class Type;
 struct Expression;
 struct Statement;
-struct Builtin;
-struct OperatorProps;
 
 struct External {
     template<typename T>

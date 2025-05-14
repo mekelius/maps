@@ -2,6 +2,7 @@
 #define __CONCRETIZE_HH
 
 namespace Maps {
+
 struct Expression;
 
 // tries to cast all types into concrete types

@@ -1,7 +1,5 @@
 #include "function_type.hh"
 
-#include "mapsc/types/casts.hh"
-
 namespace Maps {
 
 std::string RTFunctionType::to_string() const {

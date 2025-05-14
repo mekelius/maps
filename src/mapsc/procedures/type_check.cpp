@@ -1,13 +1,21 @@
 #include "type_check.hh"
 
-#include <variant>
 #include <cassert>
 #include <optional>
+#include <string>
+#include <variant>
 
 #include "common/std_visit_helper.hh"
+
+#include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/types/casts.hh"
 #include "mapsc/compilation_state.hh"
+
+#include "mapsc/types/type.hh"
+
+#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/expression.hh"
+
 #include "mapsc/procedures/concretize.hh"
 #include "mapsc/procedures/coerce_type.hh"
 
@@ -15,6 +23,8 @@ using std::get, std::get_if, std::optional, std::nullopt;
 using Maps::GlobalLogger::log_error;
 
 namespace Maps {
+
+struct Builtin;
 
 bool SimpleTypeChecker::visit_expression(Expression* expression) {
     if (expression->declared_type && **expression->declared_type != *expression->type)

@@ -1,11 +1,9 @@
 #ifndef __BUILTINS_HH
 #define __BUILTINS_HH
 
-#include <memory>
-
-#include "mapsc/ast/scope.hh"
-
 namespace Maps {
+
+class Scope;
 
 const Scope* get_builtins();
 

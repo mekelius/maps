@@ -2,10 +2,17 @@
 #define __REVERSE_PARSE_HH
 
 #include <ostream>
+#include <string>
 
-#include "mapsc/ast/ast_store.hh"
+#include "common/maps_datatypes.h"
+
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/callable.hh"
+
 
 namespace Maps {
+
+class CompilationState;
 
 class ReverseParser final {
 public:

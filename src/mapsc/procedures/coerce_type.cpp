@@ -1,8 +1,9 @@
 #include "coerce_type.hh"
 
+#include <variant>
 #include <vector>
 
-#include "type_check.hh"
+#include "mapsc/types/type.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
 

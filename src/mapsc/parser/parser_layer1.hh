@@ -1,24 +1,28 @@
 #ifndef __PARSER_LAYER_1_HH
 #define __PARSER_LAYER_1_HH
 
+#include <array>
 #include <istream>
 #include <memory>
-#include <array>
-#include <ostream>
+#include <optional>
+#include <string>
 #include <vector>
-#include <unordered_map>
 
-#include "mapsc/logging.hh"
+#include "mapsc/source.hh"
+#include "mapsc/loglevel_defs.hh"
 
-#include "mapsc/pragma.hh"
-#include "mapsc/ast/statement.hh"
-#include "mapsc/ast/expression.hh"
-
+#include "mapsc/ast/callable.hh"
+#include "mapsc/parser/token.hh"
 #include "mapsc/parser/lexer.hh"
 
 namespace Maps {
 
 class AST_Store;
+class CompilationState;
+class PragmaStore;
+enum class StatementType;
+struct Expression;
+struct Statement;
 
 class ParserLayer1 {
 public:

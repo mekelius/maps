@@ -1,27 +1,48 @@
 #include "ir_generator.hh"
 
 #include <cassert>
-#include <variant>
+#include <span>
 #include <sstream>
+#include <system_error>
+#include <tuple>
+#include <utility>
+#include <variant>
+#include <vector>
 
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/Value.h"
 #include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/FileSystem.h"
-
 #include "llvm/IR/Verifier.h"
-
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Constants.h"
 
 #include "common/string_helpers.hh"
+#include "common/maps_datatypes.h"
 
+#include "mapsc/source.hh"
 #include "mapsc/logging.hh"
+#include "mapsc/loglevel_defs.hh"
 #include "mapsc/compilation_state.hh"
 
-#include "mapsc/llvm/ir_builtins.hh"
+#include "mapsc/types/type.hh"
+#include "mapsc/types/function_type.hh"
+#include "mapsc/types/type_defs.hh"
+#include "mapsc/types/type_store.hh"
+
+#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/scope.hh"
+#include "mapsc/ast/statement.hh"
 
 using llvm::LLVMContext;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;
@@ -38,6 +59,7 @@ using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 #define IGNORED_STATEMENT_TYPE StatementType::operator_definition:\
                           case StatementType::empty
 
+                          
 namespace IR {
 
 namespace {
