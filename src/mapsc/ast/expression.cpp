@@ -368,8 +368,8 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
             {ExpressionType::call, location, CallExpressionValue{callable, args}, callee_type});
 
     auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
-    auto return_type = callee_f_type->return_type_;
     auto param_types = callee_f_type->get_params();
+    auto return_type = callee_f_type->return_type_;
 
     if (args.size() == param_types.size())
         return store.allocate_expression(

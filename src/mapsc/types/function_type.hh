@@ -13,7 +13,6 @@
 namespace Maps {
 
 constexpr TypeTemplate Function_ {
-    "Function",
     db_maybe,
     db_maybe,
 };
@@ -23,8 +22,8 @@ public:
     // this is what is used as the basis for function specialization
     using HashableSignature = std::string;
 
-    constexpr FunctionType(const ID id, const Type* return_type, bool is_pure = false)
-    :Type(id, &Function_, not_castable, not_concretizable), 
+    constexpr FunctionType(const Type* return_type, bool is_pure = false)
+    :Type("Function", &Function_, not_castable, not_concretizable), 
      return_type_(return_type), is_pure_(is_pure) {}
 
     const Type* const return_type_;
@@ -38,17 +37,19 @@ public:
 
     virtual const std::span<const Type* const> get_params() const = 0;
 
-    virtual bool is_complex() const { return true; };
+    virtual bool is_complex() const { return true; }
     virtual bool is_function() const { return true; }
+    virtual bool is_pure() const { return is_pure_; }
+
     virtual unsigned int arity() const = 0;
 };    
 
 template <uint ARITY>
 class CTFunctionType: public FunctionType {
 public:
-    constexpr CTFunctionType(const ID id, const Type* return_type, 
+    constexpr CTFunctionType(const Type* return_type, 
         const std::array<const Type*, ARITY>& param_types, bool is_pure = false)
-    :FunctionType(id, return_type, is_pure), 
+    :FunctionType(return_type, is_pure), 
      param_types_(param_types) {}
 
     const std::array<const Type*, ARITY> param_types_;
@@ -99,9 +100,9 @@ public:
 
 class RTFunctionType: public FunctionType {
 public:
-    RTFunctionType(const ID id, const Type* return_type, 
+    RTFunctionType(const Type* return_type, 
         const std::vector<const Type*>& param_types, bool is_pure = false)
-    :FunctionType(id, return_type, is_pure),
+    :FunctionType(return_type, is_pure),
      param_types_(param_types) {}
 
     std::vector<const Type*> param_types_;

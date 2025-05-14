@@ -15,7 +15,7 @@ using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_i
 namespace IR {
 
 std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, 
-    const Maps::FunctionType& function_type) const {
+    const Maps::FunctionType& function_type, bool log_error_on_fail) const {
     
     auto outer_it = functions_.find(name);
 
@@ -26,8 +26,9 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
     auto inner_it = inner_map->find(function_type.hashable_signature());
 
     if (inner_it == inner_map->end()) {
-        log_error("function \"" + name + "\" has not been specialized for type \"" + 
-            function_type.to_string() + "\"");
+        if (log_error_on_fail)
+            log_error("function \"" + name + "\" has not been specialized for type \"" + 
+                function_type.to_string() + "\"");
         return nullopt;
     }
 

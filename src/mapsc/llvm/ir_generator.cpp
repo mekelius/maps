@@ -222,8 +222,10 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
 
     auto entry_point = *compilation_state_->entry_point_;
 
-    if (holds_alternative<Maps::Undefined>(entry_point->body_))
+    if (holds_alternative<Maps::Undefined>(entry_point->body_)) {
+        fail("Undefined entry_point");
         return nullopt;
+    }
 
     optional<llvm::Function*> top_level_function;
 
@@ -237,10 +239,21 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
     top_level_function = function_definition(static_cast<std::string>(REPL_WRAPPER_NAME), 
         *maps_types_->get_function_type(Maps::Void, {}), types_.repl_wrapper_signature);
     
+    auto entry_point_type = entry_point->get_type();
+
     optional<llvm::FunctionCallee> print = 
-        function_store_->get("print", *maps_types_->get_function_type(Maps::Void, {entry_point->get_type()}));
-    
-    builder_->CreateCall(*print, builder_->CreateCall(*root_function));
+        function_store_->get("print", 
+            *maps_types_->get_function_type(Maps::Void, {entry_point_type}), false);
+
+    if (!print && entry_point_type->is_pure()) {
+        fail("Type " + entry_point_type->to_string() + " is not printable (and has no side-effects)");
+        return nullopt;
+    }
+
+    auto value = builder_->CreateCall(*root_function);
+
+    if (print)
+        builder_->CreateCall(*print, value);
 
     if (!close_function_definition(**top_level_function)) {
         fail("REPL wrapper failed verification");
@@ -487,23 +500,25 @@ llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
 
 // TODO: some assertions here for variant types
 optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression) {
-    switch (expression.type->id_) {
-        case Maps::Int.id_:
+    auto concrete_type = dynamic_cast<const Maps::ConcreteType*>(expression.type);
+    assert(concrete_type && "IR_Generator::convert_value called with not a concrete type");
+    switch (concrete_type->concrete_type_id_) {
+        case Maps::Int_ID:
             assert(std::holds_alternative<maps_Int>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
             return llvm::ConstantInt::get(*context_, llvm::APInt(64, std::get<maps_Int>(expression.value)));
 
-        case Maps::Float.id_:
+        case Maps::Float_ID:
             assert(std::holds_alternative<maps_Float>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
             return llvm::ConstantFP::get(*context_, llvm::APFloat(std::get<maps_Float>(expression.value)));
 
-        case Maps::String.id_:
+        case Maps::String_ID:
             assert(std::holds_alternative<std::string>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
             return builder_->CreateGlobalString(expression.string_value());
 
-        case Maps::Boolean.id_:
+        case Maps::Boolean_ID:
             assert(std::holds_alternative<bool>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
             return llvm::ConstantInt::get(*context_, llvm::APInt(1, std::get<bool>(expression.value)));

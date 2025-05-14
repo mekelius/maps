@@ -1,0 +1,3 @@
+// RUN: cat %s | %mapsci | grep "halojaa"
+
+print "halojaa"

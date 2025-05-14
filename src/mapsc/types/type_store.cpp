@@ -13,17 +13,13 @@ namespace Maps {
 TypeStore::TypeStore(const std::span<const Type* const> builtin_simple_types, 
     const std::span<const FunctionType* const> builtin_function_types) {
     
-    next_id_ = builtin_simple_types.size() + builtin_function_types.size();
-
     for (auto type: builtin_simple_types) {
         types_by_identifier_.insert({static_cast<std::string>(type->name()), type});
-        types_by_id_.push_back(type);
     }
 
     for (auto type: builtin_function_types) {
         types_by_structure_.insert(
             {make_function_signature(*type->return_type_, type->get_params()), type});
-        types_by_id_.push_back(type);
     }
 
     // insert type constructors
@@ -67,11 +63,11 @@ Type::HashableSignature TypeStore::make_function_signature(const Type& return_ty
 
     // nullary pure function is just a value
     if (arg_types.size() == 0 && is_pure)
-        return std::to_string(return_type.id_);
+        return std::string{return_type.name()};
 
     // nullary impure function gets the special type =>return_type
     if (arg_types.size() == 0)
-        return "=>" + std::to_string(return_type.id_);
+        return "=>" + std::string{return_type.name()};
 
     std::string signature = "";
     bool first = true;
@@ -79,12 +75,12 @@ Type::HashableSignature TypeStore::make_function_signature(const Type& return_ty
         if (!first)
             signature += "-";
         first = false;
-        signature += std::to_string(arg_type->id_);
+        signature += std::string{arg_type->name()};
     }
 
     signature += is_pure ? "-" : "=";
 
-    return signature + std::to_string(return_type.id_);
+    return signature + std::string{return_type.name()};
 }
 
 // NOTE: This actually doesn't work. The type structure notation idea is extremely ambiguous...
@@ -92,15 +88,12 @@ Type::HashableSignature TypeStore::make_function_signature(const Type& return_ty
 const FunctionType* TypeStore::create_function_type(const Type::HashableSignature& signature,
     const Type& return_type, const std::vector<const Type*>& arg_types, bool is_pure) {
 
-    assert(types_by_id_.size() == static_cast<size_t>(next_id_) &&
-        "TypeRegistry types_by_id_ not in sync with id:s");
-    std::unique_ptr<const Type> up = make_unique<const RTFunctionType>(get_id(), 
-        &return_type, arg_types, is_pure);
+    std::unique_ptr<const Type> up = 
+        make_unique<const RTFunctionType>(&return_type, arg_types, is_pure);
     types_.push_back(std::move(up));
     auto raw_ptr = types_.back().get();
 
     types_by_structure_.insert({signature, raw_ptr});
-    types_by_id_.push_back(raw_ptr);
 
     return dynamic_cast<const FunctionType*>(raw_ptr);
 }

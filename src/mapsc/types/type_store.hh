@@ -42,19 +42,14 @@ public:
         const std::span<const Type* const> arg_types, bool is_pure = true) const;
 
 private:
-    Type::ID get_id() { return ++next_id_; }
-
     const FunctionType* create_function_type(const Type::HashableSignature& signature,
         const Type& return_type, const std::vector<const Type*>& arg_types, bool is_pure = true);
 
     std::unordered_map<std::string, const Type*> types_by_identifier_ = {};
     std::unordered_map<Type::HashableSignature, const Type*> types_by_structure_ = {};
-    std::vector<const Type*> types_by_id_ = {};
 
     // we need two different vectors, since the builtin types need to be accessable by id as well
     std::vector<std::unique_ptr<const Type>> types_ = {};
-    
-    Type::ID next_id_;
     
     // std::vector<std::unique_ptr<TypeConstructor>> type_constructors_ = {};
     // std::unordered_map<std::string, const TypeConstructor*> typeconstructors_by_identifier = {};

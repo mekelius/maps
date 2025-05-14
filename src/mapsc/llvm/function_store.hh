@@ -21,7 +21,7 @@ class FunctionStore {
 public:
     // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
     std::optional<llvm::FunctionCallee> get(const std::string& name, 
-        const Maps::FunctionType& ast_type) const;
+        const Maps::FunctionType& ast_type, bool log_error_on_fail = true) const;
     bool insert(const std::string& name, const Maps::FunctionType& ast_type, 
         llvm::FunctionCallee function_callee);
 

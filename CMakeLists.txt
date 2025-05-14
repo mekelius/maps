@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(Maps)
 
+include(CTest)
+set(CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+
 add_compile_options(-Wall -Wextra -Werror 
     -Wno-error=unused-parameter 
     -Wno-error=unused-but-set-variable 
@@ -160,15 +163,6 @@ target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
 configure_file(tests/e2e/lit.site.cfg.py.in lit.site.cfg.py @ONLY)
 configure_file(tests/e2e/run_lit.py test/run_lit.py @ONLY)
 
-add_custom_target(e2e_tests
-    COMMAND ./test/run_lit.py "${CMAKE_CURRENT_BINARY_DIR}" -v
-    DEPENDS mapsc mapsci)
 
-set_property(TARGET e2e_tests 
-    PROPERTY EXCLUDE_FROM_ALL True)
-
-
-# ------------------------ E2E TESTS ------------------------
-
-add_custom_target(tests
-    DEPENDS unit_tests DEPENDS e2e_tests)
+add_test(NAME unit_tests COMMAND unit_tests)
+add_test(NAME e2e_tests COMMAND ./test/run_lit.py "${CMAKE_CURRENT_BINARY_DIR}" -v)
