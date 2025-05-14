@@ -6,3 +6,4 @@ node_modules
 **/.vitepress/dist
 **/.vitepress/cache
 mirror_*
+CMakeUserPresets.json

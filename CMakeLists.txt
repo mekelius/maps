@@ -19,11 +19,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
-# # Uncomment temporarily to run iwyu (if installed)
-# # DO NOT commit with these uncommented
-# find_program(IWYU include-what-you-use REQUIRED)
-# set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU})
-
 include_directories(
     src 
     corelib
