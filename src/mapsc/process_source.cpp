@@ -18,7 +18,7 @@ namespace Maps {
 
 // if parse fails at any point, returns nullopt, 
 // except if ignore errors is true returns the broken ast
-std::unique_ptr<CompilationState> process_source(const ConstScope* builtins, TypeStore* types, std::istream& source_is, 
+std::unique_ptr<CompilationState> process_source(const Scope* builtins, TypeStore* types, std::istream& source_is, 
     const ProcessSourceOptions& options, std::ostream& debug_ostream) {
 
     unique_ptr<CompilationState> compilation_state = make_unique<CompilationState>(builtins, types);

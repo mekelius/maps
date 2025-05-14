@@ -7,7 +7,7 @@
 
 namespace Maps {
 
-const ConstScope* get_builtins();
+const Scope* get_builtins();
 
 } // namespace Maps
 

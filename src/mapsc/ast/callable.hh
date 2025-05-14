@@ -42,7 +42,9 @@ public:
     static Callable testing_callable(const Type* type = &Hole); 
 
     constexpr Callable(std::string_view name, External external, const Type& type)
-    :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(&type) {}
+    :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(&type) {
+
+    }
 
     Callable(std::string_view name, CallableBody body, SourceLocation location);
     Callable(CallableBody body, SourceLocation location); // create anonymous callable
@@ -72,6 +74,7 @@ public:
     virtual bool is_operator() const;
     virtual bool is_binary_operator() const;
     virtual bool is_unary_operator() const;
+    virtual bool is_const() const { return false; }
 
     bool operator==(const Callable&) const = default;
 

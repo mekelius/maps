@@ -1,4 +1,3 @@
-
 // RUN: cat %s | %mapsci | grep "32"
 
 Int "23" + 9

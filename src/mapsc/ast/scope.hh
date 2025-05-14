@@ -19,14 +19,13 @@ namespace Maps {
  * Scopes contain names bound to callables
  * TODO: implement a constexpr hashmap that can be initialized in static memory 
  */
-template <typename Ptr_t>
-class BaseScope {
+class Scope {
 public:
-    using const_iterator = std::vector<std::pair<std::string, Ptr_t>>::const_iterator;
+    using const_iterator = std::vector<std::pair<std::string, Callable*>>::const_iterator;
     const_iterator begin() const { return identifiers_in_order_.begin(); }
     const_iterator end() const { return identifiers_in_order_.end(); }
 
-    BaseScope() = default;
+    Scope() = default;
 
     // std::optional<Expression*> create_call_expression(
     //     const std::string& callee_name, std::vector<Expression*> args, SourceLocation location /*, expected return type?*/);
@@ -37,34 +36,31 @@ public:
         return identifiers_.find(name) != identifiers_.end();
     }
 
-    std::optional<Ptr_t> get_identifier(const std::string& name) const {
+    std::optional<Callable*> get_identifier(const std::string& name) const {
         auto it = identifiers_.find(name);
         if (it == identifiers_.end())
-            return {};
+            return std::nullopt;
 
         return it->second;
     }
 
-    std::optional<Ptr_t> create_identifier(Ptr_t callable) {
+    std::optional<Callable*> create_identifier(Callable* callable) {
         auto name = std::string{callable->name_};
 
         if (identifier_exists(name))
             return std::nullopt;
 
-        identifiers_.insert(std::pair<std::string, Ptr_t>{name, callable});
+        identifiers_.insert(std::pair<std::string, Callable*>{name, callable});
         identifiers_in_order_.push_back({name, callable});
         
         return callable;
     }
 
-    std::vector<std::pair<std::string, Ptr_t>> identifiers_in_order_ = {};
+    std::vector<std::pair<std::string, Callable*>> identifiers_in_order_ = {};
 
 private:
-    std::unordered_map<std::string, Ptr_t> identifiers_;
+    std::unordered_map<std::string, Callable*> identifiers_;
 };
-
-using Scope = BaseScope<Callable* const>;
-using ConstScope = BaseScope<const Callable* const>;
 
 } // namespace AST
 

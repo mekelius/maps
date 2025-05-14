@@ -83,7 +83,6 @@ using ExpressionValue = std::variant<
     maps_Float,
     bool,
     std::string,
-    const Callable*,
     Callable*,                       // for references to operators and functions
     const Type*,                     // for type expressions
     TermedExpressionValue,
@@ -147,8 +146,7 @@ Expression* create_termed_expression(AST_Store& store, std::vector<Expression*>&
 
 Expression* create_reference_expression(AST_Store& store, Callable* callable, SourceLocation location);
 
-template <typename Ptr_t>
-std::optional<Expression*> create_reference_expression(AST_Store& store, const BaseScope<Ptr_t>& scope, 
+inline std::optional<Expression*> create_reference_expression(AST_Store& store, const Scope& scope, 
     const std::string& name, SourceLocation location) {
     
     if (auto callable = scope.get_identifier(name))

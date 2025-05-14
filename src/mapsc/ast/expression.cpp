@@ -24,9 +24,11 @@ std::vector<Expression*>& Expression::terms() {
 CallExpressionValue& Expression::call_value() {
     return std::get<CallExpressionValue>(value);
 }
+
 Callable* Expression::reference_value() const {
     return std::get<Callable*>(value);
 }
+
 Operator* Expression::operator_reference_value() const {
     return dynamic_cast<Operator*>(std::get<Callable*>(value));
 }
@@ -304,8 +306,8 @@ Expression* create_operator_identifier_expression(CompilationState& state, const
 Expression* create_type_operator_identifier_expression(CompilationState& state, const std::string& value, 
     SourceLocation location) {
     
-    Expression* expression = state.ast_store_->allocate_expression({ExpressionType::type_operator_identifier, 
-        location, value, &Void});
+    Expression* expression = state.ast_store_->allocate_expression({
+        ExpressionType::type_operator_identifier, location, value, &Void});
     state.unresolved_type_identifiers_.push_back(expression);
     return expression;
 }
@@ -318,7 +320,6 @@ Expression* create_termed_expression(AST_Store& store, std::vector<Expression*>&
 }
 
 Expression* create_reference_expression(AST_Store& store, Callable* callable, SourceLocation location) {
-    
     return store.allocate_expression({ExpressionType::reference, location, callable, callable->get_type()});
 }
 
@@ -344,13 +345,14 @@ Expression* create_missing_argument(AST_Store& store, SourceLocation location, c
     return store.allocate_expression({ExpressionType::missing_arg, location, std::monostate{}, type});
 }
 
-optional<Expression*> create_call_expression(AST_Store& store, SourceLocation location, Callable* callable, 
-    const std::vector<Expression*>& args) {
+optional<Expression*> create_call_expression(AST_Store& store, SourceLocation location, 
+    Callable* callable, const std::vector<Expression*>& args) {
 
     auto callee_type = callable->get_type();
     
     if (!callee_type->is_function() && args.size() > 0) {
-        log_error(std::string{callable->name_} + " cannot take arguments, tried giving " + to_string(args.size()));
+        log_error(std::string{callable->name_} + 
+            " cannot take arguments, tried giving " + to_string(args.size()));
         return nullopt;
     }
 

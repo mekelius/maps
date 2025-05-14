@@ -36,7 +36,7 @@ struct ProcessSourceOptions {
 };
 
 // the first value is if the parse succeeded
-std::unique_ptr<CompilationState> process_source(const ConstScope* builtins, TypeStore* types, std::istream& source_is, 
+std::unique_ptr<CompilationState> process_source(const Scope* builtins, TypeStore* types, std::istream& source_is, 
     const ProcessSourceOptions& options = {}, std::ostream& debug_ostream = std::cout);
 
 } // namespace Maps

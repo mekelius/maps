@@ -34,10 +34,10 @@ public:
     template<AST_Visitor T>
     bool walk_callable(T visitor, Callable* callable);
 
-    static std::tuple<CompilationState, std::unique_ptr<const ConstScope>, std::unique_ptr<TypeStore>> 
+    static std::tuple<CompilationState, std::unique_ptr<const Scope>, std::unique_ptr<TypeStore>> 
         create_test_state();
 
-    CompilationState(const ConstScope* builtins, TypeStore* types);
+    CompilationState(const Scope* builtins, TypeStore* types);
 
     [[nodiscard]] bool set_entry_point(Callable* entrypoint);
     [[nodiscard]] bool set_entry_point(std::string name);
@@ -55,7 +55,7 @@ public:
     std::optional<Callable*> entry_point_ = std::nullopt;
     
     TypeStore* const types_;
-    const ConstScope* const builtins_;
+    const Scope* const builtins_;
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
     // need to walk the tree to find them

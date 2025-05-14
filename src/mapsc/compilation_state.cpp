@@ -5,14 +5,14 @@ using std::tuple, std::unique_ptr, std::make_unique;
 
 namespace Maps {
 
-tuple<CompilationState, unique_ptr<const ConstScope>, unique_ptr<TypeStore>> CompilationState::create_test_state() {
+tuple<CompilationState, unique_ptr<const Scope>, unique_ptr<TypeStore>> CompilationState::create_test_state() {
     auto types = make_unique<TypeStore>();
-    auto builtins = make_unique<const ConstScope>();
+    auto builtins = make_unique<const Scope>();
     
     return tuple{CompilationState{builtins.get(), types.get()}, std::move(builtins), std::move(types)};
 }
 
-CompilationState::CompilationState(const ConstScope* builtins, TypeStore* types)
+CompilationState::CompilationState(const Scope* builtins, TypeStore* types)
 :types_(types), builtins_(builtins) {
 }
 
