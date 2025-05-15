@@ -80,7 +80,7 @@ private:
     std::vector<Expression*>* expression_terms_;
     std::vector<Expression*>::iterator next_term_it_;
     CompilationState* const compilation_state_;
-    AST_Store* const ast_;
+    AST_Store* const ast_store_;
 
     bool possibly_type_expression_ = true;
     std::vector<Expression*> parse_stack_ = {};

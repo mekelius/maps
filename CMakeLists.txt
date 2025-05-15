@@ -146,6 +146,7 @@ add_executable(unit_tests
 
     tests/parser/layer1.cpp
     tests/parser/layer2.cpp
+    tests/parser/unary_operators.cpp
     
     tests/types/type_casts.cpp
     tests/types/type_store.cpp
