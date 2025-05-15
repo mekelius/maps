@@ -26,7 +26,10 @@ bool Type::cast_to(const Type* target_type, Expression& expression) const {
         return false;
     }
     
-    return cast_to_(target_type, expression);
+    if (expression.is_constant_value())
+        return cast_to_(target_type, expression);
+
+    return false;
 }
 
 // bool SimpleType::concretize(Expression& expression) const {

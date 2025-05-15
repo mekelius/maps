@@ -192,6 +192,18 @@ bool Expression::is_allowed_in_type_declaration() const {
     }
 }
 
+bool Expression::is_constant_value() const {
+    switch (expression_type) {
+        case ExpressionType::value:
+        case ExpressionType::numeric_literal:
+        case ExpressionType::string_literal:
+            return true;
+
+        default:
+            return false;   
+    }
+}
+
 std::string Expression::log_message_string() const {
     switch (expression_type) {
         case ExpressionType::type_construct:

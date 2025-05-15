@@ -127,6 +127,7 @@ struct Expression {
     bool is_ok_in_codegen() const;
     bool is_castable_expression() const;
     bool is_allowed_in_type_declaration() const;
+    bool is_constant_value() const;
 
     bool operator==(const Expression& other) const = default;
 };

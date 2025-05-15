@@ -63,7 +63,10 @@ bool concretize_call(Expression& call) {
         if (*arg->type == *param_type)
             continue;
 
-        if (!arg->type->cast_to(param_type, *arg))
+        if (arg->is_constant_value() && !arg->type->cast_to(param_type, *arg))
+            return false;
+
+        if (!concretize(*arg))
             return false;
     }
 
