@@ -10,22 +10,24 @@
 
 namespace Maps {
 
-// using GlobalLogger::log_error;
+using GlobalLogger::log_error;
 
-// using std::optional, std::nullopt;
+using std::optional, std::nullopt;
 
-// bool SimpleType::cast_to(const SimpleType* target_type, Expression& expression) const {
+bool Type::cast_to(const Type* target_type, Expression& expression) const {
+    assert(*expression.type == *this && 
+        "Type::cast_to called with an expression of a type other than *this");
+
+    if (*expression.type == *target_type)
+        return true;
+
+    if (!expression.is_castable_expression()) {
+        log_error("expression " + expression.log_message_string() + ", is not castable");
+        return false;
+    }
     
-//     if (*expression.type == *target_type)
-//         return true;
-
-//     if (!expression.is_castable_expression()) {
-//         log_error("expression " + expression.log_message_string() + ", is not castable");
-//         return false;
-//     }
-    
-//     return cast_to_(target_type, expression);
-// }
+    return cast_to_(target_type, expression);
+}
 
 // bool SimpleType::concretize(Expression& expression) const {
 //     if (*expression.type != *this) {

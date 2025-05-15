@@ -6,9 +6,7 @@ namespace Maps {
 class Type;
 struct Expression;
 
-// take an expression and tries to cast it in place into target type
-// argument const value should be used if this is a new expression created from a known const value
-// like a literal
+// take a value expression and tries to cast it in place into target type
 bool not_castable(const Type*, Expression&);
 bool cast_from_Int(const Type* target_type, Expression& expression);
 bool cast_from_Float(const Type* target_type, Expression& expression);

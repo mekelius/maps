@@ -32,9 +32,13 @@ public:
     bool is_pure_function() const { return is_pure() && is_function(); }
     bool is_impure_function() const { return !is_pure() && is_function(); }
 
-    virtual bool cast_to(const Type*, Expression&) const = 0;
+    bool cast_to(const Type*, Expression&) const;
+
     virtual bool concretize(Expression&) const = 0;
     virtual bool operator==(const Type& other) const = 0;
+    
+private:
+    virtual bool cast_to_(const Type*, Expression&) const = 0;
 };
 
 class RT_Type: public Type {
@@ -47,7 +51,7 @@ public:
         return name_;
     }
 
-    virtual bool cast_to(const Type* type, Expression& expression) const {
+    virtual bool cast_to_(const Type* type, Expression& expression) const {
         return (*cast_function_)(type, expression);
     }
 
@@ -74,7 +78,7 @@ public:
         return name_;
     }
 
-    virtual bool cast_to(const Type* type, Expression& expression) const {
+    virtual bool cast_to_(const Type* type, Expression& expression) const {
         return (*cast_function_)(type, expression);
     }
 
@@ -103,7 +107,7 @@ public:
         return name_;
     }
 
-    virtual bool cast_to(const Type* type, Expression& expression) const {
+    virtual bool cast_to_(const Type* type, Expression& expression) const {
         return (*cast_function_)(type, expression);
     }
 

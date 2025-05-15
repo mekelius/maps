@@ -33,10 +33,6 @@ public:
         return output;
     }
 
-    virtual bool cast_to(const Type*, Expression&) const {
-        return false;
-    }
-
     virtual bool concretize(Expression&) const {
         return false;
     }
@@ -52,6 +48,9 @@ public:
     virtual bool operator==(const Type& other) const {
         return name() == other.name();
     }
+
+private:
+    virtual bool cast_to_(const Type*, Expression&) const { return false; }
 };
 
 class RTFunctionType: public FunctionType {
