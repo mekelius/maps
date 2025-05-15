@@ -87,8 +87,8 @@ private:
     std::vector<unsigned int> precedence_stack_ = {MIN_OPERATOR_PRECEDENCE};
 };
 
-// basically a small wrapper that creates TermedExpressionParser for each unparsed termed expression
-// in the ast and runs them
+// basically a small wrapper that creates TermedExpressionParser for each unparsed termed 
+// expression in the ast and runs them
 class ParserLayer2 {
 public:
     ParserLayer2(CompilationState* compilation_state);

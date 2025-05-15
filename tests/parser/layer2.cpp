@@ -286,22 +286,22 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         CHECK(args.at(3) == arg4);
     }
 
-    // SUBCASE("If the call is not partial, the call expression's type should be the return type") {
+    SUBCASE("If the call is not partial, the call expression's type should be the return type") {
 
-    //     const Type* function_type = types->get_function_type(Number, {&String});
+        const Type* function_type = types->get_function_type(Number, {&String}, true);
         
-    //     Callable function{"test_f", monostate{}, *function_type, TSL};
-    //     Expression ref = create_reference_expression(ast, &function, {0,0});
+        Callable function{"test_f", External{}, *function_type, TSL};
+        Expression* ref = create_reference_expression(ast, &function, {0,0});
 
-    //     Expression* arg1 = create_string_literal(ast, "", {0,0});
+        Expression* arg1 = create_string_literal(ast, "", {0,0});
 
-    //     expr->terms().push_back(&ref);
-    //     expr->terms().push_back(arg1);
+        expr->terms().push_back(ref);
+        expr->terms().push_back(arg1);
 
-    //     TermedExpressionParser{&state, expr}.run();
+        TermedExpressionParser{&state, expr}.run();
         
-    //     CHECK(expr->type == &Number);
-    // }
+        CHECK(expr->type == &Number);
+    }
 }
 
 TEST_CASE("Should handle partial application of binary operators") {
@@ -335,60 +335,56 @@ TEST_CASE("Should handle partial application of binary operators") {
     }
 }
 
-// TEST_CASE("Should set the type on a non-partial call expression to the return type") {
-//     auto [state, _0, types] = CompilationState::create_test_state();
-//     AST_Store& ast = *state.ast_store_;
+TEST_CASE("Should set the type on a non-partial call expression to the return type") {
+    auto [state, _0, types] = CompilationState::create_test_state();
+    AST_Store& ast = *state.ast_store_;
 
-//     const FunctionType* IntString = types->get_function_type(String, {&Int}, false);
+    const FunctionType* IntString = types->get_function_type(String, {&Int}, false);
 
-//     auto test_f_expr = Expression{ExpressionType::value, TSL, "qwe", IntString};
-//     auto test_f = state.globals_->create_callable("test_f", &test_f_expr, TSL);
-//     REQUIRE(test_f);
+    auto test_f_expr = Expression{ExpressionType::value, TSL, "qwe", IntString};
+    auto test_f = Callable("test_f", &test_f_expr, TSL);
 
-//     auto arg = Expression{ExpressionType::numeric_literal, TSL, "3", &NumberLiteral};
-//     auto reference = state.globals_->create_reference_expression(*test_f, TSL);
+    auto arg = Expression{ExpressionType::numeric_literal, TSL, "3", &NumberLiteral};
+    auto reference = create_reference_expression(ast, &test_f, TSL);
 
-//     auto expr = create_termed_expression(ast, {reference, &arg}, TSL);
+    auto expr = create_termed_expression(ast, {reference, &arg}, TSL);
 
-//     TermedExpressionParser{&state, expr}.run();
+    TermedExpressionParser{&state, expr}.run();
 
-//     CHECK(state.is_valid);
-//     CHECK(expr->expression_type == ExpressionType::call);
-//     CHECK(*expr->type == String);
-//     CHECK(expr->call_value() == CallExpressionValue{*test_f, {&arg}});
-// }
+    CHECK(state.is_valid);
+    CHECK(expr->expression_type == ExpressionType::call);
+    CHECK(*expr->type == String);
+    CHECK(expr->call_value() == CallExpressionValue{&test_f, {&arg}});
+}
 
 
-// TEST_CASE("Should set the type on a non-partial \"operator expression\" to the return type") {
-//     auto [state, _0, types] = CompilationState::create_test_state();
-//     AST_Store& ast = *state.ast_store_;
+TEST_CASE("Should set the type on a non-partial \"operator expression\" to the return type") {
+    auto [state, _0, types] = CompilationState::create_test_state();
+    AST_Store& ast = *state.ast_store_;
 
-//     const FunctionType* IntString = types->get_function_type(String, {&Int, &Int}, false);
+    const FunctionType* IntString = types->get_function_type(String, {&Int, &Int}, false);
 
-//     auto test_op_expr = Expression{ExpressionType::value, TSL, "jii", IntString};
-//     auto test_op = state.globals_->create_binary_operator(">=?", &test_op_expr, 5, 
-//         Associativity::left, TSL);
-//     REQUIRE(test_op);    
+    auto test_op_expr = Expression{ExpressionType::value, TSL, "jii", IntString};
+    auto test_op = Operator::create_binary(">=?", &test_op_expr, 5, 
+        Associativity::left, TSL);
 
-//     auto lhs = Expression{ExpressionType::numeric_literal, TSL, "3", &NumberLiteral};
-//     auto rhs = Expression{ExpressionType::numeric_literal, TSL, "7", &NumberLiteral};
+    auto lhs = Expression{ExpressionType::numeric_literal, TSL, "3", &NumberLiteral};
+    auto rhs = Expression{ExpressionType::numeric_literal, TSL, "7", &NumberLiteral};
 
-//     auto reference = create_operator_ref(ast, *test_op, TSL);
+    auto reference = create_operator_ref(ast, &test_op, TSL);
 
-//     auto expr = create_termed_expression(ast, {&lhs, reference, &rhs}, TSL);
+    auto expr = create_termed_expression(ast, {&lhs, reference, &rhs}, TSL);
 
-//     TermedExpressionParser{&state, expr}.run();
+    TermedExpressionParser{&state, expr}.run();
 
-//     CHECK(state.is_valid);
-//     CHECK(expr->expression_type == ExpressionType::call);
-//     CHECK(expr->call_value() == CallExpressionValue{*test_op, {&lhs, &rhs}});
-//     CHECK(*expr->type == String);
-// }
-
+    CHECK(state.is_valid);
+    CHECK(expr->expression_type == ExpressionType::call);
+    CHECK(expr->call_value() == CallExpressionValue{&test_op, {&lhs, &rhs}});
+    CHECK(*expr->type == String);
+}
 
 TEST_CASE("Layer2 should handle type specifiers") {
     auto [state, _0, types] = CompilationState::create_test_state();
-    AST_Store& ast = *state.ast_store_;
 
     auto type_specifier = Expression{ExpressionType::type_reference, TSL, &Int};
     auto value = Expression{ExpressionType::string_literal, TSL, "32", &String};
@@ -409,31 +405,28 @@ TEST_CASE("Layer2 should handle type specifiers") {
         CHECK(get<maps_Int>(value.value) == 32);
     }
 
-    // SUBCASE("Int \"32\" + 987") {
-    //     auto op = Callable{"+", monostate{}, *types->get_function_type(Int, {&Int, &Int}), TSL};
+    SUBCASE("Int \"32\" + 987") {
+        auto op = Operator{"+", External{}, *types->get_function_type(Int, {&Int, &Int}),
+            OperatorProps{UnaryFixity::none, BinaryFixity::infix}, TSL};
         
-    //     auto operator_props = OperatorProps{UnaryFixity::none, BinaryFixity::infix};
-    //     op.operator_props = &operator_props;
+        auto op_ref = Expression{ExpressionType::operator_reference, TSL, &op};
+        auto rhs = Expression{ExpressionType::numeric_literal, TSL, "987"};
+        auto expr = Expression{ExpressionType::termed_expression, TSL, 
+            TermedExpressionValue{{&type_specifier, &value, &op_ref, &rhs}, db_false}};
 
-    //     auto op_ref = Expression{ExpressionType::operator_reference, TSL, &op};
-    //     auto rhs = Expression{ExpressionType::numeric_literal, TSL, "987"};
-    //     auto expr = Expression{ExpressionType::termed_expression, TSL, 
-    //         TermedExpressionValue{{&type_specifier, &value, &op_ref, &rhs}, db_false}};
+        TermedExpressionParser{&state, &expr}.run();
 
-    //     TermedExpressionParser{&state, &expr}.run();
+        CHECK(state.is_valid);
+        CHECK(*expr.type == Int);
+        CHECK(expr.expression_type == ExpressionType::call);
 
-    //     CHECK(state.is_valid);
-    //     CHECK(*expr.type == Int);
-    //     CHECK(expr.expression_type == ExpressionType::call);
+        auto [callee, args] = expr.call_value();
 
-    //     auto [callee, args] = expr.call_value();
-
-    //     CHECK(args.size() == 2);
-    //     CHECK(*callee == op);
-    //     CHECK(*value.type == Int);
-    //     CHECK(holds_alternative<maps_Int>(value.value));
-    //     CHECK(get<maps_Int>(value.value) == 32);
-    //     CHECK(*args.at(0) == value);
-    // }
-
+        CHECK(args.size() == 2);
+        CHECK(callee == &op);
+        CHECK(*value.type == Int);
+        CHECK(holds_alternative<maps_Int>(value.value));
+        CHECK(get<maps_Int>(value.value) == 32);
+        CHECK(*args.at(0) == value);
+    }
 }
