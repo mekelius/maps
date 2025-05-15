@@ -22,8 +22,8 @@ public:
     virtual bool is_complex() const { return true; }
     virtual std::string_view name() const { return name_; }
 
-    virtual bool cast_to(const Type* type, Expression& expression) const { return false; }
-    virtual bool concretize(Expression& expression) const { return is_concrete(); }
+    virtual bool cast_to(const Type* _1, Expression& _2) const { (void) _1; (void) _2; return false; }
+    virtual bool concretize(Expression& _) const { (void) _; return is_concrete(); }
 
     virtual bool operator==(const Type& other) const {
         return name() == other.name();
@@ -46,8 +46,8 @@ public:
     virtual bool is_complex() const { return true; }
     virtual std::string_view name() const { return name_; }
 
-    virtual bool cast_to(const Type* type, Expression& expression) const { return false; }
-    virtual bool concretize(Expression& expression) const { return is_concrete(); }
+    virtual bool cast_to(const Type* _1, Expression& _2) const { (void) _1; (void) _2; return false; }
+    virtual bool concretize(Expression& _) const { (void) _; return is_concrete(); }
 
     virtual bool operator==(const Type& other) const {
         return name() == other.name();

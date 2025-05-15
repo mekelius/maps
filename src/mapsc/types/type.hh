@@ -106,7 +106,7 @@ public:
         return (*cast_function_)(type, expression);
     }
 
-    virtual bool concretize(Expression&) const {
+    virtual bool concretize(Expression& _) const {
         return true;
     }
 
