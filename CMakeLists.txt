@@ -16,6 +16,7 @@ add_compile_options(-Wall -Wextra -Werror
     -Wno-error=unused-variable
     -Wno-error=unused-private-field
     -Wno-error=unused-function
+    -fdiagnostics-color=always # needed to get colored output with ninja
 )
 
 if(NOT CMAKE_BUILD_TYPE)

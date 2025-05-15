@@ -116,7 +116,7 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
         auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
 
         // reject impure functions (maybe we can get llvm to inline them?)
-        if (!callee_f_type->is_pure_) {
+        if (!callee_f_type->is_pure()) {
             log_info("Impure functions aren't yet inlinable", 
                 MessageType::post_parse_debug, expression.location);
             return false;

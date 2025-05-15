@@ -44,7 +44,7 @@ public:
     bool is_good_ = true;
     
 private:
-    std::unordered_map<Maps::Type::HashableSignature, llvm::Type*> type_map_;
+    std::unordered_map<std::string, llvm::Type*> type_map_;
 };
 
 } // namespace IR

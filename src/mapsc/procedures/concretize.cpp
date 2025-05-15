@@ -57,7 +57,7 @@ bool concretize_call(Expression& call) {
     assert(args.size() <= callee_type->arity() && "call expression has too many args");
     assert(args.size() == callee_type->arity() && "partial calls not implemented in concretize_call");
 
-    for (int i = 0; auto param_type: callee_type->get_params()) {
+    for (int i = 0; auto param_type: callee_type->param_types()) {
         auto arg = args.at(i++);
 
         if (*arg->type == *param_type)
@@ -68,17 +68,12 @@ bool concretize_call(Expression& call) {
     }
 
     // handle return type
-    auto return_type = callee_type->return_type_;
+    auto return_type = callee_type->return_type();
 
-    if (return_type->is_native() == db_true)
+    if (return_type->is_concrete())
         return true;
-
-    if (return_type->is_castable_to_native() == db_false)
-        return false;
-
-    if (return_type->is_castable_to_native() == db_true) {
-        assert(false && "concretizing return values not implemented");
-    }
+    
+    assert(false && "concretizing return values not implemented");
     // create a call to cast function here
 
     return false;
@@ -95,16 +90,7 @@ bool concretize_reference(Expression& value) {
 }
 
 bool concretize_value(Expression& value) {
-    if (value.type->is_native() == db_true)
-        return true;
-
-    if (value.type->is_castable_to_native() == db_false)
-        return false;
-
-    if (!value.type->concretize(value))
-        return false;
-
-    return true;
+    return(value.type->concretize(value));
 }
 
 bool concretize(Expression& expression) {

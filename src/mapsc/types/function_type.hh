@@ -12,128 +12,101 @@
 
 namespace Maps {
 
-constexpr TypeTemplate Function_ {
-    db_maybe,
-    db_maybe,
-};
-
 class FunctionType: public Type {
 public:
-    // this is what is used as the basis for function specialization
-    using HashableSignature = std::string;
-
-    constexpr FunctionType(const Type* return_type, bool is_pure = false)
-    :Type("Function", &Function_, not_castable, not_concretizable), 
-     return_type_(return_type), is_pure_(is_pure) {}
-
-    const Type* const return_type_;
-    const bool is_pure_ = false;
-
-    // just a synonym for to_string at the moment
-    // TODO: memoize this
-    HashableSignature hashable_signature() const {
-        return to_string();
-    }
-
-    virtual const std::span<const Type* const> get_params() const = 0;
-
-    virtual bool is_complex() const { return true; }
-    virtual bool is_function() const { return true; }
-    virtual bool is_pure() const { return is_pure_; }
-
-    virtual unsigned int arity() const = 0;
-};    
-
-template <uint ARITY>
-class CTFunctionType: public FunctionType {
-public:
-    constexpr CTFunctionType(const Type* return_type, 
-        const std::array<const Type*, ARITY>& param_types, bool is_pure = false)
-    :FunctionType(return_type, is_pure), 
-     param_types_(param_types) {}
-
-    const std::array<const Type*, ARITY> param_types_;
-
-    // DO NOTE!: string representation is (currently) used as the basis for function overload specialization
-    // IF YOU CREATE TYPES THAT HAVE IDENTICAL STRINGS THEIR FUNCTIONS WILL COLLIDE
-    std::string to_string() const {
-        if (arity() == 0) {
-            return "Void -> " + return_type_->to_string();
+    static std::string create_name(const Type* return_type, 
+        std::span<const Type* const, std::dynamic_extent>param_types, bool is_pure) {
+        
+        if (param_types.size() == 0 && !is_pure) {
+            return "Void -> " + std::string{return_type->name()};
         }
 
         std::string output = "";
 
-        for (const Type* arg: param_types_) {
-            output += arg->to_string();
+        for (const Type* param_type: param_types) {
+            output += param_type->name();
             output += " -> ";
         }
 
-        output += return_type_->to_string();
+        output += return_type->name();
 
         return output;
     }
 
-    // just a synonym for to_string at the moment
-    // TODO: memoize this
-    HashableSignature hashable_signature() const {
-        return to_string();
+    virtual bool cast_to(const Type*, Expression&) const {
+        return false;
     }
 
-    virtual const std::span<const Type* const> get_params() const {
-        return param_types_;
+    virtual bool concretize(Expression&) const {
+        return false;
     }
 
-    virtual unsigned int arity() const {
-        return param_types_.size();
+    virtual const Type* return_type() const = 0;
+    virtual std::span<const Type* const> param_types() const = 0;
+
+    virtual bool is_complex() const { return true; }
+    virtual bool is_function() const { return true; }
+
+    virtual unsigned int arity() const { return param_types().size(); };
+
+    virtual bool operator==(const Type& other) const {
+        return name() == other.name();
     }
-
-    bool operator==(const CTFunctionType& other) {
-        if (*dynamic_cast<const Type*>(this) != *dynamic_cast<const Type*>(&other))
-            return false;
-
-        if (this->return_type_ != other.return_type_)
-            return false;
-
-        return this->param_types_ == other.param_types_;
-    }
-};    
+};
 
 class RTFunctionType: public FunctionType {
 public:
     RTFunctionType(const Type* return_type, 
-        const std::vector<const Type*>& param_types, bool is_pure = false)
-    :FunctionType(return_type, is_pure),
-     param_types_(param_types) {}
+        const std::vector<const Type*>& param_types, bool is_pure)
+    :name_(FunctionType::create_name(return_type, std::span{param_types}, is_pure)),
+     return_type_(return_type), 
+     param_types_(param_types),
+     is_pure_(is_pure) {}
 
-    std::vector<const Type*> param_types_;
-
-    // DO NOTE!: string rexistsepresentation is (currently) used as the basis for function overload specialization
-    // IF YOU CREATE TYPES THAT HAVE IDENTICAL STRINGS THEIR FUNCTIONS WILL COLLIDE
-    std::string to_string() const;
-
-    // just a synonym for to_string at the moment
-    // TODO: memoize this
-    HashableSignature hashable_signature() const {
-        return to_string();
+    std::string_view name() const {
+        return name_;
+    }
+    
+    virtual const Type* return_type() const {
+        return return_type_;
     }
 
-    virtual const std::span<const Type* const> get_params() const {
+    virtual std::span<const Type* const> param_types() const {
         return param_types_;
     }
 
-    virtual unsigned int arity() const {
-        return param_types_.size();
+    const std::string name_;
+    const Type* return_type_;
+    std::vector<const Type*> param_types_;
+    bool is_pure_;
+};
+
+template <uint ARITY>
+class CTFunctionType: public FunctionType {
+public:
+    constexpr CTFunctionType(std::string_view name, const Type* return_type, 
+        const std::array<const Type*, ARITY>& param_types, bool is_pure)
+    :name_(name),
+     return_type_(return_type),
+     param_types_(param_types),
+     is_pure_(is_pure) {}
+
+    std::string_view name() const {
+        return name_;
+    }
+    
+    virtual const Type* return_type() const {
+        return return_type_;
     }
 
-    bool operator==(const RTFunctionType& other) {
-        if (*dynamic_cast<const Type*>(this) != *dynamic_cast<const Type*>(&other))
-            return false;
-
-        if (this->return_type_ != other.return_type_)
-            return false;
-
-        return this->param_types_ == other.param_types_;
+    virtual std::span<const Type* const> param_types() const {
+        return param_types_;
     }
+
+    const std::string_view name_;
+    const Type* return_type_;
+    const std::array<const Type*, ARITY> param_types_;
+    bool is_pure_;
 };    
 
 } // namespace Maps

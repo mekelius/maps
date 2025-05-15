@@ -119,7 +119,6 @@ struct Expression {
     std::string string_value() const;
     std::string log_message_string() const;
     
-    DeferredBool has_native_representation();
     bool is_literal() const;
     bool is_illegal() const;
     bool is_reference() const;

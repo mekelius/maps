@@ -19,10 +19,6 @@ namespace Maps {
 
 // ----- EXPRESSION -----
 
-DeferredBool Expression::has_native_representation() {    
-    return type->is_castable_to_native();
-}
-
 std::vector<Expression*>& Expression::terms() {
     return std::get<TermedExpressionValue>(value).terms;
 }
@@ -368,8 +364,8 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
             {ExpressionType::call, location, CallExpressionValue{callable, args}, callee_type});
 
     auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
-    auto param_types = callee_f_type->get_params();
-    auto return_type = callee_f_type->return_type_;
+    auto param_types = callee_f_type->param_types();
+    auto return_type = callee_f_type->return_type();
 
     if (args.size() == param_types.size())
         return store.allocate_expression(

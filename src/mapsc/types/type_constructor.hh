@@ -4,6 +4,7 @@
 #include <string_view>
 #include <functional>
 #include <span>
+#include <ranges>
 
 #include "mapsc/types/type.hh"
 
@@ -17,7 +18,7 @@ public:
     std::string_view name_;
     
     constexpr Type apply(const Type& type_arg) {
-        return Type{};
+        return Type{std::views::join{{name_, " ", type_arg.name()}}};
     }
 };
 

@@ -16,7 +16,7 @@ namespace Maps { class FunctionType; }
 namespace IR {
 
 class FunctionStore {
-    using Signature = Maps::Type::HashableSignature;
+    using Signature = std::string;
 
 public:
     // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;

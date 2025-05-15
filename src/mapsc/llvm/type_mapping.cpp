@@ -49,12 +49,12 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
 }
 
 bool TypeMap::contains(const Maps::Type& maps_type) const {
-    auto signature = maps_type.hashable_signature();
+    auto signature = maps_type.to_string();
     return type_map_.contains(signature);
 }
 
 bool TypeMap::insert(const Maps::Type* maps_type, llvm::Type* llvm_type) {
-    auto signature = maps_type->hashable_signature();
+    auto signature = maps_type->to_string();
     
     if (contains(*maps_type)) {
         log_info("Attempting to store duplicate of \"" + maps_type->to_string() + "\" in TypeMap",
@@ -68,7 +68,7 @@ bool TypeMap::insert(const Maps::Type* maps_type, llvm::Type* llvm_type) {
 
 // TODO: Would be faster to use type id:s since only primitives have to be covered here
 std::optional<llvm::Type*> TypeMap::convert_type(const Maps::Type& type) const {
-    auto it = type_map_.find(type.hashable_signature());
+    auto it = type_map_.find(type.to_string());
     if (it == type_map_.end())
         return std::nullopt;
 
@@ -104,7 +104,7 @@ std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Fu
     if (!type.is_function())
         return nullopt;
 
-    return convert_function_type(*type.return_type_, type.get_params());
+    return convert_function_type(*type.return_type(), type.param_types());
 }
 
 } // namespace IR

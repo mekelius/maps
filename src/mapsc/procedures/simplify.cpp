@@ -60,7 +60,7 @@ bool attempt_simplify(Callable& callable) {
                     }
 
                     auto function_type = dynamic_cast<const FunctionType*>(type);
-                    if (function_type->is_pure_ && function_type->arity() == 0) {
+                    if (type->is_pure() && type->arity() == 0) {
                         callable.body_ = std::get<Expression*>(statement->value);
                         statement->statement_type = StatementType::deleted;
                         return attempt_simplify(callable);
@@ -87,7 +87,7 @@ bool attempt_simplify(Callable& callable) {
                         return inline_call(*expression, callable);
 
                     auto function_type = dynamic_cast<const FunctionType*>(type);
-                    if (function_type->is_pure_ && function_type->arity() == 0)
+                    if (type->is_pure() && type->arity() == 0)
                         return inline_call(*expression, callable);
 
                     return false;

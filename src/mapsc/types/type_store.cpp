@@ -19,7 +19,7 @@ TypeStore::TypeStore(const std::span<const Type* const> builtin_simple_types,
 
     for (auto type: builtin_function_types) {
         types_by_structure_.insert(
-            {make_function_signature(*type->return_type_, type->get_params()), type});
+            {make_function_signature(*type->return_type(), type->param_types()), type});
     }
 
     // insert type constructors
@@ -47,7 +47,7 @@ optional<const Type*> TypeStore::get(const std::string& identifier) {
 const FunctionType* TypeStore::get_function_type(const Type& return_type, 
     const std::vector<const Type*>& arg_types, bool is_pure) {
 
-    Type::HashableSignature signature = make_function_signature(return_type, arg_types, is_pure);
+    std::string signature = make_function_signature(return_type, arg_types, is_pure);
     auto existing_it = types_by_structure_.find(signature);
 
     // if type with this structure exists, just return that
@@ -58,7 +58,7 @@ const FunctionType* TypeStore::get_function_type(const Type& return_type,
     return create_function_type(signature, return_type, arg_types, is_pure);
 }
 
-Type::HashableSignature TypeStore::make_function_signature(const Type& return_type, 
+std::string TypeStore::make_function_signature(const Type& return_type, 
     const std::span<const Type* const> arg_types, bool is_pure) const {
 
     // nullary pure function is just a value
@@ -85,7 +85,7 @@ Type::HashableSignature TypeStore::make_function_signature(const Type& return_ty
 
 // NOTE: This actually doesn't work. The type structure notation idea is extremely ambiguous...
 // we need to do this by pattern matching instead, but it is what it is
-const FunctionType* TypeStore::create_function_type(const Type::HashableSignature& signature,
+const FunctionType* TypeStore::create_function_type(const std::string& signature,
     const Type& return_type, const std::vector<const Type*>& arg_types, bool is_pure) {
 
     std::unique_ptr<const Type> up = 

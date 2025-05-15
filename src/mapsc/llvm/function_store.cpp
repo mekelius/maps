@@ -23,7 +23,7 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
         return nullopt;
 
     auto inner_map = outer_it->second.get();
-    auto inner_it = inner_map->find(function_type.hashable_signature());
+    auto inner_it = inner_map->find(function_type.to_string());
 
     if (inner_it == inner_map->end()) {
         if (log_error_on_fail)
@@ -38,7 +38,7 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
 bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& ast_type, 
     llvm::FunctionCallee function_callee) {    
     
-    auto signature = ast_type.hashable_signature();
+    auto signature = ast_type.to_string();
 
     auto outer_it = functions_.find(name);
 

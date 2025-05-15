@@ -330,7 +330,7 @@ void TermedExpressionParser::initial_operator_state() {
             // TODO: handle precedence here
             // it's a binary operator being partially applied
             Expression* missing_argument = create_missing_argument(*ast_, op->location,
-                *dynamic_cast<const FunctionType*>(op->type)->get_params().begin());
+                *dynamic_cast<const FunctionType*>(op->type)->param_types().begin());
 
             auto call =
                 create_call_expression(*ast_, expression_->location,
@@ -359,7 +359,7 @@ void TermedExpressionParser::post_binary_operator_state() {
         Expression* op = *pop_term(); // pop the operator
         Expression* lhs = *pop_term();
         Expression* missing_argument = create_missing_argument(*ast_, op->location,
-            *dynamic_cast<const FunctionType*>(op->type)->get_params().begin());
+            *dynamic_cast<const FunctionType*>(op->type)->param_types().begin());
 
         auto call = create_call_expression(*ast_, lhs->location, op->reference_value(), 
             {lhs, missing_argument});
@@ -611,7 +611,7 @@ void TermedExpressionParser::call_expression_state() {
 
     // determine the type
     if (args.size() == reference->type->arity()) {
-        (*call_expression)->type = dynamic_cast<const FunctionType*>(reference->type)->return_type_;
+        (*call_expression)->type = dynamic_cast<const FunctionType*>(reference->type)->return_type();
     } else {
         // TODO: partial application type
     }

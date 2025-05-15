@@ -4,111 +4,120 @@
 #include <string>
 #include <string_view>
 
+#include "common/deferred_bool.hh"
+
+
 namespace Maps {
-
-// class for booleans we may or may not know yet
-enum class DeferredBool {
-    true_,
-    false_,
-    maybe_,
-};
-
-constexpr DeferredBool db_true = DeferredBool::true_;
-constexpr DeferredBool db_false = DeferredBool::false_;
-constexpr DeferredBool db_maybe = DeferredBool::maybe_;
-
-struct TypeTemplate {
-    const DeferredBool is_native = db_false;
-    const DeferredBool is_castable_to_native = db_false;
-    const bool is_user_defined = false;
-    const bool is_type_alias = false;
-};
 
 class Type;
 struct Expression;
 
-typedef bool(*CastFunction)(const Type*, Expression&);
-typedef bool(*ConcretizeFunction)(Expression&);
+using CastFunction = bool(const Type*, Expression&);
+using ConcretizeFunction = bool(Expression&);
 
 class Type {
 public:
-    using HashableSignature = std::string;
-
-    constexpr Type(std::string_view name, const TypeTemplate* type_template, const CastFunction cast_function, 
-        const ConcretizeFunction concretize_function)
-    :name_(name),
-     type_template_(type_template), 
-     cast_function_(cast_function), 
-     concretize_function_(concretize_function) {}
-    
-    // copy constructor
-    constexpr Type(const Type& rhs):
-        type_template_(rhs.type_template_), cast_function_(rhs.cast_function_), 
-        concretize_function_(rhs.concretize_function_) {}
-    // copy assignment operator
-    constexpr Type& operator=(const Type& rhs) {
-        if (this == &rhs)
-            return *this;
-
-        type_template_ = rhs.type_template_;
-
-        return *this;
-    }
-
-    constexpr bool friend operator==(const Type& lhs, const Type& rhs) {
-        return lhs.name_ == rhs.name_;
-    }
-
-    // rule of 5
-    // Type(Type&& rhs) = delete;
-    // Type&& operator=(Type&& other) = delete;
-    constexpr virtual ~Type() = default;
-
-    virtual std::string to_string() const;
+    virtual ~Type() = default;
 
     virtual bool is_complex() const { return false; }
     virtual bool is_function() const { return false; }
     virtual bool is_pure() const { return true; }
-    virtual unsigned int arity() const { return 0; }
+    virtual bool is_concrete() const { return false; };
+    virtual uint arity() const { return 0; }
+    
+    virtual std::string_view name() const = 0;
 
-    std::string_view name() const { return name_; }
-    HashableSignature hashable_signature() const { return static_cast<std::string>(name()); }
+    std::string to_string() const {
+        return std::string{name()};
+    }
 
-    DeferredBool is_native() const { return type_template_->is_native; }
-    DeferredBool is_castable_to_native() const { return type_template_->is_castable_to_native; }
 
-    bool is_user_defined() const { return type_template_->is_user_defined; }
-    bool is_type_alias() const { return type_template_->is_type_alias; }
+    virtual bool cast_to(const Type*, Expression&) const = 0;
+    virtual bool concretize(Expression&) const = 0;
+    virtual bool operator==(const Type& other) const = 0;
+};
 
-    bool cast_to(const Type* type, Expression& expression) const;
-    bool concretize(Expression& expression) const;
+class RT_Type: public Type {
+public:
+    RT_Type(const std::string& name, CastFunction* cast_function, ConcretizeFunction* concretize_function)
+    :name_(name), cast_function_(cast_function), concretize_function_(concretize_function) {}
 
-    const std::string_view name_;
-    const TypeTemplate* type_template_;
-    const CastFunction cast_function_;
+    virtual std::string_view name() const {
+        return name_;
+    }
 
-    // this function is used to force a value of this type into a concrete/native type
-    const ConcretizeFunction concretize_function_;
+    virtual bool cast_to(const Type* type, Expression& expression) const {
+        return (*cast_function_)(type, expression);
+    }
 
-protected:
-    // cast_to above does some safety checks that shouldn't be overridden
-    virtual bool cast_to_(const Type* type, Expression& expression) const;
+    virtual bool concretize(Expression& expression) const {
+        return (*concretize_function_)(expression);
+    }
 
-    // concretize above does some safety checks that shouldn't be overridden
-    virtual bool concretize_(Expression& expression) const;
+    virtual bool operator==(const Type& other) const {
+        return name() == other.name();
+    }
+
+    const std::string name_;
+    CastFunction* cast_function_;
+    ConcretizeFunction* concretize_function_;
+};
+
+class CT_Type: public Type {
+public:
+    constexpr CT_Type(std::string_view name, CastFunction* const cast_function, 
+        ConcretizeFunction* const concretize_function)
+    :name_(name), cast_function_(cast_function), concretize_function_(concretize_function) {}
+
+    virtual std::string_view name() const {
+        return name_;
+    }
+
+    virtual bool cast_to(const Type* type, Expression& expression) const {
+        return (*cast_function_)(type, expression);
+    }
+
+    virtual bool concretize(Expression& expression) const {
+        return (*concretize_function_)(expression);
+    }
+
+    virtual bool operator==(const Type& other) const {
+        return name() == other.name();
+    }
+
+    std::string_view name_;
+    CastFunction* cast_function_;
+    ConcretizeFunction* concretize_function_;
 };
 
 class ConcreteType: public Type {
 public:
-    constexpr ConcreteType(uint id, std::string_view name, const TypeTemplate* type_template, 
-        const CastFunction cast_function, const ConcretizeFunction concretize_function)
-     :Type(name, type_template, cast_function, concretize_function), concrete_type_id_(id) {}
+    constexpr ConcreteType(const uint concrete_type_id, std::string_view name, 
+        CastFunction* const cast_function)
+    :concrete_type_id_(concrete_type_id), name_(name), cast_function_(cast_function) {}
+
+    virtual bool is_concrete() const { return true; }
+
+    virtual std::string_view name() const {
+        return name_;
+    }
+
+    virtual bool cast_to(const Type* type, Expression& expression) const {
+        return (*cast_function_)(type, expression);
+    }
+
+    virtual bool concretize(Expression&) const {
+        return true;
+    }
+
+    virtual bool operator==(const Type& other) const {
+        return name() == other.name();
+    }
 
     const uint concrete_type_id_;
+    std::string_view name_;
+    CastFunction* cast_function_;
 };
-
-// caller needs to be sure that type is an operator type
-unsigned int get_precedence(const Type& type);
 
 } // namespace Maps
 #endif
