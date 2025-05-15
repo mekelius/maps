@@ -64,6 +64,7 @@ private:
     void post_binary_operator_state();
     void compare_precedence_state();
     void reduce_operator_left();
+    void create_unary_operator_call(Expression* operator_ref, Expression* value);
     
     void initial_type_reference_state();
     void initial_type_constructor_state();

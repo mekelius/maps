@@ -36,7 +36,7 @@ TEST_CASE("postfix purely unary operator") {
 
     auto op = Operator{"!", External{}, *types->get_function_type(Boolean, {&Boolean}, true), 
         {UnaryFixity::postfix}, TSL};
-    auto op_ref = Expression{ExpressionType::operator_reference, TSL, &op};
+    auto op_ref = Expression{ExpressionType::operator_reference, TSL, &op, op.get_type()};
     auto value = Expression{ExpressionType::value, TSL, true, &Boolean};
     auto expr = Expression{ExpressionType::termed_expression, TSL, 
         TermedExpressionValue{{&value, &op_ref}}};

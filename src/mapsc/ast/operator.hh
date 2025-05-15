@@ -21,9 +21,7 @@ enum class BinaryFixity {
 enum class UnaryFixity {
     prefix,
     none,
-    postfix,
-    // both_left_biased,
-    // both_right_biased,
+    postfix
 };
 
 enum class Associativity {

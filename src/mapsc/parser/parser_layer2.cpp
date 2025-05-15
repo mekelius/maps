@@ -274,10 +274,17 @@ void TermedExpressionParser::initial_value_state() {
             handle_termed_sub_expression(peek());
             return initial_value_state();
 
-        case ExpressionType::operator_reference:
-            precedence_stack_.push_back(peek_precedence());
+        case ExpressionType::operator_reference: {
             shift();
-            return post_binary_operator_state();
+            auto op = current_term()->operator_reference_value();
+            if (op->is_unary_operator() && (op->operator_props_.unary_fixity == UnaryFixity::postfix))
+                return create_unary_operator_call(*pop_term(), *pop_term());
+
+            if (op->is_binary_operator()) {
+                precedence_stack_.push_back(op->get_precedence());
+                return post_binary_operator_state();
+            }
+        }    
 
         case ExpressionType::reference:
         case ExpressionType::call:
@@ -314,17 +321,8 @@ void TermedExpressionParser::initial_operator_state() {
             Expression* rhs = get_term();
 
             // if it's an unary operator, just apply and be done with it
-            if (op->operator_reference_value()->is_unary_operator()) {
-                auto call = create_call_expression(*ast_store_, expression_->location, 
-                    op->reference_value(), { rhs });
-                
-                if (!call)
-                    return fail("Creating call to unary operator failed", op->location);
-
-                parse_stack_.push_back(*call);
-
-                return initial_value_state();
-            }
+            if (op->operator_reference_value()->is_unary_operator())
+                return create_unary_operator_call(op, rhs);
 
             // TODO: handle precedence here
             // it's a binary operator being partially applied
@@ -357,8 +355,16 @@ void TermedExpressionParser::post_binary_operator_state() {
     if (at_expression_end()) {
         Expression* op = *pop_term(); // pop the operator
         Expression* lhs = *pop_term();
+        auto op_type = op->type;
+
+        if (op_type->arity() == 0 || !op_type->is_function()) {
+            fail(op->log_message_string() + " is not a function", op->location);
+            return;
+        }
+
+        auto missing_arg_type = *dynamic_cast<const FunctionType*>(op_type)->param_types().begin();
         Expression* missing_argument = create_missing_argument(*ast_store_, op->location,
-            *dynamic_cast<const FunctionType*>(op->type)->param_types().begin());
+            missing_arg_type);
 
         auto call = create_call_expression(*ast_store_, lhs->location, op->reference_value(), 
             {lhs, missing_argument});
@@ -569,6 +575,18 @@ void TermedExpressionParser::initial_type_reference_state() {
             assert(false && "bad term encountered in TermedExpressoinParser");
             return;
     }
+}
+
+void TermedExpressionParser::create_unary_operator_call(Expression* operator_ref, Expression* value) {
+    auto call = create_call_expression(*ast_store_, expression_->location, 
+        operator_ref->reference_value(), { value });
+            
+    if (!call)
+        return fail("Creating call to unary operator failed", operator_ref->location);
+
+    parse_stack_.push_back(*call);
+
+    return initial_value_state();
 }
 
 bool TermedExpressionParser::is_acceptable_next_arg(Callable* callee, 
