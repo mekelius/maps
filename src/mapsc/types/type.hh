@@ -27,9 +27,9 @@ public:
     
     virtual std::string_view name() const = 0;
 
-    std::string to_string() const {
-        return std::string{name()};
-    }
+    std::string to_string() const { return std::string{name()}; }
+    bool is_pure_function() const { return is_pure() && is_function(); }
+    bool is_impure_function() const { return !is_pure() && is_function(); }
 
     virtual bool cast_to(const Type*, Expression&) const = 0;
     virtual bool concretize(Expression&) const = 0;

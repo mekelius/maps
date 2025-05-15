@@ -16,12 +16,14 @@ public:
     :name_(name),
      wrapped_type_(&wrapped_type) {}
 
+    virtual bool is_function() const { return true; } // These are impure functions
     virtual bool is_pure() const { return false; }
+    virtual bool is_concrete() const { return wrapped_type_->is_concrete(); }
     virtual bool is_complex() const { return true; }
     virtual std::string_view name() const { return name_; }
 
     virtual bool cast_to(const Type* type, Expression& expression) const { return false; }
-    virtual bool concretize(Expression& expression) const { return false; }
+    virtual bool concretize(Expression& expression) const { return is_concrete(); }
 
     virtual bool operator==(const Type& other) const {
         return name() == other.name();
@@ -38,12 +40,14 @@ public:
     :name_(name),
      wrapped_type_(&wrapped_type) {}
 
+    virtual bool is_function() const { return true; } // These are impure functions
     virtual bool is_pure() const { return false; }
+    virtual bool is_concrete() const { return wrapped_type_->is_concrete(); }
     virtual bool is_complex() const { return true; }
     virtual std::string_view name() const { return name_; }
 
     virtual bool cast_to(const Type* type, Expression& expression) const { return false; }
-    virtual bool concretize(Expression& expression) const { return false; }
+    virtual bool concretize(Expression& expression) const { return is_concrete(); }
 
     virtual bool operator==(const Type& other) const {
         return name() == other.name();
