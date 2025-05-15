@@ -94,7 +94,7 @@ constinit BuiltinOperator maps_mult_Int{"*", External{}, IntInt_to_Int,
     OperatorProps::Binary(520, Associativity::left)};
 //constexpr Builtin maps_true{"/", create_builtin_expression(true, Boolean)};
 
-Builtin maps_print{"print", External{}, String_to_Void};
+Builtin maps_print{"print", External{}, String_to_IO_Void};
 
 static Scope builtins;
 

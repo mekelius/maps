@@ -49,6 +49,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/types/type.cpp
     src/mapsc/types/casts.cpp
     src/mapsc/types/function_type.cpp
+    src/mapsc/types/type_constructor.cpp
     src/mapsc/types/type_store.cpp
 
     src/mapsc/ast/expression.cpp

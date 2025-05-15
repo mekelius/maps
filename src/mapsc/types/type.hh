@@ -17,7 +17,7 @@ using ConcretizeFunction = bool(Expression&);
 
 class Type {
 public:
-    virtual ~Type() = default;
+    constexpr virtual ~Type() = default;
 
     virtual bool is_complex() const { return false; }
     virtual bool is_function() const { return false; }
@@ -31,7 +31,6 @@ public:
         return std::string{name()};
     }
 
-
     virtual bool cast_to(const Type*, Expression&) const = 0;
     virtual bool concretize(Expression&) const = 0;
     virtual bool operator==(const Type& other) const = 0;
@@ -39,7 +38,8 @@ public:
 
 class RT_Type: public Type {
 public:
-    RT_Type(const std::string& name, CastFunction* cast_function, ConcretizeFunction* concretize_function)
+    RT_Type(const std::string& name, CastFunction* cast_function, 
+        ConcretizeFunction* concretize_function)
     :name_(name), cast_function_(cast_function), concretize_function_(concretize_function) {}
 
     virtual std::string_view name() const {
