@@ -68,6 +68,13 @@ bool concretize_call(Expression& call) {
 
         if (!concretize(*arg))
             return false;
+
+        if (*arg->type != *param_type) {
+            log_error(arg->log_message_string() + 
+                " does not match parameter type: " + param_type->to_string(),
+                arg->location);
+            return false;
+        }
     }
 
     // handle return type

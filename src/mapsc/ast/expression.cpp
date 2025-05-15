@@ -11,6 +11,7 @@
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/callable.hh"
 #include "mapsc/types/function_type.hh"
+#include "mapsc/procedures/reverse_parse.hh"
 
 using std::optional, std::nullopt, std::to_string;
 using Maps::GlobalLogger::log_error;
@@ -259,8 +260,8 @@ std::string Expression::log_message_string() const {
             return "nonimplemented expression";
 
         case ExpressionType::call: {
-            std::stringstream output{"call expression "};
-            output << this;
+            std::stringstream output{};
+            ReverseParser{&output} << "Call expression " << *this;
             return output.str();
         }
 

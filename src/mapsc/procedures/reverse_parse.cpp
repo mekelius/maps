@@ -137,7 +137,7 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
     return *this << ';';
 }
 
-ReverseParser& ReverseParser::print_expression(Expression& expression) {
+ReverseParser& ReverseParser::print_expression(const Expression& expression) {
     if (options_.debug_separators) *this << "£";
 
     if (options_.include_all_types)
@@ -156,7 +156,7 @@ ReverseParser& ReverseParser::print_expression(Expression& expression) {
             *this << "( ";
 
             bool pad_left = false;
-            for (Expression* term: expression.terms()) {
+            for (Expression* term: std::get<TermedExpressionValue>(expression.value).terms) {
                 *this << (pad_left ? " " : "");
                 
                 if (options_.include_debug_info)
@@ -230,7 +230,7 @@ ReverseParser& ReverseParser::print_expression(Expression& expression) {
         }
 
         case ExpressionType::call: {
-            auto [callee, args] = expression.call_value();
+            auto [callee, args] = std::get<CallExpressionValue>(expression.value);
 
             // print as an operator expression
             if (callee->is_operator() && args.size() <= 2) {
@@ -283,7 +283,7 @@ ReverseParser& ReverseParser::print_callable(CallableBody body) {
     }
 }
 
-ReverseParser& ReverseParser::print_type_declaration(Expression& expression) {
+ReverseParser& ReverseParser::print_type_declaration(const Expression& expression) {
     if (*expression.type == Absurd)
         return *this;
     
