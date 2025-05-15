@@ -107,6 +107,8 @@ target_compile_options(mapsc PRIVATE
 # ------------------------- MAPSCi ------------------------
 
 add_executable(mapsci
+    src/mapsci/init_llvm.cpp
+    src/mapsci/jit_manager.cpp
     src/mapsci/repl.cpp
     src/mapsci_main.cpp
 )

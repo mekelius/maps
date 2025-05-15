@@ -11,13 +11,14 @@
 
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 #include "llvm/IR/LLVMContext.h"
-#include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_os_ostream.h"
 
 #include "mapsc/logging.hh"
 #include "mapsc/loglevel_defs.hh"
 #include "mapsc/compiler_options.hh"
 
+#include "mapsci/init_llvm.hh"
+#include "mapsci/jit_manager.hh"
 #include "mapsci/repl.hh"
 
 
@@ -187,19 +188,21 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmParsers();
-    llvm::InitializeAllAsmPrinters();
-        
+    if (!init_llvm()) {
+        std::cerr << "initializing llvm failed" << std::endl;
+        return EXIT_FAILURE;
+    }
+
     auto ts_context = make_unique<llvm::orc::ThreadSafeContext>(make_unique<llvm::LLVMContext>());
     JIT_Manager jit{ts_context.get(), &error_stream};
 
-    if (!jit.is_good)
+    if (!jit.is_good) {
+        std::cerr << "initializing JIT failed" << std::endl;
         return EXIT_FAILURE;
+    }
 
-    if (!REPL{&jit, ts_context->getContext(), &error_stream, repl_options}.run())
+    // REPL logs its own failures
+    if (!REPL{&jit, ts_context->getContext(), &error_stream, repl_options}.run()) 
         return EXIT_FAILURE;
     
     return EXIT_SUCCESS;
