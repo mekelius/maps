@@ -7,7 +7,6 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/ast/operator.hh"
 
 namespace Maps {
 
@@ -79,52 +78,6 @@ public:
 private:
     std::optional<const Type*> declared_type_;
     std::optional<const Type*> type_;
-};
-
-class Operator: public Callable {
-public:
-    static Operator create_binary(std::string_view name, CallableBody body, 
-        Precedence precedence, Associativity associativity, SourceLocation location);
-    
-    static Operator create_binary(std::string_view name, CallableBody body, const Type& type,
-        Precedence precedence, Associativity associativity, SourceLocation location);
-
-    constexpr Operator(std::string_view name, const External external, const Type& type, 
-        const OperatorProps& operator_props)
-    :Callable(name, external, type), operator_props_(operator_props) {}
-
-    Operator(std::string_view name, CallableBody body, const Type& type, 
-        OperatorProps operator_props, SourceLocation location)
-     :Callable(name, body, type, location), 
-      operator_props_(operator_props) {}
-
-    Operator(std::string_view name, CallableBody body, 
-        OperatorProps operator_props, SourceLocation location)
-     :Callable(name, body, location), operator_props_(operator_props) {}
-
-    Operator(const Operator& other) = default;
-    Operator& operator=(const Operator& other) = default;
-    virtual constexpr ~Operator() = default;
-
-    bool is_operator() const {
-        return true;
-    }
-
-    bool is_binary_operator() const {
-        return operator_props_.is_binary();
-    }
-
-    bool is_unary_operator() const {
-        return operator_props_.is_unary();
-    }
-
-    Precedence get_precedence() {
-        return operator_props_.precedence;
-    }
-
-    OperatorProps operator_props_;
-
-private:
 };
 
 } // namespace Maps

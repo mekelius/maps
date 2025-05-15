@@ -14,18 +14,6 @@ using Maps::GlobalLogger::log_error;
 
 namespace Maps {
 
-Operator Operator::create_binary(std::string_view name, CallableBody body, Precedence precedence, 
-    Associativity associativity, SourceLocation location) {
-
-    return Operator{name, body, OperatorProps::Binary(precedence, associativity), location};
-}
-
-Operator Operator::create_binary(std::string_view name, CallableBody body, const Type& type, 
-    Precedence precedence, Associativity associativity, SourceLocation location) {
-
-    return Operator{name, body, type, OperatorProps::Binary(precedence, associativity), location};
-}
-
 Callable Callable::testing_callable(const Type* type) {
     return Callable{"DUMMY_CALLABLE", External{}, *type, TEST_SOURCE_LOCATION};
 }
