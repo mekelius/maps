@@ -20,3 +20,4 @@
 - lexer constructor eats a single character from the input stream, which is not ideal
 - builtin function types are not constexpr
     - type registry should probably be global
+- reverse parse doesn't print string values quoted

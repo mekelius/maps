@@ -16,7 +16,6 @@ public:
     :name_(name),
      wrapped_type_(&wrapped_type) {}
 
-    virtual bool is_function() const { return true; } // These are impure functions
     virtual bool is_pure() const { return false; }
     virtual bool is_concrete() const { return wrapped_type_->is_concrete(); }
     virtual bool is_complex() const { return true; }
@@ -40,7 +39,6 @@ public:
     :name_(name),
      wrapped_type_(&wrapped_type) {}
 
-    virtual bool is_function() const { return true; } // These are impure functions
     virtual bool is_pure() const { return false; }
     virtual bool is_concrete() const { return wrapped_type_->is_concrete(); }
     virtual bool is_complex() const { return true; }
@@ -66,7 +64,7 @@ public:
     // std::string_view name_ = "IO";
     
     static IO_WrappedType apply(const Type& type_arg) {
-        return IO_WrappedType{"Void => " + type_arg.to_string(), type_arg};
+        return IO_WrappedType{"IO " + type_arg.to_string(), type_arg};
     }
 
     static constexpr CT_IO_WrappedType ct_apply(std::string_view name, const Type& type_arg) {

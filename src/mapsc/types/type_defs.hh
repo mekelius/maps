@@ -30,11 +30,11 @@ constexpr CT_Type NumberLiteral{ "NumberLiteral", &cast_from_NumberLiteral, &con
 constexpr CT_Type TestingType{ "TestingType", &not_castable, &not_concretizable };
 
 // These guys lie about their type to avoid the m-word
-constexpr auto IO_Int = IO_TypeConstructor::ct_apply("( Void => Int )", Int);
-constexpr auto IO_Boolean = IO_TypeConstructor::ct_apply("( Void => Boolean )", Boolean);
-constexpr auto IO_Float = IO_TypeConstructor::ct_apply("( Void => Float )", Float);
-constexpr auto IO_String = IO_TypeConstructor::ct_apply("( Void => String )", String);
-constexpr auto IO_Void = IO_TypeConstructor::ct_apply("( Void => Void )", Void);
+constexpr auto IO_Int = IO_TypeConstructor::ct_apply("IO Int", Int);
+constexpr auto IO_Boolean = IO_TypeConstructor::ct_apply("IO Boolean", Boolean);
+constexpr auto IO_Float = IO_TypeConstructor::ct_apply("IO Float", Float);
+constexpr auto IO_String = IO_TypeConstructor::ct_apply("IO String", String);
+constexpr auto IO_Void = IO_TypeConstructor::ct_apply("IO Void", Void);
 
 constexpr std::array<const Type*, 15> BUILTIN_TYPES {
     &Int, &Boolean, &Float, &String,
@@ -44,9 +44,9 @@ constexpr std::array<const Type*, 15> BUILTIN_TYPES {
     &TestingType
 };
 
-constexpr CTFunctionType<1> String_to_IO_Void{ "( String => Void )", &IO_Void, {&String}, false };
-constexpr CTFunctionType<2> IntInt_to_Int{ "( Int -> Int -> Int )", &Int, {&Int, &Int}, true };
-constexpr CTFunctionType<2> FloatFloat_to_Float{ "( Float -> Float -> Float )", &Float, {&Float, &Float}, true };
+constexpr CTFunctionType<1> String_to_IO_Void{ "String => IO Void", &IO_Void, {&String}, false };
+constexpr CTFunctionType<2> IntInt_to_Int{ "Int -> Int -> Int", &Int, {&Int, &Int}, true };
+constexpr CTFunctionType<2> FloatFloat_to_Float{ "Float -> Float -> Float", &Float, {&Float, &Float}, true };
 constexpr std::array<const FunctionType*, 3> BUILTIN_FUNCTION_TYPES {
     &String_to_IO_Void,
     &IntInt_to_Int,

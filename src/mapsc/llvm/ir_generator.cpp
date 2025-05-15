@@ -249,7 +249,7 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
 
     optional<llvm::FunctionCallee> print = 
         function_store_->get("print", 
-            *maps_types_->get_function_type(Maps::Void, {entry_point_type}), false);
+            *maps_types_->get_function_type(Maps::IO_Void, {entry_point_type}), false);
 
     if (!print && entry_point_type->is_pure()) {
         fail("Type " + entry_point_type->to_string() + " is not printable (and has no side-effects)");
@@ -278,6 +278,20 @@ bool IR_Generator::handle_global_functions() {
     return true;
 }
 
+std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
+    const Maps::Callable& callable) {
+    
+    if (callable.get_type()->is_function())
+        return handle_function(callable);
+
+    if (const Expression* const* expression = std::get_if<Maps::Expression*>(&callable.body_)) {
+        return wrap_value_in_function(std::string{callable.name_}, **expression);
+    }
+
+    fail("In IR_Generator::handle_global_definition: callable didn't have a function type but wasn't an expression");
+    return nullopt;
+}
+
 std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
     const std::string& name, const Maps::Expression& expression) {
     
@@ -288,12 +302,11 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
         *maps_type->return_type(), maps_type->param_types());
 
     if (!llvm_type) {
-        fail("Converting \" Void -> " + maps_type->to_string() + "\" into an llvm type failed");
+        fail("Converting \"Void => " + maps_type->to_string() + "\" into an llvm type failed");
         return nullopt;
     }
     
     auto wrapper = function_definition(name, *maps_type, *llvm_type);
-
     auto value = handle_expression(expression);
 
     if (!value) {
@@ -301,23 +314,13 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
         return nullopt;
     }
 
-    builder_->CreateRet(*value);
-
-    return wrapper;
-}
-
-std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
-    const Maps::Callable& callable) {
-    
-    if (callable.get_type()->is_function())
-        return handle_function(callable);
-    
-    if (const Expression* const* expression = std::get_if<Maps::Expression*>(&callable.body_)) {
-        return wrap_value_in_function(std::string{callable.name_}, **expression);
+    if ((*value)->getType() != types_.void_t) {
+        builder_->CreateRet(*value);
+    } else {
+        builder_->CreateRetVoid();
     }
 
-    fail("In IR_Generator::handle_global_definition: callable didn't have a function type but wasn't an expression");
-    return nullopt;
+    return wrapper;
 }
 
 std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Callable& callable) {

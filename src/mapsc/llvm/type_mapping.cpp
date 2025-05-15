@@ -37,11 +37,16 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
 
     cmain_signature = llvm::FunctionType::get(int_t, {int_t, char_array_ptr_t}, false);
 
-    if (!insert(&Maps::Void,    void_t          ) ||
-        !insert(&Maps::Boolean, boolean_t       ) ||
-        !insert(&Maps::Int,     int_t           ) ||
-        !insert(&Maps::Float,   double_t        ) ||
-        !insert(&Maps::String,  char_array_ptr_t)
+    if (!insert(&Maps::Void,       void_t          ) ||
+        !insert(&Maps::Boolean,    boolean_t       ) ||
+        !insert(&Maps::Int,        int_t           ) ||
+        !insert(&Maps::Float,      double_t        ) ||
+        !insert(&Maps::String,     char_array_ptr_t) ||
+        !insert(&Maps::IO_Void,    void_t          ) ||
+        !insert(&Maps::IO_Boolean, boolean_t       ) ||
+        !insert(&Maps::IO_Int,     int_t           ) ||
+        !insert(&Maps::IO_Float,   double_t        ) ||
+        !insert(&Maps::IO_String,  char_array_ptr_t)
     ) {
         log_error("Inserting primitive types into TypeMap failed");
         is_good_ = false;

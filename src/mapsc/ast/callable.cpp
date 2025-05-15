@@ -47,6 +47,7 @@ Callable::Callable(CallableBody body, SourceLocation location)
 Callable::Callable(CallableBody body, const Type& type, SourceLocation location)
 : name_("anonymous callable"), body_(body), location_(location), type_(&type) {}
 
+// TODO: change to std::visitor
 const Type* Callable::get_type() const {
     switch (body_.index()) {
         case 0: // Undefined
