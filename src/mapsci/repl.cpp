@@ -140,14 +140,9 @@ bool REPL::run() {
         }
 
         if (options_.stop_after == Stage::layer1 ||
-            options_.stop_after == Stage::layer2
+            options_.stop_after == Stage::layer2 ||
+            options_.stop_after == Stage::layer3
         ) continue;
-
-        if (options_.print_reverse_parse) {
-            std::cerr << "parsed into:\n";
-            ReverseParser{&std::cout} << *compilation_state;
-            std::cerr << "\n" << std::endl;
-        }
 
         unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
         unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), 
@@ -349,6 +344,8 @@ void REPL::update_parse_options() {
     parse_options_.ignore_errors = options_.ignore_errors;
     parse_options_.print_layer1 = options_.print_layer1;
     parse_options_.print_layer2 = options_.print_layer2;
+    parse_options_.print_layer3 = options_.print_layer3;
+
     parse_options_.ignore_errors = options_.ignore_errors;
 
     if (options_.stop_after == Stage::layer1) {
@@ -358,6 +355,11 @@ void REPL::update_parse_options() {
 
     if (options_.stop_after == Stage::layer2) {
         parse_options_.stop_after = CompilationLayer::layer2;
+        return;
+    }
+
+    if (options_.stop_after == Stage::layer3) {
+        parse_options_.stop_after = CompilationLayer::layer3;
         return;
     }
 

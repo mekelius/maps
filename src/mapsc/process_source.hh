@@ -18,7 +18,7 @@ class TypeStore;
 enum class CompilationLayer {
     layer1,
     layer2,
-    post_layer_2,
+    layer3,
     done,
 };
 

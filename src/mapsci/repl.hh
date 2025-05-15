@@ -47,6 +47,7 @@ public:
     enum class Stage {
         layer1,
         layer2,
+        layer3,
         ir,
         done
     };
@@ -54,7 +55,7 @@ public:
     struct Options {
         bool print_layer1 = false;
         bool print_layer2 = false;
-        bool print_reverse_parse = false;
+        bool print_layer3 = false;
         bool print_ir = false;
         
         bool eval = true;

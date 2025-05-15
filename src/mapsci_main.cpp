@@ -118,13 +118,13 @@ int main(int argc, char* argv[]) {
             repl_options.print_ir = true;
             
         } else if (key == "--no-ir" || key == "--no-codegen") {
-            repl_options.stop_after = std::min(REPL::Stage::layer2, repl_options.stop_after);
+            repl_options.stop_after = std::min(REPL::Stage::layer3, repl_options.stop_after);
 
         } else if(key == "--no-eval") {
             repl_options.eval = false;
 
-        } else if(key == "--parsed" || key == "--print-parsed" || key == "--reverse-parse") {
-            repl_options.print_reverse_parse = true;
+        } else if(key == "--layer3" || key == "--print-layer3" || key == "--pre-ir" || key == "--print-pre-ir" || key == "--reverse-parse") {
+            repl_options.print_layer3 = true;
 
         } else if(key == "--quit-on-error" || key == "--exit-on-error") {
             repl_options.quit_on_error = true;
@@ -141,6 +141,9 @@ int main(int argc, char* argv[]) {
 
             } else if (value == "layer2") {
                 repl_options.stop_after = REPL::Stage::layer2;
+
+            } else if (value == "layer3") {
+                repl_options.stop_after = REPL::Stage::layer3;
 
             } else if(value == "ir") {
                 repl_options.stop_after = REPL::Stage::ir;
