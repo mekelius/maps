@@ -88,7 +88,7 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the ca
 
     Expression arg{ExpressionType::value, TSL, "5", &Number};
     Expression call{ExpressionType::call, TSL, CallExpressionValue{&const_Int, {&arg}}};
-    call.type = dynamic_cast<const FunctionType*>(const_Int.get_type())->return_type_;
+    call.type = dynamic_cast<const FunctionType*>(const_Int.get_type())->return_type();
 
     CHECK(concretize(call));
     CHECK(call != value);

@@ -63,17 +63,10 @@ public:
      param_types_(param_types),
      is_pure_(is_pure) {}
 
-    std::string_view name() const {
-        return name_;
-    }
-    
-    virtual const Type* return_type() const {
-        return return_type_;
-    }
-
-    virtual std::span<const Type* const> param_types() const {
-        return param_types_;
-    }
+    virtual bool is_pure() const { return is_pure_; }
+    std::string_view name() const { return name_; }
+    virtual const Type* return_type() const { return return_type_; }
+    virtual std::span<const Type* const> param_types() const { return param_types_; }
 
     const std::string name_;
     const Type* return_type_;
@@ -91,17 +84,10 @@ public:
      param_types_(param_types),
      is_pure_(is_pure) {}
 
-    std::string_view name() const {
-        return name_;
-    }
-    
-    virtual const Type* return_type() const {
-        return return_type_;
-    }
-
-    virtual std::span<const Type* const> param_types() const {
-        return param_types_;
-    }
+    virtual bool is_pure() const { return is_pure_; }
+    std::string_view name() const { return name_; }
+    virtual const Type* return_type() const { return return_type_; }
+    virtual std::span<const Type* const> param_types() const { return param_types_; }
 
     const std::string_view name_;
     const Type* return_type_;

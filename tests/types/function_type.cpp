@@ -7,11 +7,11 @@ using namespace std;
 using namespace Maps;
 
 TEST_CASE("Should be able to create functiontype as CTFunctionType") {
-    CTFunctionType<2> test_ct_funtion_type{-1, &TestingType, {&TestingType, &Int}, true};
+    CTFunctionType<2> test_ct_funtion_type{"qwrteyutyttcy", &TestingType, {&TestingType, &Int}, true};
 
     FunctionType* ftp = &test_ct_funtion_type;
     CHECK(ftp->arity() == 2);
-    auto params = ftp->get_params();
+    auto params = ftp->param_types();
     CHECK(params.size() == 2);
 
     auto params_it = params.begin();

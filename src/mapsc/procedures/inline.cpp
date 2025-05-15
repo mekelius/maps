@@ -47,6 +47,9 @@ bool inline_call(Expression& expression, Callable& callable) {
 
     auto [callee, args] = expression.call_value();
     
+    if (callable.get_type()->is_impure())
+        return false;
+
     if (args.empty()) {
         log_info("Changed nullary call back to a reference", 
             MessageType::post_parse_debug, expression.location);

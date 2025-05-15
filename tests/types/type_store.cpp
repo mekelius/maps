@@ -14,9 +14,9 @@ TEST_CASE("Should be able to create a non-existent function type based on signat
     SUBCASE("nullary function") {
         auto function_type = types.get_function_type(TestingType, {}, true);
         CHECK(function_type->arity() == 0);
-        CHECK(*function_type->return_type_ == TestingType);
+        CHECK(*function_type->return_type() == TestingType);
     
-        auto params = function_type->get_params();
+        auto params = function_type->param_types();
         
         CHECK(params.size() == 0);
     }
@@ -24,9 +24,9 @@ TEST_CASE("Should be able to create a non-existent function type based on signat
     SUBCASE("unary function") {
         auto function_type = types.get_function_type(TestingType, {&TestingType}, true);
         CHECK(function_type->arity() == 1);
-        CHECK(*function_type->return_type_ == TestingType);
+        CHECK(*function_type->return_type() == TestingType);
     
-        auto params = function_type->get_params();
+        auto params = function_type->param_types();
         
         CHECK(params.size() == 1);
         CHECK(**params.begin() == TestingType);
@@ -35,9 +35,9 @@ TEST_CASE("Should be able to create a non-existent function type based on signat
     SUBCASE("binary function") {
         auto function_type = types.get_function_type(TestingType, {&TestingType, &TestingType}, true);
         CHECK(function_type->arity() == 2);
-        CHECK(*function_type->return_type_ == TestingType);
+        CHECK(*function_type->return_type() == TestingType);
     
-        auto params = function_type->get_params();
+        auto params = function_type->param_types();
         
         CHECK(params.size() == 2);
         auto params_it = params.begin();
@@ -48,7 +48,8 @@ TEST_CASE("Should be able to create a non-existent function type based on signat
     }
 }
 
-const auto test_ct_function_type = CTFunctionType<1>{-1, &TestingType, {&TestingType}, false};
+const auto test_ct_function_type = 
+    CTFunctionType<1>{"asronasroi", &TestingType, {&TestingType}, false};
 
 const std::array<const FunctionType*, 1> test_builtin_function_types = {
     &test_ct_function_type
