@@ -45,10 +45,11 @@
 #include "mapsc/ast/statement.hh"
 
 using llvm::LLVMContext;
-using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;
+using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if;
+using std::unique_ptr, std::make_unique;
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
-using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, Maps::StatementType, 
-    Maps::PragmaStore;
+using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, 
+    Maps::StatementType, Maps::PragmaStore;
 using Maps::Helpers::capitalize;
 using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
@@ -81,7 +82,8 @@ std::string create_internal_name(const std::string& name, const Maps::FunctionTy
 // ----- IR GENERATOR -----
 
 IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module,
-    const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream, Options options)
+    const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream, 
+    Options options)
 :errs_(error_stream),
  context_(context),
  module_(module),
@@ -161,10 +163,12 @@ void IR_Generator::fail(const std::string& message) {
 }
 
 optional<llvm::Function*> IR_Generator::function_definition(const std::string& name, 
-    const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, llvm::Function::LinkageTypes linkage) {
+    const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
+    llvm::Function::LinkageTypes linkage) {
 
     if (!ast_type.is_function()) {
-        log_error("IR::Generator::function_definition called with a non-function type: " + ast_type.to_string());
+        log_error("IR::Generator::function_definition called with a non-function type: " + 
+            ast_type.to_string());
         assert(false && "IR_Generator::function_definition called with non-function ast type");
         return nullopt;
     }
@@ -178,7 +182,9 @@ optional<llvm::Function*> IR_Generator::function_definition(const std::string& n
 }
 
 // ??? how to do recursion?
-bool IR_Generator::close_function_definition(const llvm::Function& function, llvm::Value* return_value) {
+bool IR_Generator::close_function_definition(const llvm::Function& function, 
+    llvm::Value* return_value) {
+    
     if (return_value) {
         builder_->CreateRet(return_value);
     } else {
@@ -272,7 +278,9 @@ bool IR_Generator::handle_global_functions() {
     return true;
 }
 
-std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(const std::string& name, const Maps::Expression& expression) {
+std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
+    const std::string& name, const Maps::Expression& expression) {
+    
     const Maps::FunctionType* maps_type = 
         maps_types_->get_function_type(*expression.type, {});
 
@@ -323,7 +331,8 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Ca
         *function_type->return_type(), function_type->param_types());
 
     if (!signature) {
-        log_error("unable to convert type signature for " + std::string{callable.name_}, callable.location_);
+        log_error("unable to convert type signature for " + 
+            std::string{callable.name_}, callable.location_);
         return nullopt;
     }
 
@@ -395,8 +404,8 @@ bool IR_Generator::handle_block(const Statement& statement, bool repl_top_level)
     return true;
 }
 
-std::optional<llvm::Value*> IR_Generator::handle_expression_statement(const Maps::Statement& statement, 
-    bool repl_top_level) {
+std::optional<llvm::Value*> IR_Generator::handle_expression_statement(
+    const Maps::Statement& statement, bool repl_top_level) {
     
     assert(statement.statement_type == StatementType::expression_statement && 
         "IR_Generator::handle_expression_statement called with non-expression statement");
@@ -411,7 +420,8 @@ std::optional<llvm::Value*> IR_Generator::handle_expression_statement(const Maps
         return value;
 
     optional<llvm::FunctionCallee> print = 
-        function_store_->get("print", *maps_types_->get_function_type(Maps::Void, {expression->type}));
+        function_store_->get("print", *maps_types_->get_function_type(
+            Maps::Void, {expression->type}));
 
     if (!print) {
         fail("no print function for top level expression");
@@ -506,12 +516,14 @@ optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression)
         case Maps::Int_ID:
             assert(std::holds_alternative<maps_Int>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
-            return llvm::ConstantInt::get(*context_, llvm::APInt(64, std::get<maps_Int>(expression.value)));
+            return llvm::ConstantInt::get(*context_, 
+                llvm::APInt(64, std::get<maps_Int>(expression.value)));
 
         case Maps::Float_ID:
             assert(std::holds_alternative<maps_Float>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
-            return llvm::ConstantFP::get(*context_, llvm::APFloat(std::get<maps_Float>(expression.value)));
+            return llvm::ConstantFP::get(*context_, 
+                llvm::APFloat(std::get<maps_Float>(expression.value)));
 
         case Maps::String_ID:
             assert(std::holds_alternative<std::string>(expression.value) && 
@@ -521,7 +533,8 @@ optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression)
         case Maps::Boolean_ID:
             assert(std::holds_alternative<bool>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
-            return llvm::ConstantInt::get(*context_, llvm::APInt(1, std::get<bool>(expression.value)));
+            return llvm::ConstantInt::get(*context_, 
+                llvm::APInt(8, std::get<bool>(expression.value)));
 
         default:
             fail("Unable to create a value from type " + expression.type->to_string());

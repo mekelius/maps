@@ -112,18 +112,7 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
         }
     }
 
-    if (callee_type->is_function()) {
-        auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
-
-        // reject impure functions (maybe we can get llvm to inline them?)
-        if (!callee_f_type->is_pure()) {
-            log_info("Impure functions aren't yet inlinable", 
-                MessageType::post_parse_debug, expression.location);
-            return false;
-        }
-
-        // --- pure function ---
-
+    if (callee_type->is_pure_function()) {
         // check if what we want is a function
         if (expression.declared_type) {
             if (**expression.declared_type == **callee_declared_type || 
@@ -131,9 +120,16 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
                     return perform_substitution(expression, callee);
         }
 
-        if (callee_f_type->arity() == 0)
+        if (callee_type->arity() == 0)
             return perform_substitution(expression, callee);
 
+        return false;
+    }
+
+    // reject impure functions (maybe we can get llvm to inline them?)
+    if (callee_type->is_impure_function()) {
+        log_info("Impure functions aren't yet inlinable", 
+            MessageType::post_parse_debug, expression.location);
         return false;
     }
 

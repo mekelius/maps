@@ -269,12 +269,17 @@ std::string TermedExpressionValue::to_string() const {
     return output.str();
 }
 
-Expression* create_string_literal(AST_Store& store, const std::string& value, SourceLocation location) {
+Expression* create_string_literal(AST_Store& store, const std::string& value, 
+    SourceLocation location) {
+    
     return store.allocate_expression({ExpressionType::string_literal, location, value, &String});
 }
 
-Expression* create_numeric_literal(AST_Store& store, const std::string& value, SourceLocation location) {
-    return store.allocate_expression({ExpressionType::numeric_literal, location, value, &NumberLiteral});
+Expression* create_numeric_literal(AST_Store& store, const std::string& value, 
+    SourceLocation location) {
+    
+    return store.allocate_expression(
+        {ExpressionType::numeric_literal, location, value, &NumberLiteral});
 }
 
 Expression* create_identifier_expression(CompilationState& state, const std::string& value, 
@@ -298,14 +303,14 @@ Expression* create_type_identifier_expression(CompilationState& state,
 Expression* create_operator_identifier_expression(CompilationState& state, const std::string& value, 
     SourceLocation location) {
     
-    Expression* expression = state.ast_store_->allocate_expression({ExpressionType::operator_identifier, 
-        location, value, &Hole});
+    Expression* expression = state.ast_store_->allocate_expression(
+        {ExpressionType::operator_identifier, location, value, &Hole});
     state.unresolved_identifiers_.push_back(expression);
     return expression;
 }
 
-Expression* create_type_operator_identifier_expression(CompilationState& state, const std::string& value, 
-    SourceLocation location) {
+Expression* create_type_operator_identifier_expression(
+    CompilationState& state, const std::string& value, SourceLocation location) {
     
     Expression* expression = state.ast_store_->allocate_expression({
         ExpressionType::type_operator_identifier, location, value, &Void});
@@ -320,8 +325,11 @@ Expression* create_termed_expression(AST_Store& store, std::vector<Expression*>&
         TermedExpressionValue{terms}, &Hole});
 }
 
-Expression* create_reference_expression(AST_Store& store, Callable* callable, SourceLocation location) {
-    return store.allocate_expression({ExpressionType::reference, location, callable, callable->get_type()});
+Expression* create_reference_expression(AST_Store& store, Callable* callable, 
+    SourceLocation location) {
+    
+    return store.allocate_expression(
+        {ExpressionType::reference, location, callable, callable->get_type()});
 }
 
 Expression* create_type_reference(AST_Store& store, const Type* type, SourceLocation location) {
@@ -372,8 +380,8 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
             {ExpressionType::call, location, CallExpressionValue{callable, args}, return_type});
 
     if (args.size() > param_types.size()) {
-        log_error(std::string{callable->name_} + " takes a maximum of " + to_string(param_types.size()) + 
-            " arguments, tried giving " + to_string(args.size()));
+        log_error(std::string{callable->name_} + " takes a maximum of " + 
+            to_string(param_types.size()) + " arguments, tried giving " + to_string(args.size()));
         return nullopt;
     }
     // TODO: deal with partial calls
