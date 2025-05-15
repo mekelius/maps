@@ -28,7 +28,7 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
     char_array_13_t = llvm::ArrayType::get(char_t, 13);
     char_array_ptr_t = 
         llvm::PointerType::getUnqual(llvm::PointerType::getUnqual(char_t));
-    int_t = llvm::Type::getInt64Ty(context);
+    int_t = llvm::Type::getInt32Ty(context);
     double_t = llvm::Type::getDoubleTy(context);
     void_t = llvm::Type::getVoidTy(context);
     boolean_t = llvm::Type::getInt8Ty(context);

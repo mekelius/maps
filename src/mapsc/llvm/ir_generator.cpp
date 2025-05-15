@@ -492,7 +492,7 @@ llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
         assert(std::holds_alternative<maps_Int>(expression.value) && 
             "type on expression didn't match value");
         return llvm::ConstantInt::get(*context_, 
-            llvm::APInt(64, std::get<maps_Int>(expression.value), true));
+            llvm::APInt(32, std::get<maps_Int>(expression.value), true));
 
     } else if (*expression.type == Maps::Float) {
         return llvm::ConstantFP::get(*context_, 
@@ -520,7 +520,7 @@ optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression)
             assert(std::holds_alternative<maps_Int>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
             return llvm::ConstantInt::get(*context_, 
-                llvm::APInt(64, std::get<maps_Int>(expression.value)));
+                llvm::APInt(32, std::get<maps_Int>(expression.value)));
 
         case Maps::Float_ID:
             assert(std::holds_alternative<maps_Float>(expression.value) && 

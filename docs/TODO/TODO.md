@@ -12,12 +12,8 @@
     - Type casts and simple type declarations
     - Arithmetic expressions
     - Function calls (and definitions)
-        - inlining
         - pure function inlining as substitution
             - imperative pure function return value expression construction
-    - static typing
-        - type checking
-        - type concretization
     - Blocks and parentheses
     - if, for etc.
     - polymorphic function definitions
@@ -32,7 +28,6 @@
     - clean up IR_Generator
     - what to do with ast nodes?
         - how to convert between statements and expressions in-place
-    - create some sort of "compilation state" object to hold stuff that doen't belong to ast_store
 
 #### Accumulated tweaks
 
@@ -68,7 +63,7 @@
 
 ## Planned for later
 
-#### architectural things
+#### big things
 
 - Line-end real-estate
 - Combine asts
