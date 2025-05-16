@@ -18,7 +18,7 @@ inline tuple<Expression*, Callable*> create_operator_helper(CompilationState& st
     Callable* op_callable = state.ast_store_->allocate_operator(
         Operator::create_binary(op_string, External{}, *type, precedence, Associativity::left, TSL));
 
-    Expression* op_ref = create_operator_ref(*state.ast_store_, op_callable, {0,0});
+    Expression* op_ref = Expression::operator_ref(*state.ast_store_, op_callable, {0,0});
 
     return {op_ref, op_callable};
 }
@@ -74,12 +74,12 @@ void prime_terms(auto expr, const string& input, auto op1_ref, auto op2_ref,
 TEST_CASE("TermedExpressionParser should replace a single value term with that value") {
     auto [state, _0, _1] = CompilationState::create_test_state();
 
-    Expression* expr = create_termed_expression(*state.ast_store_, {}, {0,0});
+    Expression* expr = Expression::termed(*state.ast_store_, {}, {0,0});
 
     REQUIRE(expr->terms().size() == 0);
 
     SUBCASE("String value") {
-        Expression* value = create_string_literal(*state.ast_store_, "TEST_STRING:oasrpkorsapok", {0,0});
+        Expression* value = Expression::string_literal(*state.ast_store_, "TEST_STRING:oasrpkorsapok", {0,0});
         expr->terms().push_back(value);
         TermedExpressionParser{&state, expr}.run();
 
@@ -88,7 +88,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
     }
 
     SUBCASE("Number value") {
-        Expression* value = create_numeric_literal(*state.ast_store_, "234.52", {0,0});
+        Expression* value = Expression::numeric_literal(*state.ast_store_, "234.52", {0,0});
         expr->terms().push_back(value);
         TermedExpressionParser{&state, expr}.run();
 
@@ -101,10 +101,10 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
     auto [state, _0, _1] = CompilationState::create_test_state();
     auto ast = state.ast_store_.get();
 
-    Expression* expr = create_termed_expression(*ast, {}, {0,0});
+    Expression* expr = Expression::termed(*ast, {}, {0,0});
 
-    Expression* val1 = create_numeric_literal(*ast, "23", {0,0});
-    Expression* val2 = create_numeric_literal(*ast, "12", {0,0});
+    Expression* val1 = Expression::numeric_literal(*ast, "23", {0,0});
+    Expression* val2 = Expression::numeric_literal(*ast, "12", {0,0});
 
     // create the operator
     auto [op1_ref, op1] = create_operator_helper(state, "+");
@@ -130,7 +130,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         auto [op2_ref, op2] = create_operator_helper(state, "*", 1);
         expr->terms().push_back(op2_ref);
 
-        Expression* val3 = create_numeric_literal(*ast, "235", {0,0});
+        Expression* val3 = Expression::numeric_literal(*ast, "235", {0,0});
         expr->terms().push_back(val3);
 
         TermedExpressionParser{&state, expr}.run();
@@ -161,7 +161,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         auto [op2_ref, op2] = create_operator_helper(state, "*", 999);
         expr->terms().push_back(op2_ref);
 
-        Expression* val3 = create_numeric_literal(*ast, "235", {0,0});
+        Expression* val3 = Expression::numeric_literal(*ast, "235", {0,0});
 
         expr->terms().push_back(val3);
 
@@ -192,12 +192,12 @@ TEST_CASE ("should handle more complex expressions") {
     auto [state, _0, _1] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
-    Expression* expr = create_termed_expression(ast, {}, {0,0});
+    Expression* expr = Expression::termed(ast, {}, {0,0});
 
     auto [op1_ref, op1] = create_operator_helper(state, "1", 1);
     auto [op2_ref, op2] = create_operator_helper(state, "2", 2);
     auto [op3_ref, op3] = create_operator_helper(state, "3", 3);
-    Expression* val = create_numeric_literal(ast, "v", {0,0});
+    Expression* val = Expression::numeric_literal(ast, "v", {0,0});
 
     REQUIRE(expr->terms().size() == 0);
 
@@ -232,7 +232,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     auto [state, _0, types] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
-    Expression* expr = create_termed_expression(ast, {}, {0,0});
+    Expression* expr = Expression::termed(ast, {}, {0,0});
     
     SUBCASE("1 arg") {    
         const Type* function_type = types->get_function_type(Void, {&String});
@@ -240,8 +240,8 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         Callable function{"test_f", External{}, *function_type, TSL};
         state.globals_->create_identifier(&function);
 
-        Expression* id = create_reference_expression(ast, &function, {0,0});
-        Expression* arg1 = create_string_literal(ast, "", {0,0});
+        Expression* id = Expression::reference(ast, &function, {0,0});
+        Expression* arg1 = Expression::string_literal(ast, "", {0,0});
 
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
@@ -260,13 +260,13 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
             {&String, &String, &String, &String});
         
         Callable function{"test_f", External{}, *function_type, TSL};
-        Expression* id{create_reference_expression(ast, &function, {0,0})};
+        Expression* id{Expression::reference(ast, &function, {0,0})};
         id->type = function_type;
     
-        Expression* arg1 = create_string_literal(ast, "", {0,0});
-        Expression* arg2 = create_string_literal(ast, "", {0,0});
-        Expression* arg3 = create_string_literal(ast, "", {0,0});
-        Expression* arg4 = create_string_literal(ast, "", {0,0});
+        Expression* arg1 = Expression::string_literal(ast, "", {0,0});
+        Expression* arg2 = Expression::string_literal(ast, "", {0,0});
+        Expression* arg3 = Expression::string_literal(ast, "", {0,0});
+        Expression* arg4 = Expression::string_literal(ast, "", {0,0});
 
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
@@ -291,9 +291,9 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Type* function_type = types->get_function_type(Number, {&String}, true);
         
         Callable function{"test_f", External{}, *function_type, TSL};
-        Expression* ref = create_reference_expression(ast, &function, {0,0});
+        Expression* ref = Expression::reference(ast, &function, {0,0});
 
-        Expression* arg1 = create_string_literal(ast, "", {0,0});
+        Expression* arg1 = Expression::string_literal(ast, "", {0,0});
 
         expr->terms().push_back(ref);
         expr->terms().push_back(arg1);
@@ -309,10 +309,10 @@ TEST_CASE("Should handle partial application of binary operators") {
     AST_Store& ast = *state.ast_store_;
 
     auto [op_ref, op] = create_operator_helper(state, "-");
-    auto val = create_numeric_literal(ast, "34", {0,0});
+    auto val = Expression::numeric_literal(ast, "34", {0,0});
 
     SUBCASE("right") {
-        Expression* expr = create_termed_expression(ast, {op_ref, val}, {0,0});
+        Expression* expr = Expression::termed(ast, {op_ref, val}, {0,0});
         
         TermedExpressionParser{&state, expr}.run();
         
@@ -324,7 +324,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     }
 
     SUBCASE("left") {
-        Expression* expr = create_termed_expression(ast, {val, op_ref}, {0,0});
+        Expression* expr = Expression::termed(ast, {val, op_ref}, {0,0});
         
         TermedExpressionParser{&state, expr}.run();
         
@@ -341,13 +341,13 @@ TEST_CASE("Should set the type on a non-partial call expression to the return ty
 
     const FunctionType* IntString = types->get_function_type(String, {&Int}, false);
 
-    auto test_f_expr = Expression{ExpressionType::value, TSL, "qwe", IntString};
+    auto test_f_expr = Expression{ExpressionType::value, "qwe", IntString, TSL};
     auto test_f = Callable("test_f", &test_f_expr, TSL);
 
-    auto arg = Expression{ExpressionType::numeric_literal, TSL, "3", &NumberLiteral};
-    auto reference = create_reference_expression(ast, &test_f, TSL);
+    auto arg = Expression{ExpressionType::numeric_literal, "3", &NumberLiteral, TSL};
+    auto reference = Expression::reference(ast, &test_f, TSL);
 
-    auto expr = create_termed_expression(ast, {reference, &arg}, TSL);
+    auto expr = Expression::termed(ast, {reference, &arg}, TSL);
 
     TermedExpressionParser{&state, expr}.run();
 
@@ -364,16 +364,16 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
 
     const FunctionType* IntString = types->get_function_type(String, {&Int, &Int}, false);
 
-    auto test_op_expr = Expression{ExpressionType::value, TSL, "jii", IntString};
+    auto test_op_expr = Expression{ExpressionType::value, "jii", IntString, TSL};
     auto test_op = Operator::create_binary(">=?", &test_op_expr, 5, 
         Associativity::left, TSL);
 
-    auto lhs = Expression{ExpressionType::numeric_literal, TSL, "3", &NumberLiteral};
-    auto rhs = Expression{ExpressionType::numeric_literal, TSL, "7", &NumberLiteral};
+    auto lhs = Expression{ExpressionType::numeric_literal, "3", &NumberLiteral, TSL};
+    auto rhs = Expression{ExpressionType::numeric_literal, "7", &NumberLiteral, TSL};
 
-    auto reference = create_operator_ref(ast, &test_op, TSL);
+    auto reference = Expression::operator_ref(ast, &test_op, TSL);
 
-    auto expr = create_termed_expression(ast, {&lhs, reference, &rhs}, TSL);
+    auto expr = Expression::termed(ast, {&lhs, reference, &rhs}, TSL);
 
     TermedExpressionParser{&state, expr}.run();
 
@@ -386,12 +386,12 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
 TEST_CASE("Layer2 should handle type specifiers") {
     auto [state, _0, types] = CompilationState::create_test_state();
 
-    auto type_specifier = Expression{ExpressionType::type_reference, TSL, &Int};
-    auto value = Expression{ExpressionType::string_literal, TSL, "32", &String};
+    auto type_specifier = Expression{ExpressionType::type_reference, &Int, TSL};
+    auto value = Expression{ExpressionType::string_literal, "32", &String, TSL};
 
     SUBCASE("Int \"32\"") {
-        auto expr = Expression{ExpressionType::termed_expression, TSL, 
-            TermedExpressionValue{{&type_specifier, &value}, db_false}};
+        auto expr = Expression{ExpressionType::termed_expression, 
+            TermedExpressionValue{{&type_specifier, &value}, db_false}, TSL};
 
         TermedExpressionParser{&state, &expr}.run();
 
@@ -409,10 +409,10 @@ TEST_CASE("Layer2 should handle type specifiers") {
         auto op = Operator{"+", External{}, *types->get_function_type(Int, {&Int, &Int}),
             OperatorProps{UnaryFixity::none, BinaryFixity::infix}, TSL};
         
-        auto op_ref = Expression{ExpressionType::binary_operator_reference, TSL, &op};
-        auto rhs = Expression{ExpressionType::numeric_literal, TSL, "987"};
-        auto expr = Expression{ExpressionType::termed_expression, TSL, 
-            TermedExpressionValue{{&type_specifier, &value, &op_ref, &rhs}, db_false}};
+        auto op_ref = Expression{ExpressionType::binary_operator_reference, &op, TSL};
+        auto rhs = Expression{ExpressionType::numeric_literal, "987", TSL};
+        auto expr = Expression{ExpressionType::termed_expression, 
+            TermedExpressionValue{{&type_specifier, &value, &op_ref, &rhs}, db_false}, TSL};
 
         TermedExpressionParser{&state, &expr}.run();
 

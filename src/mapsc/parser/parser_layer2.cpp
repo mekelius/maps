@@ -150,7 +150,7 @@ bool is_value_literal(Expression* expression) {
 Expression* TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
         fail("layer2 tried to parse an empty expression", expression_->location);
-        return create_valueless_expression(*ast_store_, ExpressionType::syntax_error, expression_->location);
+        return Expression::valueless(*ast_store_, ExpressionType::syntax_error, expression_->location);
     }
 
     // safe to unwrap because at_expression_end was checked above
@@ -209,7 +209,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
 
     if (!compilation_state_->is_valid) {
         log_error("parsing termed expression failed", expression_->location);
-        return create_valueless_expression(*ast_store_, ExpressionType::syntax_error, expression_->location);
+        return Expression::valueless(*ast_store_, ExpressionType::syntax_error, expression_->location);
     }
 
     if (!at_expression_end()) {
@@ -349,11 +349,11 @@ void TermedExpressionParser::initial_binary_operator_state() {
 
             // TODO: handle precedence here
             // it's a binary operator being partially applied
-            Expression* missing_argument = create_missing_argument(*ast_store_, op->location,
+            Expression* missing_argument = Expression::missing_argument(*ast_store_, op->location,
                 *dynamic_cast<const FunctionType*>(op->type)->param_types().begin());
 
             auto call =
-                create_call_expression(*ast_store_, expression_->location,
+                Expression::call(*ast_store_, expression_->location,
                     op->reference_value(), { missing_argument, rhs });
             
             if (!call)
@@ -389,7 +389,7 @@ void TermedExpressionParser::initial_binary_operator_state() {
                         current_term()->operator_reference_value()->get_type())
                             ->param_type(1);
                 return push_partial_call(*pop_term(), 
-                    {create_missing_argument(*ast_store_, location, *missing_arg_type), *value});
+                    {Expression::missing_argument(*ast_store_, location, *missing_arg_type), *value});
             }
             return fail("unary operator failed to produce a value", location);
         }
@@ -412,7 +412,7 @@ void TermedExpressionParser::initial_binary_operator_state() {
 void TermedExpressionParser::initial_prefix_operator_state() {
     if (at_expression_end()) {
         auto op = *pop_term();
-        return parse_stack_.push_back(create_reference_expression(
+        return parse_stack_.push_back(Expression::reference(
             *ast_store_, op->operator_reference_value(), op->location));
     }
 
@@ -431,11 +431,11 @@ void TermedExpressionParser::initial_prefix_operator_state() {
 
             // TODO: handle precedence here
             // it's a binary operator being partially applied
-            Expression* missing_argument = create_missing_argument(*ast_store_, op->location,
+            Expression* missing_argument = Expression::missing_argument(*ast_store_, op->location,
                 *dynamic_cast<const FunctionType*>(op->type)->param_types().begin());
 
             auto call =
-                create_call_expression(*ast_store_, expression_->location,
+                Expression::call(*ast_store_, expression_->location,
                     op->reference_value(), { missing_argument, rhs });
             
             if (!call)
@@ -453,7 +453,7 @@ void TermedExpressionParser::initial_prefix_operator_state() {
 void TermedExpressionParser::initial_postfix_operator_state() {
     if (at_expression_end()) {
         auto op = *pop_term();
-        return parse_stack_.push_back(create_reference_expression(
+        return parse_stack_.push_back(Expression::reference(
             *ast_store_, op->operator_reference_value(), op->location));
     }
 
@@ -514,10 +514,10 @@ void TermedExpressionParser::post_binary_operator_state() {
         }
 
         auto missing_arg_type = *dynamic_cast<const FunctionType*>(op_type)->param_types().begin();
-        Expression* missing_argument = create_missing_argument(*ast_store_, op->location,
+        Expression* missing_argument = Expression::missing_argument(*ast_store_, op->location,
             missing_arg_type);
 
-        auto call = create_call_expression(*ast_store_, lhs->location, op->reference_value(), 
+        auto call = Expression::call(*ast_store_, lhs->location, op->reference_value(), 
             {lhs, missing_argument});
 
         if (!call)
@@ -661,7 +661,7 @@ void TermedExpressionParser::reduce_operator_left() {
         "TermedExpressionParser::reduce_operator_left called with a call stack \
 where operator didn't hold a reference to a callable");
 
-    auto reduced = create_call_expression(*ast_store_, lhs->location,
+    auto reduced = Expression::call(*ast_store_, lhs->location,
         std::get<Callable*>(operator_->value), {lhs, rhs});
 
     if (!reduced)
@@ -747,7 +747,7 @@ void TermedExpressionParser::push_partial_call(Expression* callee_ref,
 void TermedExpressionParser::push_partial_call(Expression* callee_ref, 
     const std::vector<Expression*>& args, SourceLocation location) {
     
-    auto call = create_call_expression(*ast_store_, location, 
+    auto call = Expression::call(*ast_store_, location, 
         callee_ref->reference_value(), args);
     
     if (!call)
@@ -760,7 +760,7 @@ void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, 
     auto location = 
         operator_ref->operator_reference_value()->operator_props_.unary_fixity == UnaryFixity::prefix ?
             operator_ref->location : value->location;
-    auto call = create_call_expression(*ast_store_, location, 
+    auto call = Expression::call(*ast_store_, location, 
         operator_ref->reference_value(), { value });
             
     if (!call)
@@ -806,7 +806,7 @@ void TermedExpressionParser::call_expression_state() {
         }
     }
 
-    auto call_expression = create_call_expression(*ast_store_, reference->location,
+    auto call_expression = Expression::call(*ast_store_, reference->location,
         std::get<Callable*>(reference->value), args);
     
     if (!call_expression)
@@ -883,12 +883,12 @@ Expression* TermedExpressionParser::handle_arg_state(Callable* callee, const std
 }
 
 Expression* TermedExpressionParser::binary_minus_ref(SourceLocation location) {
-    return create_operator_ref(
+    return Expression::operator_ref(
         *ast_store_, compilation_state_->special_callables_.binary_minus, location);
 }
 
 Expression* TermedExpressionParser::unary_minus_ref(SourceLocation location) {
-    return create_operator_ref(
+    return Expression::operator_ref(
         *ast_store_, compilation_state_->special_callables_.unary_minus, location);
 }
 

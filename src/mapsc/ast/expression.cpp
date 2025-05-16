@@ -287,74 +287,74 @@ std::string TermedExpressionValue::to_string() const {
     return output.str();
 }
 
-Expression* create_string_literal(AST_Store& store, const std::string& value, 
+Expression* Expression::string_literal(AST_Store& store, const std::string& value, 
     SourceLocation location) {
     
-    return store.allocate_expression({ExpressionType::string_literal, location, value, &String});
+    return store.allocate_expression({ExpressionType::string_literal, value, &String, location});
 }
 
-Expression* create_numeric_literal(AST_Store& store, const std::string& value, 
+Expression* Expression::numeric_literal(AST_Store& store, const std::string& value, 
     SourceLocation location) {
     
     return store.allocate_expression(
-        {ExpressionType::numeric_literal, location, value, &NumberLiteral});
+        {ExpressionType::numeric_literal, value, &NumberLiteral, location});
 }
 
-Expression* create_identifier_expression(CompilationState& state, const std::string& value, 
+Expression* Expression::identifier(CompilationState& state, const std::string& value, 
     SourceLocation location) {
     
     Expression* expression = state.ast_store_->allocate_expression(
-        {ExpressionType::identifier, location, value, &Hole});
+        {ExpressionType::identifier, value, &Hole, location});
     state.unresolved_identifiers_.push_back(expression);
     return expression;
 }
 
-Expression* create_type_identifier_expression(CompilationState& state, 
+Expression* Expression::type_identifier(CompilationState& state, 
     const std::string& value, SourceLocation location) {
     
     Expression* expression = state.ast_store_->allocate_expression(
-        {ExpressionType::type_identifier, location, value, &Hole});
+        {ExpressionType::type_identifier, value, &Hole, location});
     state.unresolved_identifiers_.push_back(expression);
     return expression;
 }
 
-Expression* create_operator_identifier_expression(CompilationState& state, const std::string& value, 
+Expression* Expression::operator_identifier(CompilationState& state, const std::string& value, 
     SourceLocation location) {
     
     Expression* expression = state.ast_store_->allocate_expression(
-        {ExpressionType::operator_identifier, location, value, &Hole});
+        {ExpressionType::operator_identifier, value, &Hole, location});
     state.unresolved_identifiers_.push_back(expression);
     return expression;
 }
 
-Expression* create_type_operator_identifier_expression(
+Expression* Expression::type_operator_identifier(
     CompilationState& state, const std::string& value, SourceLocation location) {
     
     Expression* expression = state.ast_store_->allocate_expression({
-        ExpressionType::type_operator_identifier, location, value, &Void});
+        ExpressionType::type_operator_identifier, value, &Void, location});
     state.unresolved_type_identifiers_.push_back(expression);
     return expression;
 }
 
-Expression* create_termed_expression(AST_Store& store, std::vector<Expression*>&& terms, 
+Expression* Expression::termed(AST_Store& store, std::vector<Expression*>&& terms, 
     SourceLocation location) {
     
-    return store.allocate_expression({ExpressionType::termed_expression, location, 
-        TermedExpressionValue{terms}, &Hole});
+    return store.allocate_expression({ExpressionType::termed_expression, 
+        TermedExpressionValue{terms}, &Hole, location});
 }
 
-Expression* create_reference_expression(AST_Store& store, Callable* callable, 
+Expression* Expression::reference(AST_Store& store, Callable* callable, 
     SourceLocation location) {
     
     return store.allocate_expression(
-        {ExpressionType::reference, location, callable, callable->get_type()});
+        {ExpressionType::reference, callable, callable->get_type(), location});
 }
 
-Expression* create_type_reference(AST_Store& store, const Type* type, SourceLocation location) {
-    return store.allocate_expression({ExpressionType::type_reference, location, type, &Void});
+Expression* Expression::type_reference(AST_Store& store, const Type* type, SourceLocation location) {
+    return store.allocate_expression({ExpressionType::type_reference, type, &Void, location});
 }
 
-Expression create_operator_ref(Callable* callable, SourceLocation location) {
+Expression Expression::operator_ref(Callable* callable, SourceLocation location) {
     assert(callable->is_operator() && "AST::create_operator_ref called with not an operator");
 
     ExpressionType expression_type;
@@ -371,31 +371,31 @@ Expression create_operator_ref(Callable* callable, SourceLocation location) {
             break;
     }
 
-    return {expression_type, location, callable, callable->get_type()};
+    return {expression_type, callable, callable->get_type(), location};
 }
 
-Expression* create_operator_ref(AST_Store& store, Callable* callable, SourceLocation location) {
-    return store.allocate_expression(create_operator_ref(callable, location));
+Expression* Expression::operator_ref(AST_Store& store, Callable* callable, SourceLocation location) {
+    return store.allocate_expression(operator_ref(callable, location));
 }
 
-void convert_to_operator_ref(Expression* expression, Callable* callable) {
-    auto declared_type = expression->declared_type;
-    *expression = create_operator_ref(callable, expression->location);
-    expression->declared_type = declared_type;
+void Expression::convert_to_operator_ref(Callable* callable) {
+    auto declared_type = this->declared_type;
+    *this = operator_ref(callable, location);
+    this->declared_type = declared_type;
 }
 
 // valueless expression types are tie, empty, syntax_error and not_implemented
-Expression* create_valueless_expression(AST_Store& store, ExpressionType expression_type, 
+Expression* Expression::valueless(AST_Store& store, ExpressionType expression_type, 
     SourceLocation location) {
     
-    return store.allocate_expression({expression_type, location, std::monostate{}, &Absurd});
+    return store.allocate_expression({expression_type, std::monostate{}, &Absurd, location});
 }
 
-Expression* create_missing_argument(AST_Store& store, SourceLocation location, const Type* type) {
-    return store.allocate_expression({ExpressionType::missing_arg, location, std::monostate{}, type});
+Expression* Expression::missing_argument(AST_Store& store, SourceLocation location, const Type* type) {
+    return store.allocate_expression({ExpressionType::missing_arg, std::monostate{}, type, location});
 }
 
-optional<Expression*> create_call_expression(AST_Store& store, SourceLocation location, 
+optional<Expression*> Expression::call(AST_Store& store, SourceLocation location, 
     Callable* callable, const std::vector<Expression*>& args) {
 
     auto callee_type = callable->get_type();
@@ -410,7 +410,7 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
 
     if (!callee_type->is_function())
         return store.allocate_expression(
-            {ExpressionType::call, location, CallExpressionValue{callable, args}, callee_type});
+            {ExpressionType::call, CallExpressionValue{callable, args}, callee_type, location});
 
     auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
     auto param_types = callee_f_type->param_types();
@@ -418,7 +418,7 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
 
     if (args.size() == param_types.size())
         return store.allocate_expression(
-            {ExpressionType::call, location, CallExpressionValue{callable, args}, return_type});
+            {ExpressionType::call, CallExpressionValue{callable, args}, return_type, location});
 
     if (args.size() > param_types.size()) {
         log_error(std::string{callable->name_} + " takes a maximum of " + 
@@ -436,9 +436,9 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
     // }
 }
 
-Expression* create_minus_sign(AST_Store& store, SourceLocation location) {
+Expression* Expression::minus_sign(AST_Store& store, SourceLocation location) {
     return store.allocate_expression(
-        Expression{ExpressionType::minus_sign, location, std::monostate{}});
+        Expression{ExpressionType::minus_sign, std::monostate{}, location});
 }
 
 Precedence get_operator_precedence(const Expression& operator_ref) {

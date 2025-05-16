@@ -12,9 +12,9 @@ using namespace Maps;
 TEST_CASE("Should be able to cast a string into Float") {
     Expression expr{
         ExpressionType::value,
-        TEST_SOURCE_LOCATION,
         "324.63",
-        &String
+        &String,
+        TEST_SOURCE_LOCATION,
     };
 
     CHECK(String.cast_to(&Float, expr));
@@ -26,9 +26,9 @@ TEST_CASE("Should be able to cast a string into Float") {
 TEST_CASE("Should be able to cast a Boolean into String") {
     Expression expr{
         ExpressionType::value,
-        TEST_SOURCE_LOCATION,
         true,
-        &Boolean
+        &Boolean,
+        TEST_SOURCE_LOCATION,
     };
 
     CHECK(Boolean.cast_to(&String, expr));
@@ -40,9 +40,9 @@ TEST_CASE("Should be able to cast a Boolean into String") {
 TEST_CASE("Should be able to cast an Int into Float") {
     Expression expr{
         ExpressionType::value,
-        TEST_SOURCE_LOCATION,
         324,
-        &Int
+        &Int,
+        TEST_SOURCE_LOCATION,
     };
 
     CHECK(Int.cast_to(&Float, expr));
@@ -54,9 +54,9 @@ TEST_CASE("Should be able to cast an Int into Float") {
 TEST_CASE("Should be able to cast a Float into String") {
     Expression expr{
         ExpressionType::value,
-        TEST_SOURCE_LOCATION,
         544.963,
-        &Float
+        &Float,
+        TEST_SOURCE_LOCATION,
     };
 
     CHECK(Float.cast_to(&String, expr));
@@ -68,9 +68,9 @@ TEST_CASE("Should be able to cast a Float into String") {
 TEST_CASE("Should be able to cast a Number with an int value into Float") {
     Expression expr{
         ExpressionType::value,
-        TEST_SOURCE_LOCATION,
         "999",
-        &Number
+        &Number,
+        TEST_SOURCE_LOCATION,
     };
 
     CHECK(Number.cast_to(&Float, expr));

@@ -53,8 +53,8 @@ BuiltinOperator::BuiltinOperator(std::string_view name, const Expression&& expre
 
 // ----- BUILTIN DEFINITIONS -----
 
-Builtin true_{"true", create_builtin_expression(true, Boolean)};
-Builtin false_{"false", create_builtin_expression(false, Boolean)};
+Builtin true_{"true", Expression::builtin(true, Boolean)};
+Builtin false_{"false", Expression::builtin(false, Boolean)};
 Builtin print{"print", External{}, String_to_IO_Void};
 
 // ----- BUILTINS SCOPE -----

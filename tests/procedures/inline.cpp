@@ -36,17 +36,17 @@ SUBCASE("Should pass if declared types and de facto types are all the same") {\
 }
 
 TEST_CASE("Should be able to substitute a reference to a value") {
-    Expression value{ExpressionType::value, TSL, 1};
+    Expression value{ExpressionType::value, 1, TSL};
     Callable callable{&value, TSL};
-    Expression ref{ExpressionType::reference, TSL, &callable};
+    Expression ref{ExpressionType::reference, &callable, TSL};
 
     COMMON_TESTS(substitute_value_reference);
 }
 
 TEST_CASE("Should be able to inline a nullary call to a value callable as if a reference") {
-    Expression value{ExpressionType::value, TSL, 1};
+    Expression value{ExpressionType::value, 1, TSL};
     Callable callable{&value, TSL};
-    Expression ref{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
+    Expression ref{ExpressionType::call, CallExpressionValue{&callable, {}}, TSL};
 
     COMMON_TESTS(inline_call);
 }
@@ -54,9 +54,9 @@ TEST_CASE("Should be able to inline a nullary call to a value callable as if a r
 TEST_CASE("DEBUG_no_inline should make it fail") {
     auto opts = CompilerOptions::lock_for_this_thread({{CompilerOption::DEBUG_no_inline, "true"}});
 
-    Expression value{ExpressionType::value, TSL, 1};
+    Expression value{ExpressionType::value, 1, TSL};
     Callable callable{&value, TSL};
-    Expression ref{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
+    Expression ref{ExpressionType::call, CallExpressionValue{&callable, {}}, TSL};
 
     #ifndef NDEBUG
     CHECK(!inline_call(ref, callable));
@@ -70,9 +70,9 @@ TEST_CASE("DEBUG_no_inline should make it fail") {
 TEST_CASE("Should be able to inline a nullary call to a nullary pure function callable as if a reference") {
     TypeStore types{};
     
-    Expression value{ExpressionType::value, TSL, 1, types.get_function_type(Hole, {}, true)};
+    Expression value{ExpressionType::value, 1, types.get_function_type(Hole, {}, true), TSL};
     Callable callable{&value, TSL};
-    Expression ref{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
+    Expression ref{ExpressionType::call, CallExpressionValue{&callable, {}}, TSL};
 
     COMMON_TESTS(inline_call);
 }
@@ -80,9 +80,9 @@ TEST_CASE("Should be able to inline a nullary call to a nullary pure function ca
 TEST_CASE("Should not be able to inline a nullary call to a nullary pure function callable as an expression") {
     TypeStore types{};
 
-    Expression value{ExpressionType::value, TSL, 1, types.get_function_type(Hole, {}, false)};
+    Expression value{ExpressionType::value, 1, types.get_function_type(Hole, {}, false), TSL};
     Callable callable{&value, TSL};
-    Expression ref{ExpressionType::call, TSL, CallExpressionValue{&callable, {}}};
+    Expression ref{ExpressionType::call, CallExpressionValue{&callable, {}}, TSL};
 
     CHECK(!inline_call(ref, callable));
     CHECK(ref != value);

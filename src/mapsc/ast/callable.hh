@@ -76,8 +76,8 @@ public:
     bool operator==(const Callable&) const = default;
 
 private:
-    std::optional<const Type*> declared_type_;
     std::optional<const Type*> type_;
+    std::optional<const Type*> declared_type_;
 };
 
 } // namespace Maps
