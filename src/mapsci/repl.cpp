@@ -73,7 +73,7 @@ bool REPL::run() {
         std::stringstream input_s{*input};
         Maps::TypeStore types{};
         auto compilation_state = process_source(Maps::get_builtins(), &types, input_s, 
-            parse_options_, std::cerr);
+            parse_options_, std::cout);
         
         if (!compilation_state->is_valid) {
             if (options_.quit_on_error)
@@ -99,9 +99,9 @@ bool REPL::run() {
         bool ir_success = generator->repl_run();
     
         if (options_.print_ir) {
-            std::cerr << "---IR DUMP---:\n\n";
+            std::cout << "---IR DUMP---:\n\n";
             module_->dump();
-            std::cerr << "\n---IR END---\n";
+            std::cout << "\n---IR END---\n";
         }
     
         if (!ir_success) {
@@ -115,7 +115,7 @@ bool REPL::run() {
         if (options_.stop_after == Stage::ir || !options_.eval)
             continue;
 
-        std::cerr << prefix();
+        std::cout << prefix();
         eval(std::move(module_));
     }
 

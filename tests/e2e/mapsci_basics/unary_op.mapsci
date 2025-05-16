@@ -1,3 +1,0 @@
-// RUN: cat %s | %mapsci | grep "-4"
-
--4

@@ -1,3 +1,3 @@
-// RUN: cat %s | %mapsci | grep "75"
+// RUN: cat %s | %mapsci | grep 75
 
 23 +52
