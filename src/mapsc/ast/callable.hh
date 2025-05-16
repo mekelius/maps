@@ -68,12 +68,12 @@ public:
     // checks if the name is an operator style name
     bool is_undefined() const;
     bool is_empty() const;
-    virtual bool is_operator() const;
-    virtual bool is_binary() const;
-    virtual bool is_unary() const;
+    virtual bool is_operator() const { return false; }
+    virtual bool is_binary() const { return false; }
+    virtual bool is_unary() const { return false; }
     virtual bool is_const() const { return false; }
 
-    bool operator==(const Callable&) const = default;
+    bool operator==(const Callable& other) const;
 
 private:
     std::optional<const Type*> type_;

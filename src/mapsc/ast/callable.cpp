@@ -151,16 +151,14 @@ bool Callable::is_empty() const {
     }, body_);
 }
 
-bool Callable::is_operator() const {
-    return false;
-}
+bool Callable::operator==(const Callable& other) const {
+    if (this == &other)
+        return true;
 
-bool Callable::is_binary() const {
-    return false;
-}
+    if (body_ == other.body_)
+        return true;
 
-bool Callable::is_unary() const {
     return false;
-}
+};
 
 } // namespace Maps

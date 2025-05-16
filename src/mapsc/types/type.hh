@@ -47,9 +47,7 @@ public:
         ConcretizeFunction* concretize_function)
     :name_(name), cast_function_(cast_function), concretize_function_(concretize_function) {}
 
-    virtual std::string_view name() const {
-        return name_;
-    }
+    virtual std::string_view name() const { return name_; }
 
     virtual bool cast_to_(const Type* type, Expression& expression) const {
         return (*cast_function_)(type, expression);
@@ -74,9 +72,7 @@ public:
         ConcretizeFunction* const concretize_function)
     :name_(name), cast_function_(cast_function), concretize_function_(concretize_function) {}
 
-    virtual std::string_view name() const {
-        return name_;
-    }
+    virtual std::string_view name() const { return name_; }
 
     virtual bool cast_to_(const Type* type, Expression& expression) const {
         return (*cast_function_)(type, expression);
@@ -102,18 +98,13 @@ public:
     :concrete_type_id_(concrete_type_id), name_(name), cast_function_(cast_function) {}
 
     virtual bool is_concrete() const { return true; }
-
-    virtual std::string_view name() const {
-        return name_;
-    }
+    virtual std::string_view name() const { return name_; }
 
     virtual bool cast_to_(const Type* type, Expression& expression) const {
-        return (*cast_function_)(type, expression);
+        return (*cast_function_)(type, expression); 
     }
 
-    virtual bool concretize(Expression& _) const {
-        return true;
-    }
+    virtual bool concretize(Expression& _) const { return true; }
 
     virtual bool operator==(const Type& other) const {
         return name() == other.name();
