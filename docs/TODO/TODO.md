@@ -2,6 +2,20 @@
 
 ## Priorities
 
+#### Short term
+
+- get it to compile
+- make tests pass
+- deal with unary ops
+- then:
+    - refactor ir_builtins
+    - reorder expression factory func args
+    - refactor operator class
+    - improve logging a bit
+- then:
+    - look into conditionals
+    - look into runtime casts
+
 #### Needed for 0.0.1
 
 0.0.1 focus is on expressions (parse, eval, print)

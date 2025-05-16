@@ -97,17 +97,19 @@ bool resolve_type_identifier(CompilationState& state, Expression* expression) {
 bool resolve_operator(CompilationState& state, Expression* expression) {
     if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
         if (!(*builtin)->is_operator()) {
-            log_error("during name resolution: encountered a builtin operator_e that pointed to not an operator");
+            log_error("during name resolution: encountered a builtin operator_e \
+that pointed to not an operator");
             assert(false && 
-                "during name resolution: encountered a builtin operator_e that pointed to not an operator");
+                "during name resolution: encountered a builtin operator_e that pointed to \
+not an operator");
             state.declare_invalid();
             return false;
         }
 
-        log_info("Parsed built-in operator", MessageType::parser_debug_terminal, expression->location);
-        expression->expression_type = ExpressionType::operator_reference;
-        expression->value = *builtin;
-        expression->type = (*builtin)->get_type();
+        log_info(
+            "Resolved built-in operator", MessageType::parser_debug_terminal, expression->location);
+        
+        convert_to_operator_ref(expression, *builtin);
         return true;
     }
 

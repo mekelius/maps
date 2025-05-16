@@ -100,11 +100,8 @@ Expression* TermedExpressionParser::current_term() const {
 }
 
 Precedence TermedExpressionParser::peek_precedence() const {
-    assert(peek()->expression_type == ExpressionType::operator_reference && 
-        "TermedExpressionParser::peek_precedence called with not an operator on top of the stack");
-
-    assert(peek()->reference_value()->is_binary_operator() && 
-        "TermedExpressionParser::peek_precedence encountered an operator ref that was not a binary operator");
+    assert(peek()->expression_type == ExpressionType::binary_operator_reference && 
+        "TermedExpressionParser::peek_precedence called with not a binary operator on top of the stack");
 
     return get_operator_precedence(*peek());
 }
@@ -174,9 +171,19 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             initial_value_state();
             break;
 
-        case ExpressionType::operator_reference:
+        case ExpressionType::binary_operator_reference:
             shift();
-            initial_operator_state();
+            initial_binary_operator_state();
+            break;
+
+        case ExpressionType::prefix_operator_reference:
+            shift();
+            initial_prefix_operator_state();
+            break;
+
+        case ExpressionType::postfix_operator_reference:
+            shift();
+            initial_postfix_operator_state();
             break;
 
         case ExpressionType::minus_sign:
@@ -239,18 +246,8 @@ void TermedExpressionParser::initial_reference_state() {
 
     // if it's not a function it's treated as a value
     // i.e. the next term has to be an operator
-    if (current_term()->type->arity() == 0) {
-        switch (peek()->expression_type) {
-            case ExpressionType::operator_reference:
-                precedence_stack_.push_back(peek_precedence());
-                shift();
-                return post_binary_operator_state();                
-
-            default:
-                fail("unexpected non-operator in termed expression", peek()->location);
-                return;
-        }
-    }
+    if (current_term()->type->arity() == 0)
+        return initial_value_state();
 
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
@@ -262,7 +259,7 @@ void TermedExpressionParser::initial_reference_state() {
         case ExpressionType::call:
             return call_expression_state();
 
-        case ExpressionType::operator_reference:
+        case ExpressionType::binary_operator_reference:
             precedence_stack_.push_back(peek_precedence());
             shift();
             return post_binary_operator_state();
@@ -271,6 +268,14 @@ void TermedExpressionParser::initial_reference_state() {
             assert(false && "unhandled term type in TermedExpressionParser::initial_identifier_state");
     }
 }
+
+void TermedExpressionParser::initial_call_state() {
+    if (at_expression_end())
+        return;
+
+    assert(false && "initial call not implemented");
+}
+
 
 // current_term is a value, so next term has to be something else, or eventually reduce to a binop
 void TermedExpressionParser::initial_value_state() {
@@ -282,21 +287,24 @@ void TermedExpressionParser::initial_value_state() {
             handle_termed_sub_expression(peek());
             return initial_value_state();
 
-        case ExpressionType::operator_reference: {
+        case ExpressionType::binary_operator_reference: {
             shift();
             auto op = current_term()->operator_reference_value();
-            if (op->is_unary_operator() && (op->operator_props_.unary_fixity == UnaryFixity::postfix))
-                return push_unary_operator_call(*pop_term(), *pop_term());
-
-            if (op->is_binary_operator()) {
-                precedence_stack_.push_back(op->get_precedence());
-                return post_binary_operator_state();
+            
+            precedence_stack_.push_back(op->get_precedence());
+            return post_binary_operator_state();
+        }
+        case ExpressionType::prefix_operator_reference:
+            shift();
+            initial_prefix_operator_state();
+            switch (current_term()->expression_type) {
+                default:
+                    assert(false && "goto table not implemented");
             }
 
-            assert(false && "operator not binary or unary");
-            return fail("Encountered broken operator in initial_value_state", 
-                current_term()->location);
-        }
+        case ExpressionType::postfix_operator_reference:
+            push_unary_operator_call(get_term(), *pop_term());
+            return initial_call_state();
 
         case ExpressionType::minus_sign: {
             auto location = get_term()->location;
@@ -326,22 +334,18 @@ void TermedExpressionParser::initial_value_state() {
     }
 }
 
-void TermedExpressionParser::initial_operator_state() {
+void TermedExpressionParser::initial_binary_operator_state() {
     if (at_expression_end())
         return;        
 
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(peek());
-            return initial_operator_state();
+            return initial_binary_operator_state();
 
         case GUARANTEED_VALUE: {
             Expression* op = *pop_term();
             Expression* rhs = get_term();
-
-            // if it's an unary operator, just apply and be done with it
-            if (op->operator_reference_value()->is_unary_operator())
-                return push_unary_operator_call(op, rhs);
 
             // TODO: handle precedence here
             // it's a binary operator being partially applied
@@ -371,8 +375,29 @@ void TermedExpressionParser::initial_operator_state() {
             }
             assert(false && "not implemented");
         }
-        case ExpressionType::operator_reference:
-            
+
+        case ExpressionType::binary_operator_reference:
+            assert(false && "not implemented");
+
+        case ExpressionType::prefix_operator_reference:{
+            shift();
+            initial_prefix_operator_state();
+            auto location = current_term()->location;
+            if (auto value = pop_term()) {
+                auto missing_arg_type = 
+                    dynamic_cast<const FunctionType*>(
+                        current_term()->operator_reference_value()->get_type())
+                            ->param_type(1);
+                return push_partial_call(*pop_term(), 
+                    {create_missing_argument(*ast_store_, location, *missing_arg_type), *value});
+            }
+            return fail("unary operator failed to produce a value", location);
+        }
+
+        case ExpressionType::postfix_operator_reference:
+            return fail("Postfix unary operator " + peek()->log_message_string() + 
+                " not allowed to operate on " + current_term()->log_message_string(), 
+                peek()->location);
 
         case TYPE_DECLARATION_TERM:
         case ExpressionType::call:
@@ -382,6 +407,58 @@ void TermedExpressionParser::initial_operator_state() {
         case NOT_ALLOWED_IN_LAYER2:
             assert(false && "bad term encountered in TermedExpressoinParser");
     }
+}
+
+void TermedExpressionParser::initial_prefix_operator_state() {
+    if (at_expression_end()) {
+        auto op = *pop_term();
+        return parse_stack_.push_back(create_reference_expression(
+            *ast_store_, op->operator_reference_value(), op->location));
+    }
+
+    switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_termed_sub_expression(peek());
+            return initial_prefix_operator_state();
+
+        case GUARANTEED_VALUE: {
+            Expression* op = *pop_term();
+            Expression* rhs = get_term();
+
+            // if it's an unary operator, just apply and be done with it
+            if (op->operator_reference_value()->is_unary_operator())
+                return push_unary_operator_call(op, rhs);
+
+            // TODO: handle precedence here
+            // it's a binary operator being partially applied
+            Expression* missing_argument = create_missing_argument(*ast_store_, op->location,
+                *dynamic_cast<const FunctionType*>(op->type)->param_types().begin());
+
+            auto call =
+                create_call_expression(*ast_store_, expression_->location,
+                    op->reference_value(), { missing_argument, rhs });
+            
+            if (!call)
+                return fail("Creating call expression failed", op->location);
+
+            parse_stack_.push_back(*call);
+            return;
+        }
+
+        default:
+            assert(false && "not implemented");
+    }
+}
+
+void TermedExpressionParser::initial_postfix_operator_state() {
+    if (at_expression_end()) {
+        auto op = *pop_term();
+        return parse_stack_.push_back(create_reference_expression(
+            *ast_store_, op->operator_reference_value(), op->location));
+    }
+
+    return fail("Unexpected postfix operator " + current_term()->log_message_string() + 
+        "at the start of an expression", current_term()->location);
 }
 
 void TermedExpressionParser::initial_minus_sign_state() {
@@ -455,9 +532,10 @@ void TermedExpressionParser::post_binary_operator_state() {
             handle_termed_sub_expression(peek());
             return post_binary_operator_state();
 
-        case ExpressionType::operator_reference:
-            // assert that it's unary
-            break;
+        case ExpressionType::binary_operator_reference:
+        case ExpressionType::prefix_operator_reference:
+        case ExpressionType::postfix_operator_reference:
+            assert(false && "not implemented");
 
         case ExpressionType::reference:
             shift();
@@ -531,7 +609,7 @@ void TermedExpressionParser::compare_precedence_state() {
         return;
     }
 
-    assert(peek()->expression_type == ExpressionType::operator_reference
+    assert(peek()->expression_type == ExpressionType::binary_operator_reference
         && "compare_precedence_state called with not an operator ref next");
 
     if (precedence_stack_.back() == next_precedence) { // !!!: assuming left-associativity
@@ -638,9 +716,9 @@ on the stack");
             return initial_reference_state(); 
         }
 
-        case ExpressionType::operator_reference:{
+        case ExpressionType::binary_operator_reference:{
             shift();
-            initial_operator_state();
+            initial_binary_operator_state();
             auto value = pop_term();
             return apply_type_declaration(*pop_term(), *value);
         }
@@ -658,6 +736,24 @@ on the stack");
             assert(false && "bad term encountered in TermedExpressoinParser");
             return;
     }
+}
+
+
+void TermedExpressionParser::push_partial_call(Expression* callee_ref, 
+    const std::vector<Expression*>& args) {
+
+    push_partial_call(callee_ref, args, callee_ref->location);
+}
+void TermedExpressionParser::push_partial_call(Expression* callee_ref, 
+    const std::vector<Expression*>& args, SourceLocation location) {
+    
+    auto call = create_call_expression(*ast_store_, location, 
+        callee_ref->reference_value(), args);
+    
+    if (!call)
+        return fail("During layer2: Creating partial call failed", location);
+        
+    parse_stack_.push_back(*call);
 }
 
 void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, Expression* value) {
@@ -764,7 +860,7 @@ Expression* TermedExpressionParser::handle_arg_state(Callable* callee, const std
             handle_termed_sub_expression(current_term());
             return handle_arg_state(callee, args);
             
-        case ExpressionType::operator_reference:
+        // case ExpressionType::operator_reference:
             // abort, partial application
             // might be unary
             // !!! we might need to switch to peeking, unless we want to reverse

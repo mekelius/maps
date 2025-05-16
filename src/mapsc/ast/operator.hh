@@ -11,17 +11,21 @@ using Precedence = unsigned int;
 constexpr Precedence MAX_OPERATOR_PRECEDENCE = 1000;
 constexpr Precedence MIN_OPERATOR_PRECEDENCE = 0;
 
+enum class OperatorType {
+    binary,
+    unary_prefix,
+    unary_postfix
+};
+
 enum class BinaryFixity {
     infix,
-    none,
-    // prefix, // not implemented
-    // postfix,
+    none
 };
 
 enum class UnaryFixity {
     prefix,
-    none,
-    postfix
+    postfix,
+    none
 };
 
 enum class Associativity {
@@ -95,6 +99,16 @@ public:
 
     Precedence get_precedence() {
         return operator_props_.precedence;
+    }
+
+    OperatorType operator_type() {
+        if (operator_props_.is_binary())
+            return OperatorType::binary;
+
+        if (operator_props_.unary_fixity == UnaryFixity::prefix)
+            return OperatorType::unary_prefix;
+
+        return OperatorType::unary_postfix;
     }
 
     OperatorProps operator_props_;

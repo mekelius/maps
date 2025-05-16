@@ -125,7 +125,9 @@ bool Expression::is_reference() const {
     switch (expression_type) {
         case ExpressionType::reference:
         case ExpressionType::type_reference:
-        case ExpressionType::operator_reference:
+        case ExpressionType::prefix_operator_reference:
+        case ExpressionType::postfix_operator_reference:
+        case ExpressionType::binary_operator_reference:
         case ExpressionType::type_operator_reference:
         case ExpressionType::type_constructor_reference:
             return true;
@@ -243,7 +245,9 @@ std::string Expression::log_message_string() const {
             return "reference to " + std::string{reference_value()->name_};
         case ExpressionType::type_reference:
             return "reference to type " + std::string{reference_value()->name_};
-        case ExpressionType::operator_reference:
+        case ExpressionType::binary_operator_reference:
+        case ExpressionType::prefix_operator_reference:
+        case ExpressionType::postfix_operator_reference:
             return "operator " + std::string{reference_value()->name_};
         case ExpressionType::type_operator_reference:
             return "type operator " + std::string{reference_value()->name_};
@@ -350,11 +354,34 @@ Expression* create_type_reference(AST_Store& store, const Type* type, SourceLoca
     return store.allocate_expression({ExpressionType::type_reference, location, type, &Void});
 }
 
-Expression* create_operator_ref(AST_Store& store, Callable* callable, SourceLocation location) {
+Expression create_operator_ref(Callable* callable, SourceLocation location) {
     assert(callable->is_operator() && "AST::create_operator_ref called with not an operator");
 
-    return store.allocate_expression(
-        {ExpressionType::operator_reference, location, callable, callable->get_type()});
+    ExpressionType expression_type;
+    
+    switch (dynamic_cast<Operator*>(callable)->operator_type()) {
+        case OperatorType::unary_prefix:
+            expression_type = ExpressionType::prefix_operator_reference;
+            break;
+        case OperatorType::unary_postfix:
+            expression_type = ExpressionType::postfix_operator_reference;
+            break;
+        case OperatorType::binary:
+            expression_type = ExpressionType::binary_operator_reference;
+            break;
+    }
+
+    return {expression_type, location, callable, callable->get_type()};
+}
+
+Expression* create_operator_ref(AST_Store& store, Callable* callable, SourceLocation location) {
+    return store.allocate_expression(create_operator_ref(callable, location));
+}
+
+void convert_to_operator_ref(Expression* expression, Callable* callable) {
+    auto declared_type = expression->declared_type;
+    *expression = create_operator_ref(callable, expression->location);
+    expression->declared_type = declared_type;
 }
 
 // valueless expression types are tie, empty, syntax_error and not_implemented
@@ -415,11 +442,8 @@ Expression* create_minus_sign(AST_Store& store, SourceLocation location) {
 }
 
 Precedence get_operator_precedence(const Expression& operator_ref) {
-    assert(operator_ref.expression_type == ExpressionType::operator_reference && 
-        "get_operator_precedence called with not an operator reference");
-
-    assert(operator_ref.reference_value()->is_binary_operator() && 
-        "get_operator_precedence called with not a binary operator");
+    assert(operator_ref.expression_type == ExpressionType::binary_operator_reference && 
+        "get_operator_precedence called with not a binary operator reference");
 
     return operator_ref.operator_reference_value()->get_precedence();
 }

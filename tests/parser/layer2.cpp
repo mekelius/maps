@@ -409,7 +409,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
         auto op = Operator{"+", External{}, *types->get_function_type(Int, {&Int, &Int}),
             OperatorProps{UnaryFixity::none, BinaryFixity::infix}, TSL};
         
-        auto op_ref = Expression{ExpressionType::operator_reference, TSL, &op};
+        auto op_ref = Expression{ExpressionType::binary_operator_reference, TSL, &op};
         auto rhs = Expression{ExpressionType::numeric_literal, TSL, "987"};
         auto expr = Expression{ExpressionType::termed_expression, TSL, 
             TermedExpressionValue{{&type_specifier, &value, &op_ref, &rhs}, db_false}};

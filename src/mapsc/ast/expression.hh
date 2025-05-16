@@ -44,7 +44,9 @@ enum class ExpressionType {
 
     minus_sign,                     // minus sign is special, value: std::monostate
     reference,                      // value: Callable*
-    operator_reference,
+    binary_operator_reference,
+    prefix_operator_reference,
+    postfix_operator_reference,
     type_reference,
     type_operator_reference,
     type_constructor_reference,
@@ -164,9 +166,11 @@ inline std::optional<Expression*> create_reference_expression(AST_Store& store, 
     const std::string& name, SourceLocation location, const Type* type);
 
 Expression* create_type_reference(AST_Store& store, const Type* type, SourceLocation location);
-[[nodiscard]] std::optional<Expression*> create_operator_ref(AST_Store& store, const std::string& name, 
-    SourceLocation location, const Type* type);
+
+Expression create_operator_ref(Callable* callable, SourceLocation location);
 Expression* create_operator_ref(AST_Store& store, Callable* callable, SourceLocation location);
+
+void convert_to_operator_ref(Expression* expression, Callable* callable);
 
 // valueless expression types are tie, empty, syntax_error and not_implemented
 Expression* create_valueless_expression(AST_Store& store, ExpressionType expression_type, 

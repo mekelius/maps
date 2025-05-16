@@ -57,15 +57,22 @@ private:
     
     // state functioms
     void initial_reference_state();
+    void initial_call_state();
     void initial_value_state();
-    void initial_operator_state();
+    void initial_binary_operator_state();
+    void initial_prefix_operator_state();
+    void initial_postfix_operator_state();
     void initial_minus_sign_state();
-    
+
     // binary operators
     void post_binary_operator_state();
     void compare_precedence_state();
     void reduce_operator_left();
 
+    // callee ref is used as the default location
+    void push_partial_call(Expression* callee_ref, const std::vector<Expression*>& args);
+    void push_partial_call(Expression* callee_ref, const std::vector<Expression*>& args,
+        SourceLocation location);
     // convenience function that creates an unary call expression and pushes it onto the parse stack
     void push_unary_operator_call(Expression* operator_ref, Expression* value);
     void apply_type_declaration(Expression* type_declaration, Expression* value);

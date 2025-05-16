@@ -170,7 +170,9 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
             return *this << " )";
         }
 
-        case ExpressionType::operator_reference:
+        case ExpressionType::prefix_operator_reference:
+        case ExpressionType::postfix_operator_reference:
+        case ExpressionType::binary_operator_reference:
             if (options_.include_debug_info)
                 *this << "/*operator-ref:*/ ";
             return *this << std::string{expression.reference_value()->name_};

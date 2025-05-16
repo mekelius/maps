@@ -13,6 +13,7 @@
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"
 
+using std::optional, std::nullopt;
 using Maps::GlobalLogger::log_error;
 
 namespace Maps {

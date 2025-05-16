@@ -2,6 +2,7 @@
 #define __FUNCTION_TYPE_HH
 
 #include <array>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -39,6 +40,7 @@ public:
 
     virtual const Type* return_type() const = 0;
     virtual std::span<const Type* const> param_types() const = 0;
+    virtual std::optional<const Type* const> param_type(uint param_index) const = 0;
 
     virtual bool is_complex() const { return true; }
     virtual bool is_function() const { return true; }
@@ -66,6 +68,12 @@ public:
     std::string_view name() const { return name_; }
     virtual const Type* return_type() const { return return_type_; }
     virtual std::span<const Type* const> param_types() const { return param_types_; }
+    virtual std::optional<const Type* const> param_type(uint param_index) const {
+        if (param_types_.size() < param_index + 1)
+            return std::nullopt;
+
+        return param_types_.at(param_index);
+    };
 
     const std::string name_;
     const Type* return_type_;
@@ -87,6 +95,12 @@ public:
     std::string_view name() const { return name_; }
     virtual const Type* return_type() const { return return_type_; }
     virtual std::span<const Type* const> param_types() const { return param_types_; }
+    virtual std::optional<const Type* const> param_type(uint param_index) const {
+        if (param_types_.size() < param_index + 1)
+            return std::nullopt;
+
+        return param_types_.at(param_index);
+    };
 
     const std::string_view name_;
     const Type* return_type_;
