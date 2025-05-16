@@ -10,7 +10,6 @@
 #include "mapsc/logging.hh"
 #include "mapsc/loglevel_defs.hh"
 #include "mapsc/compilation_state.hh"
-#include "mapsc/builtins.hh"
 
 #include "mapsc/types/type.hh"
 #include "mapsc/types/function_type.hh"
@@ -26,14 +25,14 @@ namespace Maps {
 // Expression types that are not allowed here
 // NOTE: Empty is allowed at top-level
 #define NOT_ALLOWED_IN_LAYER2 ExpressionType::identifier:\
-            case ExpressionType::type_identifier:\
-            case ExpressionType::operator_identifier:\
-            case ExpressionType::type_operator_identifier:\
-            case ExpressionType::type_operator_reference:\
-            case ExpressionType::deleted:\
-            case ExpressionType::missing_arg:\
-            case ExpressionType::syntax_error:\
-            case ExpressionType::not_implemented
+                         case ExpressionType::type_identifier:\
+                         case ExpressionType::operator_identifier:\
+                         case ExpressionType::type_operator_identifier:\
+                         case ExpressionType::type_operator_reference:\
+                         case ExpressionType::deleted:\
+                         case ExpressionType::missing_arg:\
+                         case ExpressionType::syntax_error:\
+                         case ExpressionType::not_implemented
 
 #define TYPE_DECLARATION_TERM ExpressionType::type_argument:\
                          case ExpressionType::type_field_name:\
@@ -51,7 +50,7 @@ namespace Maps {
                       case ExpressionType::termed_expression
 
 ParserLayer2::ParserLayer2(CompilationState* compilation_state)
-: compilation_state_(compilation_state) {
+:compilation_state_(compilation_state) {
 }
 
 void ParserLayer2::run() {
@@ -65,7 +64,9 @@ void ParserLayer2::run() {
 }
 
 TermedExpressionParser::TermedExpressionParser(CompilationState* compilation_state, Expression* expression)
-:expression_(expression), compilation_state_(compilation_state), ast_store_(compilation_state->ast_store_.get()) {
+:expression_(expression), 
+ compilation_state_(compilation_state), 
+ ast_store_(compilation_state->ast_store_.get()) {
     expression_terms_ = &expression->terms();
     next_term_it_ = expression_terms_->begin();    
 }
@@ -285,7 +286,7 @@ void TermedExpressionParser::initial_value_state() {
             shift();
             auto op = current_term()->operator_reference_value();
             if (op->is_unary_operator() && (op->operator_props_.unary_fixity == UnaryFixity::postfix))
-                return create_unary_operator_call(*pop_term(), *pop_term());
+                return push_unary_operator_call(*pop_term(), *pop_term());
 
             if (op->is_binary_operator()) {
                 precedence_stack_.push_back(op->get_precedence());
@@ -340,7 +341,7 @@ void TermedExpressionParser::initial_operator_state() {
 
             // if it's an unary operator, just apply and be done with it
             if (op->operator_reference_value()->is_unary_operator())
-                return create_unary_operator_call(op, rhs);
+                return push_unary_operator_call(op, rhs);
 
             // TODO: handle precedence here
             // it's a binary operator being partially applied
@@ -362,7 +363,7 @@ void TermedExpressionParser::initial_operator_state() {
             auto location = get_term()->location;
             switch (peek()->expression_type) {
                 case GUARANTEED_VALUE:
-                    create_unary_operator_call(unary_minus_ref(location), get_term());
+                    push_unary_operator_call(unary_minus_ref(location), get_term());
                     assert(false && "not implemented");
 
                 default:
@@ -370,9 +371,11 @@ void TermedExpressionParser::initial_operator_state() {
             }
             assert(false && "not implemented");
         }
+        case ExpressionType::operator_reference:
+            
+
         case TYPE_DECLARATION_TERM:
         case ExpressionType::call:
-        case ExpressionType::operator_reference:
         case ExpressionType::reference:
             assert(false && "not implemented");
 
@@ -407,9 +410,9 @@ void TermedExpressionParser::initial_minus_sign_state() {
 
         case GUARANTEED_VALUE: {
             auto location = (*pop_term())->location;
-            parse_stack_.push_back(unary_minus_ref(location));
+            push_unary_operator_call(unary_minus_ref(location), get_term());
 
-            
+            return initial_value_state();
         }
 
         case ExpressionType::reference:
@@ -538,7 +541,8 @@ void TermedExpressionParser::compare_precedence_state() {
         return post_binary_operator_state();
     }
 
-    // if the precedence goes up, push it into the stack and run post_binary_op_state with the new precedence stack
+    // if the precedence goes up, push it into the stack and run post_binary_op_state with 
+    // the new precedence stack
     // once it returns, there should be a nice reduced rhs on the parse_stack_
     if (precedence_stack_.back() < next_precedence) {
         unsigned int previous_precedence = precedence_stack_.back();
@@ -556,7 +560,8 @@ void TermedExpressionParser::compare_precedence_state() {
         }
 
         assert(peek_precedence() >= precedence_stack_.back() 
-            && "post_binary_operator_state didn't run until the end or a lover/equal precedence that the caller put on the precedence stack");
+            && "post_binary_operator_state didn't run until the end or a lover/equal precedence \
+that the caller put on the precedence stack");
         
         // continue parsing
         shift();
@@ -574,8 +579,9 @@ void TermedExpressionParser::reduce_operator_left() {
     Expression* lhs = *pop_term();
 
     // TODO: check types here
-    assert(std::holds_alternative<Callable*>(operator_->value) 
-        && "TermedExpressionParser::reduce_operator_left called with a call stack where operator didn't hold a reference to a callable");
+    assert(std::holds_alternative<Callable*>(operator_->value) && 
+        "TermedExpressionParser::reduce_operator_left called with a call stack \
+where operator didn't hold a reference to a callable");
 
     auto reduced = create_call_expression(*ast_store_, lhs->location,
         std::get<Callable*>(operator_->value), {lhs, rhs});
@@ -591,7 +597,8 @@ void TermedExpressionParser::reduce_operator_left() {
 
 void TermedExpressionParser::initial_type_reference_state() {
     assert(current_term()->expression_type == ExpressionType::type_reference && 
-        "TermedExpressionParser::type_specifier_state entered with not a type_specifier/type_reference on the stack");
+        "TermedExpressionParser::type_specifier_state entered with not a type_specifier/type_reference \
+on the stack");
 
     if (at_expression_end()) {
         if (!possibly_type_expression_) {
@@ -644,7 +651,7 @@ void TermedExpressionParser::initial_type_reference_state() {
             // fail
 
         default:
-            assert(false && "-.-"); // !!!
+            assert(false && "not implemented");
 
         case NOT_ALLOWED_IN_LAYER2:
             fail("bad term encountered in TermedExpressoinParser", current_term()->location);
@@ -653,7 +660,7 @@ void TermedExpressionParser::initial_type_reference_state() {
     }
 }
 
-void TermedExpressionParser::create_unary_operator_call(Expression* operator_ref, Expression* value) {
+void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, Expression* value) {
     auto location = 
         operator_ref->operator_reference_value()->operator_props_.unary_fixity == UnaryFixity::prefix ?
             operator_ref->location : value->location;
@@ -780,11 +787,13 @@ Expression* TermedExpressionParser::handle_arg_state(Callable* callee, const std
 }
 
 Expression* TermedExpressionParser::binary_minus_ref(SourceLocation location) {
-    return create_operator_ref(*ast_store_, &binary_minus_Int, location);
+    return create_operator_ref(
+        *ast_store_, compilation_state_->special_callables_.binary_minus, location);
 }
 
 Expression* TermedExpressionParser::unary_minus_ref(SourceLocation location) {
-    return create_operator_ref(*ast_store_, &unary_minus_Int, location);
+    return create_operator_ref(
+        *ast_store_, compilation_state_->special_callables_.unary_minus, location);
 }
 
 } // namespace Maps

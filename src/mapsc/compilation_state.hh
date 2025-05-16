@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "mapsc/pragma.hh"
+#include "mapsc/builtins.hh"
 
 #include "mapsc/types/type_store.hh"
 
@@ -34,6 +35,11 @@ concept AST_Visitor = requires(T t) {
 
 class CompilationState {
 public:
+    struct SpecialCallables {
+        BuiltinOperator* unary_minus;
+        BuiltinOperator* binary_minus;
+    };
+
     template<AST_Visitor T>
     bool walk_tree(T& visitor);
 
@@ -47,7 +53,8 @@ public:
     static std::tuple<CompilationState, std::unique_ptr<const Scope>, std::unique_ptr<TypeStore>> 
         create_test_state();
 
-    CompilationState(const Scope* builtins, TypeStore* types);
+    CompilationState(const Scope* builtins, TypeStore* types,
+        SpecialCallables specials = {&unary_minus_Int, &binary_minus_Int});
 
     [[nodiscard]] bool set_entry_point(Callable* entrypoint);
     [[nodiscard]] bool set_entry_point(std::string name);
@@ -66,6 +73,7 @@ public:
     
     TypeStore* const types_;
     const Scope* const builtins_;
+    const SpecialCallables special_callables_;
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
     // need to walk the tree to find them

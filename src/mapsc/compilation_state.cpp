@@ -12,8 +12,9 @@ tuple<CompilationState, unique_ptr<const Scope>, unique_ptr<TypeStore>> Compilat
     return tuple{CompilationState{builtins.get(), types.get()}, std::move(builtins), std::move(types)};
 }
 
-CompilationState::CompilationState(const Scope* builtins, TypeStore* types)
-:types_(types), builtins_(builtins) {
+CompilationState::CompilationState(const Scope* builtins, TypeStore* types, 
+    SpecialCallables special_callables)
+:types_(types), builtins_(builtins), special_callables_(special_callables) {
 }
 
 bool CompilationState::set_entry_point(Callable* entrypoint) {

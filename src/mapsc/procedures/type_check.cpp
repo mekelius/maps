@@ -24,8 +24,6 @@ using Maps::GlobalLogger::log_error;
 
 namespace Maps {
 
-struct Builtin;
-
 bool SimpleTypeChecker::visit_expression(Expression* expression) {
     if (expression->declared_type && **expression->declared_type != *expression->type)
         return handle_declared_type(*expression, *expression->declared_type);

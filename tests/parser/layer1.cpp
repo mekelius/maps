@@ -164,3 +164,26 @@ TEST_CASE("Should handle various cases") {
             rhs->expression_type == ExpressionType::numeric_literal));
     }
 }
+
+TEST_CASE("Should recognize minus as a special case") {
+    auto types = TypeStore{};
+    auto state = CompilationState{get_builtins(), &types};
+
+    std::stringstream source{"-5"};
+
+    ParserLayer1 layer1{&state};
+
+    auto callable = layer1.eval_parse(source);
+    CHECK(state.is_valid);
+    CHECK(callable);
+
+    CHECK(std::holds_alternative<Expression*>((*callable)->body_));
+    auto expression = std::get<Expression*>((*callable)->body_);
+
+    CHECK(expression->expression_type == ExpressionType::termed_expression);
+    auto terms = expression->terms();
+    CHECK(terms.size() == 2);
+    CHECK(terms.at(0)->expression_type == ExpressionType::minus_sign);
+    CHECK(terms.at(1)->expression_type == ExpressionType::numeric_literal);
+    CHECK(terms.at(1)->string_value() == "5");
+}

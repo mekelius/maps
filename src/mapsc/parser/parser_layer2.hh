@@ -67,7 +67,7 @@ private:
     void reduce_operator_left();
 
     // convenience function that creates an unary call expression and pushes it onto the parse stack
-    void create_unary_operator_call(Expression* operator_ref, Expression* value);
+    void push_unary_operator_call(Expression* operator_ref, Expression* value);
     void apply_type_declaration(Expression* type_declaration, Expression* value);
     
     void initial_type_reference_state();
