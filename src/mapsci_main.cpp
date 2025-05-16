@@ -121,22 +121,34 @@ int main(int argc, char* argv[]) {
         } else if (key == "--no-ir" || key == "--no-codegen") {
             repl_options.stop_after = std::min(REPL::Stage::layer3, repl_options.stop_after);
 
-        } else if(key == "--no-eval") {
+        } else if (key == "--no-eval") {
             repl_options.eval = false;
 
-        } else if(key == "--layer3" || key == "--print-layer3" || key == "--pre-ir" || key == "--print-pre-ir" || key == "--reverse-parse") {
+        } else if (key == "--layer3" || key == "--print-layer3" || key == "--pre-ir" || key == "--print-pre-ir" || key == "--reverse-parse") {
             repl_options.print_layer3 = true;
 
-        } else if(key == "--quit-on-error" || key == "--exit-on-error") {
+        } else if (key == "--quit-on-error" || key == "--exit-on-error") {
             repl_options.quit_on_error = true;
 
-        } else if(key == "--layer1") {
+        } else if (key == "--prefix-output") {
+            repl_options.prefix_output = true;
+
+        } else if (key == "--no-prompt") {
+            repl_options.prompt = false;
+
+        } else if (key == "--e2e-tests-mode") {
+            repl_options.prefix_output = true;
+            repl_options.prompt = false;
+            repl_options.quit_on_error = true;
+            logger_options.set(LogLevel::errors());
+
+        } else if (key == "--layer1") {
             repl_options.print_layer1 = true;
 
-        } else if(key == "--layer2") {
+        } else if (key == "--layer2") {
             repl_options.print_layer2 = true;
 
-        } else if(key == "--stop-after") {
+        } else if (key == "--stop-after") {
             if (value == "layer1") {
                 repl_options.stop_after = REPL::Stage::layer1;
 
@@ -149,19 +161,19 @@ int main(int argc, char* argv[]) {
             } else if(value == "ir") {
                 repl_options.stop_after = REPL::Stage::ir;
             }
-        } else if(key == "--ignore-errors" || key == "--ignore-error") {
+        } else if (key == "--ignore-errors" || key == "--ignore-error") {
             repl_options.ignore_errors = false;
 
         } else if (key == "--print-all-types" || key == "--print-types" || key == "--include-all-types" || key == "--include-types") {
             compiler_options->set(CompilerOption::print_all_types, "true");
 
-        } else if(key == "--no-history") {
+        } else if (key == "--no-history") {
             repl_options.save_history = false;
 
-        } else if(key == "--history-file") {
+        } else if (key == "--history-file") {
             repl_options.history_file_path = value;
 
-        } else if(key == "-h" || key == "--help" || key == "--usage") {
+        } else if (key == "-h" || key == "--help" || key == "--usage") {
             std::cout << USAGE << std::endl;
             return EXIT_SUCCESS;
 

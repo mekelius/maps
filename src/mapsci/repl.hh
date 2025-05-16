@@ -36,12 +36,17 @@ public:
         bool save_history = false;
         std::filesystem::path history_file_path;
         bool quit_on_error = false;
+        bool prompt = true;
+        // adds "mapsci-output:" before the evaluated line (for testing)
+        bool prefix_output = false;
     };
 
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options);
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream);
 
     bool run();
+
+    std::string_view prefix() const { return options_.prefix_output ? "mapsci-output:" : ""; }
     
 private:
     std::optional<std::string> get_input();

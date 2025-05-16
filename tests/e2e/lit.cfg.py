@@ -9,7 +9,7 @@ config.test_source_root = os.path.dirname(__file__)
 config.test_exec_root = os.path.join(config.build_dir, 'test')
 
 config.substitutions.append(('%mapsci',
-    os.path.join(config.build_dir, 'mapsci --no-history')))
+    os.path.join(config.build_dir, 'mapsci --e2e-tests-mode')))
 
 # config.substitutions.append(('%mapsc',
 #     os.path.join(config.build_dir, 'mapsc')))

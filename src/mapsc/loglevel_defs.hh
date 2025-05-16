@@ -31,6 +31,13 @@ struct LogLevel {
         return message_types;
     }
 
+    constexpr static MessageTypes errors() {
+        MessageTypes message_types;
+        std::fill(message_types.begin(), message_types.end(), false);
+        message_types.at(0) = true;
+        return message_types;
+    }
+
     constexpr static MessageTypes quiet() {
         MessageTypes message_types;
         std::fill(message_types.begin(), message_types.end(), false);

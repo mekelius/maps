@@ -112,6 +112,7 @@ bool REPL::run() {
         if (options_.stop_after == Stage::ir || !options_.eval)
             continue;
 
+        std::cerr << prefix();
         eval(std::move(module_));
     }
 
@@ -119,7 +120,7 @@ bool REPL::run() {
 }
 
 std::optional<std::string> REPL::get_input() {
-    char* line = readline(PROMPT.cbegin());
+    char* line = readline(options_.prompt ? PROMPT.cbegin() : "");
 
     if (!line) {
         std::cout << std::endl;
