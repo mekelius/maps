@@ -117,11 +117,11 @@ struct Expression {
         return std::nullopt;
     }
 
-    [[nodiscard]] static std::optional<Expression*> type_operator_ref(AST_Store& store, 
+    [[nodiscard]] static std::optional<Expression*> type_operator_reference(AST_Store& store, 
         const std::string& name, SourceLocation location, const Type* type);
     static Expression* type_reference(AST_Store& store, const Type* type, SourceLocation location);
-    static Expression operator_ref(Callable* callable, SourceLocation location);
-    static Expression* operator_ref(AST_Store& store, Callable* callable, SourceLocation location);
+    static Expression operator_reference(Callable* callable, SourceLocation location);
+    static Expression* operator_reference(AST_Store& store, Callable* callable, SourceLocation location);
     static Expression* valueless(AST_Store& store, ExpressionType expression_type, SourceLocation location);
     static Expression* missing_argument(AST_Store& store, SourceLocation location, const Type* type);
     static Expression builtin(const ExpressionValue& value, const Type& type) {
@@ -141,7 +141,7 @@ struct Expression {
     :expression_type(expression_type), value(value), type(type), declared_type(declared_type), location(location) {}
 
     // ----- CONVERSIONS -----
-    void convert_to_operator_ref(Callable* callable);
+    void convert_to_operator_reference(Callable* callable);
 
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();

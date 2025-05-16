@@ -18,7 +18,7 @@ inline tuple<Expression*, Callable*> create_operator_helper(CompilationState& st
     Callable* op_callable = state.ast_store_->allocate_operator(
         Operator::create_binary(op_string, External{}, *type, precedence, Associativity::left, TSL));
 
-    Expression* op_ref = Expression::operator_ref(*state.ast_store_, op_callable, {0,0});
+    Expression* op_ref = Expression::operator_reference(*state.ast_store_, op_callable, {0,0});
 
     return {op_ref, op_callable};
 }
@@ -371,7 +371,7 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
     auto lhs = Expression{ExpressionType::numeric_literal, "3", &NumberLiteral, TSL};
     auto rhs = Expression{ExpressionType::numeric_literal, "7", &NumberLiteral, TSL};
 
-    auto reference = Expression::operator_ref(ast, &test_op, TSL);
+    auto reference = Expression::operator_reference(ast, &test_op, TSL);
 
     auto expr = Expression::termed(ast, {&lhs, reference, &rhs}, TSL);
 

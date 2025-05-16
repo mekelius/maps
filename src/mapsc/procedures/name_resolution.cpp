@@ -109,7 +109,7 @@ not an operator");
         log_info(
             "Resolved built-in operator", MessageType::parser_debug_terminal, expression->location);
         
-        expression->convert_to_operator_ref(*builtin);
+        expression->convert_to_operator_reference(*builtin);
         return true;
     }
 

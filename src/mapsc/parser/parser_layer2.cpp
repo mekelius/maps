@@ -883,12 +883,12 @@ Expression* TermedExpressionParser::handle_arg_state(Callable* callee, const std
 }
 
 Expression* TermedExpressionParser::binary_minus_ref(SourceLocation location) {
-    return Expression::operator_ref(
+    return Expression::operator_reference(
         *ast_store_, compilation_state_->special_callables_.binary_minus, location);
 }
 
 Expression* TermedExpressionParser::unary_minus_ref(SourceLocation location) {
-    return Expression::operator_ref(
+    return Expression::operator_reference(
         *ast_store_, compilation_state_->special_callables_.unary_minus, location);
 }
 

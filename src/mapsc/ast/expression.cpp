@@ -354,7 +354,7 @@ Expression* Expression::type_reference(AST_Store& store, const Type* type, Sourc
     return store.allocate_expression({ExpressionType::type_reference, type, &Void, location});
 }
 
-Expression Expression::operator_ref(Callable* callable, SourceLocation location) {
+Expression Expression::operator_reference(Callable* callable, SourceLocation location) {
     assert(callable->is_operator() && "AST::create_operator_ref called with not an operator");
 
     ExpressionType expression_type;
@@ -374,13 +374,13 @@ Expression Expression::operator_ref(Callable* callable, SourceLocation location)
     return {expression_type, callable, callable->get_type(), location};
 }
 
-Expression* Expression::operator_ref(AST_Store& store, Callable* callable, SourceLocation location) {
-    return store.allocate_expression(operator_ref(callable, location));
+Expression* Expression::operator_reference(AST_Store& store, Callable* callable, SourceLocation location) {
+    return store.allocate_expression(operator_reference(callable, location));
 }
 
-void Expression::convert_to_operator_ref(Callable* callable) {
+void Expression::convert_to_operator_reference(Callable* callable) {
     auto declared_type = this->declared_type;
-    *this = operator_ref(callable, location);
+    *this = operator_reference(callable, location);
     this->declared_type = declared_type;
 }
 
