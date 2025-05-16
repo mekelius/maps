@@ -59,12 +59,16 @@ private:
     void initial_reference_state();
     void initial_value_state();
     void initial_operator_state();
+    void initial_minus_sign_state();
     
     // binary operators
     void post_binary_operator_state();
     void compare_precedence_state();
     void reduce_operator_left();
+
+    // convenience function that creates an unary call expression and pushes it onto the parse stack
     void create_unary_operator_call(Expression* operator_ref, Expression* value);
+    void apply_type_declaration(Expression* type_declaration, Expression* value);
     
     void initial_type_reference_state();
     void initial_type_constructor_state();
@@ -76,6 +80,10 @@ private:
     void call_expression_state();
     void partial_call_state();
     Expression* handle_arg_state(Callable* callee, const std::vector<Expression*>& args);
+
+    // creating minus refs
+    Expression* binary_minus_ref(SourceLocation location);
+    Expression* unary_minus_ref(SourceLocation location);
 
     Expression* const expression_;
     std::vector<Expression*>* expression_terms_;

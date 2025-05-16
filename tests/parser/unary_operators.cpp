@@ -64,41 +64,20 @@ TEST_CASE("Unary should take precedence over binary (prefix)") {
     auto op_ref = Expression{ExpressionType::operator_reference, TSL, &op, op.get_type()};
     auto value = Expression{ExpressionType::value, TSL, true, &Boolean};
 
-    SUBCASE("!true") {
-        auto expr = Expression{ExpressionType::termed_expression, TSL, 
-            TermedExpressionValue{{&op_ref, &value}}};
-    
-        TermedExpressionParser{&state, &expr}.run();
-    
-        CHECK(state.is_valid);
-    
-        CHECK(expr.expression_type == ExpressionType::call);
-        
-        auto [callee, args] = expr.call_value();
-    
-        CHECK(args.size() == 1);
-        CHECK(**args.begin() == value);
-        CHECK(callee == &op);
-    }
+    auto expr = Expression{ExpressionType::termed_expression, TSL, 
+        TermedExpressionValue{{&op_ref, &value}}};
 
-    // SUBCASE("true ! false") {
-    //     auto value = Expression{ExpressionType::value, TSL, true, &Boolean};
+    TermedExpressionParser{&state, &expr}.run();
 
-    //     auto expr = Expression{ExpressionType::termed_expression, TSL, 
-    //         TermedExpressionValue{{&op_ref, &value}}};
+    CHECK(state.is_valid);
+
+    CHECK(expr.expression_type == ExpressionType::call);
     
-    //     TermedExpressionParser{&state, &expr}.run();
-    
-    //     CHECK(state.is_valid);
-    
-    //     CHECK(expr.expression_type == ExpressionType::call);
-        
-    //     auto [callee, args] = expr.call_value();
-    
-    //     CHECK(args.size() == 1);
-    //     CHECK(**args.begin() == value);
-    //     CHECK(callee == &op);
-    // }
+    auto [callee, args] = expr.call_value();
+
+    CHECK(args.size() == 1);
+    CHECK(**args.begin() == value);
+    CHECK(callee == &op);
 }
 
 TEST_CASE("Unary should take precedence over binary (postfix)") {

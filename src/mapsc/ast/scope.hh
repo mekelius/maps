@@ -44,9 +44,7 @@ public:
         return it->second;
     }
 
-    std::optional<Callable*> create_identifier(Callable* callable) {
-        auto name = std::string{callable->name_};
-
+    std::optional<Callable*> create_identifier(const std::string& name, Callable* callable) {
         if (identifier_exists(name))
             return std::nullopt;
 
@@ -54,6 +52,10 @@ public:
         identifiers_in_order_.push_back({name, callable});
         
         return callable;
+    }
+
+    std::optional<Callable*> create_identifier(Callable* callable) {
+        return create_identifier(std::string{callable->name_}, callable);
     }
 
     std::vector<std::pair<std::string, Callable*>> identifiers_in_order_ = {};

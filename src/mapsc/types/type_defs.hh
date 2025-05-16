@@ -45,10 +45,12 @@ constexpr std::array<const Type*, 15> BUILTIN_TYPES {
 };
 
 constexpr CTFunctionType<1> String_to_IO_Void{ "String => IO Void", &IO_Void, {&String}, false };
+constexpr CTFunctionType<1> Int_to_Int{ "Int -> Int", &Int, {&Int}, true };
 constexpr CTFunctionType<2> IntInt_to_Int{ "Int -> Int -> Int", &Int, {&Int, &Int}, true };
 constexpr CTFunctionType<2> FloatFloat_to_Float{ "Float -> Float -> Float", &Float, {&Float, &Float}, true };
-constexpr std::array<const FunctionType*, 3> BUILTIN_FUNCTION_TYPES {
+constexpr std::array<const FunctionType*, 4> BUILTIN_FUNCTION_TYPES {
     &String_to_IO_Void,
+    &Int_to_Int,
     &IntInt_to_Int,
     &FloatFloat_to_Float
 };

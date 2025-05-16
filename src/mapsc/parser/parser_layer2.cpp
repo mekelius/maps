@@ -10,6 +10,7 @@
 #include "mapsc/logging.hh"
 #include "mapsc/loglevel_defs.hh"
 #include "mapsc/compilation_state.hh"
+#include "mapsc/builtins.hh"
 
 #include "mapsc/types/type.hh"
 #include "mapsc/types/function_type.hh"
@@ -24,29 +25,29 @@ namespace Maps {
 
 // Expression types that are not allowed here
 // NOTE: Empty is allowed at top-level
-#define BAD_TERM ExpressionType::identifier: \
-            case ExpressionType::type_identifier: \
-            case ExpressionType::operator_identifier: \
-            case ExpressionType::type_operator_identifier: \
-            case ExpressionType::deleted: \
-            case ExpressionType::missing_arg: \
-            case ExpressionType::syntax_error: \
+#define NOT_ALLOWED_IN_LAYER2 ExpressionType::identifier:\
+            case ExpressionType::type_identifier:\
+            case ExpressionType::operator_identifier:\
+            case ExpressionType::type_operator_identifier:\
+            case ExpressionType::type_operator_reference:\
+            case ExpressionType::deleted:\
+            case ExpressionType::missing_arg:\
+            case ExpressionType::syntax_error:\
             case ExpressionType::not_implemented
 
-#define TYPE_DECLARATION_TERM ExpressionType::type_argument: \
-                         case ExpressionType::type_field_name: \
-                         case ExpressionType::type_constructor_reference: \
-                         case ExpressionType::type_reference: \
-                         case ExpressionType::type_operator_reference: \
+#define TYPE_DECLARATION_TERM ExpressionType::type_argument:\
+                         case ExpressionType::type_field_name:\
+                         case ExpressionType::type_constructor_reference:\
+                         case ExpressionType::type_reference:\
                          case ExpressionType::type_construct
 
 // Expression types guaranteed to be simple values
-#define GUARANTEED_VALUE ExpressionType::string_literal: \
-                    case ExpressionType::numeric_literal: \
+#define GUARANTEED_VALUE ExpressionType::string_literal:\
+                    case ExpressionType::numeric_literal:\
                     case ExpressionType::value
 
-#define POTENTIAL_FUNCTION ExpressionType::call: \
-                      case ExpressionType::reference: \
+#define POTENTIAL_FUNCTION ExpressionType::call:\
+                      case ExpressionType::reference:\
                       case ExpressionType::termed_expression
 
 ParserLayer2::ParserLayer2(CompilationState* compilation_state)
@@ -81,6 +82,8 @@ void TermedExpressionParser::run() {
 
 Expression* TermedExpressionParser::get_term() {
     Expression* current_term = *next_term_it_;
+    assert(current_term->is_ok_in_layer2() && 
+        "TermedExpressionParser encountered a term not ok in layer2");
     next_term_it_++;
     return current_term;
 }
@@ -175,8 +178,12 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             initial_operator_state();
             break;
 
+        case ExpressionType::minus_sign:
+            shift();
+            initial_minus_sign_state();
+            break;
+
         case ExpressionType::type_reference:
-        case ExpressionType::type_operator_reference:
             shift();
             initial_type_reference_state();
             break;
@@ -185,7 +192,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         case ExpressionType::type_argument:
         case ExpressionType::type_construct:
         case ExpressionType::type_constructor_reference:
-        case BAD_TERM:
+        case NOT_ALLOWED_IN_LAYER2:
             // TODO: make expressions print out nice
             log_error("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), 
                 expression_->location);
@@ -284,7 +291,19 @@ void TermedExpressionParser::initial_value_state() {
                 precedence_stack_.push_back(op->get_precedence());
                 return post_binary_operator_state();
             }
-        }    
+
+            assert(false && "operator not binary or unary");
+            return fail("Encountered broken operator in initial_value_state", 
+                current_term()->location);
+        }
+
+        case ExpressionType::minus_sign: {
+            auto location = get_term()->location;
+            parse_stack_.push_back(binary_minus_ref(location));
+            precedence_stack_.push_back(
+                current_term()->operator_reference_value()->get_precedence());
+            return post_binary_operator_state();
+        }
 
         case ExpressionType::reference:
         case ExpressionType::call:
@@ -293,14 +312,13 @@ void TermedExpressionParser::initial_value_state() {
                 " in termed expression, expected an operator", peek()->location);
 
         case ExpressionType::type_reference:
-        case ExpressionType::type_operator_reference:
         case ExpressionType::type_argument:
         case ExpressionType::type_construct:
         case ExpressionType::type_constructor_reference:
             assert(false && "not implemented");
     
         case ExpressionType::type_field_name:
-        case BAD_TERM:
+        case NOT_ALLOWED_IN_LAYER2:
             // TODO: make expression to_str
             fail("bad term "+ peek()->log_message_string() + " in initial value state", peek()->location);
             return;
@@ -340,14 +358,67 @@ void TermedExpressionParser::initial_operator_state() {
             return;
         }
 
+        case ExpressionType::minus_sign:{
+            auto location = get_term()->location;
+            switch (peek()->expression_type) {
+                case GUARANTEED_VALUE:
+                    create_unary_operator_call(unary_minus_ref(location), get_term());
+                    assert(false && "not implemented");
+
+                default:
+                    assert(false && "not implemented");
+            }
+            assert(false && "not implemented");
+        }
         case TYPE_DECLARATION_TERM:
         case ExpressionType::call:
         case ExpressionType::operator_reference:
         case ExpressionType::reference:
             assert(false && "not implemented");
 
-        case BAD_TERM:
+        case NOT_ALLOWED_IN_LAYER2:
             assert(false && "bad term encountered in TermedExpressoinParser");
+    }
+}
+
+void TermedExpressionParser::initial_minus_sign_state() {
+    if (at_expression_end()) {
+        auto declared_type = current_term()->declared_type;
+        
+        auto location = (*pop_term())->location;
+
+        if (!declared_type)
+            return fail("minus sign without arguments or declared type is ambiguous", location);
+
+        if (declared_type == &Int_to_Int)
+            return parse_stack_.push_back(unary_minus_ref(location));
+
+        if (declared_type == &IntInt_to_Int)
+            return parse_stack_.push_back(binary_minus_ref(location));
+
+        return fail(
+            "Type " + (*declared_type)->to_string() + " is not allowed with \"-\"", location);
+    }
+
+    switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_termed_sub_expression(peek());
+            return initial_minus_sign_state();
+
+        case GUARANTEED_VALUE: {
+            auto location = (*pop_term())->location;
+            parse_stack_.push_back(unary_minus_ref(location));
+
+            
+        }
+
+        case ExpressionType::reference:
+        case ExpressionType::call:
+
+        case TYPE_DECLARATION_TERM:
+        default:
+            return fail("Initial minus sign not allowed with " + peek()->log_message_string(), 
+                current_term()->location);
     }
 }
 
@@ -406,6 +477,9 @@ void TermedExpressionParser::post_binary_operator_state() {
             
             return compare_precedence_state();
         }
+
+        case ExpressionType::minus_sign:
+            assert(false && "not implemented");
             
         case GUARANTEED_VALUE:
             shift();
@@ -420,7 +494,7 @@ void TermedExpressionParser::post_binary_operator_state() {
 
             assert(false && "not implemented");
 
-        case BAD_TERM:
+        case NOT_ALLOWED_IN_LAYER2:
             assert(false && "bad term in TermedExpressionParser::post_binary_operator_state");
             break;
     }
@@ -555,22 +629,24 @@ void TermedExpressionParser::initial_type_reference_state() {
             current_term()->declared_type = get<const Type*>(type_value);
             current_term()->location = type_term->location;
             return initial_reference_state(); 
-        }           
-        case ExpressionType::operator_reference:
-            
+        }
+
+        case ExpressionType::operator_reference:{
+            shift();
+            initial_operator_state();
+            auto value = pop_term();
+            return apply_type_declaration(*pop_term(), *value);
+        }
         case ExpressionType::termed_expression:
             // parse and come back
             // 
-        case ExpressionType::type_operator_reference:
-            // make a type construct
-
         case ExpressionType::type_reference:
             // fail
 
         default:
             assert(false && "-.-"); // !!!
 
-        case BAD_TERM:
+        case NOT_ALLOWED_IN_LAYER2:
             fail("bad term encountered in TermedExpressoinParser", current_term()->location);
             assert(false && "bad term encountered in TermedExpressoinParser");
             return;
@@ -578,15 +654,22 @@ void TermedExpressionParser::initial_type_reference_state() {
 }
 
 void TermedExpressionParser::create_unary_operator_call(Expression* operator_ref, Expression* value) {
-    auto call = create_call_expression(*ast_store_, expression_->location, 
+    auto location = 
+        operator_ref->operator_reference_value()->operator_props_.unary_fixity == UnaryFixity::prefix ?
+            operator_ref->location : value->location;
+    auto call = create_call_expression(*ast_store_, location, 
         operator_ref->reference_value(), { value });
             
     if (!call)
-        return fail("Creating call to unary operator failed", operator_ref->location);
+        return fail("Creating a call to unary operator failed", location);
 
     parse_stack_.push_back(*call);
 
     return initial_value_state();
+}
+
+void TermedExpressionParser::apply_type_declaration(Expression* type_declaration, Expression* value) {
+    assert(false && "not implemented");
 }
 
 bool TermedExpressionParser::is_acceptable_next_arg(Callable* callee, 
@@ -694,6 +777,14 @@ Expression* TermedExpressionParser::handle_arg_state(Callable* callee, const std
             assert(false && "unhandled expression type in call_expression_state");
             return *pop_term();
     }
+}
+
+Expression* TermedExpressionParser::binary_minus_ref(SourceLocation location) {
+    return create_operator_ref(*ast_store_, &binary_minus_Int, location);
+}
+
+Expression* TermedExpressionParser::unary_minus_ref(SourceLocation location) {
+    return create_operator_ref(*ast_store_, &unary_minus_Int, location);
 }
 
 } // namespace Maps

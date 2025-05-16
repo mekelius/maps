@@ -262,6 +262,9 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 
         case ExpressionType::missing_arg:
             return *this << "@missing arg@";
+
+        case ExpressionType::minus_sign:
+            return *this << "-";
     }
 }
 

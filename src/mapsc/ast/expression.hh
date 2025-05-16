@@ -42,6 +42,7 @@ enum class ExpressionType {
     type_construct,                 // value: type_identifier | (type_constructor_identifier, [type_parameter])
     type_argument,                  // value: (type_construct, optional<string>)
 
+    minus_sign,                     // minus sign is special, value: std::monostate
     reference,                      // value: Callable*
     operator_reference,
     type_reference,
@@ -178,6 +179,8 @@ inline const Expression create_builtin_expression(const ExpressionValue& value, 
 
 std::optional<Expression*> create_call_expression(AST_Store& store, SourceLocation location, Callable* callable, 
     const std::vector<Expression*>& args);
+
+Expression* create_minus_sign(AST_Store& store, SourceLocation location);
 
 Precedence get_operator_precedence(const Expression& operator_ref);
 

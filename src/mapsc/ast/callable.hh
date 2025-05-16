@@ -40,7 +40,6 @@ public:
 
     constexpr Callable(std::string_view name, External external, const Type& type)
     :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(&type) {
-
     }
 
     Callable(std::string_view name, CallableBody body, SourceLocation location);

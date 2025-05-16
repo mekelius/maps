@@ -27,80 +27,50 @@ namespace Maps {
 
 class Type;
 
-namespace {
+Builtin::Builtin(std::string_view name, const Expression&& expression)
+:Callable(name, Undefined{}, BUILTIN_SOURCE_LOCATION), 
+    builtin_body_(expression) {
+    body_ = &std::get<Expression>(builtin_body_);
+}
 
+Builtin::Builtin(std::string_view name, const Statement&& statement, const Type& type)
+:Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION),
+    builtin_body_(statement) {
+    body_ = &std::get<Statement>(builtin_body_);
+}
 
-using BuiltinValue = std::variant<maps_Boolean, maps_String, maps_Int, maps_Float>;
-using BuiltinBody = std::variant<External, Expression, Statement>;
+Builtin::Builtin(std::string_view name, External external, const Type& type)
+:Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION), builtin_body_(external) {
+    body_ = std::get<External>(builtin_body_);
+}
 
-class Builtin: public Callable {
-public:
-    Builtin(std::string_view name, const Expression&& expression)
-    :Callable(name, Undefined{}, BUILTIN_SOURCE_LOCATION), 
-     builtin_body_(expression) {
-        body_ = &std::get<Expression>(builtin_body_);
-    }
+BuiltinOperator::BuiltinOperator(std::string_view name, const Expression&& expression, 
+    OperatorProps operator_props)
+:Operator(name, Undefined{}, operator_props, BUILTIN_SOURCE_LOCATION),
+    builtin_body_(expression) {
+    body_ = &std::get<Expression>(builtin_body_);
+}
 
-    Builtin(std::string_view name, const Statement&& statement, const Type& type)
-    :Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION),
-     builtin_body_(statement) {
-        body_ = &std::get<Statement>(builtin_body_);
-    }
+// ----- BUILTIN DEFINITIONS -----
 
-    Builtin(std::string_view name, External external, const Type& type)
-    :Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION), builtin_body_(external) {
-        body_ = std::get<External>(builtin_body_);
-    }
+Builtin true_{"true", create_builtin_expression(true, Boolean)};
+Builtin false_{"false", create_builtin_expression(false, Boolean)};
+Builtin print{"print", External{}, String_to_IO_Void};
 
-    virtual bool is_const() const { return true; }
-
-    BuiltinBody builtin_body_;
-};
-
-class BuiltinOperator: public Operator {
-public:
-    BuiltinOperator(std::string_view name, const Expression&& expression, 
-        OperatorProps operator_props)
-    :Operator(name, Undefined{}, operator_props, BUILTIN_SOURCE_LOCATION),
-     builtin_body_(expression) {
-        body_ = &std::get<Expression>(builtin_body_);
-    }
-
-    // Builtin(const std::string& name, const Statement&& statement, const Type& type)
-    // :Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION),
-    //  builtin_body_(statement) {
-    //     body_ = &std::get<Statement>(builtin_body_);
-    // }
-
-    constexpr BuiltinOperator(std::string_view name, External external, const Type& type, 
-        OperatorProps operator_props)
-    :Operator(name, external, type, operator_props), builtin_body_(external) {}
-
-    virtual constexpr ~BuiltinOperator() = default;
-
-    virtual bool is_const() const { return true; }
-
-    BuiltinBody builtin_body_;
-};
-
-Builtin maps_true{"true", create_builtin_expression(true, Boolean)};
-Builtin maps_false{"false", create_builtin_expression(false, Boolean)};
-
-constinit BuiltinOperator maps_plus_Int{"+", External{}, IntInt_to_Int,
-    OperatorProps::Binary(500, Associativity::left)};
-constinit BuiltinOperator maps_minus_Int{"-", External{}, IntInt_to_Int,
-    OperatorProps::Binary(510, Associativity::left)};
-constinit BuiltinOperator maps_mult_Int{"*", External{}, IntInt_to_Int,
-    OperatorProps::Binary(520, Associativity::left)};
-//constexpr Builtin maps_true{"/", create_builtin_expression(true, Boolean)};
-
-Builtin maps_print{"print", External{}, String_to_IO_Void};
+// ----- BUILTINS SCOPE -----
 
 static Scope builtins;
-
 bool builtins_initialized = false;
 
-} // anonymous namespace
+constinit BuiltinOperator unary_minus_Int{"-", External{}, Int_to_Int,
+    OperatorProps{UnaryFixity::prefix}};
+
+constinit BuiltinOperator plus_Int{"+", External{}, IntInt_to_Int,
+    OperatorProps::Binary(500, Associativity::left)};
+constinit BuiltinOperator binary_minus_Int{"-", External{}, IntInt_to_Int,
+    OperatorProps::Binary(510, Associativity::left)};
+constinit BuiltinOperator mult_Int{"*", External{}, IntInt_to_Int,
+    OperatorProps::Binary(520, Associativity::left)};
 
 bool init_builtin(Scope& scope, Callable& callable) {
     if (!scope.create_identifier(&callable)) {
@@ -115,12 +85,11 @@ bool init_builtins(Scope& scope) {
     builtins_initialized = true;
 
     return (
-        init_builtin(scope, maps_true       ) &&
-        init_builtin(scope, maps_false      ) &&
-        init_builtin(scope, maps_print      ) &&
-        init_builtin(scope, maps_plus_Int   ) &&
-        init_builtin(scope, maps_minus_Int  ) &&
-        init_builtin(scope, maps_mult_Int   )
+        init_builtin(scope, true_      ) &&
+        init_builtin(scope, false_     ) &&
+        init_builtin(scope, print      ) &&
+        init_builtin(scope, plus_Int   ) &&
+        init_builtin(scope, mult_Int   )
     );
 
     // if (!ast.create_builtin_binary_operator("+", *ast.types_->get_function_type(Int, 

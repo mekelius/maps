@@ -149,7 +149,7 @@ bool Expression::is_identifier() const {
 }
 
 bool Expression::is_ok_in_layer2() const {
-    return (!is_identifier() && !is_illegal());
+    return !(is_identifier() || is_illegal() || expression_type == ExpressionType::type_operator_reference);
 }
 
 bool Expression::is_ok_in_codegen() const {
@@ -271,8 +271,9 @@ std::string Expression::log_message_string() const {
         case ExpressionType::deleted:
             return "deleted expession";
 
-        default:
-            assert(false && "unknown expression type");
+        case ExpressionType::minus_sign:
+            return "-";
+
     }
 }
 
@@ -406,6 +407,11 @@ optional<Expression*> create_call_expression(AST_Store& store, SourceLocation lo
 
     //     if(arg->type )
     // }
+}
+
+Expression* create_minus_sign(AST_Store& store, SourceLocation location) {
+    return store.allocate_expression(
+        Expression{ExpressionType::minus_sign, location, std::monostate{}});
 }
 
 Precedence get_operator_precedence(const Expression& operator_ref) {

@@ -956,6 +956,13 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return parse_expression();
             
         case TokenType::operator_t: {
+            // handle minus sign as a special case
+            if (current_token().get_string() == "-") {
+                auto location = current_token().location;
+                get_token();
+                return create_minus_sign(*ast_store_, location);
+            }
+
             Expression* expression = create_operator_identifier_expression(*compilation_state_, 
                 current_token().string_value(), current_token().location);
             get_token();
