@@ -24,6 +24,7 @@ public:
     using const_iterator = std::vector<std::pair<std::string, Callable*>>::const_iterator;
     const_iterator begin() const { return identifiers_in_order_.begin(); }
     const_iterator end() const { return identifiers_in_order_.end(); }
+    bool empty() const { return identifiers_.empty(); }
 
     Scope() = default;
 

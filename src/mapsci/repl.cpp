@@ -88,6 +88,9 @@ bool REPL::run() {
             options_.stop_after == Stage::layer3
         ) continue;
 
+        if (compilation_state->empty())
+            continue;
+
         unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
         unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), 
             compilation_state.get(), error_stream_);

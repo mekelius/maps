@@ -56,8 +56,13 @@ optional<Callable*> ParserLayer1::eval_parse(std::istream& source_is) {
         return nullopt;
     }
 
+    auto entry_point = *compilation_state_->entry_point_;
     // if root is a single statement block or an expression statement, simplify it
-    attempt_simplify(**compilation_state_->entry_point_);
+    attempt_simplify(*entry_point);
+
+    // check for empty entry point
+    if (entry_point->is_empty())
+        compilation_state_->entry_point_ = nullopt;
 
     return compilation_state_->entry_point_;
 }

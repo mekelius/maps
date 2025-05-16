@@ -85,6 +85,7 @@ struct Statement {
     std::string log_message_string() const;
 
     bool is_illegal_as_single_statement_block() const;
+    bool is_empty() const;
 
     bool operator==(const Statement& other) const {
         return std::tie(statement_type, value) == std::tie(other.statement_type, other.value);

@@ -17,6 +17,16 @@ CompilationState::CompilationState(const Scope* builtins, TypeStore* types,
 :types_(types), builtins_(builtins), special_callables_(special_callables) {
 }
 
+bool CompilationState::empty() const {
+    if (!globals_->empty())
+        return false;
+
+    if (entry_point_)
+        return false;
+
+    return true;
+}
+
 bool CompilationState::set_entry_point(Callable* entrypoint) {
     entry_point_ = entrypoint;
     return true;

@@ -56,6 +56,8 @@ public:
     CompilationState(const Scope* builtins, TypeStore* types,
         SpecialCallables specials = {&unary_minus_Int, &binary_minus_Int});
 
+    bool empty() const;
+
     [[nodiscard]] bool set_entry_point(Callable* entrypoint);
     [[nodiscard]] bool set_entry_point(std::string name);
 

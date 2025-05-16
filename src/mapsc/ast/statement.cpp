@@ -108,4 +108,8 @@ bool Statement::is_illegal_as_single_statement_block() const {
     }
 }
 
+bool Statement::is_empty() const {
+    return statement_type == StatementType::empty;
+}
+
 } // namespace AST

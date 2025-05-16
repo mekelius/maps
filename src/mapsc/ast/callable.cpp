@@ -1,7 +1,10 @@
 #include "callable.hh"
 
+#include <variant>
 #include <cassert>
 #include <string>
+
+#include "common/std_visit_helper.hh"
 
 #include "mapsc/logging.hh"
 
@@ -136,6 +139,15 @@ bool Callable::set_declared_type(const Type& type) {
 
 bool Callable::is_undefined() const {
     return std::holds_alternative<Undefined>(body_);
+}
+
+bool Callable::is_empty() const {
+    return std::visit(overloaded {
+        [](External) { return false; },
+        [](Expression*) { return false; },
+        [](Undefined) { return true; },
+        [](Statement* statement) { return statement->is_empty(); }
+    }, body_);
 }
 
 bool Callable::is_operator() const {

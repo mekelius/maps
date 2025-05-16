@@ -67,6 +67,7 @@ public:
 
     // checks if the name is an operator style name
     bool is_undefined() const;
+    bool is_empty() const;
     virtual bool is_operator() const;
     virtual bool is_binary_operator() const;
     virtual bool is_unary_operator() const;

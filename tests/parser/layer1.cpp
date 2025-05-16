@@ -187,3 +187,30 @@ TEST_CASE("Should recognize minus as a special case") {
     CHECK(terms.at(1)->expression_type == ExpressionType::numeric_literal);
     CHECK(terms.at(1)->string_value() == "5");
 }
+
+TEST_CASE("Should correctly produce empty results") {
+    auto [state, _1, _2] = CompilationState::create_test_state();
+    REQUIRE(state.empty());
+    ParserLayer1 layer1{&state};
+
+    SUBCASE("control") {
+        std::stringstream source{"2"};
+
+        layer1.eval_parse(source);
+        CHECK(!state.empty());
+    }
+
+    SUBCASE("empty string") {
+        std::stringstream source{""};
+
+        layer1.eval_parse(source);
+        CHECK(state.empty());
+    }
+
+    SUBCASE("comment") {
+        std::stringstream source{"//comment"};
+
+        layer1.eval_parse(source);
+        CHECK(state.empty());
+    }
+}

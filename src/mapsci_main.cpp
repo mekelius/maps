@@ -139,6 +139,7 @@ int main(int argc, char* argv[]) {
         } else if (key == "--e2e-tests-mode") {
             repl_options.prefix_output = true;
             repl_options.prompt = false;
+            repl_options.save_history = false;
             repl_options.quit_on_error = true;
             logger_options.set(LogLevel::errors());
 
