@@ -16,7 +16,8 @@ inline tuple<Expression*, Callable*> create_operator_helper(CompilationState& st
 
     const Type* type = state.types_->get_function_type(Void, {&Number, &Number});
     Callable* op_callable = state.ast_store_->allocate_operator(
-        Operator::create_binary(op_string, External{}, *type, precedence, Associativity::left, TSL));
+        Operator::create_binary(op_string, External{}, *type, precedence, 
+            Operator::Associativity::left, TSL));
 
     Expression* op_ref = Expression::operator_reference(*state.ast_store_, op_callable, {0,0});
 
@@ -366,7 +367,7 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
 
     auto test_op_expr = Expression{ExpressionType::value, "jii", IntString, TSL};
     auto test_op = Operator::create_binary(">=?", &test_op_expr, 5, 
-        Associativity::left, TSL);
+        Operator::Associativity::left, TSL);
 
     auto lhs = Expression{ExpressionType::numeric_literal, "3", &NumberLiteral, TSL};
     auto rhs = Expression{ExpressionType::numeric_literal, "7", &NumberLiteral, TSL};
@@ -407,7 +408,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
 
     SUBCASE("Int \"32\" + 987") {
         auto op = Operator{"+", External{}, *types->get_function_type(Int, {&Int, &Int}),
-            OperatorProps{UnaryFixity::none, BinaryFixity::infix}, TSL};
+            {Operator::Fixity::binary}, TSL};
         
         auto op_ref = Expression{ExpressionType::binary_operator_reference, &op, TSL};
         auto rhs = Expression{ExpressionType::numeric_literal, "987", TSL};

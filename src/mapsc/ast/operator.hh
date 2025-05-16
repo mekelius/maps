@@ -6,112 +6,70 @@
 
 namespace Maps {
 
-using Precedence = unsigned int;
-
-constexpr Precedence MAX_OPERATOR_PRECEDENCE = 1000;
-constexpr Precedence MIN_OPERATOR_PRECEDENCE = 0;
-
-enum class OperatorType {
-    binary,
-    unary_prefix,
-    unary_postfix
-};
-
-enum class BinaryFixity {
-    infix,
-    none
-};
-
-enum class UnaryFixity {
-    prefix,
-    postfix,
-    none
-};
-
-enum class Associativity {
-    left,
-    // none, // not implemented, everything is left-associative
-    // right, 
-    // both,
-};
-
-struct OperatorProps {
-    constexpr static OperatorProps Binary(Precedence precedence, Associativity associativity) {
-        return OperatorProps{UnaryFixity::none, BinaryFixity::infix, precedence, associativity};
-    }
-
-    constexpr static OperatorProps Unary() {
-        return OperatorProps{UnaryFixity::prefix};
-    }
-
-    UnaryFixity unary_fixity = UnaryFixity::prefix;
-    BinaryFixity binary_fixity = BinaryFixity::infix;
-    
-    Precedence precedence = 999;
-    Associativity associativity = Associativity::left;
-
-    bool is_unary() const { return unary_fixity != UnaryFixity::none; };
-    bool is_binary() const { return binary_fixity != BinaryFixity::none; };
-};
-
 class Operator: public Callable {
 public:
+    using Precedence = unsigned int;
+
+    static constexpr Precedence MAX_PRECEDENCE = 1000;
+    static constexpr Precedence MIN_PRECEDENCE = 0;
+
+    enum class Fixity {
+        binary,
+        unary_prefix,
+        unary_postfix
+    };
+
+    enum class Associativity {
+        left
+        // none, // not implemented, everything is left-associative
+        // right, 
+        // both,
+    };
+
+    struct Properties {
+        Fixity fixity;
+        Precedence precedence = 999;
+        Associativity associativity = Associativity::left;
+    };
+
     static Operator create_binary(std::string_view name, CallableBody body, Precedence precedence, 
         Associativity associativity, SourceLocation location) {
 
-        return Operator{name, body, OperatorProps::Binary(precedence, associativity), location};
+        return Operator{name, body, {Fixity::binary, precedence, associativity}, location};
     }
 
     static Operator create_binary(std::string_view name, CallableBody body, const Type& type, 
         Precedence precedence, Associativity associativity, SourceLocation location) {
 
-        return Operator{name, body, type, OperatorProps::Binary(precedence, associativity), location};
+        return Operator{name, body, type, {Fixity::binary, precedence, associativity}, location};
     }
 
     constexpr Operator(std::string_view name, const External external, const Type& type, 
-        const OperatorProps& operator_props)
+        const Properties& operator_props)
     :Callable(name, external, type), operator_props_(operator_props) {}
 
     Operator(std::string_view name, CallableBody body, const Type& type, 
-        OperatorProps operator_props, SourceLocation location)
+        Properties operator_props, SourceLocation location)
      :Callable(name, body, type, location), 
       operator_props_(operator_props) {}
 
     Operator(std::string_view name, CallableBody body, 
-        OperatorProps operator_props, SourceLocation location)
+        Properties operator_props, SourceLocation location)
      :Callable(name, body, location), operator_props_(operator_props) {}
 
     Operator(const Operator& other) = default;
     Operator& operator=(const Operator& other) = default;
     virtual constexpr ~Operator() = default;
 
-    bool is_operator() const {
-        return true;
-    }
+    bool is_operator() const { return true; }
+    bool is_binary() const { return operator_props_.fixity == Fixity::binary; }
+    bool is_unary() const { return operator_props_.fixity != Fixity::binary; }
+    bool is_prefix() const { return operator_props_.fixity == Fixity::unary_prefix; }
 
-    bool is_binary_operator() const {
-        return operator_props_.is_binary();
-    }
+    Precedence precedence() { return operator_props_.precedence; }
+    Fixity fixity() const { return operator_props_.fixity; }
 
-    bool is_unary_operator() const {
-        return operator_props_.is_unary();
-    }
-
-    Precedence get_precedence() {
-        return operator_props_.precedence;
-    }
-
-    OperatorType operator_type() {
-        if (operator_props_.is_binary())
-            return OperatorType::binary;
-
-        if (operator_props_.unary_fixity == UnaryFixity::prefix)
-            return OperatorType::unary_prefix;
-
-        return OperatorType::unary_postfix;
-    }
-
-    OperatorProps operator_props_;
+    Properties operator_props_;
 
 private:
 };

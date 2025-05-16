@@ -7,9 +7,9 @@
 - deal with unary ops
 - then:
     - refactor ir_builtins
-    - reorder expression factory func args
     - refactor operator class
     - improve logging a bit
+    - maybe make expression constructors private?
 - then:
     - look into conditionals
     - look into runtime casts

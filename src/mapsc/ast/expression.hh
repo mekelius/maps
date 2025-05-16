@@ -198,7 +198,7 @@ struct Expression {
     SourceLocation location;
 };
 
-Precedence get_operator_precedence(const Expression& operator_ref);
+Operator::Precedence get_operator_precedence(const Expression& operator_ref);
 
 } // namespace Maps
 

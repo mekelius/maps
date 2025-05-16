@@ -99,7 +99,7 @@ Expression* TermedExpressionParser::current_term() const {
     return parse_stack_.back();
 }
 
-Precedence TermedExpressionParser::peek_precedence() const {
+Operator::Precedence TermedExpressionParser::peek_precedence() const {
     assert(peek()->expression_type == ExpressionType::binary_operator_reference && 
         "TermedExpressionParser::peek_precedence called with not a binary operator on top of the stack");
 
@@ -291,7 +291,7 @@ void TermedExpressionParser::initial_value_state() {
             shift();
             auto op = current_term()->operator_reference_value();
             
-            precedence_stack_.push_back(op->get_precedence());
+            precedence_stack_.push_back(op->precedence());
             return post_binary_operator_state();
         }
         case ExpressionType::prefix_operator_reference:
@@ -310,7 +310,7 @@ void TermedExpressionParser::initial_value_state() {
             auto location = get_term()->location;
             parse_stack_.push_back(binary_minus_ref(location));
             precedence_stack_.push_back(
-                current_term()->operator_reference_value()->get_precedence());
+                current_term()->operator_reference_value()->precedence());
             return post_binary_operator_state();
         }
 
@@ -421,13 +421,27 @@ void TermedExpressionParser::initial_prefix_operator_state() {
             handle_termed_sub_expression(peek());
             return initial_prefix_operator_state();
 
-        case GUARANTEED_VALUE: {
-            Expression* op = *pop_term();
-            Expression* rhs = get_term();
+        case GUARANTEED_VALUE:
+            return push_unary_operator_call(*pop_term(), get_term());
 
-            return push_unary_operator_call(op, rhs);
+        case ExpressionType::prefix_operator_reference: {
+            auto location = current_term()->location;
+            shift();
+            initial_prefix_operator_state();
+
+            auto rhs = pop_term();
+            auto op = pop_term();
+            if (!rhs || !op) {
+                return fail("parsing failed", location);
+            }
+            return push_unary_operator_call(*op, *rhs);
         }
 
+        case ExpressionType::postfix_operator_reference:
+        case NOT_ALLOWED_IN_LAYER2:
+            return fail("Unexpected " + peek()->log_message_string() + " in termed expression", 
+                peek()->location);
+            
         default:
             assert(false && "not implemented");
     }
@@ -575,7 +589,7 @@ void TermedExpressionParser::compare_precedence_state() {
     }
 
     // precedence goes down => one or more "closing parenthesis" required
-    Precedence next_precedence = peek_precedence();
+    auto next_precedence = peek_precedence();
 
     if (precedence_stack_.back() > next_precedence) {
         reduce_operator_left();
@@ -721,7 +735,6 @@ on the stack");
     }
 }
 
-
 void TermedExpressionParser::push_partial_call(Expression* callee_ref, 
     const std::vector<Expression*>& args) {
 
@@ -741,7 +754,7 @@ void TermedExpressionParser::push_partial_call(Expression* callee_ref,
 
 void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, Expression* value) {
     auto location = 
-        operator_ref->operator_reference_value()->operator_props_.unary_fixity == UnaryFixity::prefix ?
+        operator_ref->operator_reference_value()->fixity() == Operator::Fixity::unary_prefix ?
             operator_ref->location : value->location;
     auto call = Expression::call(*ast_store_, 
         operator_ref->reference_value(), { value }, location);

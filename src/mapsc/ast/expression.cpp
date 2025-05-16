@@ -368,14 +368,14 @@ Expression Expression::operator_reference(Callable* callable, SourceLocation loc
 
     ExpressionType expression_type;
     
-    switch (dynamic_cast<Operator*>(callable)->operator_type()) {
-        case OperatorType::unary_prefix:
+    switch (dynamic_cast<Operator*>(callable)->fixity()) {
+        case Operator::Fixity::unary_prefix:
             expression_type = ExpressionType::prefix_operator_reference;
             break;
-        case OperatorType::unary_postfix:
+        case Operator::Fixity::unary_postfix:
             expression_type = ExpressionType::postfix_operator_reference;
             break;
-        case OperatorType::binary:
+        case Operator::Fixity::binary:
             expression_type = ExpressionType::binary_operator_reference;
             break;
     }
@@ -450,11 +450,11 @@ Expression* Expression::minus_sign(AST_Store& store, SourceLocation location) {
         Expression{ExpressionType::minus_sign, std::monostate{}, location});
 }
 
-Precedence get_operator_precedence(const Expression& operator_ref) {
+Operator::Precedence get_operator_precedence(const Expression& operator_ref) {
     assert(operator_ref.expression_type == ExpressionType::binary_operator_reference && 
         "get_operator_precedence called with not a binary operator reference");
 
-    return operator_ref.operator_reference_value()->get_precedence();
+    return operator_ref.operator_reference_value()->precedence();
 }
 
 } // namespace Maps

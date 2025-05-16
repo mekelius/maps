@@ -499,7 +499,7 @@ Statement* ParserLayer1::parse_operator_definition() {
 
                 assert(current_token().get_string() == "prefix" && "postfix operators not implemented");
                 // UnaryFixity fixity = current_token().get_string() == "prefix" ? UnaryFixity::prefix : UnaryFixity::postfix;
-                UnaryFixity fixity = UnaryFixity::prefix;
+                Operator::Fixity fixity = Operator::Fixity::unary_prefix;
 
                 get_token(); // eat the fixity specifier
 
@@ -514,7 +514,7 @@ Statement* ParserLayer1::parse_operator_definition() {
                 statement->value = OperatorStatementValue{op_string, 1, body};
 
                 compilation_state_->globals_->create_identifier(ast_store_->allocate_callable(
-                    Operator{op_string, body, OperatorProps{fixity}, statement->location}));
+                    Operator{op_string, body, {fixity}, statement->location}));
                 log_info("parsed let statement", MessageType::parser_debug);
                 return statement;
             }
@@ -525,9 +525,9 @@ Statement* ParserLayer1::parse_operator_definition() {
                     " in unary operator statement, expected precedence specifier(positive integer)");
 
             unsigned int precedence = std::stoi(current_token().string_value());
-            if (precedence >= MAX_OPERATOR_PRECEDENCE)
+            if (precedence >= Operator::MAX_PRECEDENCE)
                 return broken_statement_helper("max operator precedence is " + 
-                    std::to_string(MAX_OPERATOR_PRECEDENCE));
+                    std::to_string(Operator::MAX_PRECEDENCE));
 
             get_token(); // eat the precedence specifier
 
@@ -542,8 +542,7 @@ Statement* ParserLayer1::parse_operator_definition() {
             statement->value = OperatorStatementValue{op_string, 2, body};
 
             compilation_state_->globals_->create_identifier(ast_store_->allocate_callable(
-                Operator{op_string, body, 
-                    OperatorProps::Binary(precedence, Associativity::left), 
+                Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
                         statement->location}));
             log_info("parsed let statement", MessageType::parser_debug);
             return statement;   

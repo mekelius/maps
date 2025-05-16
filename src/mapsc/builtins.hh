@@ -44,7 +44,7 @@ public:
 class BuiltinOperator: public Operator {
 public:
     BuiltinOperator(std::string_view name, const Expression&& expression, 
-        OperatorProps operator_props);
+        Operator::Properties operator_props);
 
     // Builtin(const std::string& name, const Statement&& statement, const Type& type)
     // :Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION),
@@ -53,7 +53,7 @@ public:
     // }
   
     constexpr BuiltinOperator(std::string_view name, External external, const Type& type, 
-        OperatorProps operator_props)
+        Operator::Properties operator_props)
     :Operator(name, external, type, operator_props), builtin_body_(external) {}
 
     virtual constexpr ~BuiltinOperator() = default;

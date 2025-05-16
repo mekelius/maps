@@ -69,8 +69,8 @@ public:
     bool is_undefined() const;
     bool is_empty() const;
     virtual bool is_operator() const;
-    virtual bool is_binary_operator() const;
-    virtual bool is_unary_operator() const;
+    virtual bool is_binary() const;
+    virtual bool is_unary() const;
     virtual bool is_const() const { return false; }
 
     bool operator==(const Callable&) const = default;

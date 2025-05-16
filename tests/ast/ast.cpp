@@ -19,10 +19,10 @@ TEST_CASE("Operator::create_binary should create an operator") {
     auto [state, _0, _1] = CompilationState::create_test_state();
 
     Callable* op_callable = state.ast_store_->allocate_operator(
-        Operator::create_binary("+", External{}, 2, Associativity::left, TSL));
+        Operator::create_binary("+", External{}, 2, Operator::Associativity::left, TSL));
 
     CHECK(dynamic_cast<Operator*>(op_callable));
 
     CHECK(op_callable->is_operator());
-    CHECK(op_callable->is_binary_operator());
+    CHECK(op_callable->is_binary());
 }

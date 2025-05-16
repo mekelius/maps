@@ -38,7 +38,7 @@ private:
 
     // helper to get the precedence of an operator on top of the stack
     // caller must check that there is an operator at the top of the stack
-    Precedence peek_precedence() const;
+    Operator::Precedence peek_precedence() const;
 
     // advances the input stream by one and pushes the term onto the parse stack
     void shift();
@@ -100,7 +100,7 @@ private:
 
     bool possibly_type_expression_ = true;
     std::vector<Expression*> parse_stack_ = {};
-    std::vector<unsigned int> precedence_stack_ = {MIN_OPERATOR_PRECEDENCE};
+    std::vector<Operator::Precedence> precedence_stack_ = {Operator::MIN_PRECEDENCE};
 };
 
 // basically a small wrapper that creates TermedExpressionParser for each unparsed termed 

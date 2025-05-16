@@ -45,7 +45,7 @@ Builtin::Builtin(std::string_view name, External external, const Type& type)
 }
 
 BuiltinOperator::BuiltinOperator(std::string_view name, const Expression&& expression, 
-    OperatorProps operator_props)
+    Operator::Properties operator_props)
 :Operator(name, Undefined{}, operator_props, BUILTIN_SOURCE_LOCATION),
     builtin_body_(expression) {
     body_ = &std::get<Expression>(builtin_body_);
@@ -63,14 +63,14 @@ static Scope builtins;
 bool builtins_initialized = false;
 
 constinit BuiltinOperator unary_minus_Int{"-", External{}, Int_to_Int,
-    OperatorProps{UnaryFixity::prefix}};
+    Operator::Properties{Operator::Fixity::unary_prefix}};
 
 constinit BuiltinOperator plus_Int{"+", External{}, IntInt_to_Int,
-    OperatorProps::Binary(500, Associativity::left)};
+    {Operator::Fixity::binary, 500}};
 constinit BuiltinOperator binary_minus_Int{"-", External{}, IntInt_to_Int,
-    OperatorProps::Binary(510, Associativity::left)};
+    {Operator::Fixity::binary,510}};
 constinit BuiltinOperator mult_Int{"*", External{}, IntInt_to_Int,
-    OperatorProps::Binary(520, Associativity::left)};
+    {Operator::Fixity::binary,520}};
 
 bool init_builtin(Scope& scope, Callable& callable) {
     if (!scope.create_identifier(&callable)) {

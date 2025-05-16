@@ -155,11 +155,11 @@ bool Callable::is_operator() const {
     return false;
 }
 
-bool Callable::is_binary_operator() const {
+bool Callable::is_binary() const {
     return false;
 }
 
-bool Callable::is_unary_operator() const {
+bool Callable::is_unary() const {
     return false;
 }
 
