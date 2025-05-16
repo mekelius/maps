@@ -4,8 +4,6 @@
 
 #### Short term
 
-- get it to compile
-- make tests pass
 - deal with unary ops
 - then:
     - refactor ir_builtins

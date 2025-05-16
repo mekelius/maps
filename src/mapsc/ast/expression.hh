@@ -29,21 +29,21 @@ struct Expression;
 // NOTE: references and calls are created by scopes, rest are created by AST
 // See: 'docs/internals/ast\ nodes' for description of what these mean 
 enum class ExpressionType {
-    string_literal = 0,             // value: string
+    string_literal = 0,        // value: string
     numeric_literal,
 
     value,
     
-    identifier,                     // value: string
+    identifier,                // value: string
     operator_identifier,
     type_operator_identifier,
 
-    type_identifier,                // value: string
-    type_construct,                 // value: type_identifier | (type_constructor_identifier, [type_parameter])
-    type_argument,                  // value: (type_construct, optional<string>)
+    type_identifier,           // value: string
+    type_construct, // value: type_identifier | (type_constructor_identifier, [type_parameter])
+    type_argument,             // value: (type_construct, optional<string>)
 
-    minus_sign,                     // minus sign is special, value: std::monostate
-    reference,                      // value: Callable*
+    minus_sign,                // minus sign is special, value: std::monostate
+    reference,                 // value: Callable*
     binary_operator_reference,
     prefix_operator_reference,
     postfix_operator_reference,
@@ -100,45 +100,64 @@ using ExpressionValue = std::variant<
 
 struct Expression {
     // ----- STATIC METHODS -----
-    static Expression* string_literal(AST_Store& store, const std::string& value, SourceLocation location);
-    static Expression* numeric_literal(AST_Store& store, const std::string& value, SourceLocation location);
-    static Expression* identifier(CompilationState& state, const std::string& value, SourceLocation location);
-    static Expression* type_identifier(CompilationState& state, const std::string& value, SourceLocation location);
-    static Expression* operator_identifier(CompilationState& state, const std::string& value, SourceLocation location);
-    static Expression* type_operator_identifier(CompilationState& state, const std::string& value, SourceLocation location);
-    static Expression* termed(AST_Store& store, std::vector<Expression*>&& terms, SourceLocation location);
-    static Expression* reference(AST_Store& store, Callable* callable, SourceLocation location);
-    static std::optional<Expression*> reference(AST_Store& store, const Scope& scope, 
-        const std::string& name, SourceLocation location) {
-        
-        if (auto callable = scope.get_identifier(name))
-            return reference(store, *callable, location);
+    static Expression* string_literal(
+        AST_Store& store, const std::string& value, SourceLocation location);
+    static Expression* numeric_literal(
+        AST_Store& store, const std::string& value, SourceLocation location);
 
-        return std::nullopt;
-    }
+    static Expression* identifier(
+        CompilationState& state, const std::string& value, SourceLocation location);
+    static Expression* type_identifier(
+        CompilationState& state, const std::string& value, SourceLocation location);
+    static Expression* operator_identifier(
+        CompilationState& state, const std::string& value, SourceLocation location);
+    static Expression* type_operator_identifier(
+        CompilationState& state, const std::string& value, SourceLocation location);
 
-    [[nodiscard]] static std::optional<Expression*> type_operator_reference(AST_Store& store, 
-        const std::string& name, SourceLocation location, const Type* type);
-    static Expression* type_reference(AST_Store& store, const Type* type, SourceLocation location);
-    static Expression operator_reference(Callable* callable, SourceLocation location);
-    static Expression* operator_reference(AST_Store& store, Callable* callable, SourceLocation location);
-    static Expression* valueless(AST_Store& store, ExpressionType expression_type, SourceLocation location);
-    static Expression* missing_argument(AST_Store& store, SourceLocation location, const Type* type);
+    static Expression* termed(
+        AST_Store& store, std::vector<Expression*>&& terms, SourceLocation location);
+
+    static Expression* reference(
+        AST_Store& store, Callable* callable, SourceLocation location);
+    static Expression* type_reference(
+        AST_Store& store, const Type* type, SourceLocation location);
+    static Expression operator_reference(
+        Callable* callable, SourceLocation location);
+    static Expression* operator_reference(
+        AST_Store& store, Callable* callable, SourceLocation location);
+
+    static std::optional<Expression*> reference(
+        AST_Store& store, const Scope& scope, const std::string& name, SourceLocation location);
+    static std::optional<Expression*> type_operator_reference(
+        AST_Store& store, const std::string& name, const Type* type, SourceLocation location);
+
+    static std::optional<Expression*> call(
+        AST_Store& store, Callable* callable, const std::vector<Expression*>& args, 
+        SourceLocation location);
+
+    static Expression* valueless(
+        AST_Store& store, ExpressionType expression_type, SourceLocation location);
+    static Expression* missing_argument(
+        AST_Store& store, const Type* type, SourceLocation location);
+    static Expression* minus_sign(
+        AST_Store& store, SourceLocation location);
+
     static Expression builtin(const ExpressionValue& value, const Type& type) {
         return Expression{ExpressionType::value, value, &type, BUILTIN_SOURCE_LOCATION};
     }
 
-    static std::optional<Expression*> call(AST_Store& store, SourceLocation location, Callable* callable, const std::vector<Expression*>& args);
-    static Expression* minus_sign(AST_Store& store, SourceLocation location);
-
-
     // ----- CONSTRUCTORS -----
     Expression(ExpressionType expression_type, ExpressionValue value, SourceLocation location)
     :expression_type(expression_type), value(value), location(location) {}
-    Expression(ExpressionType expression_type, ExpressionValue value, const Type* type, SourceLocation location)
+
+    Expression(ExpressionType expression_type, ExpressionValue value, const Type* type, 
+        SourceLocation location)
     :expression_type(expression_type), value(value), type(type), location(location) {}
-    Expression(ExpressionType expression_type, ExpressionValue value, const Type* type, const Type* declared_type, SourceLocation location)
-    :expression_type(expression_type), value(value), type(type), declared_type(declared_type), location(location) {}
+
+    Expression(ExpressionType expression_type, ExpressionValue value, const Type* type, 
+        const Type* declared_type, SourceLocation location)
+    :expression_type(expression_type), value(value), type(type), declared_type(declared_type), 
+     location(location) {}
 
     // ----- CONVERSIONS -----
     void convert_to_operator_reference(Callable* callable);

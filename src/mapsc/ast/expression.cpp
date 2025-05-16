@@ -350,6 +350,15 @@ Expression* Expression::reference(AST_Store& store, Callable* callable,
         {ExpressionType::reference, callable, callable->get_type(), location});
 }
 
+std::optional<Expression*> Expression::reference(AST_Store& store, const Scope& scope, 
+    const std::string& name, SourceLocation location) {
+    
+    if (auto callable = scope.get_identifier(name))
+        return reference(store, *callable, location);
+
+    return std::nullopt;
+}
+
 Expression* Expression::type_reference(AST_Store& store, const Type* type, SourceLocation location) {
     return store.allocate_expression({ExpressionType::type_reference, type, &Void, location});
 }
@@ -391,12 +400,12 @@ Expression* Expression::valueless(AST_Store& store, ExpressionType expression_ty
     return store.allocate_expression({expression_type, std::monostate{}, &Absurd, location});
 }
 
-Expression* Expression::missing_argument(AST_Store& store, SourceLocation location, const Type* type) {
+Expression* Expression::missing_argument(AST_Store& store, const Type* type, SourceLocation location) {
     return store.allocate_expression({ExpressionType::missing_arg, std::monostate{}, type, location});
 }
 
-optional<Expression*> Expression::call(AST_Store& store, SourceLocation location, 
-    Callable* callable, const std::vector<Expression*>& args) {
+optional<Expression*> Expression::call(AST_Store& store, 
+    Callable* callable, const std::vector<Expression*>& args, SourceLocation location) {
 
     auto callee_type = callable->get_type();
     
