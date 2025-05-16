@@ -231,6 +231,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
             return *this << arg << " " << (name ? *name : ""); 
         }
 
+        case ExpressionType::partial_call:
         case ExpressionType::call: {
             auto [callee, args] = std::get<CallExpressionValue>(expression.value);
 
@@ -238,7 +239,13 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
             if (callee->is_operator() && args.size() <= 2) {
                 switch (args.size()) {
                     case 2:
-                        return *this << "( " << args.at(0) << " " << std::string{callee->name_} << " " << args.at(1) << " )";
+                        return *this << "( " 
+                                    << args.at(0) 
+                                    << " " 
+                                    << std::string{callee->name_} 
+                                    << " " 
+                                    << args.at(1) 
+                                    << " )";
 
                     case 1:
                         return *this << "( " << std::string{callee->name_} << args.at(0) << " )";

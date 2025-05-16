@@ -58,6 +58,7 @@ private:
     // state functioms
     void initial_reference_state();
     void initial_call_state();
+    void initial_partial_call_state();
     void initial_value_state();
     void initial_binary_operator_state();
     void initial_prefix_operator_state();

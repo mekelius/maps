@@ -16,7 +16,7 @@
     - libedit is only needed for targets mapsci and e2e_tests. If you build just the target mapsc this isn't needed
 
 4. (optional) if you want to run the tests:
-    - ```pip install --user lit```
+    - ```pip install --user lit filecheck```
 
 5. (optional) install ninja-build for faster build times
     - e.g.: ```sudo apt install ninja-build```

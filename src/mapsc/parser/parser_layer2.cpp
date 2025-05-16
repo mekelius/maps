@@ -63,7 +63,8 @@ void ParserLayer2::run() {
     }
 }
 
-TermedExpressionParser::TermedExpressionParser(CompilationState* compilation_state, Expression* expression)
+TermedExpressionParser::TermedExpressionParser(
+    CompilationState* compilation_state, Expression* expression)
 :expression_(expression), 
  compilation_state_(compilation_state), 
  ast_store_(compilation_state->ast_store_.get()) {
@@ -163,6 +164,11 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         case ExpressionType::reference:
             shift();
             initial_reference_state();
+            break;
+
+        case ExpressionType::partial_call:
+            shift();
+            initial_partial_call_state();
             break;
 
         case ExpressionType::call:
@@ -273,9 +279,15 @@ void TermedExpressionParser::initial_call_state() {
     if (at_expression_end())
         return;
 
-    assert(false && "initial call not implemented");
+    assert(false && "initial call state not implemented");
 }
 
+void TermedExpressionParser::initial_partial_call_state() {
+    if (at_expression_end())
+        return;
+
+    assert(false && "initial partial call state not implemented");
+}
 
 // current_term is a value, so next term has to be something else, or eventually reduce to a binop
 void TermedExpressionParser::initial_value_state() {
@@ -323,13 +335,15 @@ void TermedExpressionParser::initial_value_state() {
         case ExpressionType::type_reference:
         case ExpressionType::type_argument:
         case ExpressionType::type_construct:
+        case ExpressionType::partial_call:
         case ExpressionType::type_constructor_reference:
             assert(false && "not implemented");
     
         case ExpressionType::type_field_name:
         case NOT_ALLOWED_IN_LAYER2:
             // TODO: make expression to_str
-            fail("bad term "+ peek()->log_message_string() + " in initial value state", peek()->location);
+            fail("bad term "+ peek()->log_message_string() + 
+                " in initial value state", peek()->location);
             return;
     }
 }
@@ -376,6 +390,7 @@ void TermedExpressionParser::initial_binary_operator_state() {
             assert(false && "not implemented");
         }
 
+        case ExpressionType::partial_call:
         case ExpressionType::binary_operator_reference:
             assert(false && "not implemented");
 
@@ -556,6 +571,7 @@ void TermedExpressionParser::post_binary_operator_state() {
             return compare_precedence_state();
         }
 
+        case ExpressionType::partial_call:
         case ExpressionType::minus_sign:
             assert(false && "not implemented");
             
@@ -850,7 +866,9 @@ void TermedExpressionParser::partial_call_state() {
     return;
 }
 
-Expression* TermedExpressionParser::handle_arg_state(Callable* callee, const std::vector<Expression*>& args) { 
+Expression* TermedExpressionParser::handle_arg_state(
+    Callable* callee, const std::vector<Expression*>& args) { 
+    
     switch (current_term()->expression_type) {
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(current_term());

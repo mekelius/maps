@@ -4,10 +4,9 @@
 
 #### Short term
 
-- deal with unary ops
+- deal with add unary
 - then:
     - refactor ir_builtins
-    - refactor operator class
     - improve logging a bit
     - maybe make expression constructors private?
 - then:

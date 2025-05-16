@@ -166,8 +166,6 @@ target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
 # ------------------------ E2E TESTS ------------------------
 
 configure_file(tests/e2e/lit.site.cfg.py.in lit.site.cfg.py @ONLY)
-configure_file(tests/e2e/run_lit.py test/run_lit.py @ONLY)
-
 
 add_test(NAME unit_tests COMMAND unit_tests)
-add_test(NAME e2e_tests COMMAND ./test/run_lit.py "${CMAKE_CURRENT_BINARY_DIR}" -v)
+add_test(NAME e2e_tests COMMAND lit "${CMAKE_CURRENT_BINARY_DIR}" -v)

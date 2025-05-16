@@ -263,6 +263,7 @@ std::string Expression::log_message_string() const {
         case ExpressionType::not_implemented:
             return "nonimplemented expression";
 
+        case ExpressionType::partial_call:
         case ExpressionType::call: {
             std::stringstream output{};
             ReverseParser{&output} << "Call expression " << *this;
@@ -277,7 +278,6 @@ std::string Expression::log_message_string() const {
 
         case ExpressionType::minus_sign:
             return "-";
-
     }
 }
 
@@ -425,15 +425,23 @@ optional<Expression*> Expression::call(AST_Store& store,
     auto param_types = callee_f_type->param_types();
     auto return_type = callee_f_type->return_type();
 
-    if (args.size() == param_types.size())
-        return store.allocate_expression(
-            {ExpressionType::call, CallExpressionValue{callable, args}, return_type, location});
-
     if (args.size() > param_types.size()) {
         log_error(std::string{callable->name_} + " takes a maximum of " + 
             to_string(param_types.size()) + " arguments, tried giving " + to_string(args.size()));
         return nullopt;
     }
+
+    bool missing_args = false;
+    for (auto arg: args) {
+        if (arg->expression_type == ExpressionType::missing_arg)
+            missing_args = true;
+    }
+
+    if (args.size() == param_types.size() && !missing_args)
+        return store.allocate_expression(
+            {ExpressionType::call, CallExpressionValue{callable, args}, return_type, location});
+
+    // if (args.)
     // TODO: deal with partial calls
     // TODO: deal with declared types
     assert(false && "parial calls and all that not implemented");

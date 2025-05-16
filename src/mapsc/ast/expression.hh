@@ -58,6 +58,7 @@ enum class ExpressionType {
     not_implemented,
     
     call,                   // value: 
+    partial_call,
     missing_arg,
 
     deleted,                // value: std::monostate
