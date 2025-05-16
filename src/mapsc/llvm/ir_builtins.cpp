@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
@@ -53,6 +55,11 @@ bool insert_builtins(IR::IR_Generator& generator) {
     }
 
     // insert arithmetic functions
+    const Maps::FunctionType* IntInt = generator.maps_types_->get_function_type(
+        Maps::Int, {&Maps::Int});
+    llvm::FunctionType* llvm_IntInt = llvm::FunctionType::get(generator.types_.int_t, 
+        {generator.types_.int_t}, false);
+
     const Maps::FunctionType* IntIntInt = generator.maps_types_->get_function_type(
         Maps::Int, {&Maps::Int, &Maps::Int});
     llvm::FunctionType* llvm_IntIntInt = llvm::FunctionType::get(generator.types_.int_t, 
@@ -62,7 +69,20 @@ bool insert_builtins(IR::IR_Generator& generator) {
         Maps::Float, {&Maps::Float, &Maps::Float});
     llvm::FunctionType* llvm_FloatFloatFloat = llvm::FunctionType::get(generator.types_.double_t, 
         {generator.types_.double_t, generator.types_.double_t}, false);
-    
+
+    llvm::Value* zero = llvm::ConstantInt::get(*generator.context_, llvm::APInt(32, 0, true));
+
+    optional<llvm::Function*> negate_int = generator.function_definition("-", *IntInt, llvm_IntInt);
+
+    if (!negate_int) {
+        log_error("creating builtin unarey - failed");
+        return false;
+    }
+
+    generator.builder_->CreateRet(
+        generator.builder_->CreateSub(zero, (*negate_int)->getArg(0))
+    );
+
     optional<llvm::Function*> int_add = generator.function_definition("+", *IntIntInt, llvm_IntIntInt);
 
     if (!int_add) {
