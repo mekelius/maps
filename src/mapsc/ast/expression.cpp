@@ -404,9 +404,10 @@ Expression* Expression::missing_argument(AST_Store& store, const Type* type, Sou
     return store.allocate_expression({ExpressionType::missing_arg, std::monostate{}, type, location});
 }
 
-optional<Expression*> Expression::call(AST_Store& store, 
-    Callable* callable, const std::vector<Expression*>& args, SourceLocation location) {
+optional<Expression*> Expression::call(CompilationState& state, 
+    Callable* callable, std::vector<Expression*>&& args, SourceLocation location) {
 
+    auto& store = *state.ast_store_;
     auto callee_type = callable->get_type();
     
     if (!callee_type->is_function() && args.size() > 0) {
@@ -441,16 +442,25 @@ optional<Expression*> Expression::call(AST_Store& store,
         return store.allocate_expression(
             {ExpressionType::call, CallExpressionValue{callable, args}, return_type, location});
 
-    // if (args.)
-    // TODO: deal with partial calls
     // TODO: deal with declared types
-    assert(false && "parial calls and all that not implemented");
 
-    // for (int i = 0; auto arg: args) {
-    //     auto param_type = param_types.at(i);
+    std::vector<const Type*> missing_arg_types{};
 
-    //     if(arg->type )
-    // }
+    for (size_t i = args.size(); i < param_types.size(); i++) {
+        auto param_type = *callee_f_type->param_type(i);
+        missing_arg_types.push_back(param_type);
+        args.push_back(Expression::missing_argument(store, param_type, location));
+    }
+
+    auto partial_return_type = state.types_->get_function_type(
+        *return_type, missing_arg_types, callee_f_type->is_pure());
+
+    assert(args.size() == param_types.size() && "Something went wrong while creating placeholders for \
+missing args");
+
+    return store.allocate_expression(
+        {ExpressionType::partial_call, CallExpressionValue{callable, args}, partial_return_type, 
+            location});
 }
 
 Expression* Expression::minus_sign(AST_Store& store, SourceLocation location) {

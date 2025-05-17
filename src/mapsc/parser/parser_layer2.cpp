@@ -367,7 +367,7 @@ void TermedExpressionParser::initial_binary_operator_state() {
                 *dynamic_cast<const FunctionType*>(op->type)->param_types().begin(), op->location);
 
             auto call =
-                Expression::call(*ast_store_,
+                Expression::call(*compilation_state_,
                     op->reference_value(), { missing_argument, rhs }, expression_->location);
             
             if (!call)
@@ -529,7 +529,7 @@ void TermedExpressionParser::post_binary_operator_state() {
         Expression* missing_argument = Expression::missing_argument(*ast_store_,
             missing_arg_type, op->location);
 
-        auto call = Expression::call(*ast_store_, op->reference_value(), 
+        auto call = Expression::call(*compilation_state_, op->reference_value(), 
             {lhs, missing_argument}, lhs->location);
 
         if (!call)
@@ -674,7 +674,7 @@ void TermedExpressionParser::reduce_operator_left() {
         "TermedExpressionParser::reduce_operator_left called with a call stack \
 where operator didn't hold a reference to a callable");
 
-    auto reduced = Expression::call(*ast_store_,
+    auto reduced = Expression::call(*compilation_state_,
         std::get<Callable*>(operator_->value), {lhs, rhs}, lhs->location);
 
     if (!reduced)
@@ -759,8 +759,8 @@ void TermedExpressionParser::push_partial_call(Expression* callee_ref,
 void TermedExpressionParser::push_partial_call(Expression* callee_ref, 
     const std::vector<Expression*>& args, SourceLocation location) {
     
-    auto call = Expression::call(*ast_store_, 
-        callee_ref->reference_value(), args, location);
+    auto call = Expression::call(*compilation_state_, 
+        callee_ref->reference_value(), std::vector<Expression*>{args}, location);
     
     if (!call)
         return fail("During layer2: Creating partial call failed", location);
@@ -772,7 +772,7 @@ void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, 
     auto location = 
         operator_ref->operator_reference_value()->fixity() == Operator::Fixity::unary_prefix ?
             operator_ref->location : value->location;
-    auto call = Expression::call(*ast_store_, 
+    auto call = Expression::call(*compilation_state_, 
         operator_ref->reference_value(), { value }, location);
             
     if (!call)
@@ -818,8 +818,8 @@ void TermedExpressionParser::call_expression_state() {
         }
     }
 
-    auto call_expression = Expression::call(*ast_store_,
-        std::get<Callable*>(reference->value), args, reference->location);
+    auto call_expression = Expression::call(*compilation_state_,
+        std::get<Callable*>(reference->value), std::vector<Expression*>{args}, reference->location);
     
     if (!call_expression)
         return log_error("Creating call expression failed", reference->location);

@@ -40,6 +40,7 @@
     - clean up IR_Generator
     - what to do with ast nodes?
         - how to convert between statements and expressions in-place
+        - how to make them constexprable
 
 #### Accumulated tweaks
 

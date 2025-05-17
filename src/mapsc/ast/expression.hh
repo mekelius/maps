@@ -133,7 +133,7 @@ struct Expression {
         AST_Store& store, const std::string& name, const Type* type, SourceLocation location);
 
     static std::optional<Expression*> call(
-        AST_Store& store, Callable* callable, const std::vector<Expression*>& args, 
+        CompilationState& state, Callable* callable, std::vector<Expression*>&& args, 
         SourceLocation location);
 
     static Expression* valueless(

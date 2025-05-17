@@ -11,11 +11,16 @@
 - Scope::create_unary_operator forces the type into Hole->Hole
 - Scope::create_binary_operator should be combined with the logic used in layer2 CallState
     - also only handles binary functions
-- :stop_at doesn't print error message on fail
+- :stop_at doesn't print anything on success
 - lexer constructor eats a single character from the input stream, which is not ideal
 - reverse parse doesn't print string values quoted
 - :t doesn't show function types
 
 - Callable::attempt_simplify doesn't delete the nodes when simplifying single-statement blocks and sometimes segfaults (the problem line is commented out atm)
-- Reverse parse doesn't print reference names correctly???
+- Reverse parse doesn't print reference names correctly because callables store string_views
+    - bandaid fix is to add scope reference to the callables and have them check the name from the scope
+        - honestly callables need a bit of a rework, but that should be combined with making expressions and statements constexprable
+            - how can this be done without virtualizing them as well?
 - I think repl drops the root callables without deleting them (and leaks everything else as well)
+- REPL should check if a definition can produce valid IR before saving it, currently easy to get stuck
+    - also allow deleting names
