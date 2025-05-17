@@ -101,7 +101,8 @@ bool REPL::run() {
 
         if (options_.stop_after == Stage::layer1 ||
             options_.stop_after == Stage::layer2 ||
-            options_.stop_after == Stage::layer3
+            options_.stop_after == Stage::layer3 ||
+            !has_something_to_evaluate(*compilation_state)
         ) {
             if (compilation_state->is_valid) {
                 std::cout << "Copying " << compilation_state->globals_.size() << " definitions\n";
@@ -110,9 +111,6 @@ bool REPL::run() {
             }
             continue;
         }
-
-        if (!has_something_to_evaluate(*compilation_state))
-            continue;
 
         unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
         unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(
