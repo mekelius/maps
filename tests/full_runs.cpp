@@ -15,9 +15,9 @@ TEST_CASE("Integration test: parse_source should parse a numberliteral with the 
     auto compilation_state = process_source(get_builtins(), &types, source);
 
     CHECK(compilation_state->is_valid);
-    CHECK(compilation_state->globals_->identifier_exists("x"));
+    CHECK(compilation_state->globals_.identifier_exists("x"));
 
-    auto x = (*compilation_state->globals_->get_identifier("x"));
+    auto x = (*compilation_state->globals_.get_identifier("x"));
 
     CHECK(*x->get_type() == Int);
 }

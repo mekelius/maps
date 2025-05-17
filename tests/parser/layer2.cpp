@@ -239,7 +239,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Type* function_type = types->get_function_type(Void, {&String});
 
         Callable function{"test_f", External{}, *function_type, TSL};
-        state.globals_->create_identifier(&function);
+        state.globals_.create_identifier(&function);
 
         Expression* id = Expression::reference(ast, &function, {0,0});
         Expression* arg1 = Expression::string_literal(ast, "", {0,0});

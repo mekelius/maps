@@ -237,24 +237,25 @@ void REPL::run_command(Maps::CompilationState& state, const std::string& input) 
             return;
         }
 
-        if (command == "layer2") {
+        if (next_arg == "layer2") {
             options_.stop_after = Stage::layer2;
             update_parse_options();
             return;
         } 
         
-        if (command == "ir") {
+        if (next_arg == "ir") {
             options_.stop_after = Stage::ir;
             update_parse_options();
             return;
         }
         
-        if (command == "done" || command == "eval") {
+        if (next_arg == "done" || next_arg == "eval") {
             options_.stop_after = Stage::done;
             update_parse_options();
             return;
         }
 
+        std::cout << next_arg << " is not a valid point to stop\n"; 
         return;
     }
 
