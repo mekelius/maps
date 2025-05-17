@@ -68,6 +68,7 @@ public:
     [[nodiscard]] bool set_entry_point(std::string name);
 
     void declare_invalid() { is_valid = false; };
+    void dump(std::ostream&) const;
 
     bool is_valid = true;
     

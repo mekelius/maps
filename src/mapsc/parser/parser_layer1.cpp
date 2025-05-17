@@ -66,6 +66,7 @@ optional<Callable*> ParserLayer1::eval_parse(std::istream& source_is) {
 
     return compilation_state_->entry_point_;
 }
+
 // ----- PRIVATE METHODS -----
 
 void ParserLayer1::run_parse(std::istream& source_is) {
@@ -278,8 +279,9 @@ void ParserLayer1::parse_top_level_statement() {
 
         default:
             // TODO: check pragmas for top-level statement types
+            // Definitions shouldn't be evaluated
             statement = parse_statement();
-            if (statement->statement_type != StatementType::empty && 
+            if (statement->statement_type != StatementType::empty && !statement->is_definition() &&
                 (pragmas_->check_flag_value("top-level evaluation", statement->location) || 
                     force_top_level_eval_)) {            
                 std::get<Block>(std::get<Statement*>((*compilation_state_->entry_point_)->body_)->value).push_back(statement);

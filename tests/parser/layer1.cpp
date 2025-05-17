@@ -39,6 +39,25 @@ public:
     };
 };
 
+TEST_CASE("layer1 eval should not put top level let statements into the root") {
+    auto [state, types, builtins] = CompilationState::create_test_state();
+
+    ParserLayer1 layer1{&state};
+
+    std::stringstream source{"let x = 5"};
+    layer1.eval_parse(source);
+
+    CHECK(state.is_valid);
+    CHECK(!state.empty());
+    CHECK(!state.entry_point_);
+
+    CHECK(state.globals_.identifier_exists("x"));
+    auto x = *state.globals_.get_identifier("x");
+    CHECK(std::holds_alternative<Expression*>(x->body_));
+    auto expression = std::get<Expression*>(x->body_);
+    CHECK(expression->string_value() == "5");
+}
+
 TEST_CASE("layer1 eval should simplify single statement blocks") {
     TypeStore types{};
     CompilationState state{get_builtins(), &types};

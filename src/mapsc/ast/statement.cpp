@@ -112,4 +112,17 @@ bool Statement::is_empty() const {
     return statement_type == StatementType::empty;
 }
 
+bool Statement::is_definition() const {
+    switch (statement_type) {
+        case StatementType::let:
+        case StatementType::assignment:
+        case StatementType::operator_definition:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+
 } // namespace AST

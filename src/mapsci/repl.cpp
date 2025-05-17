@@ -33,6 +33,18 @@ using Maps::TypeStore, Maps::CompilationState;
 constexpr std::string_view DEFAULT_MODULE_NAME = "interpreted";
 constexpr std::string_view PROMPT = "mapsci> ";
 
+
+// ----- STATIC METHODS -----
+
+bool REPL::has_something_to_evaluate(const Maps::CompilationState& state) {
+    if (!state.is_valid || state.empty() || !state.entry_point_)
+        return false;
+
+    return true;
+}
+
+// ----- PUBLIC METHODS -----
+
 REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, 
     Options options)
 : context_(context), jit_(jit), error_stream_(error_stream), options_(options) {
@@ -85,6 +97,8 @@ bool REPL::run() {
                 continue;
         }
 
+        compilation_state->dump(std::cout);
+
         if (options_.stop_after == Stage::layer1 ||
             options_.stop_after == Stage::layer2 ||
             options_.stop_after == Stage::layer3
@@ -97,7 +111,7 @@ bool REPL::run() {
             continue;
         }
 
-        if (compilation_state->empty())
+        if (!has_something_to_evaluate(*compilation_state))
             continue;
 
         unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
@@ -136,6 +150,8 @@ bool REPL::run() {
 
     return true;
 }
+
+// ----- PRIVATE METHODS -----
 
 std::optional<std::string> REPL::get_input() {
     char* line = readline(options_.prompt ? PROMPT.cbegin() : "");

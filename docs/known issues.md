@@ -18,3 +18,4 @@
 
 - Callable::attempt_simplify doesn't delete the nodes when simplifying single-statement blocks and sometimes segfaults (the problem line is commented out atm)
 - Reverse parse doesn't print reference names correctly???
+- I think repl drops the root callables without deleting them

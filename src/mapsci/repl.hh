@@ -15,6 +15,8 @@
 
 class REPL {
 public:
+    static bool has_something_to_evaluate(const Maps::CompilationState&);
+
     enum class Stage {
         layer1,
         layer2,

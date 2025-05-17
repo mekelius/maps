@@ -42,4 +42,24 @@ bool CompilationState::set_entry_point(std::string name) {
     return true;
 }
 
+void CompilationState::dump(std::ostream& stream) const {
+    stream << "----- Compilation state -----\n\n";
+    
+    stream << (is_valid ? "valid" : "invalid") << "\n"; 
+    stream << "entry point: ";
+    if (!entry_point_) {
+        stream << "none\n";
+    } else {
+        stream << (*entry_point_)->name_ << "\n";
+    }
+
+    stream << "global identifiers:\n";
+
+    for (auto [name, callable]: globals_.identifiers_in_order_) {
+        stream << "  " << name << "\n";
+    }
+
+    stream << "\n-----------------------------\n" << std::endl;
+}
+
 } // namespace Maps
