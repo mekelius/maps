@@ -28,11 +28,13 @@
 using std::optional, std::nullopt;
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple;
 using Maps::ProcessSourceOptions, Maps::ReverseParser, Maps::CompilationLayer;
+using Maps::TypeStore, Maps::CompilationState;
 
 constexpr std::string_view DEFAULT_MODULE_NAME = "interpreted";
 constexpr std::string_view PROMPT = "mapsci> ";
 
-REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options)
+REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, 
+    Options options)
 : context_(context), jit_(jit), error_stream_(error_stream), options_(options) {
     parse_options_.in_repl = true;
     update_parse_options();
@@ -58,22 +60,22 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
 }
 
 bool REPL::run() {    
-    while (running_) {
-        
+    auto types = TypeStore{};
+    auto stored_state = CompilationState{Maps::get_builtins(), &types};
+
+    while (running_) {        
         optional<std::string> input = get_input();
 
         if (!input)
             continue;
 
         if (input->at(0) == ':') {
-            run_command(*input);
+            run_command(stored_state, *input);
             continue;
         }
 
         std::stringstream input_s{*input};
-        Maps::TypeStore types{};
-        auto compilation_state = process_source(Maps::get_builtins(), &types, input_s, 
-            parse_options_, std::cout);
+        auto compilation_state = process_source(stored_state, input_s, parse_options_, std::cout);
         
         if (!compilation_state->is_valid) {
             if (options_.quit_on_error)
@@ -86,14 +88,21 @@ bool REPL::run() {
         if (options_.stop_after == Stage::layer1 ||
             options_.stop_after == Stage::layer2 ||
             options_.stop_after == Stage::layer3
-        ) continue;
+        ) {
+            if (compilation_state->is_valid) {
+                std::cout << "Copying " << compilation_state->globals_.size() << " definitions\n";
+                stored_state = *compilation_state;
+                std::cout << "Copied " << stored_state.globals_.size() << " definitions\n";
+            }
+            continue;
+        }
 
         if (compilation_state->empty())
             continue;
 
         unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(DEFAULT_MODULE_NAME, *context_);
-        unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(context_, module_.get(), 
-            compilation_state.get(), error_stream_);
+        unique_ptr<IR::IR_Generator> generator = make_unique<IR::IR_Generator>(
+            context_, module_.get(), compilation_state.get(), error_stream_);
 
         insert_builtins(*generator);
         bool ir_success = generator->repl_run();
@@ -112,11 +121,17 @@ bool REPL::run() {
                 continue;
         }
 
-        if (options_.stop_after == Stage::ir || !options_.eval)
+        if (options_.stop_after == Stage::ir || !options_.eval) {
+            if (ir_success)
+                stored_state = *compilation_state;
+            
             continue;
+        }
 
         std::cout << prefix();
         eval(std::move(module_));
+
+        stored_state = *compilation_state;
     }
 
     return true;
@@ -167,7 +182,8 @@ void REPL::eval(std::unique_ptr<llvm::Module> module_) {
 std::string REPL::parse_type(std::istream& input_stream) {
     Maps::TypeStore types{};
 
-    auto compilation_state = process_source(Maps::get_builtins(), &types, input_stream, parse_options_, std::cout);
+    auto compilation_state = 
+        process_source(Maps::get_builtins(), &types, input_stream, parse_options_, std::cout);
     
     if (!compilation_state->is_valid && !options_.ignore_errors) {
         std::cout << "ERROR: parsing type failed" << std::endl;
@@ -182,7 +198,7 @@ std::string REPL::parse_type(std::istream& input_stream) {
     return type->to_string();
 }
     
-void REPL::run_command(const std::string& input) {
+void REPL::run_command(Maps::CompilationState& state, const std::string& input) {
     std::stringstream input_stream{input};
     std::string command;
     std::getline(input_stream, command, ' ');
@@ -200,6 +216,17 @@ void REPL::run_command(const std::string& input) {
 
     std::string next_arg;
     
+    if (command == ":names") {
+        if (state.globals_.empty())
+            std::cout << "Global scope is empty\n";
+
+        for (auto [name, callable]: state.globals_.identifiers_in_order_) {
+            std::cout << name << "\n";
+        }
+        
+        return;
+    }
+
     if (command == ":stop_after" || command == ":stop_at") {
         std::string next_arg;
         std::getline(input_stream, next_arg, ' ');

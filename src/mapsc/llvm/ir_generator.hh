@@ -129,7 +129,7 @@ private:
     Options options_;
 
     const Maps::CompilationState* compilation_state_;
-    Maps::PragmaStore* pragmas_;
+    const Maps::PragmaStore* pragmas_;
     Maps::TypeStore* maps_types_;
     
     std::unique_ptr<FunctionStore> function_store_ = std::make_unique<FunctionStore>();

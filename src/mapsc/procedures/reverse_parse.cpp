@@ -42,7 +42,7 @@ std::string ReverseParser::linebreak() {
 ReverseParser& ReverseParser::reverse_parse(const CompilationState& state) {
     reset();
 
-    for (auto [name, callable]: state.globals_->identifiers_in_order_) {
+    for (auto [name, callable]: state.globals_.identifiers_in_order_) {
         *this << "let " << name << " = " << callable->body_ << ";\n\n";
     }
 

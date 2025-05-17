@@ -90,7 +90,7 @@ IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module,
  types_({*context_}),
  options_(options),
  compilation_state_(compilation_state), 
- pragmas_(compilation_state->pragmas_.get()),
+ pragmas_(&compilation_state->pragmas_),
  maps_types_(compilation_state->types_) {
 
     if (!types_.is_good_)
@@ -270,7 +270,7 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
 }
 
 bool IR_Generator::handle_global_functions() {
-    for (auto [_1, callable]: *compilation_state_->globals_) {
+    for (auto [_1, callable]: compilation_state_->globals_) {
         if (!handle_global_definition(*callable))
             return false;
     }

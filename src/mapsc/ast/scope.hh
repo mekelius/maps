@@ -22,16 +22,16 @@ namespace Maps {
 class Scope {
 public:
     using const_iterator = std::vector<std::pair<std::string, Callable*>>::const_iterator;
+
     const_iterator begin() const { return identifiers_in_order_.begin(); }
     const_iterator end() const { return identifiers_in_order_.end(); }
     bool empty() const { return identifiers_.empty(); }
+    size_t size() const { return identifiers_.size(); }
 
     Scope() = default;
-
-    // std::optional<Expression*> create_call_expression(
-    //     const std::string& callee_name, std::vector<Expression*> args, SourceLocation location /*, expected return type?*/);
-    // Expression* create_call_expression(Callable* callee, const std::vector<Expression*>& args, 
-    //     SourceLocation location /*, expected return type?*/);
+    Scope(const Scope& other) = default;
+    Scope& operator=(const Scope& other) = default;
+    ~Scope() = default;
 
     bool identifier_exists(const std::string& name) const {
         return identifiers_.find(name) != identifiers_.end();

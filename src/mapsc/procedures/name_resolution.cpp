@@ -66,7 +66,7 @@ bool resolve_identifier(CompilationState& state, Expression* expression) {
         return true;
     }
 
-    std::optional<Callable*> callable = state.globals_->get_identifier(expression->string_value());
+    std::optional<Callable*> callable = state.globals_.get_identifier(expression->string_value());
 
     if (!callable) {
         log_error("unknown identifier: " + expression->string_value(), expression->location);

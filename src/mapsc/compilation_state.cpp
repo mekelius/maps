@@ -18,7 +18,7 @@ CompilationState::CompilationState(const Scope* builtins, TypeStore* types,
 }
 
 bool CompilationState::empty() const {
-    if (!globals_->empty())
+    if (!globals_.empty())
         return false;
 
     if (entry_point_)
@@ -33,7 +33,7 @@ bool CompilationState::set_entry_point(Callable* entrypoint) {
 }
 
 bool CompilationState::set_entry_point(std::string name) {
-    auto entry_point = globals_->get_identifier(name);
+    auto entry_point = globals_.get_identifier(name);
 
     if (!entry_point)
         return false;
@@ -41,6 +41,5 @@ bool CompilationState::set_entry_point(std::string name) {
     entry_point_ = entry_point;
     return true;
 }
-
 
 } // namespace Maps

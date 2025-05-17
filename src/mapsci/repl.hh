@@ -8,6 +8,7 @@
 #include <istream>
 
 #include "mapsc/process_source.hh"
+#include "mapsc/compilation_state.hh"
 
 #include "mapsci/jit_manager.hh"
 
@@ -53,7 +54,7 @@ private:
     bool save_history();
     void eval(std::unique_ptr<llvm::Module> module_);
     std::string parse_type(std::istream& input_stream);
-    void run_command(const std::string& command);
+    void run_command(Maps::CompilationState& state, const std::string& command);
 
     void update_parse_options();
 

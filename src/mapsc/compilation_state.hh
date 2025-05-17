@@ -56,6 +56,12 @@ public:
     CompilationState(const Scope* builtins, TypeStore* types,
         SpecialCallables specials = {&unary_minus_Int, &binary_minus_Int});
 
+    // copy constructor
+    CompilationState(const CompilationState&) = default;
+    // copy assignment operator
+    CompilationState& operator=(const CompilationState&) = default;
+    ~CompilationState() = default;
+
     bool empty() const;
 
     [[nodiscard]] bool set_entry_point(Callable* entrypoint);
@@ -65,17 +71,17 @@ public:
 
     bool is_valid = true;
     
-    std::unique_ptr<Scope> globals_ = std::make_unique<Scope>();
-    std::unique_ptr<AST_Store> ast_store_ = std::make_unique<AST_Store>();
-    std::unique_ptr<PragmaStore> pragmas_ = std::make_unique<PragmaStore>();
+    Scope globals_ = {};
+    std::shared_ptr<AST_Store> ast_store_ = std::make_shared<AST_Store>();
+    PragmaStore pragmas_ = {};
     
     // container for top-level statements
     
     std::optional<Callable*> entry_point_ = std::nullopt;
     
-    TypeStore* const types_;
-    const Scope* const builtins_;
-    const SpecialCallables special_callables_;
+    TypeStore* types_;
+    const Scope* builtins_;
+    SpecialCallables special_callables_ = SpecialCallables{&unary_minus_Int, &binary_minus_Int};
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
     // need to walk the tree to find them
@@ -162,7 +168,7 @@ bool CompilationState::walk_callable(T visitor, Callable* callable) {
 
 template<AST_Visitor T>
 bool CompilationState::walk_tree(T& visitor) {
-    for (auto [_1, callable]: globals_->identifiers_in_order_) {
+    for (auto [_1, callable]: globals_.identifiers_in_order_) {
         if (!walk_callable(visitor, callable))
             return false;
     }

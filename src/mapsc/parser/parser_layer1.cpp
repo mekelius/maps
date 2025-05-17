@@ -39,7 +39,7 @@ namespace Maps {
 ParserLayer1::ParserLayer1(CompilationState* const compilation_state)
 :compilation_state_(compilation_state), 
  ast_store_(compilation_state->ast_store_.get()), 
- pragmas_(compilation_state->pragmas_.get()) {}
+ pragmas_(&compilation_state->pragmas_) {}
 
 bool ParserLayer1::run(std::istream& source_is) {
     run_parse(source_is);
@@ -172,7 +172,7 @@ void ParserLayer1::log_info(const std::string& message, MessageType message_type
 // ----- IDENTIFIERS -----
 
 bool ParserLayer1::identifier_exists(const std::string& identifier) const {
-    return compilation_state_->globals_->identifier_exists(identifier);
+    return compilation_state_->globals_.identifier_exists(identifier);
 }
 
 void ParserLayer1::create_identifier(const std::string& name, SourceLocation location) {
@@ -182,13 +182,13 @@ void ParserLayer1::create_identifier(const std::string& name, SourceLocation loc
 void ParserLayer1::create_identifier(const std::string& name,
     CallableBody body, SourceLocation location) {
     log_info("created identifier " + name, MessageType::parser_debug_identifier);
-    compilation_state_->globals_->create_identifier(
+    compilation_state_->globals_.create_identifier(
         ast_store_->allocate_callable({name, body, location})
     );
 }
 
 std::optional<Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
-    return compilation_state_->globals_->get_identifier(identifier);
+    return compilation_state_->globals_.get_identifier(identifier);
 }
 
 
@@ -466,7 +466,7 @@ Statement* ParserLayer1::parse_operator_definition() {
             if (compilation_state_->builtins_->identifier_exists(op_string)) 
                 return broken_statement_helper("attempting to redefine built-in operator: " + op_string);
 
-            if (compilation_state_->globals_->identifier_exists(op_string))
+            if (compilation_state_->globals_.identifier_exists(op_string))
                 return broken_statement_helper("attempting to redefine user-defined operator: " + op_string);
 
             get_token();
@@ -513,7 +513,7 @@ Statement* ParserLayer1::parse_operator_definition() {
                 Statement* statement = create_statement(StatementType::operator_definition);
                 statement->value = OperatorStatementValue{op_string, 1, body};
 
-                compilation_state_->globals_->create_identifier(ast_store_->allocate_callable(
+                compilation_state_->globals_.create_identifier(ast_store_->allocate_callable(
                     Operator{op_string, body, {fixity}, statement->location}));
                 log_info("parsed let statement", MessageType::parser_debug);
                 return statement;
@@ -541,7 +541,7 @@ Statement* ParserLayer1::parse_operator_definition() {
             Statement* statement = create_statement(StatementType::operator_definition);
             statement->value = OperatorStatementValue{op_string, 2, body};
 
-            compilation_state_->globals_->create_identifier(ast_store_->allocate_callable(
+            compilation_state_->globals_.create_identifier(ast_store_->allocate_callable(
                 Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
                         statement->location}));
             log_info("parsed let statement", MessageType::parser_debug);
