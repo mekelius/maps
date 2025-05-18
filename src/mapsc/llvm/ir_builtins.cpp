@@ -48,13 +48,14 @@ bool insert_builtins(IR::IR_Generator& generator) {
         if (!generator.forward_declaration("print", *generator.maps_types_->get_function_type(
                 Maps::IO_Void, {maps_type}),
             llvm::FunctionType::get(generator.types_.void_t, {llvm_type}, false))) {
-        
-            Log::compiler_error("Creating builtin functions failed", COMPILER_INIT_SOURCE_LOCATION);
+
+            Log::compiler_error("Creating builtin functions failed", 
+                COMPILER_INIT_SOURCE_LOCATION);
             return false;
         }
     }
 
-    // insert arithmetic functions
+    // arithmetic function types
     const Maps::FunctionType* IntInt = generator.maps_types_->get_function_type(
         Maps::Int, {&Maps::Int});
     llvm::FunctionType* llvm_IntInt = llvm::FunctionType::get(generator.types_.int_t, 
@@ -72,10 +73,12 @@ bool insert_builtins(IR::IR_Generator& generator) {
 
     llvm::Value* zero = llvm::ConstantInt::get(*generator.context_, llvm::APInt(32, 0, true));
 
+
+    // ##########  -Int  ##########
     optional<llvm::Function*> negate_int = generator.function_definition("-", *IntInt, llvm_IntInt);
 
     if (!negate_int) {
-        Log::compiler_error("creating builtin unary failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error("creating builtin unary - failed", COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
@@ -83,6 +86,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         generator.builder_->CreateSub(zero, (*negate_int)->getArg(0))
     );
 
+    // ##########  Int + Int  ##########
     optional<llvm::Function*> int_add = generator.function_definition("+", *IntIntInt, llvm_IntIntInt);
 
     if (!int_add) {
@@ -96,6 +100,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
+    // ##########  Int * Int  ##########
     optional<llvm::Function*> int_mul = generator.function_definition("*", *IntIntInt, llvm_IntIntInt);
 
     if (!int_mul) {
@@ -109,6 +114,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
+    // ##########  Int - Int  ##########
     optional<llvm::Function*> int_sub = generator.function_definition("-", *IntIntInt, llvm_IntIntInt);
 
     if (!int_sub) {
@@ -122,6 +128,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
+    // ##########  Float + Float  ##########
     optional<llvm::Function*> float_add = generator.function_definition(
         "+", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
@@ -136,6 +143,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
+    // ##########  Float * Float  ##########
     optional<llvm::Function*> float_mul = generator.function_definition(
         "*", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
@@ -150,6 +158,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
+    // ##########  Float - Float  ##########
     optional<llvm::Function*> float_sub = generator.function_definition(
         "-", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
@@ -164,6 +173,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         )
     );
 
+    // ##########  Float / Float  ##########
     optional<llvm::Function*> float_div = generator.function_definition(
         "/", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 

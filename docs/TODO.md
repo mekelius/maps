@@ -7,8 +7,6 @@
 - deal with add unary
 - move creating callables to a separate step after layer1 (layer1 should return a tree instead)
 - then:
-    - refactor ir_builtins
-    - improve logging a bit
     - maybe make expression constructors private?
 - then:
     - look into conditionals
