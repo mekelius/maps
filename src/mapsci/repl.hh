@@ -36,7 +36,7 @@ public:
         bool ignore_errors = false;
         Stage stop_after = Stage::done;
 
-        bool save_history = false;
+        bool save_history = true;
         std::filesystem::path history_file_path;
         bool quit_on_error = false;
         bool prompt = true;
