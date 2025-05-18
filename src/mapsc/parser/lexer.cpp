@@ -241,7 +241,7 @@ Token Lexer::read_identifier() {
     buffer_.sputc(current_char_);
     read_char();
     
-    while ((std::isalnum(current_char_) || current_char_ == '_') && !source_is_->eof()) {
+    while (is_allowed_in_identifiers(current_char_) && !source_is_->eof()) {
         buffer_.sputc(current_char_);
         read_char();
     }
