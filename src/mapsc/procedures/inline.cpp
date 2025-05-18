@@ -10,8 +10,6 @@
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
 
-#include "mapsc/compiler_options.hh"
-
 #include "mapsc/types/type.hh"
 #include "mapsc/types/function_type.hh"
 
@@ -24,11 +22,6 @@ namespace Maps {
 using Log = LogInContext<LogContext::inline_>;
 
 bool inline_call(Expression& expression) {
-    #ifndef NDEBUG
-    if (CompilerOptions::get(CompilerOption::DEBUG_no_inline) == "true")
-        return false;
-    #endif
-    
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
 
@@ -37,11 +30,6 @@ bool inline_call(Expression& expression) {
 }
 
 bool inline_call(Expression& expression, Callable& callable) {
-    #ifndef NDEBUG
-    if (CompilerOptions::get(CompilerOption::DEBUG_no_inline) == "true")
-        return false;
-    #endif
-
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
 
@@ -56,18 +44,7 @@ bool inline_call(Expression& expression, Callable& callable) {
         return substitute_value_reference(expression, callable);
     }
 
-    // auto callee_type = dynamic_cast<const FunctionType*>(callee->get_type());
     return false;
-
-
-    // for (int i = 0; Expression* arg: args) {
-        
-    // }
-
-    // if (callee_type->is_pure) {
-        
-    // }
-    
 }
 
 namespace {

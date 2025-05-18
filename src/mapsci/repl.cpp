@@ -73,7 +73,7 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
 
 bool REPL::run() {    
     auto types = TypeStore{};
-    auto stored_state = CompilationState{Maps::get_builtins(), &types};
+    auto stored_state = CompilationState{Maps::get_builtins(), &types, options_.compiler_options};
 
     while (running_) {        
         optional<std::string> input = get_input();

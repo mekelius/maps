@@ -22,6 +22,9 @@
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/statement.hh" 
 
+#include "mapsc/procedures/reverse_parse.hh"
+
+
 namespace Maps {
 
 // interface for visitors
@@ -35,6 +38,10 @@ concept AST_Visitor = requires(T t) {
 
 class CompilationState {
 public:
+    struct Options {
+        ReverseParser::Options reverse_parse{};
+    };
+
     struct SpecialCallables {
         BuiltinOperator* unary_minus;
         BuiltinOperator* binary_minus;
@@ -53,7 +60,11 @@ public:
     static std::tuple<CompilationState, std::unique_ptr<const Scope>, std::unique_ptr<TypeStore>> 
         create_test_state();
 
-    CompilationState(const Scope* builtins, TypeStore* types,
+    CompilationState(const Scope* builtins, TypeStore* types, 
+        SpecialCallables specials = {&unary_minus_Int, &binary_minus_Int});
+
+    CompilationState(const Scope* builtins, TypeStore* types, 
+        Options compiler_options,
         SpecialCallables specials = {&unary_minus_Int, &binary_minus_Int});
 
     // copy constructor
@@ -72,12 +83,12 @@ public:
 
     bool is_valid = true;
     
+    Options compiler_options_{};
     Scope globals_ = {};
     std::shared_ptr<AST_Store> ast_store_ = std::make_shared<AST_Store>();
     PragmaStore pragmas_ = {};
     
     // container for top-level statements
-    
     std::optional<Callable*> entry_point_ = std::nullopt;
     
     TypeStore* types_;

@@ -31,7 +31,8 @@ std::unique_ptr<CompilationState> process_source(const CompilationState& base, s
 
     unique_ptr<CompilationState> compilation_state = 
         make_unique<CompilationState>(base);
-    ReverseParser reverse_parser{&debug_ostream};
+    ReverseParser reverse_parser{
+        &debug_ostream, compilation_state->compiler_options_.reverse_parse};
     // ----- layer1 -----
 
     ParserLayer1 layer1{compilation_state.get()};

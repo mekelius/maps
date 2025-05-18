@@ -1,11 +1,5 @@
-#include "mapsc/logging.hh"
-
-#include <memory>
-#include <optional>
-
-
-
-using std::optional, std::nullopt, std::unique_ptr, std::make_unique;
+#include "logging.hh"
+#include "logging_options.hh"
 
 namespace Maps {
 

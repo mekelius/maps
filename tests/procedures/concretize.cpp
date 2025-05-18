@@ -5,7 +5,6 @@
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/callable.hh"
 #include "mapsc/types/type_store.hh"
-#include "mapsc/compiler_options.hh"
 
 using namespace Maps;
 using namespace std;

@@ -14,8 +14,14 @@ tuple<CompilationState, unique_ptr<const Scope>, unique_ptr<TypeStore>> Compilat
 
 CompilationState::CompilationState(const Scope* builtins, TypeStore* types, 
     SpecialCallables special_callables)
-:types_(types), builtins_(builtins), special_callables_(special_callables) {
-}
+:CompilationState(builtins, types, {}, special_callables) {}
+
+CompilationState::CompilationState(const Scope* builtins, TypeStore* types, 
+    Options compiler_options, SpecialCallables special_callables)
+:compiler_options_(compiler_options), 
+ types_(types), 
+ builtins_(builtins), 
+ special_callables_(special_callables) {}
 
 bool CompilationState::empty() const {
     if (!globals_.empty())

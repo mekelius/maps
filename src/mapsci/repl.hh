@@ -42,6 +42,8 @@ public:
         bool prompt = true;
         // adds "mapsci-output:" before the evaluated line (for testing)
         bool prefix_output = false;
+
+        Maps::CompilationState::Options compiler_options{};
     };
 
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, Options options);

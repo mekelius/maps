@@ -14,8 +14,7 @@
 #include "llvm/Support/raw_os_ostream.h"
 
 #include "mapsc/logging.hh"
-
-#include "mapsc/compiler_options.hh"
+#include "mapsc/logging_options.hh"
 
 #include "mapsci/init_llvm.hh"
 #include "mapsci/jit_manager.hh"
@@ -24,7 +23,7 @@
 
 using std::unique_ptr, std::make_unique;
 using Maps::LogInContext, Maps::LogOptions, Maps::LogLevel, Maps::LogContext;
-using Maps::CompilerOptions, Maps::CompilerOption;
+using Maps::CompilationState;
 
 const std::string DATA_SUBDIRECTORY = "mapsc";
 const std::string HISTORY_FILENAME = "mapsci_history";
@@ -88,8 +87,6 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::string> args = {argv + 1, argc + argv};
     std::vector<std::string> source_filenames{};
-
-    auto compiler_options = *CompilerOptions::lock();
 
     auto log_options_lock = LogOptions::Lock::global();
     auto log_options = log_options_lock.options_;
@@ -166,8 +163,8 @@ int main(int argc, char* argv[]) {
         } else if (key == "--ignore-errors" || key == "--ignore-error") {
             repl_options.ignore_errors = false;
 
-        } else if (key == "--print-all-types" || key == "--print-types" || key == "--include-all-types" || key == "--include-types") {
-            compiler_options->set(CompilerOption::print_all_types, "true");
+        } else if (key == "--types" || key == "--print-all-types" || key == "--print-types" || key == "--include-all-types" || key == "--include-types") {
+            repl_options.compiler_options.reverse_parse.include_all_types = true;
 
         } else if (key == "--no-history") {
             repl_options.save_history = false;

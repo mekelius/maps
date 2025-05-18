@@ -42,7 +42,6 @@ set_property(TARGET corelib PROPERTY OUTPUT_NAME maps_core)
 
 add_library(mapsc_frontend OBJECT
     src/mapsc/logging.cpp
-    src/mapsc/compiler_options.cpp
     src/mapsc/pragma.cpp
     src/mapsc/compilation_state.cpp
 
@@ -136,12 +135,9 @@ target_link_libraries(mapsc-verify mapsc_frontend)
 
 add_executable(unit_tests
     tests/tests_main.cpp
-    
+
     tests/full_runs.cpp
-
     tests/pragmas.cpp
-    tests/compiler_options.cpp
-
     tests/ast/ast.cpp
 
     tests/parser/layer1.cpp

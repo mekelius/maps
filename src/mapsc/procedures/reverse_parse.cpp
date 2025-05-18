@@ -15,7 +15,6 @@
 #include "mapsc/ast/statement.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/compiler_options.hh"
 #include "mapsc/compilation_state.hh"
 
 namespace Maps {
@@ -25,9 +24,6 @@ ReverseParser::ReverseParser(std::ostream* ostream)
 
 ReverseParser::ReverseParser(std::ostream* ostream, const Options& options)
     :ostream_(ostream), options_(options) {
-
-    if (CompilerOptions::get(CompilerOption::print_all_types) == "true")
-        options_.include_all_types = true;
 }
 
 void ReverseParser::reset() {

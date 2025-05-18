@@ -6,6 +6,7 @@
 #include <fstream>
 
 #include "mapsc/logging.hh"
+#include "mapsc/logging_options.hh"
 
 #include "mapsc/builtins.hh"
 #include "mapsc/compilation_state.hh"
