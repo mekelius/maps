@@ -9,10 +9,9 @@
 #include <array>
 #include <algorithm>
 
-// TODO: make these constexpr
-constexpr std::string_view OPERATOR_GLYPHS = "+-*/^=!?|<>.$&€£@¬§¤";
+constexpr std::string_view OPERATOR_GLYPHS = "+-*/%^=!?|<>.$&€£@¬§¤";
+constexpr std::string_view GLYPHS_FORBIDDEN_IN_NAMES = "+-*/%^=|<>.$&€£@¬§¤;:\\#~[]{}()\"`";
 
-// OPT: roll these into a single enum
 constexpr std::array<std::string_view, 42> RESERVED_WORDS = {
     "return",
     "let", "mut", "const", "type", "class",
@@ -35,6 +34,16 @@ constexpr inline bool is_operator_glyph(char glyph) {
 
 constexpr inline bool is_reserved_word(const std::string& word) {
     return std::find(RESERVED_WORDS.begin(), RESERVED_WORDS.end(), word) != RESERVED_WORDS.end();
+}
+
+constexpr inline bool is_allowed_in_identifiers(char ch) {
+    if (isalnum(ch))
+        return true;
+
+    if (std::find(GLYPHS_FORBIDDEN_IN_NAMES.begin(), GLYPHS_FORBIDDEN_IN_NAMES.end(), ch))
+        return false;
+
+    return true;
 }
 
 #endif

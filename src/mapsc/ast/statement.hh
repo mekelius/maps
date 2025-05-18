@@ -12,10 +12,9 @@
 
 namespace Maps {
 
-// ----- BUILTINS -----
-
 struct Expression;
 struct Statement;
+class AST_Store;
 
 // ----- STATEMENTS -----
 struct Let {
@@ -76,6 +75,12 @@ using StatementValue = std::variant<
 >;
 
 struct Statement {
+    static Statement* empty(AST_Store& store, SourceLocation location);
+    static Statement* return_(AST_Store& store, Expression* value, SourceLocation location);
+    static Statement* block(AST_Store& store, Block value, SourceLocation location);
+    static Statement* expression(AST_Store& store, Expression* value, SourceLocation location);
+    static Statement* syntax_error(AST_Store& store, SourceLocation location);
+
     Statement(StatementType statement_type, SourceLocation location);
 
     StatementType statement_type;

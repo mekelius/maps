@@ -76,6 +76,14 @@ add_library(mapsc_frontend OBJECT
 
 target_link_libraries(mapsc_frontend corelib)
 
+# -------------------- dsir FRONTEND --------------------
+
+add_library(dsir OBJECT
+    src/mapsc/dsir/parse_dsir.cpp
+)
+
+target_link_libraries(dsir mapsc_frontend)
+
 # ------------------------ IR_GEN -------------------------
 
 add_library(ir_gen OBJECT
@@ -141,6 +149,7 @@ add_executable(unit_tests
     tests/pragmas.cpp
     tests/ast/ast.cpp
 
+    tests/parser/lexer.cpp
     tests/parser/layer1.cpp
     tests/parser/layer2.cpp
     tests/parser/unary_operators.cpp
@@ -159,6 +168,22 @@ set_property(TARGET unit_tests
 
 target_link_libraries(unit_tests mapsc_frontend)
 target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
+
+
+# ----------------------- dsir UNIT TESTS -----------------------
+
+add_executable(dsir_unit_tests
+    tests/tests_main.cpp
+
+    tests/dsir/basics.cpp
+)
+
+set_property(TARGET dsir_unit_tests 
+    PROPERTY EXCLUDE_FROM_ALL True)
+
+target_link_libraries(dsir_unit_tests mapsc_frontend dsir)
+target_include_directories(dsir_unit_tests SYSTEM PRIVATE doctest tests)
+
 
 # ------------------------ E2E TESTS ------------------------
 

@@ -27,7 +27,7 @@ Needed features:
 
 #### slightly longer term
 
-- come up with an approacs to test IR
+- come up with an approach to test IR
 - need to input some builtins as IR
 - need to create a base IR module to not reinsert every time
     - from file

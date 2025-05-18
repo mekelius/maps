@@ -85,7 +85,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     }
 
     generator.builder_->CreateRet(generator.builder_->CreateSelect(
-        (*cast_Boolean_to_String)->getArg(0),
+        generator.builder_->getInt1((*cast_Boolean_to_String)->getArg(0)),
             generator.builder_->CreateGlobalString("true"),
             generator.builder_->CreateGlobalString("false")
     ));

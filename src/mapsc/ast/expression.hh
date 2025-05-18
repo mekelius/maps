@@ -143,11 +143,16 @@ struct Expression {
     static Expression* minus_sign(
         AST_Store& store, SourceLocation location);
 
+    static Expression* syntax_error(AST_Store& store, SourceLocation location);
+
     static Expression builtin(const ExpressionValue& value, const Type& type) {
         return Expression{ExpressionType::value, value, &type, BUILTIN_SOURCE_LOCATION};
     }
 
     // ----- CONSTRUCTORS -----
+    Expression(ExpressionType expression_type, SourceLocation location)
+    :expression_type(expression_type), value(std::monostate{}), location(location) {}
+
     Expression(ExpressionType expression_type, ExpressionValue value, SourceLocation location)
     :expression_type(expression_type), value(value), location(location) {}
 

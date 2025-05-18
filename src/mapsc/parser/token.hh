@@ -21,6 +21,7 @@ enum class TokenType: int {
     tie,
     pragma,
     dummy,  // dummy token used to initialize token values
+    syntax_error,
     unknown // unhandled, means a bug
 };
 

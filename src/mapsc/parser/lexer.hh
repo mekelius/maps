@@ -22,6 +22,9 @@ public:
 private:
     char read_char();
     char peek_char();
+
+    SourceLocation current_location() const;
+
     // creates a token filled with the correct line and col info
     Token create_token(TokenType token_type);
     Token create_token(TokenType token_type, const std::string& value);

@@ -68,6 +68,9 @@ std::string Token::get_string() const {
         case TokenType::pragma:
             return "pragma: " + string_value();
 
+        case TokenType::syntax_error:
+            return "syntax error: " + string_value();
+
         case TokenType::unknown:
             assert(false && "unknown tokens shouldn't exist");
             return "unknown token type";

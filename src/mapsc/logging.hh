@@ -25,7 +25,8 @@ enum class LogContext {
     concretize      = 8,
     ir_gen_init     = 9,
     ir_gen          = 10,
-    REPL            = 11
+    REPL            = 11,
+    dsir_parser    = 12
 };
 constexpr auto LOG_CONTEXT_COUNT = __LINE__ - LOG_CONTEXTS_START_LINE - 3;
 // clang-format on
@@ -56,6 +57,8 @@ constexpr std::string_view prefix(LogContext context) {
             return "during IR generation: ";
         case LogContext::REPL:
             return "in REPL: ";
+        case LogContext::dsir_parser:
+            return "in dsir parser: ";
     }
 }
 

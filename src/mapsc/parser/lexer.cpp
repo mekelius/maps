@@ -58,14 +58,18 @@ char Lexer::peek_char() {
     return source_is_->peek();
 }
 
+SourceLocation Lexer::current_location() const {
+    return SourceLocation{static_cast<int>(current_token_start_line_),
+        static_cast<int>(current_token_start_col_), source_id_};
+}
+
+
 Token Lexer::create_token(TokenType type) {
-    return Token{type, SourceLocation{static_cast<int>(current_token_start_line_), 
-        static_cast<int>(current_token_start_col_), source_id_}};
+    return Token{type, current_location()};
 }
 
 Token Lexer::create_token(TokenType type, const std::string& value) {
-    return Token{type, value, {static_cast<int>(current_token_start_line_), 
-        static_cast<int>(current_token_start_col_), source_id_}};
+    return Token{type, value, current_location()};
 }
 
 // ----- PRODUCTION RULES -----
@@ -281,6 +285,17 @@ Token Lexer::read_string_literal() {
         buffer_.sputc(current_char_);
     }
 
+    if (current_char_ != '\"') {
+        if (source_is_->eof()) {
+            Log::error("Unexpected eof during string literal", current_location());
+        } else {
+            Log::compiler_error(
+                "Something unexpected happened during string literal lexing", 
+                current_location());
+        }
+        return create_token(TokenType::syntax_error, "string literal missing closing quote");
+    }
+
     read_char(); // eat the closing "
     return create_token(TokenType::string_literal, buffer_.str());
 }
@@ -402,7 +417,8 @@ void Lexer::read_and_ignore_comment() {
     assert(current_char_ == '*');
     
     // multi-line comment
-    // NOTE: multi-line comments may mess with indentation, but can't be bothered to think about that atm
+    // !!! NOTE: multi-line comments may mess with indentation, but can't be bothered to 
+    // think about that atm
     bool found_closing = false;
     bool prev_was_asterisk = false;
         

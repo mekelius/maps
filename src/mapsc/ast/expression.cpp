@@ -471,6 +471,10 @@ Expression* Expression::minus_sign(AST_Store& store, SourceLocation location) {
         Expression{ExpressionType::minus_sign, std::monostate{}, location});
 }
 
+Expression* Expression::syntax_error(AST_Store& store, SourceLocation location) {
+    return store.allocate_expression(Expression{ExpressionType::syntax_error, location});
+}
+
 Operator::Precedence get_operator_precedence(const Expression& operator_ref) {
     assert(operator_ref.expression_type == ExpressionType::binary_operator_reference && 
         "get_operator_precedence called with not a binary operator reference");
