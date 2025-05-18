@@ -10,6 +10,7 @@ constexpr SourceFileID DEFAULT_SOURCE_FILE = 0;
 constexpr SourceFileID NULL_SOURCE_FILE = -1;
 constexpr SourceFileID BUILTIN_SOURCE_FILE = -2;
 constexpr SourceFileID EXTERNAL_SOURCE_FILE = -3;
+constexpr SourceFileID COMPILER_INIT_SOURCE_FILE = -4;
 
 struct SourceLocation {
     static constexpr int OUT_OF_SOURCE = -1;
@@ -30,6 +31,9 @@ struct SourceLocation {
 
 constexpr SourceLocation NO_SOURCE_LOCATION{
     SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, NULL_SOURCE_FILE};
+
+constexpr SourceLocation COMPILER_INIT_SOURCE_LOCATION{
+    SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, COMPILER_INIT_SOURCE_FILE};
 
 constexpr SourceLocation TEST_SOURCE_LOCATION{0, 0, NULL_SOURCE_FILE};    
 constexpr auto TSL = TEST_SOURCE_LOCATION;

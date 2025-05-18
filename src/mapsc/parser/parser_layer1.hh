@@ -9,7 +9,8 @@
 #include <vector>
 
 #include "mapsc/source.hh"
-#include "mapsc/loglevel_defs.hh"
+
+#include "mapsc/logging.hh"
 
 #include "mapsc/ast/callable.hh"
 #include "mapsc/parser/token.hh"
@@ -50,11 +51,8 @@ protected:
     void fail(const std::string& message);
     void fail(const std::string& message, SourceLocation location);
     
-    void log_info(const std::string& message, 
-        MessageType message_type = MessageType::general_info) const;
-    
-    void log_info(const std::string& message, MessageType message_type, 
-        SourceLocation location) const;
+    void log(const std::string& message, LogLevel loglevel) const;
+    void log(const std::string& message, LogLevel loglevel, SourceLocation location) const;
 
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& name) const;

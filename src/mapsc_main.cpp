@@ -26,7 +26,6 @@
 namespace Maps { class Scope; }
 
 using std::unique_ptr, std::make_unique;
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 // TODO: handle multiple inputfiles
 constexpr std::string_view USAGE = "USAGE: testc inputfile [-o filename] [-ir filename]";
@@ -119,7 +118,7 @@ int main(int argc, char** argv) {
         Maps::process_source(builtins, &types,source_is);
 
     if (!compilation_state->is_valid) {
-        log_error("parsing failed");
+        Maps::LogNoContext::error("parsing failed", NO_SOURCE_LOCATION);
         return EXIT_FAILURE;
     }
 

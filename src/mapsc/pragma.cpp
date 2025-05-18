@@ -4,11 +4,12 @@
 #include <utility>
 
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
+
 
 namespace Maps {
 
-using GlobalLogger::log_error, GlobalLogger::log_info;
+using Log = LogInContext<LogContext::compiler_init>;
 
 PragmaStore::PragmaStore() {
     for (const PragmaFlag& flag: flags) {
@@ -21,14 +22,14 @@ bool PragmaStore::set_flag(const std::string& flag_name, bool value, const Sourc
     auto flag_declarations_it = declarations_.find(flag_name);
     
     if (flag_declarations_it == declarations_.end()) {
-        log_error("tried to set unkown pragma: " + std::string{flag_name}, location);
+        Log::error("tried to set unkown pragma: " + std::string{flag_name}, location);
         return false;
     }
 
     flag_declarations_it->second.insert({location, value});
-        log_info(
-            "set pragma: " + std::string(value ? "enable " : "disable ") + std::string{flag_name}, 
-        MessageType::pragma_debug, location);
+    Log::debug(
+        "set pragma: " + std::string(value ? "enable " : "disable ") + std::string{flag_name}, 
+        location);
     return true;
 }
 

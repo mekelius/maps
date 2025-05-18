@@ -15,7 +15,7 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
 #include "mapsc/pragma.hh"
 #include "mapsc/compilation_state.hh"
 
@@ -33,6 +33,8 @@ using std::optional, std::nullopt, std::make_unique;
 
 
 namespace Maps {
+
+using Log = LogInContext<LogContext::layer1>;
 
 // ----- PUBLIC METHODS -----
 
@@ -155,18 +157,18 @@ void ParserLayer1::fail(const std::string& message) {
 }
 
 void ParserLayer1::fail(const std::string& message, SourceLocation location) {
-    GlobalLogger::log_error(message, location);
+    Log::error(message, location);
     declare_invalid();
 }
 
-void ParserLayer1::log_info(const std::string& message, MessageType message_type) const {
-    GlobalLogger::log_info(message, message_type, current_token().location);
+void ParserLayer1::log(const std::string& message, LogLevel loglevel) const {
+    Log::on_level(message, loglevel, current_token().location);
 }
 
-void ParserLayer1::log_info(const std::string& message, MessageType message_type, 
+void ParserLayer1::log(const std::string& message, LogLevel loglevel, 
     SourceLocation location) const {
     
-    GlobalLogger::log_info(message, message_type, location);
+    Log::on_level(message, loglevel, location);
 }
 
 
@@ -182,7 +184,7 @@ void ParserLayer1::create_identifier(const std::string& name, SourceLocation loc
 
 void ParserLayer1::create_identifier(const std::string& name,
     CallableBody body, SourceLocation location) {
-    log_info("created identifier " + name, MessageType::parser_debug_identifier);
+    log("created identifier " + name, LogLevel::debug_extra);
     compilation_state_->globals_.create_identifier(
         ast_store_->allocate_callable({name, body, location})
     );
@@ -314,7 +316,7 @@ Statement* ParserLayer1::parse_statement() {
 
         case TokenType::reserved_word:
             if (current_token().string_value() == "let") {
-                log_info("Scoping not yet implemented");
+                log("Scoping not yet implemented", LogLevel::warning);
                 return parse_let_statement();
             }
 
@@ -384,8 +386,8 @@ Statement* ParserLayer1::parse_expression_statement() {
 
     if (current_token().token_type == TokenType::semicolon)
         get_token(); // eat trailing semicolon
-    log_info("finished parsing expression statement from " + statement->location.to_string(), 
-        MessageType::parser_debug);
+    log("finished parsing expression statement from " + statement->location.to_string(), 
+        LogLevel::debug_extra);
     return statement;
 }
 
@@ -409,8 +411,8 @@ Statement* ParserLayer1::parse_let_statement() {
                 get_token(); // eat the identifier
 
                 if (is_statement_separator(current_token())) {
-                    log_info("parsed let statement declaring \"" + name + "\" with no definition", 
-                        MessageType::parser_debug);
+                    log("parsed let statement declaring \"" + name + "\" with no definition", 
+                        LogLevel::debug_extra);
                     
                     get_token(); // eat the semicolon
                     Statement* statement = create_statement(StatementType::let);
@@ -436,7 +438,7 @@ Statement* ParserLayer1::parse_let_statement() {
                     statement->value = Let{name, body};
 
                     create_identifier(name, body, statement->location);
-                    log_info("parsed let statement", MessageType::parser_debug);
+                    log("parsed let statement", LogLevel::debug_extra);
                     return statement;
                 }
 
@@ -447,7 +449,7 @@ Statement* ParserLayer1::parse_let_statement() {
             }
 
         case TokenType::operator_t:
-            log_info("operator overloading not yet implemented, ignoring");
+            log("operator overloading not yet implemented, ignoring", LogLevel::warning);
             reset_to_top_level();
             return create_statement(StatementType::empty);
 
@@ -517,7 +519,7 @@ Statement* ParserLayer1::parse_operator_definition() {
 
                 compilation_state_->globals_.create_identifier(ast_store_->allocate_callable(
                     Operator{op_string, body, {fixity}, statement->location}));
-                log_info("parsed let statement", MessageType::parser_debug);
+                log("parsed let statement", LogLevel::debug_extra);
                 return statement;
             }
 
@@ -546,7 +548,7 @@ Statement* ParserLayer1::parse_operator_definition() {
             compilation_state_->globals_.create_identifier(ast_store_->allocate_callable(
                 Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
                         statement->location}));
-            log_info("parsed let statement", MessageType::parser_debug);
+            log("parsed let statement", LogLevel::debug_extra);
             return statement;   
 
         }
@@ -577,8 +579,8 @@ Statement* ParserLayer1::parse_assignment_statement() {
 
     // expect parse_statement to eat the semicolon etc.
 
-    log_info("finished parsing assignment statement from " + statement->location.to_string(), 
-        MessageType::parser_debug);
+    log("finished parsing assignment statement from " + statement->location.to_string(), 
+        LogLevel::debug_extra);
     return statement;
 }
 
@@ -590,7 +592,7 @@ Statement* ParserLayer1::parse_block_statement() {
     unsigned int curly_brace_at_start = curly_brace_level_;
 
     statement_start();
-    log_info("start parsing block statement", MessageType::parser_debug);
+    log("start parsing block statement", LogLevel::debug_extra);
     
     // determine the block type, i.e. curly-brace or indent
     // must trust the assertion above that other types of tokens won't end up here
@@ -635,8 +637,8 @@ Statement* ParserLayer1::parse_block_statement() {
     if (current_token().token_type == TokenType::semicolon)
         get_token(); // eat possible trailing semicolon
 
-    log_info("finished parsing block statement from " + statement->location.to_string(), 
-        MessageType::parser_debug);
+    log("finished parsing block statement from " + statement->location.to_string(), 
+        LogLevel::debug_extra);
 
     if (substatements->size() == 1) {
         // attempt to simplify
@@ -658,7 +660,7 @@ Statement* ParserLayer1::parse_block_statement() {
 }
 
 bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
-    log_info("simplifying single statement block", MessageType::parser_debug, outer->location);
+    log("simplifying single statement block", LogLevel::debug_extra, outer->location);
 
     assert(outer->statement_type == StatementType::block && 
         "ParserLayer1::collapse_single_statement_block called with a statement that's not a block");
@@ -693,7 +695,7 @@ Statement* ParserLayer1::parse_return_statement() {
         && "return statement didn't end in statement separator");
     get_token(); //eat statement separator
 
-    log_info("parsed return statement", MessageType::parser_debug);
+    log("parsed return statement", LogLevel::debug_extra);
     return statement;
 }
 
@@ -809,9 +811,9 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     expression_start();
     Expression* expression = Expression::termed(*ast_store_, {}, current_token().location);
 
-    log_info(
+    log(
         in_tied_expression ? "start parsing tied expression" : "start parsing termed expression", 
-        MessageType::parser_debug);
+        LogLevel::debug_extra);
 
     expression->terms().push_back(parse_term(in_tied_expression));
     
@@ -904,8 +906,8 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
         auto term = expression->terms().at(0);
         ast_store_->delete_expression(expression);
 
-        log_info("removed \"parentheses\" from " + expression->location.to_string(), 
-            MessageType::parser_debug);
+        log("removed \"parentheses\" from " + expression->location.to_string(), 
+            LogLevel::debug_extra);
         expression_end();
         return term;
     }
@@ -922,8 +924,8 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
     compilation_state_->unparsed_termed_expressions_.push_back(expression);
     
-    log_info("finished parsing termed expression from " + expression->location.to_string(), 
-        MessageType::parser_debug);
+    log("finished parsing termed expression from " + expression->location.to_string(), 
+        LogLevel::debug_extra);
     expression_end();
     return expression;
 }
@@ -1032,7 +1034,7 @@ Expression* ParserLayer1::parse_mapping_literal() {
     get_token();
     // eat until the closing character
 
-    log_info("parsed mapping literal (not implemented)", MessageType::parser_debug);
+    fail("parsed mapping literal (not implemented)");
 
     expression_end();
     return expression;
@@ -1044,7 +1046,7 @@ Expression* ParserLayer1::handle_string_literal() {
 
     get_token();
     
-    log_info("parsed string literal", MessageType::parser_debug_terminal);
+    log("parsed string literal", LogLevel::debug_extra);
     return expression;
 }
 
@@ -1054,7 +1056,7 @@ Expression* ParserLayer1::handle_numeric_literal() {
     
     get_token();
         
-    log_info("parsed numeric literal", MessageType::parser_debug_terminal);
+    log("parsed numeric literal", LogLevel::debug_extra);
     return expression;
 }
 
@@ -1064,7 +1066,7 @@ Expression* ParserLayer1::handle_identifier() {
    
     get_token();
     
-    log_info("parsed unresolved identifier", MessageType::parser_debug_terminal);
+    log("parsed unresolved identifier", LogLevel::debug_extra);
     return expression;
 }
 
@@ -1074,7 +1076,7 @@ Expression* ParserLayer1::handle_type_identifier() {
    
     get_token();
     
-    log_info("parsed unresolved type identifier", MessageType::parser_debug_terminal);
+    log("parsed unresolved type identifier", LogLevel::debug_extra);
     return expression;
 }
 
@@ -1151,7 +1153,7 @@ Expression* ParserLayer1::handle_type_identifier() {
 // }
 
 void ParserLayer1::reset_to_top_level() {
-    log_info("resetting to global scope", MessageType::parser_debug);
+    log("resetting to global scope", LogLevel::debug);
 
     current_expression_start_ = {};
     current_statement_start_ = {};

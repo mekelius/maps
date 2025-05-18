@@ -9,7 +9,7 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
 #include "mapsc/compiler_options.hh"
 
 #include "mapsc/types/type.hh"
@@ -18,10 +18,10 @@
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/callable.hh"
 
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
-
 
 namespace Maps {
+
+using Log = LogInContext<LogContext::inline_>;
 
 bool inline_call(Expression& expression) {
     #ifndef NDEBUG
@@ -51,8 +51,7 @@ bool inline_call(Expression& expression, Callable& callable) {
         return false;
 
     if (args.empty()) {
-        log_info("Changed nullary call back to a reference", 
-            MessageType::post_parse_debug, expression.location);
+        Log::debug_extra("Changed nullary call back to a reference", expression.location);
         expression.expression_type = ExpressionType::reference;
         return substitute_value_reference(expression, callable);
     }
@@ -98,7 +97,7 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
         "substitute_value_reference called with not a reference");
 
     if (callee.is_undefined()) {
-        log_error("\"" + std::string{callee.name_} + "\" is undefined", expression.location);
+        Log::error("\"" + std::string{callee.name_} + "\" is undefined", expression.location);
         return false;
     }
 
@@ -108,9 +107,10 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
 
     if (callee_declared_type && expression.declared_type) {
         if (**callee_declared_type != **expression.declared_type) {
-            log_info("Attempting substitution, but declared types don't match: " + 
-                (*expression.declared_type)->to_string() + " != " + (*callee_declared_type)->to_string(), 
-                MessageType::post_parse_debug, expression.location);
+            Log::warning("Attempting substitution, declared types don't match: " + 
+                (*expression.declared_type)->to_string() + " != " + 
+                (*callee_declared_type)->to_string(), 
+                expression.location);
             return false;
         }
     }
@@ -131,14 +131,14 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
 
     // reject impure functions (maybe we can get llvm to inline them?)
     if (callee_type->is_impure_function()) {
-        log_info("Impure functions aren't yet inlinable", 
-            MessageType::post_parse_debug, expression.location);
+        Log::warning("Impure functions aren't yet inlinable", expression.location);
         return false;
     }
 
     if (*callee_type != *expression.type) {
         // try to cast
-        log_error("incompatible types: " + callee_type->to_string() + " and " + expression.type->to_string(), 
+        Log::error(
+            "incompatible types: " + callee_type->to_string() + " and " + expression.type->to_string(), 
             expression.location);
         return false;
     }

@@ -6,7 +6,7 @@
 #include <fstream>
 
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
 #include "mapsc/builtins.hh"
 #include "mapsc/compilation_state.hh"
 
@@ -19,7 +19,7 @@
 #include "mapsc/procedures/name_resolution.hh"
 
 
-using Maps::LogLevel, Maps::Logger;
+using Maps::LogInContext, Maps::LogOptions, Maps::LogLevel, Maps::LogContext;
 
 constexpr unsigned int OUTPUT_WIDTH = 80;
 constexpr std::string_view USAGE = "\n\
@@ -51,27 +51,26 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> args = { argv + 1, argv + argc };
     std::vector<std::string> source_filenames{};
 
-    Logger::Options logger_options;
+    auto log_options_lock = LogOptions::Lock::global();
+    auto log_options = log_options_lock.options_;
 
     for (std::string arg : args) {
         if (arg == "-t" || arg == "--tokens") {
             // lexer_ostream = &std::cout;
 
         } else if (arg == "-v" || arg == "--verbose" || arg == "--debug" || arg == "--parser-debug") {
-            logger_options.set(LogLevel::debug());
+            log_options->set_loglevel(LogLevel::debug);
             
         } else if (arg == "-q" || arg == "--quiet") {
-            logger_options.set(LogLevel::quiet());
+            log_options->set_loglevel(LogLevel::compiler_error);
 
         } else if (arg == "-e" || arg == "--everything") {
-            logger_options.set(LogLevel::everything());
+            log_options->set_loglevel(LogLevel::debug_extra);
 
         } else {
             source_filenames.push_back(arg);
         }
     }
-
-    Logger::set_global_options(logger_options);
 
     std::cout << separator('#') << separator('#', "VERIFY MAPSC") << "\n" 
               << "Running with " << source_filenames.size() << " input files\n\n";
@@ -97,7 +96,7 @@ int main(int argc, char* argv[]) {
 
         Maps::ParserLayer1{&compilation_state}.run(source_file);
 
-        if (Logger::logs_since_last_check()) 
+        if (Maps::logs_since_last_check()) 
             std::cout << "\n";
         if (!compilation_state.is_valid) {
             std::cerr << "layer1 failed\n\n";
@@ -108,7 +107,7 @@ int main(int argc, char* argv[]) {
 
         resolve_identifiers(compilation_state);
 
-        if(Logger::logs_since_last_check()) 
+        if(Maps::logs_since_last_check()) 
             std::cout << "\n";
         if (!compilation_state.is_valid) {
             std::cerr << "name resolution failed\n\n";
@@ -119,7 +118,7 @@ int main(int argc, char* argv[]) {
 
         Maps::ParserLayer2{&compilation_state}.run();
 
-        if(Logger::logs_since_last_check()) 
+        if(Maps::logs_since_last_check()) 
             std::cout << "\n";
         if (!compilation_state.is_valid) {
             std::cerr << "layer2 failed\n\n";

@@ -8,11 +8,12 @@
 
 #include "mapsc/ast/expression.hh"
 
-namespace Maps {
-
-using GlobalLogger::log_error;
 
 using std::optional, std::nullopt;
+
+namespace Maps {
+
+using Log = LogNoContext;
 
 bool Type::cast_to(const Type* target_type, Expression& expression) const {
     assert(*expression.type == *this && 
@@ -22,7 +23,8 @@ bool Type::cast_to(const Type* target_type, Expression& expression) const {
         return true;
 
     if (!expression.is_castable_expression()) {
-        log_error("expression " + expression.log_message_string() + ", is not castable");
+        Log::error("expression " + expression.log_message_string() + ", is not castable", 
+            expression.location);
         return false;
     }
     

@@ -20,9 +20,10 @@
 #include "mapsc/procedures/coerce_type.hh"
 
 using std::get, std::get_if, std::optional, std::nullopt;
-using Maps::GlobalLogger::log_error;
 
 namespace Maps {
+
+using Log = LogInContext<LogContext::layer4>;
 
 bool SimpleTypeChecker::visit_expression(Expression* expression) {
     if (expression->declared_type && **expression->declared_type != *expression->type)
@@ -31,7 +32,7 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
     if (concretize(*expression))
         return true;
 
-    log_error("Found a non-reduced type: " + static_cast<std::string>(expression->type->name()), 
+    Log::error("Found a non-reduced type: " + static_cast<std::string>(expression->type->name()), 
         expression->location);
 
     return false;
@@ -49,7 +50,8 @@ bool SimpleTypeChecker::visit_callable(Callable* callable) {
 
             if (declared_type) {
                 if (type && *type != **declared_type) {
-                    assert(false && "in visit_callable: declared type mismatch, handling not implemented");
+                    assert(false && 
+                        "in visit_callable: declared type mismatch, handling not implemented");
                     return false;
                 }
             }

@@ -14,7 +14,7 @@
 #include "llvm/Support/raw_os_ostream.h"
 
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
 #include "mapsc/compiler_options.hh"
 
 #include "mapsci/init_llvm.hh"
@@ -23,7 +23,8 @@
 
 
 using std::unique_ptr, std::make_unique;
-using Maps::MessageType, Maps::LogLevel, Maps::Logger, Maps::CompilerOptions, Maps::CompilerOption;
+using Maps::LogInContext, Maps::LogOptions, Maps::LogLevel, Maps::LogContext;
+using Maps::CompilerOptions, Maps::CompilerOption;
 
 const std::string DATA_SUBDIRECTORY = "mapsc";
 const std::string HISTORY_FILENAME = "mapsci_history";
@@ -90,7 +91,9 @@ int main(int argc, char* argv[]) {
 
     auto compiler_options = *CompilerOptions::lock();
 
-    Logger::Options logger_options;
+    auto log_options_lock = LogOptions::Lock::global();
+    auto log_options = log_options_lock.options_;
+
     REPL::Options repl_options;
     repl_options.save_history = true;
 
@@ -104,16 +107,16 @@ int main(int argc, char* argv[]) {
         std::getline(arg_s, value);
 
         if (key == "-t" || key == "--tokens") {
-            logger_options.set(MessageType::lexer_debug_token, true);
+            log_options->set_loglevel(LogContext::lexer, LogLevel::debug_extra);
 
         } else if (key == "--debug" || key == "--parser-debug") {
-            logger_options.set(LogLevel::debug());
+            log_options->set_loglevel(LogLevel::debug);
             
         } else if (key == "-q" || key == "--quiet") {
-            logger_options.set(LogLevel::quiet());
+            log_options->set_loglevel(LogLevel::compiler_error);
 
         } else if (key == "-e" || key == "--everything") {
-            logger_options.set(LogLevel::everything());
+            log_options->set_loglevel(LogLevel::debug_extra);
 
         } else if (key == "--ir" || key == "--print-ir" || key == "--dump-ir") {
             repl_options.print_ir = true;
@@ -139,7 +142,7 @@ int main(int argc, char* argv[]) {
         } else if (key == "--e2e-tests-mode") {
             repl_options.save_history = false;
             repl_options.quit_on_error = true;
-            logger_options.set(LogLevel::errors());
+            log_options->set_loglevel(LogLevel::error);
 
         } else if (key == "--layer1") {
             repl_options.print_layer1 = true;
@@ -186,8 +189,6 @@ int main(int argc, char* argv[]) {
             source_filenames.push_back(key);
         }
     }
-
-    Logger::set_global_options(logger_options);
 
     if (repl_options.save_history && repl_options.history_file_path.empty()) {
         auto history_file_path = get_default_history_file_path();

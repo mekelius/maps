@@ -31,7 +31,7 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
 #include "mapsc/compilation_state.hh"
 
 #include "mapsc/types/type.hh"
@@ -47,11 +47,9 @@
 using llvm::LLVMContext;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if;
 using std::unique_ptr, std::make_unique;
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, 
     Maps::StatementType, Maps::PragmaStore;
 using Maps::Helpers::capitalize;
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 #define BAD_STATEMENT_TYPE StatementType::broken:\
                       case StatementType::illegal:\
@@ -60,6 +58,8 @@ using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 #define IGNORED_STATEMENT_TYPE StatementType::operator_definition:\
                           case StatementType::empty
 
+
+using Log = Maps::LogInContext<Maps::LogContext::ir_gen>;
                           
 namespace IR {
 
@@ -167,8 +167,8 @@ optional<llvm::Function*> IR_Generator::function_definition(const std::string& n
     llvm::Function::LinkageTypes linkage) {
 
     if (!ast_type.is_function()) {
-        log_error("IR::Generator::function_definition called with a non-function type: " + 
-            ast_type.to_string());
+        Log::compiler_error("IR::Generator::function_definition called with a non-function type: " + 
+            ast_type.to_string(), NO_SOURCE_LOCATION);
         assert(false && "IR_Generator::function_definition called with non-function ast type");
         return nullopt;
     }
@@ -220,8 +220,8 @@ bool IR_Generator::verify_module() {
 
 optional<llvm::Function*> IR_Generator::eval_and_print_root() {
     if (!compilation_state_->entry_point_) {
-        log_info("IR_Generator::eval_and_print_root called with no entry point on CompilationState", 
-            Maps::MessageType::ir_gen_debug);
+        Log::compiler_error("IR_Generator::eval_and_print_root called with no entry point on CompilationState", 
+            NO_SOURCE_LOCATION);
         fail("No entry point");
         return nullopt;
     }
@@ -333,7 +333,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Ca
         *function_type->return_type(), function_type->param_types());
 
     if (!signature) {
-        log_error("unable to convert type signature for " + 
+        Log::error("unable to convert type signature for " + 
             std::string{callable.name_}, callable.location_);
         return nullopt;
     }

@@ -13,10 +13,12 @@
 #include "mapsc/types/function_type.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 
+
 using std::optional, std::nullopt, std::to_string;
-using Maps::GlobalLogger::log_error;
 
 namespace Maps {
+
+using Log = LogNoContext;
 
 // ----- EXPRESSION -----
 
@@ -411,8 +413,8 @@ optional<Expression*> Expression::call(CompilationState& state,
     auto callee_type = callable->get_type();
     
     if (!callee_type->is_function() && args.size() > 0) {
-        log_error(std::string{callable->name_} + 
-            " cannot take arguments, tried giving " + to_string(args.size()));
+        Log::error(std::string{callable->name_} + 
+            " cannot take arguments, tried giving " + to_string(args.size()), callable->location_);
         return nullopt;
     }
 
@@ -427,8 +429,9 @@ optional<Expression*> Expression::call(CompilationState& state,
     auto return_type = callee_f_type->return_type();
 
     if (args.size() > param_types.size()) {
-        log_error(std::string{callable->name_} + " takes a maximum of " + 
-            to_string(param_types.size()) + " arguments, tried giving " + to_string(args.size()));
+        Log::error(std::string{callable->name_} + " takes a maximum of " + 
+            to_string(param_types.size()) + " arguments, tried giving " + to_string(args.size()), 
+            location);
         return nullopt;
     }
 

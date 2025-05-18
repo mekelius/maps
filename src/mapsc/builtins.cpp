@@ -21,10 +21,11 @@
 #include "mapsc/ast/statement.hh"
 
 using std::monostate;
-using Maps::GlobalLogger::log_error;
+
 
 namespace Maps {
 
+using Log = LogInContext<LogContext::compiler_init>;
 class Type;
 
 Builtin::Builtin(std::string_view name, const Expression&& expression)
@@ -74,7 +75,8 @@ constinit BuiltinOperator mult_Int{"*", External{}, IntInt_to_Int,
 
 bool init_builtin(Scope& scope, Callable& callable) {
     if (!scope.create_identifier(&callable)) {
-        log_error("Creating builtin " + std::string{callable.name_} + " failed");
+        Log::compiler_error("Creating builtin " + std::string{callable.name_} + " failed",
+            COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
@@ -127,7 +129,7 @@ bool init_builtins(Scope& scope) {
 
 const Scope* get_builtins() {
     if (!builtins_initialized && !init_builtins(builtins)) {
-        log_error("Initializing builtins failed");
+        Log::compiler_error("Initializing builtins failed", COMPILER_INIT_SOURCE_LOCATION);
         assert(false && "initializing builtins failed");
     }
 

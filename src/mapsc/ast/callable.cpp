@@ -14,7 +14,7 @@
 #include "mapsc/ast/expression.hh"
 
 using std::optional, std::nullopt;
-using Maps::GlobalLogger::log_error;
+
 
 namespace Maps {
 
@@ -27,7 +27,8 @@ Callable::Callable(std::string_view name, CallableBody body, const Type& type, S
     assert((!std::holds_alternative<Expression*>(body)  || 
             type == Hole                                ||
             type == *std::get<Expression*>(body)->type) &&
-            "Tried to initialize expression-bodied callable with a type, type should be set on the expression");
+            "Tried to initialize expression-bodied callable with a type, \
+type should be set on the expression");
 }
 
 Callable::Callable(std::string_view name, CallableBody body, SourceLocation location)
@@ -130,7 +131,7 @@ bool Callable::set_declared_type(const Type& type) {
         return true;
 
     } else if (auto external = std::get_if<External>(&body_)) {
-        log_error("tried to set the declared type on a builtin");
+        LogNoContext::compiler_error("tried to set the declared type on a builtin", location_);
         assert(false && "tried to set the declared type on a builtin");
         return false;
     }

@@ -26,7 +26,7 @@
 #include "mapsc/llvm/type_mapping.hh"
 
 using std::optional;
-using Maps::GlobalLogger::log_error;
+using Log = Maps::LogInContext<Maps::LogContext::ir_gen_init>;
 
 namespace llvm { class Type; }
 namespace Maps { class FunctionType; }
@@ -49,7 +49,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
                 Maps::IO_Void, {maps_type}),
             llvm::FunctionType::get(generator.types_.void_t, {llvm_type}, false))) {
         
-            log_error("Creating builtin functions failed");
+            Log::compiler_error("Creating builtin functions failed", COMPILER_INIT_SOURCE_LOCATION);
             return false;
         }
     }
@@ -75,7 +75,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     optional<llvm::Function*> negate_int = generator.function_definition("-", *IntInt, llvm_IntInt);
 
     if (!negate_int) {
-        log_error("creating builtin unarey - failed");
+        Log::compiler_error("creating builtin unary failed", COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
@@ -86,7 +86,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     optional<llvm::Function*> int_add = generator.function_definition("+", *IntIntInt, llvm_IntIntInt);
 
     if (!int_add) {
-        log_error("creating builtin + failed");
+        Log::compiler_error("creating builtin + failed", COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
@@ -99,7 +99,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     optional<llvm::Function*> int_mul = generator.function_definition("*", *IntIntInt, llvm_IntIntInt);
 
     if (!int_mul) {
-        log_error("creating builtin * failed");
+        Log::error("creating builtin * failed", COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
@@ -112,7 +112,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     optional<llvm::Function*> int_sub = generator.function_definition("-", *IntIntInt, llvm_IntIntInt);
 
     if (!int_sub) {
-        log_error("creating builtin - failed");
+        Log::error("creating builtin - failed", COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
@@ -126,7 +126,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         "+", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_add) {
-        log_error("creating builtin + failed");
+        Log::error("creating builtin + failed", COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
@@ -140,7 +140,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         "*", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_mul) {
-        log_error("creating builtin * failed");
+        Log::error("creating builtin * failed", COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
@@ -154,7 +154,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         "-", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_sub) {
-        log_error("creating builtin - failed");
+        Log::error("creating builtin - failed", COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
@@ -168,7 +168,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
         "/", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_div) {
-        log_error("creating builtin - failed");
+        Log::error("creating builtin - failed", COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 

@@ -19,7 +19,7 @@ extern "C" {
 #include "mapsc/ast/expression.hh"
 
 using std::nullopt;
-using Maps::GlobalLogger::log_error;
+
 
 namespace Maps {
 

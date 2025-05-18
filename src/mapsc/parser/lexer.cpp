@@ -10,10 +10,10 @@
 #include "mapsc/logging.hh"
 #include "mapsc/words.hh"
 
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_token;
-
 
 namespace Maps {
+
+using Log = LogInContext<LogContext::lexer>;
 
 // ----- Public methods -----
 Lexer::Lexer(std::istream* source_is, SourceFileID source_id)
@@ -24,7 +24,7 @@ Lexer::Lexer(std::istream* source_is, SourceFileID source_id)
 Token Lexer::get_token() {
     Token token = get_token_();
 
-    log_token(prev_token_.get_string(), prev_token_.location);
+    Log::debug_extra(prev_token_.get_string(), prev_token_.location);
     
     // a bit of a hack to keep the outputs in sync
     prev_token_ = token;
@@ -126,7 +126,7 @@ Token Lexer::get_token_() {
             buffer_.sputc(read_char());  
             
             if (is_operator_glyph(current_char_)) {
-                log_error("Syntax error: operator cannot start with \"" + buffer_.str() + "\"",
+                Log::error("Syntax error: operator cannot start with \"" + buffer_.str() + "\"",
                     {static_cast<int>(current_token_start_line_), 
                         static_cast<int>(current_token_start_col_)});
                 return create_token(TokenType::unknown);

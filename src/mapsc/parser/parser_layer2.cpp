@@ -8,7 +8,7 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
 #include "mapsc/compilation_state.hh"
 
 #include "mapsc/types/type.hh"
@@ -18,9 +18,10 @@
 #include "mapsc/ast/callable.hh"
 #include "mapsc/ast/ast_store.hh"
 
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 namespace Maps {
+
+using Log = LogInContext<LogContext::layer2>;
 
 // Expression types that are not allowed here
 // NOTE: Empty is allowed at top-level
@@ -78,8 +79,7 @@ void TermedExpressionParser::run() {
     // overwrite the expression in-place
     *expression_ = *result;
 
-    log_info("parsed a termed expression",
-        MessageType::parser_debug_termed_expression, result->location);
+    Log::debug_extra("parsed a termed expression", result->location);
 }
 
 Expression* TermedExpressionParser::get_term() {
@@ -122,7 +122,7 @@ std::optional<Expression*> TermedExpressionParser::pop_term() {
 }
 
 void TermedExpressionParser::fail(const std::string& message, SourceLocation location) {
-    log_error(message, location);
+    Log::error(message, location);
     compilation_state_->declare_invalid();
 }
 
@@ -208,13 +208,13 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         case ExpressionType::type_constructor_reference:
         case NOT_ALLOWED_IN_LAYER2:
             // TODO: make expressions print out nice
-            log_error("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), 
+            Log::error("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), 
                 expression_->location);
             assert(false && "bad term in TermedExpressionParser::parse_termed_expression");
     }
 
     if (!compilation_state_->is_valid) {
-        log_error("parsing termed expression failed", expression_->location);
+        Log::error("parsing termed expression failed", expression_->location);
         return Expression::valueless(*ast_store_, ExpressionType::syntax_error, expression_->location);
     }
 
@@ -822,7 +822,7 @@ void TermedExpressionParser::call_expression_state() {
         std::get<Callable*>(reference->value), std::vector<Expression*>{args}, reference->location);
     
     if (!call_expression)
-        return log_error("Creating call expression failed", reference->location);
+        return Log::error("Creating call expression failed", reference->location);
 
     // determine the type
     if (args.size() == reference->type->arity()) {

@@ -9,7 +9,7 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
 
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/callable.hh"
@@ -19,10 +19,11 @@
 #include "mapsc/procedures/inline.hh"
 
 using std::get, std::get_if, std::optional, std::nullopt;
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 
 namespace Maps {
+
+using Log = LogInContext<LogContext::concretize>;
 
 bool concretize_call(Expression& call) {
     auto [callee, args] = call.call_value();
@@ -36,7 +37,7 @@ bool concretize_call(Expression& call) {
 
     // if it's not a function, it should have been inlinable?
     if (!callee_type) {
-        log_info("Concretizing a call failed", MessageType::post_parse_debug, call.location);
+        Log::warning("Concretizing a call failed", call.location);
         return false;
     }
 
@@ -70,7 +71,7 @@ bool concretize_call(Expression& call) {
             return false;
 
         if (*arg->type != *param_type) {
-            log_error(arg->log_message_string() + 
+            Log::error(arg->log_message_string() + 
                 " does not match parameter type: " + param_type->to_string(),
                 arg->location);
             return false;
@@ -115,7 +116,7 @@ bool concretize(Expression& expression) {
         case ExpressionType::reference:
             return concretize_reference(expression);
         default:
-            log_error("Concretizer encountered an expression that was not a value or a call", 
+            Log::error("Concretizer encountered an expression that was not a value or a call", 
                 expression.location);
             return false;
     }

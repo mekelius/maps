@@ -12,15 +12,14 @@
 #include "mapsc/ast/scope.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
 #include "mapsc/source.hh"
 #include "mapsc/types/type_store.hh"
 
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info;
 
 namespace Maps {
 
-class Type;
+using Log = LogInContext<LogContext::name_resolution>;
 
 // Replaces all identifiers and operators with references to the correct callables
 bool resolve_identifiers(CompilationState& state) {
@@ -40,7 +39,7 @@ bool resolve_identifiers(CompilationState& state) {
                 break;
 
             default:
-                log_error("Unexpected expression type in unresolved_identifiers_and_operators", 
+                Log::error("Unexpected expression type in unresolved_identifiers_and_operators", 
                     expression->location);
                 assert(false 
                     && "Unexpected expression type in unresolved_identifiers_and_operators");
@@ -59,7 +58,7 @@ bool resolve_identifiers(CompilationState& state) {
 bool resolve_identifier(CompilationState& state, Expression* expression) {
     // check builtins
     if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
-        log_info("Parsed built-in", MessageType::parser_debug_terminal, expression->location);
+        Log::debug_extra("Parsed built-in", expression->location);
         expression->expression_type = ExpressionType::reference;
         expression->type = (*builtin)->get_type();
         expression->value = *builtin;
@@ -69,7 +68,7 @@ bool resolve_identifier(CompilationState& state, Expression* expression) {
     std::optional<Callable*> callable = state.globals_.get_identifier(expression->string_value());
 
     if (!callable) {
-        log_error("unknown identifier: " + expression->string_value(), expression->location);
+        Log::error("unknown identifier: " + expression->string_value(), expression->location);
         state.declare_invalid();
         return false;
     }
@@ -84,7 +83,7 @@ bool resolve_type_identifier(CompilationState& state, Expression* expression) {
     // check builtins
     std::optional<const Type*> type = state.types_->get(expression->string_value());
     if (!type) {
-        log_error("unkown type identifier: " + expression->string_value(), expression->location);
+        Log::error("unkown type identifier: " + expression->string_value(), expression->location);
         state.declare_invalid();
         return false;
     }
@@ -97,8 +96,8 @@ bool resolve_type_identifier(CompilationState& state, Expression* expression) {
 bool resolve_operator(CompilationState& state, Expression* expression) {
     if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
         if (!(*builtin)->is_operator()) {
-            log_error("during name resolution: encountered a builtin operator_e \
-that pointed to not an operator");
+            Log::error("during name resolution: encountered a builtin operator_e \
+that pointed to not an operator", expression->location);
             assert(false && 
                 "during name resolution: encountered a builtin operator_e that pointed to \
 not an operator");
@@ -106,14 +105,13 @@ not an operator");
             return false;
         }
 
-        log_info(
-            "Resolved built-in operator", MessageType::parser_debug_terminal, expression->location);
+        Log::debug_extra("Resolved built-in operator", expression->location);
         
         expression->convert_to_operator_reference(*builtin);
         return true;
     }
 
-    log_error("unknown operator: " + expression->string_value(), expression->location);
+    Log::error("unknown operator: " + expression->string_value(), expression->location);
     state.declare_invalid();
     return false;
 }

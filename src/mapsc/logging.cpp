@@ -3,7 +3,7 @@
 #include <memory>
 #include <optional>
 
-#include "mapsc/loglevel_defs.hh"
+
 
 using std::optional, std::nullopt, std::unique_ptr, std::make_unique;
 
@@ -11,68 +11,93 @@ namespace Maps {
 
 namespace {
 
-// at line 1000 the token stream is gonna shift right, but that's ok
-constexpr unsigned int LINE_COL_FORMAT_PADDING = 8;
-
+constinit LogOptions global_options{};
 bool log_check_flag = false;
 
-std::string line_col_padding(unsigned int width) {
-    return width < LINE_COL_FORMAT_PADDING ? 
-        std::string(LINE_COL_FORMAT_PADDING - width, ' ') : " ";
+} // anonymous namespace
+
+
+LogOptions::Lock LogOptions::Lock::global() {
+    return LogOptions::Lock{};
 }
 
-} // namespace
-
-Logger::Options Logger::global_options = Logger::Options{};
-Logger Logger::global_logger = Logger{};
-
-Logger Logger::get() {
-    return Logger{};
-}
-void Logger::set_global_options(const Options& options) {
-    global_options = options;
+LogOptions::Lock::~Lock() {
+    global_lock_ = false;
 }
 
-void Logger::log_error(const std::string& message, SourceLocation location) {
-    if (!options_->has_message_type(MessageType::error))
-        return;
-    
-    std::string location_string = location.to_string();
-    
-    log_check_flag = true;
-
-    *options_->ostream
-        << location_string << line_col_padding(location_string.size())
-        << "error: " << message << "\n";
+LogOptions::Lock::Lock() {
+    options_ = &global_options;
+    global_lock_ = true;
 }
 
-void Logger::log_info(const std::string& message, MessageType message_type, SourceLocation location) {
-    if (!options_->has_message_type(message_type))
-        return;
-
-    std::string location_string = location.to_string();
-
-    log_check_flag = true;
-
-    *options_->ostream
-        << location_string << line_col_padding(location_string.size())
-        << "info:  " << message << '\n';
+LogLevel LogOptions::get_loglevel() const {
+    return loglevel_;
 }
 
-void Logger::log_token(const std::string& message, SourceLocation location) {
-    if (!options_->has_message_type(MessageType::lexer_debug_token))
-        return;
-    log_check_flag = true;
-
-    *options_->ostream
-        << location.to_string() << line_col_padding(location.to_string().size()) 
-        << "token: " << message << '\n';
+LogLevel LogOptions::get_loglevel(LogContext context) const {
+    return per_context_loglevels.at(static_cast<size_t>(context));
 }
 
-bool Logger::logs_since_last_check() {
+void LogOptions::set_loglevel(LogLevel loglevel) {
+    for (size_t index = 0; index < LOG_CONTEXT_COUNT; index++) {
+        if (!per_context_loglevels_overridden_.at(index))
+            per_context_loglevels.at(index) = loglevel;
+    }    
+}
+
+void LogOptions::set_loglevel(LogContext context, LogLevel loglevel) {
+    auto index = static_cast<size_t>(context);
+    per_context_loglevels_overridden_.at(index) = true;
+    per_context_loglevels.at(index) = loglevel;
+}
+
+
+std::string line_col_padding(uint width) {
+    return width < global_options.LINE_COL_FORMAT_PADDING ? 
+        std::string(global_options.LINE_COL_FORMAT_PADDING - width, ' ') : " ";
+}
+
+bool logs_since_last_check() {
     bool value = log_check_flag;
     log_check_flag = false;
     return value;
+}
+
+void log_(std::string_view message, LogLevel log_level, LogContext context, 
+    std::string_view loglevel_prefix, std::string_view context_prefix, SourceLocation location) {
+
+    if (global_options.get_loglevel(context) < log_level)
+        return;
+
+    std::string location_string = location.to_string();
+    log_check_flag = true;
+    
+    *global_options.ostream
+        << location_string 
+        << line_col_padding(location_string.size())
+        << loglevel_prefix; 
+        
+    if (global_options.print_context_prefixes)
+        *global_options.ostream << context_prefix;
+
+    *global_options.ostream << message << "\n";
+}
+
+void log_(std::string_view message, LogLevel log_level, std::string_view loglevel_prefix, 
+    SourceLocation location) {
+
+    if (global_options.get_loglevel() < log_level)
+        return;
+
+    std::string location_string = location.to_string();
+    log_check_flag = true;
+    
+    *global_options.ostream
+        << location_string 
+        << line_col_padding(location_string.size())
+        << loglevel_prefix; 
+
+    *global_options.ostream << message << "\n";
 }
 
 } //namespace Maps

@@ -2,87 +2,197 @@
 #define __LOGGING_HH
 
 #include <array>
+#include <functional>
 #include <iostream>
 #include <string>
 
-#include "loglevel_defs.hh"
+#include "common/array_helpers.hh"
 #include "mapsc/source.hh"
 
 namespace Maps {
 
-class Logger {
+// clang-format off
+constexpr auto LOG_CONTEXTS_START_LINE = __LINE__;
+enum class LogContext {
+    compiler_init   = 0,
+    lexer           = 1,
+    layer1          = 2,
+    name_resolution = 3,
+    layer2          = 4,
+    layer3          = 5,
+    layer4          = 6,
+    inline_         = 7,
+    concretize      = 8,
+    ir_gen_init     = 9,
+    ir_gen          = 10,
+    REPL            = 11
+};
+constexpr auto LOG_CONTEXT_COUNT = __LINE__ - LOG_CONTEXTS_START_LINE - 3;
+// clang-format on
+
+constexpr std::string_view prefix(LogContext context) {
+    switch (context) {
+        case LogContext::compiler_init:
+            return "during compiler initialization: ";
+        case LogContext::lexer:
+            return "in lexer: ";
+        case LogContext::layer1:
+            return "in layer1: ";
+        case LogContext::name_resolution:
+            return "during name resolution: ";
+        case LogContext::layer2:
+            return "in layer2: ";
+        case LogContext::layer3:
+            return "in layer3: ";
+        case LogContext::layer4:
+            return "in layer4: ";
+        case LogContext::inline_:
+            return "during function inline: ";
+        case LogContext::concretize:
+            return "during concretize: ";
+        case LogContext::ir_gen_init:
+            return "during initializing IR generation: ";
+        case LogContext::ir_gen:
+            return "during IR generation: ";
+        case LogContext::REPL:
+            return "in REPL: ";
+    }
+}
+
+enum class LogLevel {
+    compiler_error,
+    error,
+    warning,
+    info,
+    debug,
+    debug_extra
+};
+using LogLevels = std::array<LogLevel, LOG_CONTEXT_COUNT>;
+
+constexpr LogLevels set_all(LogLevel log_level) {
+    LogLevels log_levels{};
+    std::fill(log_levels.begin(), log_levels.end(), log_level);
+    return log_levels;
+}
+
+constexpr std::string_view prefix(LogLevel loglevel) {
+    switch (loglevel) {
+        case LogLevel::compiler_error:
+            return "COMPILER ERROR: ";
+        case LogLevel::error:
+            return "Error:   ";
+        case LogLevel::warning:
+            return "Warning: ";
+        case LogLevel::info:
+            return "Info:    ";
+        case LogLevel::debug:
+            return "Debug:   ";
+        case LogLevel::debug_extra:
+            return "Extra:   ";
+    }
+}
+
+class LogOptions {
 public:
-    struct Options {
-        MessageTypes message_types = LogLevel::default_();
-        std::ostream* ostream = &std::cout;
+    class Lock {
+    public:
+        static Lock global();
+        ~Lock();        
+        LogOptions* options_;
 
-        constexpr bool has_message_type(MessageType message_type) const {
-            return message_types.at(static_cast<int>(message_type));
-        };
-
-        constexpr void set(MessageType message_type, bool value) {
-            message_types.at(static_cast<int>(message_type)) = value;
-        }
-
-        constexpr void set(const MessageTypes& message_types_new) {
-            message_types = message_types_new;
-        }
+    private:
+        Lock();
+        bool global_lock_ = false;
     };
-        
-    // --- STATIC METHODS ---
-    static Logger get();
-    static void set_global_options(const Options& options);
 
-    // --- PUBLIC METHODS ---
-    void log_error(const std::string& message, SourceLocation location = NO_SOURCE_LOCATION);
-    void log_token(const std::string& message, SourceLocation location);
-    void log_info(const std::string& message, MessageType message_type, 
-        SourceLocation location = NO_SOURCE_LOCATION);
+    LogLevel get_loglevel() const;
+    LogLevel get_loglevel(LogContext context) const;
 
-    // returns true if log output has happened since last time this was called
-    // only call this from main as a formatting aid
-    // TODO: this should be like, per stream and actually not the responsibility of the logger
-    // Maybe this could be a kind of stream wrapper instead
-    static bool logs_since_last_check();
+    // sets the loglevel for all components
+    void set_loglevel(LogLevel loglevel);
+    void set_loglevel(LogContext context, LogLevel loglevel);
 
+    LogLevels per_context_loglevels = set_all(LogLevel::info);
+    std::ostream* ostream = &std::cout;
+    uint LINE_COL_FORMAT_PADDING = 8;
+    bool print_context_prefixes = false;
+    
 private:
-    Logger(Options* options = &global_options): options_(options) {}
-
-    Options* options_;
-
-    static Options global_options;
-    static Logger global_logger;
-
-public:
-    struct Global {
-        constexpr static void log_error(const std::string& message, 
-            SourceLocation location = NO_SOURCE_LOCATION) {
-            
-            global_logger.log_error(message, location);
-        }
-        constexpr static void log_info(const std::string& message, MessageType message_type, 
-            SourceLocation location = NO_SOURCE_LOCATION) {
-
-            global_logger.log_info(message, message_type, location);
-        }
-        constexpr static void log_token(const std::string& message, SourceLocation location) {
-            global_logger.log_token(message, location);
-        }
-    };
+    LogLevel loglevel_ = LogLevel::info;
+    std::array<bool, LOG_CONTEXT_COUNT> per_context_loglevels_overridden_ = 
+        init_array<bool, LOG_CONTEXT_COUNT>(false);
 };
 
-// unfortunately the default args don't get transferred correctly if we don't do this
-namespace GlobalLogger {
+bool logs_since_last_check();
 
-constexpr static void log_error(const std::string& message, 
-    SourceLocation location = NO_SOURCE_LOCATION) { Logger::Global::log_error(message, location); }
-constexpr static void log_info(const std::string& message, MessageType message_type, 
-    SourceLocation location = NO_SOURCE_LOCATION) { 
-        Logger::Global::log_info(message, message_type, location);}
-constexpr static void log_token(const std::string& message, SourceLocation location) { 
-    Logger::Global::log_token(message, location); }
+void log_(std::string_view message, LogLevel log_level, LogContext context, 
+    std::string_view loglevel_prefix, std::string_view context_prefix, SourceLocation location);
+void log_(std::string_view message, LogLevel log_level, std::string_view loglevel_prefix, 
+    SourceLocation location);
 
-} // namespace GlobalLogger
+inline void log(std::string_view message, LogContext context, LogLevel loglevel, SourceLocation location) {
+    log_(message, loglevel, context, prefix(loglevel), prefix(context), location);
+}
+inline void log(std::string_view message, LogLevel loglevel, SourceLocation location) {
+    log_(message, loglevel, prefix(loglevel), location);
+}
+
+template <LogContext context>
+class LogInContext {
+public:
+    static void on_level(std::string_view message, LogLevel loglevel, SourceLocation location) {
+        log(message, context, loglevel, location);
+    }
+
+    static void compiler_error(std::string_view message, SourceLocation location) {
+        log(message, context, LogLevel::compiler_error, location);
+    }
+    static void error(std::string_view message, SourceLocation location) {
+        log(message, context, LogLevel::error, location);
+    }
+    static void warning(std::string_view message, SourceLocation location) {
+        log(message, context, LogLevel::warning, location);
+    }
+    static void info(std::string_view message, SourceLocation location) {
+        log(message, context, LogLevel::info, location);
+    }
+    static void debug(std::string_view message, SourceLocation location) {
+        log(message, context, LogLevel::debug, location);
+    }
+    static void debug_extra(std::string_view message, SourceLocation location) {
+        log(message, context, LogLevel::debug_extra, location);
+    }
+
+    LogInContext() = delete;
+};
+
+class LogNoContext {
+public:
+    static void on_level(std::string_view message, LogLevel loglevel, SourceLocation location) {
+        log(message, loglevel, location);
+    }
+
+    static void compiler_error(std::string_view message, SourceLocation location) {
+        log(message, LogLevel::compiler_error, location);
+    }
+    static void error(std::string_view message, SourceLocation location) {
+        log(message, LogLevel::error, location);
+    }
+    static void warning(std::string_view message, SourceLocation location) {
+        log(message, LogLevel::warning, location);
+    }
+    static void info(std::string_view message, SourceLocation location) {
+        log(message, LogLevel::info, location);
+    }
+    static void debug(std::string_view message, SourceLocation location) {
+        log(message, LogLevel::debug, location);
+    }
+    static void debug_extra(std::string_view message, SourceLocation location) {
+        log(message, LogLevel::debug_extra, location);
+    }
+
+    LogNoContext() = delete;
+};
 
 } // namespace Maps
 

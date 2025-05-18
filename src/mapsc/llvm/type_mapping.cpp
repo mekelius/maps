@@ -8,16 +8,16 @@
 #include "llvm/IR/Type.h"
 
 #include "mapsc/logging.hh"
-#include "mapsc/loglevel_defs.hh"
+
 
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/function_type.hh"
 
 namespace llvm { class LLVMContext; }
 
-using Maps::GlobalLogger::log_error, Maps::GlobalLogger::log_info, Maps::MessageType;
 using std::optional, std::nullopt, std::vector;
 
+using Log = Maps::LogInContext<Maps::LogContext::ir_gen_init>;
 
 namespace IR {
 
@@ -48,7 +48,8 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
         !insert(&Maps::IO_Float,   double_t        ) ||
         !insert(&Maps::IO_String,  char_array_ptr_t)
     ) {
-        log_error("Inserting primitive types into TypeMap failed");
+        Log::compiler_error("Inserting primitive types into TypeMap failed", 
+            COMPILER_INIT_SOURCE_LOCATION);
         is_good_ = false;
     }
 }
@@ -62,8 +63,9 @@ bool TypeMap::insert(const Maps::Type* maps_type, llvm::Type* llvm_type) {
     auto signature = maps_type->to_string();
     
     if (contains(*maps_type)) {
-        log_info("Attempting to store duplicate of \"" + maps_type->to_string() + "\" in TypeMap",
-            MessageType::ir_gen_debug);
+        Log::compiler_error(
+            "Attempting to store duplicate of \"" + maps_type->to_string() + "\" in TypeMap",
+            COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
