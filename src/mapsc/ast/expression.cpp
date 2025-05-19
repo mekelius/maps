@@ -33,8 +33,8 @@ Callable* Expression::reference_value() const {
     return std::get<Callable*>(value);
 }
 
-Operator* Expression::operator_reference_value() const {
-    return dynamic_cast<Operator*>(std::get<Callable*>(value));
+Callable* Expression::operator_reference_value() const {
+    return std::get<Callable*>(value);
 }
 
 bool Expression::is_partial_call() const {
@@ -95,7 +95,7 @@ DeferredBool Expression::is_type_declaration() {
 std::string Expression::string_value() const {
     if (std::holds_alternative<Callable*>(value)) {
         // !!! this will cause crashes when lambdas come in
-        return std::string{std::get<Callable*>(value)->name_};
+        return std::get<Callable*>(value)->to_string();
     }
     return std::get<std::string>(value);
 }
@@ -244,17 +244,17 @@ std::string Expression::log_message_string() const {
             return "type identifier " + string_value();
 
         case ExpressionType::reference:
-            return "reference to " + std::string{reference_value()->name_};
+            return "reference to " + reference_value()->to_string();
         case ExpressionType::type_reference:
-            return "reference to type " + std::string{reference_value()->name_};
+            return "reference to type " + reference_value()->to_string();
         case ExpressionType::binary_operator_reference:
         case ExpressionType::prefix_operator_reference:
         case ExpressionType::postfix_operator_reference:
-            return "operator " + std::string{reference_value()->name_};
+            return "operator " + reference_value()->to_string();
         case ExpressionType::type_operator_reference:
-            return "type operator " + std::string{reference_value()->name_};
+            return "type operator " + reference_value()->to_string();
         case ExpressionType::type_constructor_reference:
-            return "reference to type constructor " + std::string{reference_value()->name_};
+            return "reference to type constructor " + reference_value()->to_string();
    
         case ExpressionType::type_field_name:
             return "named field" + string_value();
@@ -361,7 +361,9 @@ std::optional<Expression*> Expression::reference(AST_Store& store, const Scope& 
     return std::nullopt;
 }
 
-Expression* Expression::type_reference(AST_Store& store, const Type* type, SourceLocation location) {
+Expression* Expression::type_reference(AST_Store& store, const Type* type, 
+    SourceLocation location) {
+    
     return store.allocate_expression({ExpressionType::type_reference, type, &Void, location});
 }
 
@@ -385,7 +387,9 @@ Expression Expression::operator_reference(Callable* callable, SourceLocation loc
     return {expression_type, callable, callable->get_type(), location};
 }
 
-Expression* Expression::operator_reference(AST_Store& store, Callable* callable, SourceLocation location) {
+Expression* Expression::operator_reference(AST_Store& store, Callable* callable, 
+    SourceLocation location) {
+    
     return store.allocate_expression(operator_reference(callable, location));
 }
 
@@ -402,8 +406,11 @@ Expression* Expression::valueless(AST_Store& store, ExpressionType expression_ty
     return store.allocate_expression({expression_type, std::monostate{}, &Absurd, location});
 }
 
-Expression* Expression::missing_argument(AST_Store& store, const Type* type, SourceLocation location) {
-    return store.allocate_expression({ExpressionType::missing_arg, std::monostate{}, type, location});
+Expression* Expression::missing_argument(AST_Store& store, const Type* type, 
+    SourceLocation location) {
+    
+    return store.allocate_expression({ExpressionType::missing_arg, std::monostate{}, type, 
+        location});
 }
 
 optional<Expression*> Expression::call(CompilationState& state, 
@@ -413,8 +420,9 @@ optional<Expression*> Expression::call(CompilationState& state,
     auto callee_type = callable->get_type();
     
     if (!callee_type->is_function() && args.size() > 0) {
-        Log::error(std::string{callable->name_} + 
-            " cannot take arguments, tried giving " + to_string(args.size()), callable->location_);
+        Log::error(callable->to_string() + 
+            " cannot take arguments, tried giving " + to_string(args.size()), 
+            callable->location());
         return nullopt;
     }
 
@@ -429,7 +437,7 @@ optional<Expression*> Expression::call(CompilationState& state,
     auto return_type = callee_f_type->return_type();
 
     if (args.size() > param_types.size()) {
-        Log::error(std::string{callable->name_} + " takes a maximum of " + 
+        Log::error(callable->to_string() + " takes a maximum of " + 
             to_string(param_types.size()) + " arguments, tried giving " + to_string(args.size()), 
             location);
         return nullopt;
@@ -479,7 +487,7 @@ Operator::Precedence get_operator_precedence(const Expression& operator_ref) {
     assert(operator_ref.expression_type == ExpressionType::binary_operator_reference && 
         "get_operator_precedence called with not a binary operator reference");
 
-    return operator_ref.operator_reference_value()->precedence();
+    return dynamic_cast<Operator*>(operator_ref.operator_reference_value())->precedence();
 }
 
 } // namespace Maps

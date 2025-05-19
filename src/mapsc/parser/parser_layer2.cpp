@@ -303,7 +303,7 @@ void TermedExpressionParser::initial_value_state() {
             shift();
             auto op = current_term()->operator_reference_value();
             
-            precedence_stack_.push_back(op->precedence());
+            precedence_stack_.push_back(dynamic_cast<Operator*>(op)->precedence());
             return post_binary_operator_state();
         }
         case ExpressionType::prefix_operator_reference:
@@ -322,7 +322,7 @@ void TermedExpressionParser::initial_value_state() {
             auto location = get_term()->location;
             parse_stack_.push_back(binary_minus_ref(location));
             precedence_stack_.push_back(
-                current_term()->operator_reference_value()->precedence());
+                dynamic_cast<Operator*>(current_term()->operator_reference_value())->precedence());
             return post_binary_operator_state();
         }
 
@@ -770,7 +770,8 @@ void TermedExpressionParser::push_partial_call(Expression* callee_ref,
 
 void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, Expression* value) {
     auto location = 
-        operator_ref->operator_reference_value()->fixity() == Operator::Fixity::unary_prefix ?
+        dynamic_cast<Operator*>(
+            operator_ref->operator_reference_value())->fixity() == Operator::Fixity::unary_prefix ?
             operator_ref->location : value->location;
     auto call = Expression::call(*compilation_state_, 
         operator_ref->reference_value(), { value }, location);

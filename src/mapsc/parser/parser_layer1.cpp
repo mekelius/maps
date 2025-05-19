@@ -77,7 +77,8 @@ void ParserLayer1::run_parse(std::istream& source_is) {
     prime_tokens();
 
     Statement* root_statement = ast_store_->allocate_statement({StatementType::block, {0,0}});
-    Callable* root_callable = ast_store_->allocate_callable({"root", root_statement, {0,0}});
+    RT_Callable* root_callable = ast_store_->allocate_callable(RT_Callable{
+        "root", root_statement, {0,0}});
 
     if (!compilation_state_->set_entry_point(root_callable))
         return fail("failed to set entry point");
@@ -186,7 +187,7 @@ void ParserLayer1::create_identifier(const std::string& name,
     CallableBody body, SourceLocation location) {
     log("created identifier " + name, LogLevel::debug_extra);
     compilation_state_->globals_.create_identifier(
-        ast_store_->allocate_callable({name, body, location})
+        ast_store_->allocate_callable(RT_Callable{name, body, location})
     );
 }
 
@@ -286,7 +287,9 @@ void ParserLayer1::parse_top_level_statement() {
             if (statement->statement_type != StatementType::empty && !statement->is_definition() &&
                 (pragmas_->check_flag_value("top-level evaluation", statement->location) || 
                     force_top_level_eval_)) {            
-                std::get<Block>(std::get<Statement*>((*compilation_state_->entry_point_)->body_)->value).push_back(statement);
+                std::get<Block>(std::get<Statement*>(
+                    (*compilation_state_->entry_point_)->const_body())->value)
+                        .push_back(statement);
             }
             return;
     }
@@ -518,7 +521,7 @@ Statement* ParserLayer1::parse_operator_definition() {
                 statement->value = OperatorStatementValue{op_string, 1, body};
 
                 compilation_state_->globals_.create_identifier(ast_store_->allocate_callable(
-                    Operator{op_string, body, {fixity}, statement->location}));
+                    RT_Operator{op_string, body, {fixity}, statement->location}));
                 log("parsed let statement", LogLevel::debug_extra);
                 return statement;
             }
@@ -546,7 +549,7 @@ Statement* ParserLayer1::parse_operator_definition() {
             statement->value = OperatorStatementValue{op_string, 2, body};
 
             compilation_state_->globals_.create_identifier(ast_store_->allocate_callable(
-                Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
+                RT_Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
                         statement->location}));
             log("parsed let statement", LogLevel::debug_extra);
             return statement;   

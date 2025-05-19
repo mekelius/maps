@@ -23,50 +23,80 @@
 
 namespace Maps {
 
-class Scope;
-
-const Scope* get_builtins();
+const CT_Scope* get_builtins();
 
 using BuiltinValue = std::variant<maps_Boolean, maps_String, maps_Int, maps_Float>;
-using BuiltinBody = std::variant<External, Expression, Statement>;
+using BuiltinBody = std::variant<External>;
 
-class Builtin: public Callable {
+class CT_Callable: public Callable {
 public:
-    Builtin(std::string_view name, const Expression&& expression);
-    Builtin(std::string_view name, const Statement&& statement, const Type& type);
-    Builtin(std::string_view name, External external, const Type& type);
+    // CT_Callable(std::string_view name, Expression&& expression);
+    // CT_Callable(std::string_view name, Statement&& statement, const Type& type);
+    // CT_Callable(std::string_view name, BuiltinBody&& body, const Type& type)
+    // :name_(name), 
+    //  builtin_body_(body), 
+    //  type_(&type), location_(BUILTIN_SOURCE_LOCATION) {}
+
+    constexpr CT_Callable(std::string_view name, External external, const Type& type)
+    :name_(name), 
+     builtin_body_(external), 
+     type_(&type),
+     location_(BUILTIN_SOURCE_LOCATION) {}
 
     virtual bool is_const() const { return true; }
 
+    virtual constexpr std::string_view name() const { return name_; }
+    virtual CallableBody const_body() const;
+    virtual constexpr const SourceLocation& location() const { return location_; }
+
+    // since statements don't store types, we'll have to store them here
+    // if the body is an expression, the type will just mirror it's type
+    virtual const Type* get_type() const { return type_; }
+    virtual std::optional<const Type*> get_declared_type() const { return std::nullopt; }
+    
+    virtual bool operator==(const Callable& other) const {
+        if (this == &other)
+            return true;
+
+        if (const_body() == other.const_body())
+            return true;
+
+        return false;
+    }
+
+private:
+    std::string_view name_;
     BuiltinBody builtin_body_;
+    const Type* type_;
+    SourceLocation location_;
 };
 
-class BuiltinOperator: public Operator {
+class CT_Operator: public CT_Callable, public Operator {
 public:
-    BuiltinOperator(std::string_view name, const Expression&& expression, 
-        Operator::Properties operator_props);
+    // CT_Operator(std::string_view name, const Expression&& expression, 
+    //     Operator::Properties operator_props);
 
-    // Builtin(const std::string& name, const Statement&& statement, const Type& type)
-    // :Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION),
-    //  builtin_body_(statement) {
-    //     body_ = &std::get<Statement>(builtin_body_);
-    // }
-  
-    constexpr BuiltinOperator(std::string_view name, External external, const Type& type, 
+    constexpr CT_Operator(std::string_view name, External external, const Type& type, 
         Operator::Properties operator_props)
-    :Operator(name, external, type, operator_props), builtin_body_(external) {}
+    :CT_Callable(name, external, type),
+     operator_props_(operator_props) {}
 
-    virtual constexpr ~BuiltinOperator() = default;
+    constexpr bool is_operator() const { return true; }
 
-    virtual bool is_const() const { return true; }
+    virtual Properties operator_props() const {
+        return operator_props_;
+    };
 
-    BuiltinBody builtin_body_;
+    virtual constexpr ~CT_Operator() = default;
+
+private:
+    Operator::Properties operator_props_;
 };
 
-extern constinit BuiltinOperator unary_minus_Int;
-extern constinit BuiltinOperator plus_Int;
-extern constinit BuiltinOperator binary_minus_Int;
-extern constinit BuiltinOperator mult_Int;;
+extern constinit CT_Operator unary_minus_Int;
+extern constinit CT_Operator plus_Int;
+extern constinit CT_Operator binary_minus_Int;
+extern constinit CT_Operator mult_Int;
 
 } // namespace Maps
 

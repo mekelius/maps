@@ -16,6 +16,8 @@
 #include "mapsc/source.hh"
 #include "mapsc/types/type_store.hh"
 
+using std::optional, std::nullopt;
+
 
 namespace Maps {
 
@@ -23,8 +25,26 @@ using Log = LogInContext<LogContext::name_resolution>;
 
 namespace {
 
+optional<Callable*> lookup_identifier(const Scopes& scopes, const std::string& name) {
+    auto [ct_scopes, rt_scopes] = scopes;
+
+    for (auto scope: ct_scopes) {
+        auto callable = scope->get_identifier(name);
+        if (callable)
+            return callable;
+    }
+
+    for (auto scope: rt_scopes) {
+        auto callable = scope->get_identifier(name);
+        if (callable)
+            return callable;
+    }   
+
+    return nullopt;
+}
+
 // this should be scope's responsibility
-bool resolve_identifier(CompilationState& state, const std::vector<Scope*>& scopes, 
+bool resolve_identifier(CompilationState& state, const Scopes& scopes, 
     Expression* expression) {
     
     // check builtins
@@ -36,12 +56,7 @@ bool resolve_identifier(CompilationState& state, const std::vector<Scope*>& scop
         return true;
     }
 
-    std::optional<Callable*> callable;
-    for (auto scope: scopes) {
-        callable = scope->get_identifier(expression->string_value());
-        if (callable)
-            break;
-    }
+    auto callable = lookup_identifier(scopes, expression->string_value());
 
     if (!callable) {
         Log::error("unknown identifier: " + expression->string_value(), expression->location);
@@ -54,8 +69,9 @@ bool resolve_identifier(CompilationState& state, const std::vector<Scope*>& scop
     return true;
 }
 
-bool resolve_type_identifier(CompilationState& state,
-    const std::vector<Scope*>& scopes, Expression* expression) {
+bool resolve_type_identifier(CompilationState& state, const Scopes& scopes, 
+    Expression* expression) {
+    
     // check builtins
     std::optional<const Type*> type = state.types_->get(expression->string_value());
     if (!type) {
@@ -68,7 +84,7 @@ bool resolve_type_identifier(CompilationState& state,
     return true;
 }
 
-bool resolve_operator(CompilationState& state, const std::vector<Scope*>& scopes, 
+bool resolve_operator(CompilationState& state, const Scopes& scopes, 
     Expression* expression) {
     
     if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
@@ -87,12 +103,7 @@ not an operator");
         return true;
     }
 
-    std::optional<Callable*> callable;
-    for (auto scope: scopes) {
-        callable = scope->get_identifier(expression->string_value());
-        if (callable)
-            break;
-    }
+    auto callable = lookup_identifier(scopes, expression->string_value());
 
     if (!callable) {
         Log::error("unknown operator: " + expression->string_value(), expression->location);
@@ -107,7 +118,7 @@ not an operator");
 
 
 // Replaces all identifiers and operators with references to the correct callables
-bool resolve_identifiers(CompilationState& state, const std::vector<Scope*>& scopes, 
+bool resolve_identifiers(CompilationState& state, const Scopes& scopes, 
     std::vector<Expression*>& unresolved_identifiers) {
     for (Expression* expression: unresolved_identifiers) {
         switch (expression->expression_type) {
@@ -137,5 +148,18 @@ bool resolve_identifiers(CompilationState& state, const std::vector<Scope*>& sco
     }
     return true;
 }
+
+bool resolve_identifiers(CompilationState& state, const std::vector<RT_Scope*>& scopes, 
+    std::vector<Expression*>& unresolved_identifiers) {
+
+    return resolve_identifiers(state, Scopes{{}, scopes}, unresolved_identifiers);
+}
+
+bool resolve_identifiers(CompilationState& state, const std::vector<CT_Scope*>& scopes, 
+    std::vector<Expression*>& unresolved_identifiers) {
+
+    return resolve_identifiers(state, Scopes{scopes, {}}, unresolved_identifiers);
+}
+
 
 } // namespace Maps

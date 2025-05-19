@@ -33,7 +33,7 @@ template<class T>
 concept AST_Visitor = requires(T t) {
     {t.visit_expression(std::declval<Expression*>())} -> std::convertible_to<bool>;
     {t.visit_statement(std::declval<Statement*>())} -> std::convertible_to<bool>;
-    {t.visit_callable(std::declval<Callable*>())} -> std::convertible_to<bool>;
+    {t.visit_callable(std::declval<RT_Callable*>())} -> std::convertible_to<bool>;
 };
 
 class CompilationState {
@@ -43,8 +43,8 @@ public:
     };
 
     struct SpecialCallables {
-        BuiltinOperator* unary_minus;
-        BuiltinOperator* binary_minus;
+        CT_Operator* unary_minus;
+        CT_Operator* binary_minus;
     };
 
     template<AST_Visitor T>
@@ -55,15 +55,15 @@ public:
     template<AST_Visitor T>
     bool walk_statement(T visitor, Statement* statement);
     template<AST_Visitor T>
-    bool walk_callable(T visitor, Callable* callable);
+    bool walk_callable(T visitor, RT_Callable* callable);
 
-    static std::tuple<CompilationState, std::unique_ptr<const Scope>, std::unique_ptr<TypeStore>> 
+    static std::tuple<CompilationState, std::unique_ptr<const CT_Scope>, std::unique_ptr<TypeStore>> 
         create_test_state();
 
-    CompilationState(const Scope* builtins, TypeStore* types, 
+    CompilationState(const CT_Scope* builtins, TypeStore* types, 
         SpecialCallables specials = {&unary_minus_Int, &binary_minus_Int});
 
-    CompilationState(const Scope* builtins, TypeStore* types, 
+    CompilationState(const CT_Scope* builtins, TypeStore* types, 
         Options compiler_options,
         SpecialCallables specials = {&unary_minus_Int, &binary_minus_Int});
 
@@ -75,7 +75,7 @@ public:
 
     bool empty() const;
 
-    [[nodiscard]] bool set_entry_point(Callable* entrypoint);
+    [[nodiscard]] bool set_entry_point(RT_Callable* entrypoint);
     [[nodiscard]] bool set_entry_point(std::string name);
 
     void declare_invalid() { is_valid = false; };
@@ -84,15 +84,15 @@ public:
     bool is_valid = true;
     
     Options compiler_options_{};
-    Scope globals_ = {};
+    RT_Scope globals_ = {};
     std::shared_ptr<AST_Store> ast_store_ = std::make_shared<AST_Store>();
     PragmaStore pragmas_ = {};
     
     // container for top-level statements
-    std::optional<Callable*> entry_point_ = std::nullopt;
+    std::optional<RT_Callable*> entry_point_ = std::nullopt;
     
     TypeStore* types_;
-    const Scope* builtins_;
+    const CT_Scope* builtins_;
     SpecialCallables special_callables_ = SpecialCallables{&unary_minus_Int, &binary_minus_Int};
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
@@ -165,13 +165,13 @@ bool CompilationState::walk_statement(T visitor, Statement* statement) {
 }
 
 template<AST_Visitor T>
-bool CompilationState::walk_callable(T visitor, Callable* callable) {
+bool CompilationState::walk_callable(T visitor, RT_Callable* callable) {
     if (!visitor.visit_callable(callable))
         return false;
 
-    if (Expression* const* expression = get_if<Expression*>(&callable->body_)) {
+    if (Expression* const* expression = get_if<Expression*>(&callable->body())) {
         return walk_expression(visitor, *expression);
-    } else if (Statement* const* statement = get_if<Statement*>(&callable->body_)) {
+    } else if (Statement* const* statement = get_if<Statement*>(&callable->body())) {
         return walk_statement(visitor, *statement);
     }
 

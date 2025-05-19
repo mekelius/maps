@@ -30,8 +30,8 @@ public:
 
     Expression* allocate_expression(const Expression&& expr);
     Statement* allocate_statement(const Statement&& statement);
-    Callable* allocate_callable(const Callable&& callable);
-    Callable* allocate_operator(const Operator&& op);
+    RT_Callable* allocate_callable(const RT_Callable&& callable);
+    RT_Callable* allocate_operator(const RT_Operator&& op);
 
 private:
 
@@ -42,7 +42,7 @@ private:
     // TODO: move from vector of unique_ptrs to unique_ptr of vectors
     std::vector<std::unique_ptr<Statement>> statements_ = {};
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
-    std::vector<std::unique_ptr<Callable>> callables_ = {};
+    std::vector<std::unique_ptr<RT_Callable>> callables_ = {};
 };
 
 } // namespace Maps

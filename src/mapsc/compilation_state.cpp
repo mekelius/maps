@@ -5,18 +5,18 @@ using std::tuple, std::unique_ptr, std::make_unique;
 
 namespace Maps {
 
-tuple<CompilationState, unique_ptr<const Scope>, unique_ptr<TypeStore>> CompilationState::create_test_state() {
+tuple<CompilationState, unique_ptr<const CT_Scope>, unique_ptr<TypeStore>> CompilationState::create_test_state() {
     auto types = make_unique<TypeStore>();
-    auto builtins = make_unique<const Scope>();
+    auto builtins = make_unique<const CT_Scope>();
     
     return tuple{CompilationState{builtins.get(), types.get()}, std::move(builtins), std::move(types)};
 }
 
-CompilationState::CompilationState(const Scope* builtins, TypeStore* types, 
+CompilationState::CompilationState(const CT_Scope* builtins, TypeStore* types, 
     SpecialCallables special_callables)
 :CompilationState(builtins, types, {}, special_callables) {}
 
-CompilationState::CompilationState(const Scope* builtins, TypeStore* types, 
+CompilationState::CompilationState(const CT_Scope* builtins, TypeStore* types, 
     Options compiler_options, SpecialCallables special_callables)
 :compiler_options_(compiler_options), 
  types_(types), 
@@ -33,7 +33,7 @@ bool CompilationState::empty() const {
     return true;
 }
 
-bool CompilationState::set_entry_point(Callable* entrypoint) {
+bool CompilationState::set_entry_point(RT_Callable* entrypoint) {
     entry_point_ = entrypoint;
     return true;
 }
@@ -56,7 +56,7 @@ void CompilationState::dump(std::ostream& stream) const {
     if (!entry_point_) {
         stream << "none\n";
     } else {
-        stream << (*entry_point_)->name_ << "\n";
+        stream << (*entry_point_)->name() << "\n";
     }
 
     stream << "global identifiers:\n";

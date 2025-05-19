@@ -3,9 +3,9 @@
 
 namespace Maps {
 
-class Callable;
+class RT_Callable;
 
-bool attempt_simplify(Callable& callable);
+bool attempt_simplify(RT_Callable& callable);
 
 } // namespace Maps
 

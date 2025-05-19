@@ -152,6 +152,7 @@ add_executable(unit_tests
     tests/parser/lexer.cpp
     tests/parser/layer1.cpp
     tests/parser/layer2.cpp
+    tests/parser/unary_minus.cpp
     tests/parser/unary_operators.cpp
     
     tests/types/type_casts.cpp

@@ -172,7 +172,7 @@ struct Expression {
     std::vector<Expression*>& terms();
     CallExpressionValue& call_value();
     Callable* reference_value() const;
-    Operator* operator_reference_value() const;
+    Callable* operator_reference_value() const;
 
     bool is_partial_call() const;
     bool is_reduced_value() const;

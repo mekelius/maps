@@ -15,29 +15,32 @@
 
 namespace Maps {
 
+class CT_Callable;
+
 /**
  * Scopes contain names bound to callables
  * TODO: implement a constexpr hashmap that can be initialized in static memory 
  */
-class Scope {
+template <typename T>
+class Scope_T {
 public:
-    using const_iterator = std::vector<std::pair<std::string, Callable*>>::const_iterator;
+    using const_iterator = std::vector<std::pair<std::string, T>>::const_iterator;
 
     const_iterator begin() const { return identifiers_in_order_.begin(); }
     const_iterator end() const { return identifiers_in_order_.end(); }
     bool empty() const { return identifiers_.empty(); }
     size_t size() const { return identifiers_.size(); }
 
-    Scope() = default;
-    Scope(const Scope& other) = default;
-    Scope& operator=(const Scope& other) = default;
-    ~Scope() = default;
+    Scope_T() = default;
+    Scope_T(const Scope_T& other) = default;
+    Scope_T& operator=(const Scope_T& other) = default;
+    ~Scope_T() = default;
 
     bool identifier_exists(const std::string& name) const {
         return identifiers_.find(name) != identifiers_.end();
     }
 
-    std::optional<Callable*> get_identifier(const std::string& name) const {
+    std::optional<T> get_identifier(const std::string& name) const {
         auto it = identifiers_.find(name);
         if (it == identifiers_.end())
             return std::nullopt;
@@ -45,25 +48,29 @@ public:
         return it->second;
     }
 
-    std::optional<Callable*> create_identifier(const std::string& name, Callable* callable) {
+    std::optional<T> create_identifier(const std::string& name, T callable) {
         if (identifier_exists(name))
             return std::nullopt;
 
-        identifiers_.insert(std::pair<std::string, Callable*>{name, callable});
+        identifiers_.insert(std::pair<std::string, T>{name, callable});
         identifiers_in_order_.push_back({name, callable});
         
         return callable;
     }
 
-    std::optional<Callable*> create_identifier(Callable* callable) {
-        return create_identifier(std::string{callable->name_}, callable);
+    std::optional<T> create_identifier(T callable) {
+        return create_identifier(callable->to_string(), callable);
     }
 
-    std::vector<std::pair<std::string, Callable*>> identifiers_in_order_ = {};
+    std::vector<std::pair<std::string, T>> identifiers_in_order_ = {};
 
 private:
-    std::unordered_map<std::string, Callable*> identifiers_;
+    std::unordered_map<std::string, T> identifiers_;
 };
+
+using Scope = Scope_T<Callable*>;
+using RT_Scope = Scope_T<RT_Callable*>;
+using CT_Scope = Scope_T<CT_Callable*>;
 
 } // namespace AST
 

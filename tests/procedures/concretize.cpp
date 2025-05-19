@@ -59,7 +59,7 @@ TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
 
 TEST_CASE("Concretizer should run variable substitution with a concrete type") {
     Expression value{ExpressionType::value, 1, &Int, TSL};
-    Callable callable{&value, TSL};
+    RT_Callable callable{&value, TSL};
     Expression ref{ExpressionType::reference, &callable, TSL};
     ref.type = &Int;
 
@@ -69,7 +69,7 @@ TEST_CASE("Concretizer should run variable substitution with a concrete type") {
 
 TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
     Expression value{ExpressionType::value, 1, &Int, TSL};
-    Callable callable{&value, TSL};
+    RT_Callable callable{&value, TSL};
     Expression call{ExpressionType::call, CallExpressionValue{&callable, {}}, TSL};
     call.type = &Int;
 
@@ -83,7 +83,7 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the ca
     
     auto IntInt = types.get_function_type(Int, {&Int}, false);
     Expression value{ExpressionType::value, 1, IntInt, TSL};
-    Callable const_Int{"const_Int", &value, TSL};
+    RT_Callable const_Int{"const_Int", &value, TSL};
 
     Expression arg{ExpressionType::value, "5", &Number, TSL};
     Expression call{ExpressionType::call, CallExpressionValue{&const_Int, {&arg}}, TSL};
@@ -101,7 +101,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
     REQUIRE(types.empty());
 
     auto IntIntInt = types.get_function_type(Int, {&Int, &Int});
-    Callable dummy_callable = Callable::testing_callable(IntIntInt);
+    RT_Callable dummy_callable = RT_Callable::testing_callable(IntIntInt);
 
     REQUIRE(*dummy_callable.get_type() == *IntIntInt);
 
@@ -143,7 +143,7 @@ TEST_CASE("Concretizer should be able to cast arguments up if needed") {
     REQUIRE(types.empty());
 
     auto IntIntInt = types.get_function_type(Float, {&Float, &Float});
-    Callable dummy_callable = Callable::testing_callable(IntIntInt);
+    RT_Callable dummy_callable = RT_Callable::testing_callable(IntIntInt);
 
     SUBCASE("Number -> Int -> Float into Float -> Float -> Float") {
         Expression arg1{ExpressionType::value, "12.45", &Number, TSL};

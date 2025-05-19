@@ -39,11 +39,11 @@ ReverseParser& ReverseParser::reverse_parse(const CompilationState& state) {
     reset();
 
     for (auto [name, callable]: state.globals_.identifiers_in_order_) {
-        *this << "let " << name << " = " << callable->body_ << ";\n\n";
+        *this << "let " << name << " = " << callable->const_body() << ";\n\n";
     }
 
     if (state.entry_point_)
-        return *this << (*state.entry_point_)->body_ << '\n';
+        return *this << (*state.entry_point_)->const_body() << '\n';
 
     return *this;
 }
@@ -171,7 +171,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
         case ExpressionType::binary_operator_reference:
             if (options_.include_debug_info)
                 *this << "/*operator-ref:*/ ";
-            return *this << std::string{expression.reference_value()->name_};
+            return *this << expression.reference_value()->to_string();
         
         case ExpressionType::reference:
         case ExpressionType::type_reference:
@@ -179,7 +179,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
         case ExpressionType::type_constructor_reference:
             if (options_.include_debug_info)
                 *this << "/*reference to:*/ ";
-            return *this << std::string{expression.reference_value()->name_};
+            return *this << expression.reference_value()->to_string();
 
         case ExpressionType::not_implemented:
             return *this << "Expression type not implemented in parser: " + expression.string_value();
@@ -238,20 +238,20 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
                         return *this << "( " 
                                     << args.at(0) 
                                     << " " 
-                                    << std::string{callee->name_} 
+                                    << callee->to_string()
                                     << " " 
                                     << args.at(1) 
                                     << " )";
 
                     case 1:
-                        return *this << "( " << std::string{callee->name_} << args.at(0) << " )";
+                        return *this << "( " << callee->to_string() << args.at(0) << " )";
                    
                     case 0:
-                        return *this << "(" << std::string{callee->name_} << ")";
+                        return *this << "(" << callee->to_string() << ")";
                 }
             }
 
-            *this << std::string{callee->name_} << '(';
+            *this << callee->to_string() << '(';
             
             bool first_arg = true;
             for (Expression* arg_expression: args) {

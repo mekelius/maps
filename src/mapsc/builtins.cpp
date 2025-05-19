@@ -28,54 +28,58 @@ namespace Maps {
 using Log = LogInContext<LogContext::compiler_init>;
 class Type;
 
-Builtin::Builtin(std::string_view name, const Expression&& expression)
-:Callable(name, Undefined{}, BUILTIN_SOURCE_LOCATION), 
-    builtin_body_(expression) {
-    body_ = &std::get<Expression>(builtin_body_);
+CallableBody CT_Callable::const_body() const {
+    return std::get<External>(builtin_body_);
+    // if (auto external = std::get_if<External>(&builtin_body_)) {
+    //     return *external;
+    // }// } else if (Expression* expression = std::get_if<Expression>(&builtin_body_)) {
+    //     return expression;
+    // }
+
+    // return std::visit(overloaded {
+    //     [](External external) { return external; },
+    //     [this](Expression expression) { return &expression; },
+    //     [this](Statement statement) { return &statement; }
+    // }, builtin_body_);
 }
 
-Builtin::Builtin(std::string_view name, const Statement&& statement, const Type& type)
-:Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION),
-    builtin_body_(statement) {
-    body_ = &std::get<Statement>(builtin_body_);
-}
+// CT_Callable::CT_Callable(std::string_view name, Expression&& expression)
+// :CT_Callable(name, expression, *expression.type)
+// {}
 
-Builtin::Builtin(std::string_view name, External external, const Type& type)
-:Callable(name, Undefined{}, type, BUILTIN_SOURCE_LOCATION), builtin_body_(external) {
-    body_ = std::get<External>(builtin_body_);
-}
+// CT_Callable::CT_Callable(std::string_view name, Statement&& statement, const Type& type)
+// :CT_Callable(name, statement, type) {}
 
-BuiltinOperator::BuiltinOperator(std::string_view name, const Expression&& expression, 
-    Operator::Properties operator_props)
-:Operator(name, Undefined{}, operator_props, BUILTIN_SOURCE_LOCATION),
-    builtin_body_(expression) {
-    body_ = &std::get<Expression>(builtin_body_);
-}
+// CT_Operator::CT_Operator(std::string_view name, Expression&& expression, 
+//     Operator::Properties operator_props)
+// :CT_Callable(name, std::move(expression)),
+//     operator_props_(operator_props) {
+// }
 
 // ----- BUILTIN DEFINITIONS -----
 
-Builtin true_{"true", Expression::builtin(true, Boolean)};
-Builtin false_{"false", Expression::builtin(false, Boolean)};
-Builtin print{"print", External{}, String_to_IO_Void};
+// CT_Callable true_{"true", Expression::builtin(true, Boolean)};
+// CT_Callable false_{"false", Expression::builtin(false, Boolean)};
+CT_Callable print{"print", External{}, String_to_IO_Void};
 
 // ----- BUILTINS SCOPE -----
 
-static Scope builtins;
+static CT_Scope builtins;
 bool builtins_initialized = false;
 
-constinit BuiltinOperator unary_minus_Int{"-", External{}, Int_to_Int,
+constinit CT_Operator unary_minus_Int{"-", External{}, Int_to_Int,
     Operator::Properties{Operator::Fixity::unary_prefix}};
 
-constinit BuiltinOperator plus_Int{"+", External{}, IntInt_to_Int,
+constinit CT_Operator plus_Int{"+", External{}, IntInt_to_Int,
     {Operator::Fixity::binary, 500}};
-constinit BuiltinOperator binary_minus_Int{"-", External{}, IntInt_to_Int,
+constinit CT_Operator binary_minus_Int{"-", External{}, IntInt_to_Int,
     {Operator::Fixity::binary,510}};
-constinit BuiltinOperator mult_Int{"*", External{}, IntInt_to_Int,
+constinit CT_Operator mult_Int{"*", External{}, IntInt_to_Int,
     {Operator::Fixity::binary,520}};
 
-bool init_builtin(Scope& scope, Callable& callable) {
+bool init_builtin(CT_Scope& scope, CT_Callable& callable) {
     if (!scope.create_identifier(&callable)) {
-        Log::compiler_error("Creating builtin " + std::string{callable.name_} + " failed",
+        Log::compiler_error("Creating builtin " + callable.to_string() + " failed",
             COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
@@ -83,12 +87,12 @@ bool init_builtin(Scope& scope, Callable& callable) {
     return true;
 }
 
-bool init_builtins(Scope& scope) {
+bool init_builtins(CT_Scope& scope) {
     builtins_initialized = true;
 
     return (
-        init_builtin(scope, true_      ) &&
-        init_builtin(scope, false_     ) &&
+        // init_builtin(scope, true_      ) &&
+        // init_builtin(scope, false_     ) &&
         init_builtin(scope, print      ) &&
         init_builtin(scope, plus_Int   ) &&
         init_builtin(scope, mult_Int   )
@@ -127,7 +131,7 @@ bool init_builtins(Scope& scope) {
     //     *ast.types_->get_function_type(Void, {&Boolean}));
 }
 
-const Scope* get_builtins() {
+const CT_Scope* get_builtins() {
     if (!builtins_initialized && !init_builtins(builtins)) {
         Log::compiler_error("Initializing builtins failed", COMPILER_INIT_SOURCE_LOCATION);
         assert(false && "initializing builtins failed");

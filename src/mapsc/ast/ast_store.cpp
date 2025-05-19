@@ -36,13 +36,13 @@ Statement* AST_Store::allocate_statement(const Statement&& statement) {
     return statements_.back().get();
 }
 
-Callable* AST_Store::allocate_callable(const Callable&& callable) {
-    callables_.push_back(std::make_unique<Callable>(callable));
+RT_Callable* AST_Store::allocate_callable(const RT_Callable&& callable) {
+    callables_.push_back(std::make_unique<RT_Callable>(callable));
     return callables_.back().get();
 }
 
-Callable* AST_Store::allocate_operator(const Operator&& op) {
-    callables_.push_back(std::make_unique<Operator>(op));
+RT_Callable* AST_Store::allocate_operator(const RT_Operator&& op) {
+    callables_.push_back(std::make_unique<RT_Operator>(op));
     return callables_.back().get();
 }
 

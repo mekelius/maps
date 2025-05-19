@@ -51,7 +51,8 @@ namespace {
 
 // this should be ran after all the checks are cleared
 [[nodiscard]] bool perform_substitution(Expression& expression, Callable& callee) {
-    if (auto inner_expression = std::get_if<Expression*>(&callee.body_)) {
+    auto callee_body = callee.const_body();
+    if (auto inner_expression = std::get_if<Expression*>(&callee_body)) {
         expression = **inner_expression;
         return true;   
     }
@@ -74,7 +75,7 @@ bool substitute_value_reference(Expression& expression, Callable& callee) {
         "substitute_value_reference called with not a reference");
 
     if (callee.is_undefined()) {
-        Log::error("\"" + std::string{callee.name_} + "\" is undefined", expression.location);
+        Log::error("\"" + callee.to_string() + "\" is undefined", expression.location);
         return false;
     }
 

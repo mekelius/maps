@@ -18,11 +18,21 @@ using std::optional, std::nullopt;
 
 namespace Maps {
 
-Callable Callable::testing_callable(const Type* type) {
-    return Callable{"DUMMY_CALLABLE", External{}, *type, TEST_SOURCE_LOCATION};
+bool Callable::is_empty() const {
+    return std::visit(overloaded {
+        [](External) { return false; },
+        [](Expression*) { return false; },
+        [](Undefined) { return true; },
+        [](Statement* statement) { return statement->is_empty(); }
+    }, const_body());
 }
 
-Callable::Callable(std::string_view name, CallableBody body, const Type& type, SourceLocation location)
+RT_Callable RT_Callable::testing_callable(const Type* type) {
+    return RT_Callable{"DUMMY_CALLABLE", External{}, *type, TEST_SOURCE_LOCATION};
+}
+
+RT_Callable::RT_Callable(std::string_view name, CallableBody body, const Type& type, 
+    SourceLocation location)
 : name_(name), body_(body), location_(location), type_(&type) {
     assert((!std::holds_alternative<Expression*>(body)  || 
             type == Hole                                ||
@@ -31,17 +41,17 @@ Callable::Callable(std::string_view name, CallableBody body, const Type& type, S
 type should be set on the expression");
 }
 
-Callable::Callable(std::string_view name, CallableBody body, SourceLocation location)
-:Callable(name, body, Hole, location) {}
+RT_Callable::RT_Callable(std::string_view name, CallableBody body, SourceLocation location)
+:RT_Callable(name, body, Hole, location) {}
 
-Callable::Callable(CallableBody body, SourceLocation location)
-: name_("anonymous callable"), body_(body), location_(location) {}
+RT_Callable::RT_Callable(CallableBody body, SourceLocation location)
+:name_("anonymous callable"), body_(body), location_(location) {}
 
-Callable::Callable(CallableBody body, const Type& type, SourceLocation location)
-: name_("anonymous callable"), body_(body), location_(location), type_(&type) {}
+RT_Callable::RT_Callable(CallableBody body, const Type& type, SourceLocation location)
+:name_("anonymous callable"), body_(body), location_(location), type_(&type) {}
 
 // TODO: change to std::visitor
-const Type* Callable::get_type() const {
+const Type* RT_Callable::get_type() const {
     switch (body_.index()) {
         case 0: // Undefined
             return type_ ? *type_ : &Hole;
@@ -67,7 +77,7 @@ const Type* Callable::get_type() const {
 }
 
 // !!! this feels pretty sus, manipulating state with way too many layers of indirection
-void Callable::set_type(const Type& type) {
+void RT_Callable::set_type(const Type& type) {
     switch (body_.index()) {
         case 0: // uninitialized
             type_ = std::make_optional<const Type*>(&type);
@@ -97,7 +107,7 @@ void Callable::set_type(const Type& type) {
     }
 }
 
-std::optional<const Type*> Callable::get_declared_type() const {
+std::optional<const Type*> RT_Callable::get_declared_type() const {
     if (Expression* const* expression = std::get_if<Expression*>(&body_)) {
         return (*expression)->declared_type;
 
@@ -115,7 +125,7 @@ std::optional<const Type*> Callable::get_declared_type() const {
     return std::nullopt;
 }
 
-bool Callable::set_declared_type(const Type& type) {
+bool RT_Callable::set_declared_type(const Type& type) {
     if (Expression* const* expression = std::get_if<Expression*>(&body_)) {
         (*expression)->declared_type = &type;
         return true;
@@ -138,28 +148,5 @@ bool Callable::set_declared_type(const Type& type) {
 
     return false;
 }
-
-bool Callable::is_undefined() const {
-    return std::holds_alternative<Undefined>(body_);
-}
-
-bool Callable::is_empty() const {
-    return std::visit(overloaded {
-        [](External) { return false; },
-        [](Expression*) { return false; },
-        [](Undefined) { return true; },
-        [](Statement* statement) { return statement->is_empty(); }
-    }, body_);
-}
-
-bool Callable::operator==(const Callable& other) const {
-    if (this == &other)
-        return true;
-
-    if (body_ == other.body_)
-        return true;
-
-    return false;
-};
 
 } // namespace Maps

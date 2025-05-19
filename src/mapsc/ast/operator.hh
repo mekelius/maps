@@ -6,7 +6,7 @@
 
 namespace Maps {
 
-class Operator: public Callable {
+class Operator {
 public:
     using Precedence = unsigned int;
 
@@ -32,44 +32,62 @@ public:
         Associativity associativity = Associativity::left;
     };
 
-    static Operator create_binary(std::string_view name, CallableBody body, Precedence precedence, 
-        Associativity associativity, SourceLocation location) {
+    bool is_binary() const { return operator_props().fixity == Operator::Fixity::binary; }
+    bool is_unary() const { return operator_props().fixity != Operator::Fixity::binary; }
+    bool is_prefix() const { return operator_props().fixity == Operator::Fixity::unary_prefix; }
 
-        return Operator{name, body, {Fixity::binary, precedence, associativity}, location};
+    Precedence precedence() { return operator_props().precedence; }
+    Fixity fixity() const { return operator_props().fixity; }
+
+    virtual Properties operator_props() const = 0;
+};
+
+class RT_Operator: public RT_Callable, public Operator {
+public:
+    static RT_Operator create_binary(std::string_view name, CallableBody body, 
+        Operator::Precedence precedence, Operator::Associativity associativity, 
+        SourceLocation location) {
+
+        return RT_Operator{ name, body, 
+            { Operator::Fixity::binary, precedence, associativity }, 
+            location };
     }
 
-    static Operator create_binary(std::string_view name, CallableBody body, const Type& type, 
-        Precedence precedence, Associativity associativity, SourceLocation location) {
+    static RT_Operator create_binary(std::string_view name, CallableBody body, const Type& type, 
+        Operator::Precedence precedence, Operator::Associativity associativity, 
+        SourceLocation location) {
 
-        return Operator{name, body, type, {Fixity::binary, precedence, associativity}, location};
+        return RT_Operator{ name, body, type, 
+            { Operator::Fixity::binary, precedence, associativity }, 
+            location };
     }
 
-    constexpr Operator(std::string_view name, const External external, const Type& type, 
-        const Properties& operator_props)
-    :Callable(name, external, type), operator_props_(operator_props) {}
+    RT_Operator(std::string_view name, const External external, const Type& type, 
+        const Operator::Properties& operator_props)
+    :RT_Callable(name, external, type),
+     operator_props_(operator_props) {}
 
-    Operator(std::string_view name, CallableBody body, const Type& type, 
-        Properties operator_props, SourceLocation location)
-     :Callable(name, body, type, location), 
-      operator_props_(operator_props) {}
+    RT_Operator(std::string_view name, CallableBody body, const Type& type, 
+        Operator::Properties operator_props, SourceLocation location)
+    :RT_Callable(name, body, type, location), 
+     operator_props_(operator_props) {}
 
-    Operator(std::string_view name, CallableBody body, 
-        Properties operator_props, SourceLocation location)
-     :Callable(name, body, location), operator_props_(operator_props) {}
+    RT_Operator(std::string_view name, CallableBody body, 
+        Operator::Properties operator_props, SourceLocation location)
+    :RT_Callable(name, body, location), 
+     operator_props_(operator_props) {}
 
-    Operator(const Operator& other) = default;
-    Operator& operator=(const Operator& other) = default;
-    virtual constexpr ~Operator() = default;
+    RT_Operator(const RT_Operator& other) = default;
+    RT_Operator& operator=(const RT_Operator& other) = default;
+    virtual ~RT_Operator() = default;
 
     bool is_operator() const { return true; }
-    bool is_binary() const { return operator_props_.fixity == Fixity::binary; }
-    bool is_unary() const { return operator_props_.fixity != Fixity::binary; }
-    bool is_prefix() const { return operator_props_.fixity == Fixity::unary_prefix; }
 
-    Precedence precedence() { return operator_props_.precedence; }
-    Fixity fixity() const { return operator_props_.fixity; }
+    virtual Properties operator_props() const {
+        return operator_props_;
+    };
 
-    Properties operator_props_;
+    Operator::Properties operator_props_;
 
 private:
 };

@@ -16,7 +16,7 @@
 namespace Maps {
 
 // TODO: delete the simplified nodes properly
-bool attempt_simplify(Callable& callable) {
+bool attempt_simplify(RT_Callable& callable) {
     return std::visit(overloaded {
         [](Undefined) { return true; },
         [](External) { return true; },
@@ -26,7 +26,7 @@ bool attempt_simplify(Callable& callable) {
                 // expression statements get replaced by their expressions
                 case StatementType::expression_statement:
                     // TODO: check type
-                    callable.body_ = std::get<Expression*>(statement->value);
+                    callable.body() = std::get<Expression*>(statement->value);
                     statement->statement_type = StatementType::deleted;
                     return attempt_simplify(callable);
                     
@@ -35,7 +35,7 @@ bool attempt_simplify(Callable& callable) {
                     auto block = &std::get<Block>(statement->value);
 
                     if (block->size() == 0) {
-                        callable.body_ = Undefined{};
+                        callable.body() = Undefined{};
                         statement->statement_type = StatementType::deleted;
                         return true;
                     }
@@ -55,12 +55,12 @@ bool attempt_simplify(Callable& callable) {
                     auto type = callable.get_type();
                     if (!type->is_function()) {
                         statement->statement_type = StatementType::deleted;
-                        callable.body_ = std::get<Expression*>(statement->value);
+                        callable.body() = std::get<Expression*>(statement->value);
                         return attempt_simplify(callable);
                     }
 
                     if (type->is_pure() && type->arity() == 0) {
-                        callable.body_ = std::get<Expression*>(statement->value);
+                        callable.body() = std::get<Expression*>(statement->value);
                         statement->statement_type = StatementType::deleted;
                         return attempt_simplify(callable);
                     }
@@ -70,7 +70,7 @@ bool attempt_simplify(Callable& callable) {
 
                 case StatementType::empty:
                     statement->statement_type = StatementType::deleted;
-                    callable.body_ = Undefined{};
+                    callable.body() = Undefined{};
                     return true;
 
                 default:
@@ -95,7 +95,7 @@ bool attempt_simplify(Callable& callable) {
                     return false;
             }
         },
-    }, callable.body_);
+    }, callable.body());
 }
 
 } // namespace Maps

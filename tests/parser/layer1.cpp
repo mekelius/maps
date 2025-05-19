@@ -53,8 +53,8 @@ TEST_CASE("layer1 eval should not put top level let statements into the root") {
 
     CHECK(state.globals_.identifier_exists("x"));
     auto x = *state.globals_.get_identifier("x");
-    CHECK(std::holds_alternative<Expression*>(x->body_));
-    auto expression = std::get<Expression*>(x->body_);
+    CHECK(std::holds_alternative<Expression*>(x->const_body()));
+    auto expression = std::get<Expression*>(x->const_body());
     CHECK(expression->string_value() == "5");
 }
 
@@ -75,9 +75,9 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
             \
             CHECK(state.is_valid);\
             CHECK(callable);\
-            CHECK(std::holds_alternative<Expression*>((*callable)->body_));\
+            CHECK(std::holds_alternative<Expression*>((*callable)->const_body()));\
             \
-            auto expression = std::get<Expression*>((*callable)->body_);\
+            auto expression = std::get<Expression*>((*callable)->const_body());\
             \
             CHECK(expression->expression_type == ExpressionType::numeric_literal);\
             CHECK(expression->string_value() == "4");\
@@ -102,8 +102,8 @@ TEST_CASE("Should handle various cases") {
     
         CHECK(state.is_valid);
         CHECK(callable);
-        CHECK(std::holds_alternative<Expression*>((*callable)->body_));
-        auto expression = std::get<Expression*>((*callable)->body_);
+        CHECK(std::holds_alternative<Expression*>((*callable)->const_body()));
+        auto expression = std::get<Expression*>((*callable)->const_body());
         CHECK(expression->expression_type == ExpressionType::string_literal);
         CHECK(expression->string_value() == "asd");
     }
@@ -114,8 +114,8 @@ TEST_CASE("Should handle various cases") {
         
         CHECK(state.is_valid);
         CHECK(callable);
-        CHECK(std::holds_alternative<Expression*>((*callable)->body_));
-        auto expression = std::get<Expression*>((*callable)->body_);
+        CHECK(std::holds_alternative<Expression*>((*callable)->const_body()));
+        auto expression = std::get<Expression*>((*callable)->const_body());
         
         CHECK(expression->expression_type == ExpressionType::termed_expression);
         
@@ -139,8 +139,8 @@ TEST_CASE("Should handle various cases") {
 
         CHECK(state.is_valid);
         CHECK(callable);
-        CHECK(std::holds_alternative<Expression*>((*callable)->body_));
-        auto expression = std::get<Expression*>((*callable)->body_);
+        CHECK(std::holds_alternative<Expression*>((*callable)->const_body()));
+        auto expression = std::get<Expression*>((*callable)->const_body());
 
         CHECK(expression->expression_type == ExpressionType::termed_expression);
         
@@ -164,8 +164,8 @@ TEST_CASE("Should handle various cases") {
 
         CHECK(state.is_valid);
         CHECK(callable);
-        CHECK(std::holds_alternative<Expression*>((*callable)->body_));
-        auto expression = std::get<Expression*>((*callable)->body_);
+        CHECK(std::holds_alternative<Expression*>((*callable)->const_body()));
+        auto expression = std::get<Expression*>((*callable)->const_body());
 
         CHECK(expression->expression_type == ExpressionType::termed_expression);
         
@@ -196,8 +196,8 @@ TEST_CASE("Should recognize minus as a special case") {
     CHECK(state.is_valid);
     CHECK(callable);
 
-    CHECK(std::holds_alternative<Expression*>((*callable)->body_));
-    auto expression = std::get<Expression*>((*callable)->body_);
+    CHECK(std::holds_alternative<Expression*>((*callable)->const_body()));
+    auto expression = std::get<Expression*>((*callable)->const_body());
 
     CHECK(expression->expression_type == ExpressionType::termed_expression);
     auto terms = expression->terms();

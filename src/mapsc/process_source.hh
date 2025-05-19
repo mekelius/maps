@@ -9,10 +9,10 @@
 #include <iostream>
 
 #include "mapsc/compilation_state.hh"
+#include "mapsc/ast/scope.hh"
 
 namespace Maps {
 
-class Scope;
 class TypeStore;
 
 enum class CompilationLayer {
@@ -34,7 +34,7 @@ struct ProcessSourceOptions {
 };
 
 // the first value is if the parse succeeded
-std::unique_ptr<CompilationState> process_source(const Scope* builtins, TypeStore* types, std::istream& source_is, 
+std::unique_ptr<CompilationState> process_source(const CT_Scope* builtins, TypeStore* types, std::istream& source_is, 
     const ProcessSourceOptions& options = {}, std::ostream& debug_ostream = std::cout);
 std::unique_ptr<CompilationState> process_source(const CompilationState& base, std::istream& source_is, 
     const ProcessSourceOptions& options = {}, std::ostream& debug_ostream = std::cout);

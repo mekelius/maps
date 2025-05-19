@@ -7,6 +7,8 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/types/type_defs.hh"
+#include "common/std_visit_helper.hh"
+
 
 namespace Maps {
 
@@ -35,47 +37,75 @@ using CallableBody = std::variant<Undefined, Expression*, Statement*, External>;
  */
 class Callable {
 public:
-    // creates a new dummy callable suitable for unit testing
-    static Callable testing_callable(const Type* type = &Hole); 
+    virtual std::string_view name() const = 0;
+    virtual std::string to_string() const { return std::string{name()}; };
+    virtual CallableBody const_body() const = 0;
+    virtual const SourceLocation& location() const = 0;
+    virtual const Type* get_type() const = 0;
+    virtual std::optional<const Type*> get_declared_type() const = 0;
 
-    constexpr Callable(std::string_view name, External external, const Type& type)
+    bool is_undefined() const {
+        return std::holds_alternative<Undefined>(const_body());
+    }
+
+    bool is_empty() const;
+
+    virtual bool is_operator() const { return false; }
+    virtual bool is_const() const { return false; }
+
+    virtual bool operator==(const Callable& other) const = 0;
+};
+
+class RT_Callable: public Callable {
+public:
+    // creates a new dummy callable suitable for unit testing
+    static RT_Callable testing_callable(const Type* type = &Hole); 
+
+    RT_Callable(std::string_view name, External external, const Type& type)
     :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(&type) {
     }
 
-    Callable(std::string_view name, CallableBody body, SourceLocation location);
-    Callable(CallableBody body, SourceLocation location); // create anonymous callable
+    RT_Callable(std::string_view name, CallableBody body, SourceLocation location);
+    RT_Callable(CallableBody body, SourceLocation location); // create anonymous callable
 
     // anonymous callables
-    Callable(std::string_view name, CallableBody body, const Type& type, SourceLocation location);
-    Callable(CallableBody body, const Type& type, SourceLocation location);
+    RT_Callable(std::string_view name, CallableBody body, const Type& type, SourceLocation location);
+    RT_Callable(CallableBody body, const Type& type, SourceLocation location);
 
-    Callable(const Callable& other) = default;
-    Callable& operator=(const Callable& other) = default;
-    virtual constexpr ~Callable() = default;
+    RT_Callable(const RT_Callable& other) = default;
+    RT_Callable& operator=(const RT_Callable& other) = default;
+    virtual constexpr ~RT_Callable() = default;
 
-    std::string_view name_;
-    CallableBody body_;
-    SourceLocation location_;
+    // ----- OVERRIDES ------
+    virtual std::string_view name() const { return name_; }
+    virtual std::string to_string() const { return name_; }
+    virtual CallableBody const_body() const { return body_; }
+    virtual CallableBody& body() { return body_; }
+    virtual const SourceLocation& location() const { return location_; }
 
     // since statements don't store types, we'll have to store them here
     // if the body is an expression, the type will just mirror it's type
-    const Type* get_type() const;
-    void set_type(const Type& type);
+    virtual const Type* get_type() const;
+    virtual std::optional<const Type*> get_declared_type() const;
 
-    std::optional<const Type*> get_declared_type() const;
+
+    void set_type(const Type& type);
     bool set_declared_type(const Type& type);
 
-    // checks if the name is an operator style name
-    bool is_undefined() const;
-    bool is_empty() const;
-    virtual bool is_operator() const { return false; }
-    virtual bool is_binary() const { return false; }
-    virtual bool is_unary() const { return false; }
-    virtual bool is_const() const { return false; }
+    virtual bool operator==(const Callable& other) const {
+        if (this == &other)
+            return true;
 
-    bool operator==(const Callable& other) const;
+        if (const_body() == other.const_body())
+            return true;
+
+        return false;
+    }
 
 private:
+    std::string name_;
+    CallableBody body_;
+    SourceLocation location_;
     std::optional<const Type*> type_;
     std::optional<const Type*> declared_type_;
 };

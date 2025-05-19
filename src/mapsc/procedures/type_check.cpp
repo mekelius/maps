@@ -38,11 +38,10 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
     return false;
 }
 
-bool SimpleTypeChecker::visit_callable(Callable* callable) {
+bool SimpleTypeChecker::visit_callable(RT_Callable* callable) {
     return std::visit(overloaded{
         [](External) { return true; },
         [](Undefined) { return true; },
-        [](Builtin*) { return true; },
         [](Expression*) { return true; },
         [callable](Statement* statement) {                        
             auto type = callable->get_type();
@@ -61,7 +60,7 @@ bool SimpleTypeChecker::visit_callable(Callable* callable) {
 
             return coerce_return_type(*statement, type);
         }
-    }, callable->body_);
+    }, callable->body());
 }
 
 // Note, statements shouldn't mess with contained expressions, since they will be visited
