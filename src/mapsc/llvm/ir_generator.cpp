@@ -228,7 +228,7 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
 
     auto entry_point = *compilation_state_->entry_point_;
 
-    if (holds_alternative<Maps::Undefined>(entry_point->body_)) {
+    if (holds_alternative<Maps::Undefined>(entry_point->const_body())) {
         fail("Undefined entry_point");
         return nullopt;
     }
@@ -284,8 +284,11 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
     if (callable.get_type()->is_function())
         return handle_function(callable);
 
-    if (const Expression* const* expression = std::get_if<Maps::Expression*>(&callable.body_))
-        return wrap_value_in_function(std::string{callable.name_}, **expression);
+    auto callable_body = callable.const_body();
+
+    if (const Expression* const* expression = 
+            std::get_if<Maps::Expression*>(&callable_body))
+        return wrap_value_in_function(callable.to_string(), **expression);
 
     fail("In IR_Generator::handle_global_definition: callable didn't have a function type but wasn't an expression");
     return nullopt;
@@ -334,11 +337,11 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Ca
 
     if (!signature) {
         Log::error("unable to convert type signature for " + 
-            std::string{callable.name_}, callable.location_);
+            callable.to_string(), callable.location());
         return nullopt;
     }
 
-    optional<llvm::Function*> function = function_definition(std::string{callable.name_}, 
+    optional<llvm::Function*> function = function_definition(callable.to_string(), 
         *dynamic_cast<const Maps::FunctionType*>(callable.get_type()), *signature);
 
     if (!function)
@@ -464,10 +467,10 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
 
     std::optional<llvm::FunctionCallee> function = function_store_->get(
-        std::string{callee->name_}, *dynamic_cast<const Maps::FunctionType*>(callee->get_type()));
+        callee->to_string(), *dynamic_cast<const Maps::FunctionType*>(callee->get_type()));
 
     if (!function) {
-        fail("attempt to call unknown function: \"" + std::string{callee->name_} + "\"");
+        fail("attempt to call unknown function: \"" + callee->to_string() + "\"");
         return nullptr;
     }
 
