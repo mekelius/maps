@@ -97,7 +97,8 @@ bool REPL::run() {
                 continue;
         }
 
-        compilation_state->dump(std::cout);
+        if (options_.print_compilation_state)
+            compilation_state->dump(std::cout);
 
         if (options_.stop_after == Stage::layer1 ||
             options_.stop_after == Stage::layer2 ||
@@ -105,9 +106,9 @@ bool REPL::run() {
             !has_something_to_evaluate(*compilation_state)
         ) {
             if (compilation_state->is_valid) {
-                std::cout << "Copying " << compilation_state->globals_.size() << " definitions\n";
+                // std::cout << "Copying " << compilation_state->globals_.size() << " definitions\n";
                 stored_state = *compilation_state;
-                std::cout << "Copied " << stored_state.globals_.size() << " definitions\n";
+                // std::cout << "Copied " << stored_state.globals_.size() << " definitions\n";
             }
             continue;
         }

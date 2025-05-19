@@ -30,6 +30,7 @@ public:
         bool print_layer2 = false;
         bool print_layer3 = false;
         bool print_ir = false;
+        bool print_compilation_state = false;
         
         bool eval = true;
 

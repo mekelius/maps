@@ -5,11 +5,13 @@
 - REPL should check if a definition can produce valid IR before saving it, currently easy to get stuck
     - also allow deleting names
 - Callable::attempt_simplify doesn't delete the nodes when simplifying single-statement blocks and sometimes segfaults (the problem line is commented out atm)
-- evaluating a binary expr causes following evals to fail
-    - something to do with name resolution
-        - add some assertions to repl
 - is not dealt with properlu in stage 2
-
+- something's still wrong with clearing the unresolved identifiers
+    - should assert
+    - try this (with --stop-after=layer2):
+        - a - b
+        - let a
+        - lte b
 
 ## Compilation and validity
 

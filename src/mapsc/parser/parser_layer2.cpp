@@ -274,7 +274,7 @@ void TermedExpressionParser::initial_value_state() {
         case ExpressionType::reference:
         case ExpressionType::call:
         case GUARANTEED_VALUE:
-            return fail("unexpected value expression " + peek()->log_message_string() +
+            return fail("unexpected " + peek()->log_message_string() +
                 " in termed expression, expected an operator", peek()->location);
 
         case ExpressionType::partial_binop_call_left: {
