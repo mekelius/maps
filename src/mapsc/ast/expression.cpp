@@ -274,8 +274,11 @@ std::string Expression::log_message_string() const {
             return "named field" + string_value();
 
         case ExpressionType::syntax_error:
-            return "broken expression";
+            return "broken expession (syntax error)";
         
+        case ExpressionType::compiler_error:
+            return "broken expression (compiler error)";
+
         case ExpressionType::not_implemented:
             return "nonimplemented expression";
 
@@ -296,6 +299,9 @@ std::string Expression::log_message_string() const {
 
         case ExpressionType::minus_sign:
             return "-";
+
+        case ExpressionType::partially_applied_minus:
+            return "-( " + std::get<Expression*>(value)->log_message_string() + " )";
     }
 }
 
@@ -415,6 +421,47 @@ void Expression::convert_to_operator_reference(Callable* callable) {
     this->declared_type = declared_type;
 }
 
+void Expression::convert_to_partial_binop_minus_call_left(AST_Store& store) {
+    if (expression_type != ExpressionType::partially_applied_minus) {
+        assert(false && 
+           "Expression::convert_to_partial_binop_call_left called on a not partially applied minus");
+
+        Log::compiler_error(
+            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus", 
+            location);
+
+        expression_type = ExpressionType::compiler_error;
+        return;
+    }
+
+    expression_type = ExpressionType::partial_binop_call_left;
+
+    auto rhs = std::get<Expression*>(value);
+    value = CallExpressionValue(&binary_minus_Int, 
+        {Expression::missing_argument(store, &Int, location), rhs});
+    type = &Int_to_Int;
+}
+
+void Expression::convert_to_unary_minus_call() {
+    if (expression_type != ExpressionType::partially_applied_minus) {
+        assert(false && 
+           "Expression::convert_to_unary_minus_call called on a not partially applied minus");
+
+        Log::compiler_error(
+            "Expression::convert_to_unary_minus_call called on a not partially applied minus", 
+            location);
+
+        expression_type = ExpressionType::compiler_error;
+        return;
+    }
+
+    expression_type = ExpressionType::call;
+    auto arg = std::get<Expression*>(value);
+    value = CallExpressionValue(&unary_minus_Int, {arg});
+    type = &Int;
+}
+
+
 // valueless expression types are tie, empty, syntax_error and not_implemented
 Expression* Expression::valueless(AST_Store& store, ExpressionType expression_type, 
     SourceLocation location) {
@@ -533,6 +580,13 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
                 CallExpressionValue{callable, {lhs, rhs}}, partial_return_type, 
                 location});
 }
+
+Expression* Expression::partially_applied_minus(AST_Store& store, Expression* rhs, 
+    SourceLocation location) {
+
+    return store.allocate_expression({ExpressionType::partially_applied_minus, rhs, location});
+}
+
 
 Expression* Expression::minus_sign(AST_Store& store, SourceLocation location) {
     return store.allocate_expression(

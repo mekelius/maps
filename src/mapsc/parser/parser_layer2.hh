@@ -64,6 +64,8 @@ private:
     void initial_prefix_operator_state();
     void initial_postfix_operator_state();
     void initial_minus_sign_state();
+    void initial_partially_applied_minus_state();
+
     void post_binary_operator_state();
     void compare_precedence_state();
 

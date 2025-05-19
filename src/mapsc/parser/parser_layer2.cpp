@@ -33,7 +33,8 @@ using Log = LogInContext<LogContext::layer2>;
                          case ExpressionType::deleted:\
                          case ExpressionType::missing_arg:\
                          case ExpressionType::syntax_error:\
-                         case ExpressionType::not_implemented
+                         case ExpressionType::not_implemented:\
+                         case ExpressionType::compiler_error
 
 #define TYPE_DECLARATION_TERM ExpressionType::type_argument:\
                          case ExpressionType::type_field_name:\
@@ -277,6 +278,9 @@ void TermedExpressionParser::initial_value_state() {
             return fail("unexpected " + peek()->log_message_string() +
                 " in termed expression, expected an operator", peek()->location);
 
+        case ExpressionType::partially_applied_minus:
+            peek()->convert_to_partial_binop_minus_call_left(*ast_store_);
+            // intentional fall-through
         case ExpressionType::partial_binop_call_left: {
             auto location = current_term()->location;
             add_to_partial_call_and_push(get_term(), {*pop_term()}, location);
@@ -372,6 +376,10 @@ void TermedExpressionParser::initial_goto() {
             initial_postfix_operator_state();
             break;
 
+        case ExpressionType::partially_applied_minus:
+            initial_partially_applied_minus_state();
+            break;
+
         case ExpressionType::minus_sign:
             initial_minus_sign_state();
             break;
@@ -418,6 +426,7 @@ void TermedExpressionParser::initial_binary_operator_state() {
             assert(false && "not implemented");
         }
 
+        case ExpressionType::partially_applied_minus:
         case ExpressionType::partial_binop_call_left:
         case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_call:
@@ -579,6 +588,11 @@ void TermedExpressionParser::initial_minus_sign_state() {
     }
 }
 
+void TermedExpressionParser::initial_partially_applied_minus_state() {
+    current_term()->convert_to_unary_minus_call();
+    return initial_call_state();
+}
+
 void TermedExpressionParser::post_binary_operator_state() {
     if (at_expression_end()) {
         Expression* op = *pop_term(); // pop the operator
@@ -638,6 +652,7 @@ void TermedExpressionParser::post_binary_operator_state() {
             return compare_precedence_state();
         }
 
+        case ExpressionType::partially_applied_minus:
         case ExpressionType::partial_call:
         case ExpressionType::minus_sign:
             assert(false && "not implemented");

@@ -267,14 +267,20 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
             return *this << ')';
         }
 
+        case ExpressionType::partially_applied_minus:
+            return *this << "-" << *std::get<Expression*>(expression.value);
+
+        case ExpressionType::minus_sign:
+            return *this << "-";
+            
+        case ExpressionType::compiler_error:
+            return *this << "@compiler error@";
+
         case ExpressionType::deleted:
             return *this << "@deleted expression@";
 
         case ExpressionType::missing_arg:
             return *this << "@missing arg@";
-
-        case ExpressionType::minus_sign:
-            return *this << "-";
     }
 }
 

@@ -55,12 +55,14 @@ enum class ExpressionType {
     termed_expression,      // value: std::vector<Expression*>
     
     syntax_error,           // value: std::string
+    compiler_error,
     not_implemented,
     
     call,                   // value: 
     partial_call,
     partial_binop_call_left,
     partial_binop_call_right,
+    partially_applied_minus,
     missing_arg,
 
     deleted,                // value: std::monostate
@@ -93,6 +95,7 @@ using ExpressionValue = std::variant<
     maps_Float,
     bool,
     std::string,
+    Expression*,
     Callable*,                       // for references to operators and functions
     const Type*,                     // for type expressions
     TermedExpressionValue,
@@ -140,6 +143,9 @@ struct Expression {
 
     static std::optional<Expression*> partial_binop_call(CompilationState& state, 
         Callable* callable, Expression* lhs, Expression* rhs, SourceLocation location);
+    
+    static Expression* partially_applied_minus(AST_Store& store, 
+        Expression* rhs, SourceLocation location);
 
     static Expression* valueless(
         AST_Store& store, ExpressionType expression_type, SourceLocation location);
@@ -172,6 +178,10 @@ struct Expression {
 
     // ----- CONVERSIONS -----
     void convert_to_operator_reference(Callable* callable);
+
+    // expect to be a partially applied minus
+    void convert_to_partial_binop_minus_call_left(AST_Store& store);
+    void convert_to_unary_minus_call();
 
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();
