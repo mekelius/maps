@@ -61,6 +61,7 @@ std::unique_ptr<CompilationState> process_source(const CompilationState& base, s
             compilation_state->unresolved_identifiers_) && !options.ignore_errors)
         return compilation_state;
 
+    compilation_state->unresolved_identifiers_ = {};
     // ----- layer2 -----
 
     ParserLayer2{compilation_state.get()}.run();
