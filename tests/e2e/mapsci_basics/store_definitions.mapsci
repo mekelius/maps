@@ -1,8 +1,8 @@
 // RUN: %mapsci < %s | filecheck %s
 
 let x = 6
-x + 7       // CHECK: 13
+x + 7               // CHECK: 13
 
-y = x * 78 
-z = y + 9
-z           // CHECK: 1023
+let y = x * 78 
+let z = y + 9
+z                   // CHECK: 477
