@@ -154,66 +154,9 @@ Expression* TermedExpressionParser::parse_termed_expression() {
         return Expression::valueless(*ast_store_, ExpressionType::syntax_error, expression_->location);
     }
 
-    // safe to unwrap because at_expression_end was checked above
-    switch (peek()->expression_type) {
-        case ExpressionType::termed_expression:
-            handle_termed_sub_expression(peek());
-            return parse_termed_expression();
-
-        // terminals
-        case ExpressionType::reference:
-            shift();
-            initial_reference_state();
-            break;
-
-        case ExpressionType::partial_binop_call_left:
-        case ExpressionType::partial_binop_call_right:
-        case ExpressionType::partial_call:
-            shift();
-            initial_partial_call_state();
-            break;
-
-        case ExpressionType::call:
-        case GUARANTEED_VALUE:
-            shift();
-            initial_value_state();
-            break;
-
-        case ExpressionType::binary_operator_reference:
-            shift();
-            initial_binary_operator_state();
-            break;
-
-        case ExpressionType::prefix_operator_reference:
-            shift();
-            initial_prefix_operator_state();
-            break;
-
-        case ExpressionType::postfix_operator_reference:
-            shift();
-            initial_postfix_operator_state();
-            break;
-
-        case ExpressionType::minus_sign:
-            shift();
-            initial_minus_sign_state();
-            break;
-
-        case ExpressionType::type_reference:
-            shift();
-            initial_type_reference_state();
-            break;
-
-        case ExpressionType::type_field_name:
-        case ExpressionType::type_argument:
-        case ExpressionType::type_construct:
-        case ExpressionType::type_constructor_reference:
-        case NOT_ALLOWED_IN_LAYER2:
-            // TODO: make expressions print out nice
-            Log::error("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), 
-                expression_->location);
-            assert(false && "bad term in TermedExpressionParser::parse_termed_expression");
-    }
+    // enter initial goto to find the first state
+    shift();
+    initial_goto();
 
     if (!compilation_state_->is_valid) {
         Log::error("parsing termed expression failed", expression_->location);
@@ -358,6 +301,97 @@ void TermedExpressionParser::initial_value_state() {
     }
 }
 
+void TermedExpressionParser::reduce_partial_binop_call_right() {
+    Expression* rhs = *pop_term();
+    Expression* op = *pop_term();
+
+    // TODO: handle precedence here
+    // it's a binary operator being partially applied
+    Expression* missing_argument = Expression::missing_argument(*ast_store_,
+        *dynamic_cast<const FunctionType*>(op->type)->param_types().begin(), op->location);
+
+    auto call =
+        Expression::partial_binop_call(*compilation_state_,
+            op->reference_value(), missing_argument, rhs, expression_->location);
+    
+    if (!call)
+        return fail("Creating call expression failed", op->location);
+
+    parse_stack_.push_back(*call);
+}
+
+void TermedExpressionParser::reduce_unary_minus_ref() {
+    parse_stack_.push_back(unary_minus_ref((*pop_term())->location));
+}
+
+void TermedExpressionParser::reduce_prefix_operator() {
+    auto value = *pop_term();
+    auto op = *pop_term();
+    
+    auto expression = Expression::call(*compilation_state_, op->reference_value(), 
+        {value}, op->location);
+
+    if (!expression)
+        return fail("Applying unary operator " + op->log_message_string() + " to " + 
+            value->log_message_string() + " failed", op->location);
+
+    parse_stack_.push_back(*expression);
+}
+
+void TermedExpressionParser::initial_goto() {
+    switch (current_term()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_termed_sub_expression(current_term());
+            return initial_goto();
+
+        // terminals
+        case ExpressionType::reference:
+            initial_reference_state();
+            break;
+
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
+        case ExpressionType::partial_call:
+            initial_partial_call_state();
+            break;
+
+        case ExpressionType::call:
+        case GUARANTEED_VALUE:
+            initial_value_state();
+            break;
+
+        case ExpressionType::binary_operator_reference:
+            initial_binary_operator_state();
+            break;
+
+        case ExpressionType::prefix_operator_reference:
+            initial_prefix_operator_state();
+            break;
+
+        case ExpressionType::postfix_operator_reference:
+            initial_postfix_operator_state();
+            break;
+
+        case ExpressionType::minus_sign:
+            initial_minus_sign_state();
+            break;
+
+        case ExpressionType::type_reference:
+            initial_type_reference_state();
+            break;
+
+        case ExpressionType::type_field_name:
+        case ExpressionType::type_argument:
+        case ExpressionType::type_construct:
+        case ExpressionType::type_constructor_reference:
+        case NOT_ALLOWED_IN_LAYER2:
+            // TODO: make expressions print out nice
+            Log::error("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), 
+                expression_->location);
+            assert(false && "bad term in TermedExpressionParser::parse_termed_expression");
+    }
+}
+
 void TermedExpressionParser::initial_binary_operator_state() {
     if (at_expression_end())
         return;        
@@ -367,25 +401,9 @@ void TermedExpressionParser::initial_binary_operator_state() {
             handle_termed_sub_expression(peek());
             return initial_binary_operator_state();
 
-        case GUARANTEED_VALUE: {
-            Expression* op = *pop_term();
-            Expression* rhs = get_term();
-
-            // TODO: handle precedence here
-            // it's a binary operator being partially applied
-            Expression* missing_argument = Expression::missing_argument(*ast_store_,
-                *dynamic_cast<const FunctionType*>(op->type)->param_types().begin(), op->location);
-
-            auto call =
-                Expression::partial_binop_call(*compilation_state_,
-                    op->reference_value(), missing_argument, rhs, expression_->location);
-            
-            if (!call)
-                return fail("Creating call expression failed", op->location);
-
-            parse_stack_.push_back(*call);
-            return;
-        }
+        case GUARANTEED_VALUE:
+            shift();
+            return reduce_partial_binop_call_right();
 
         case ExpressionType::minus_sign:{
             auto location = get_term()->location;
@@ -426,9 +444,35 @@ void TermedExpressionParser::initial_binary_operator_state() {
                 " not allowed to operate on " + current_term()->log_message_string(), 
                 peek()->location);
 
-        case TYPE_DECLARATION_TERM:
-        case ExpressionType::call:
         case ExpressionType::reference:
+            shift();
+            initial_reference_state();
+            switch (current_term()->expression_type) {
+                case GUARANTEED_VALUE:
+                case ExpressionType::reference:
+                case ExpressionType::call:
+                    return reduce_partial_binop_call_right();
+                
+                default:
+                    fail("Unexpected " + current_term()->log_message_string() + 
+                        " as right side of binary operator, expected a value", current_term()->location);
+            }
+
+        case ExpressionType::call:
+            shift();
+            initial_call_state();
+            switch (current_term()->expression_type) {
+                case GUARANTEED_VALUE:
+                case ExpressionType::reference:
+                case ExpressionType::call:
+                    return reduce_partial_binop_call_right();
+
+                default:
+                    fail("Unexpected " + current_term()->log_message_string() + 
+                        " as right side of binary operator, expected a value", current_term()->location);
+            }
+
+        case TYPE_DECLARATION_TERM:
             assert(false && "not implemented");
 
         case NOT_ALLOWED_IN_LAYER2:
@@ -456,12 +500,9 @@ void TermedExpressionParser::initial_prefix_operator_state() {
             shift();
             initial_prefix_operator_state();
 
-            auto rhs = pop_term();
-            auto op = pop_term();
-            if (!rhs || !op) {
-                return fail("parsing failed", location);
-            }
-            return push_unary_operator_call(*op, *rhs);
+            reduce_prefix_operator();
+
+            return initial_goto();
         }
 
         case ExpressionType::postfix_operator_reference:
@@ -469,9 +510,19 @@ void TermedExpressionParser::initial_prefix_operator_state() {
             return fail("Unexpected " + peek()->log_message_string() + " in termed expression", 
                 peek()->location);
             
+        case ExpressionType::reference:
+        case ExpressionType::call:
+            shift();
+            reduce_prefix_operator();
+
+            return initial_goto();
+
         default:
-            assert(false && "not implemented");
+            return fail("Unexpected " + current_term()->log_message_string() + 
+            " after an unary operator", current_term()->location);
     }
+    return fail("Unexpected " + current_term()->log_message_string() + 
+    " after an unary operator", current_term()->location);
 }
 
 void TermedExpressionParser::initial_postfix_operator_state() {
@@ -488,20 +539,20 @@ void TermedExpressionParser::initial_postfix_operator_state() {
 void TermedExpressionParser::initial_minus_sign_state() {
     if (at_expression_end()) {
         auto declared_type = current_term()->declared_type;
-        
-        auto location = (*pop_term())->location;
 
         if (!declared_type)
-            return fail("minus sign without arguments or declared type is ambiguous", location);
+            return fail("minus sign without arguments or declared type is ambiguous", 
+                current_term()->location);
 
         if (declared_type == &Int_to_Int)
-            return parse_stack_.push_back(unary_minus_ref(location));
+            return reduce_unary_minus_ref();
 
         if (declared_type == &IntInt_to_Int)
-            return parse_stack_.push_back(binary_minus_ref(location));
+            return parse_stack_.push_back(binary_minus_ref(current_term()->location));
 
         return fail(
-            "Type " + (*declared_type)->to_string() + " is not allowed with \"-\"", location);
+            "Type " + (*declared_type)->to_string() + " is not allowed with \"-\"", 
+            current_term()->location);
     }
 
     switch (peek()->expression_type) {
@@ -518,6 +569,8 @@ void TermedExpressionParser::initial_minus_sign_state() {
 
         case ExpressionType::reference:
         case ExpressionType::call:
+            reduce_unary_minus_ref();
+            return initial_prefix_operator_state();
 
         case TYPE_DECLARATION_TERM:
         default:
@@ -613,7 +666,7 @@ void TermedExpressionParser::post_binary_operator_state() {
 // if OP1 wins, we can reduce left, if OP2 wins we must wait (how?)
 void TermedExpressionParser::compare_precedence_state() {
     if (at_expression_end()) {
-        reduce_operator_left();
+        reduce_binop_call();
         precedence_stack_.pop_back();
         return;
     }
@@ -622,7 +675,7 @@ void TermedExpressionParser::compare_precedence_state() {
     auto next_precedence = peek_precedence();
 
     if (precedence_stack_.back() > next_precedence) {
-        reduce_operator_left();
+        reduce_binop_call();
         precedence_stack_.pop_back();
         
         // if there's an "intermediate level" or operators, we need to handle those before returning
@@ -641,7 +694,7 @@ void TermedExpressionParser::compare_precedence_state() {
 
     if (precedence_stack_.back() == next_precedence) { // !!!: assuming left-associativity
         // if the precedence stays the same, just reduce and carry on
-        reduce_operator_left();
+        reduce_binop_call();
         shift();
         return post_binary_operator_state();
     }
@@ -657,7 +710,7 @@ void TermedExpressionParser::compare_precedence_state() {
         assert(precedence_stack_.back() == previous_precedence 
             && "post_binary_operator_state didn't return to the same precedence level");
             
-        reduce_operator_left();
+        reduce_binop_call();
 
         if (at_expression_end()) {
             // ??? should we look at the precedence stack here? 
@@ -675,7 +728,7 @@ that the caller put on the precedence stack");
 }
 
 // Pops 3 values from the parse stack, reduces them into a binop apply expression and pushes it on top
-void TermedExpressionParser::reduce_operator_left() {
+void TermedExpressionParser::reduce_binop_call() {
     assert(parse_stack_.size() >= 3 
         && "TermedExpressionParser::reduce_operator_left_ called with parse stack size < 3");
 

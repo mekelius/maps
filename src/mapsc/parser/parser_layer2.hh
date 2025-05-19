@@ -64,11 +64,17 @@ private:
     void initial_prefix_operator_state();
     void initial_postfix_operator_state();
     void initial_minus_sign_state();
-
-    // binary operators
     void post_binary_operator_state();
     void compare_precedence_state();
-    void reduce_operator_left();
+
+    // reductions
+    void reduce_binop_call();
+    void reduce_partial_binop_call_right();
+    void reduce_unary_minus_ref();
+    void reduce_prefix_operator();
+
+    // gotos
+    void initial_goto();
 
     // callee ref is used as the default location
     void push_partial_call(Expression* callee_ref, const std::vector<Expression*>& args);
