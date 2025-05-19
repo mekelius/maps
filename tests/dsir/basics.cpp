@@ -22,7 +22,7 @@ TEST_CASE("String literal") {
     CHECK(top_level);
     CHECK(*(*top_level)->get_type() == String);
 
-    auto body = std::get<Expression*>((*top_level)->body_);
+    auto body = std::get<Expression*>((*top_level)->const_body());
     CHECK(body->expression_type == ExpressionType::string_literal);
     CHECK(body->string_value() == "hmm");
 }
@@ -37,7 +37,7 @@ TEST_CASE("Numeric literal") {
     CHECK(top_level);
     CHECK(*(*top_level)->get_type() == NumberLiteral);
 
-    auto body = std::get<Expression*>((*top_level)->body_);
+    auto body = std::get<Expression*>((*top_level)->const_body());
     CHECK(body->expression_type == ExpressionType::numeric_literal);
     CHECK(body->string_value() == "435");
 }
@@ -56,7 +56,7 @@ TEST_CASE("Identifier into reference") {
     CHECK(top_level);
     CHECK(*(*top_level)->get_type() == Hole);
 
-    auto body = std::get<Expression*>((*top_level)->body_);
+    auto body = std::get<Expression*>((*top_level)->const_body());
     CHECK(body->expression_type == ExpressionType::reference);
     CHECK(body->reference_value() == hello);
 }
@@ -73,10 +73,10 @@ TEST_CASE("Definition") {
     auto x = definitions.get_identifier("x");
 
     CHECK(x);
-    CHECK((*x)->name_ == "x");
+    CHECK((*x)->name() == "x");
     CHECK(*(*x)->get_type() == NumberLiteral);
 
-    auto body = std::get<Expression*>((*x)->body_);
+    auto body = std::get<Expression*>((*x)->const_body());
     CHECK(body->expression_type == ExpressionType::numeric_literal);
     CHECK(body->string_value() == "23");
 }

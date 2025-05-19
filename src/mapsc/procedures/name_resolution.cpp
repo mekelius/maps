@@ -75,7 +75,8 @@ bool resolve_type_identifier(CompilationState& state, const Scopes& scopes,
     // check builtins
     std::optional<const Type*> type = state.types_->get(expression->string_value());
     if (!type) {
-        Log::error("unkown type identifier: " + expression->string_value(), expression->location);
+        Log::error("unkown type identifier: " + expression->string_value(), 
+            expression->location);
         return false;
     }
     
@@ -149,16 +150,43 @@ bool resolve_identifiers(CompilationState& state, const Scopes& scopes,
     return true;
 }
 
-bool resolve_identifiers(CompilationState& state, const std::vector<RT_Scope*>& scopes, 
+bool resolve_identifiers(CompilationState& state, std::span<const RT_Scope* const> scopes, 
     std::vector<Expression*>& unresolved_identifiers) {
 
-    return resolve_identifiers(state, Scopes{{}, scopes}, unresolved_identifiers);
+    return resolve_identifiers(state, {{}, scopes}, unresolved_identifiers);
 }
 
-bool resolve_identifiers(CompilationState& state, const std::vector<CT_Scope*>& scopes, 
+bool resolve_identifiers(CompilationState& state, std::span<const CT_Scope* const> scopes, 
     std::vector<Expression*>& unresolved_identifiers) {
 
-    return resolve_identifiers(state, Scopes{scopes, {}}, unresolved_identifiers);
+    return resolve_identifiers(state, {scopes, {}}, unresolved_identifiers);
+}
+
+bool resolve_identifiers(CompilationState& state, const CT_Scope& ct_scope, 
+    const RT_Scope& rt_scope, std::vector<Expression*>& unresolved_identifiers) {
+
+    return resolve_identifiers(state, {
+        std::array<const CT_Scope* const, 1>{&ct_scope}, 
+        std::array<const RT_Scope* const, 1>{&rt_scope}}, 
+        unresolved_identifiers);
+}
+
+bool resolve_identifiers(CompilationState& state, const RT_Scope& scope,
+    std::vector<Expression*>& unresolved_identifiers) {
+
+    return resolve_identifiers(state, {
+        std::array<const CT_Scope* const, 1>{state.builtins_}, 
+        std::array<const RT_Scope* const, 2>{&state.globals_, &scope}}, 
+        unresolved_identifiers);
+}
+
+bool resolve_identifiers(CompilationState& state, 
+    std::vector<Expression*>& unresolved_identifiers) {
+
+    return resolve_identifiers(state, Scopes{
+        std::array<const CT_Scope* const, 1>{state.builtins_}, 
+        std::array<const RT_Scope* const, 1>{&state.globals_}}, 
+        unresolved_identifiers);
 }
 
 

@@ -483,16 +483,12 @@ ParseResult eval_parse_dsir(CompilationState& state, std::istream& source) {
         return result;
 
     if (result.top_level_callable) {
-        if (!resolve_identifiers(state, {&result.definitions, &state.globals_}, 
-            result.unresolved_identifiers)) {
-            
+        if (!resolve_identifiers(state, result.definitions, result.unresolved_identifiers)) {
             Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
             return { false };
         }
     } else {
-        if (!resolve_identifiers(state, {&result.definitions, &state.globals_}, 
-            result.unresolved_identifiers)) {
-            
+        if (!resolve_identifiers(state, result.definitions, result.unresolved_identifiers)) {
             Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
             return { false };
         }
@@ -508,16 +504,12 @@ ParseResult parse_dsir(CompilationState& state, std::istream& source) {
         return result;
 
     if (result.top_level_callable) {
-        if (!resolve_identifiers(state, {&result.definitions, &state.globals_}, 
-            result.unresolved_identifiers)) {
-            
+        if (!resolve_identifiers(state, result.definitions, result.unresolved_identifiers)) {
             Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
             return { false };
         }
     } else {
-        if (!resolve_identifiers(state, {&result.definitions, &state.globals_}, 
-            result.unresolved_identifiers)) {
-            
+        if (!resolve_identifiers(state, result.definitions, result.unresolved_identifiers)) {
             Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
             return { false };
         }
