@@ -21,21 +21,110 @@ namespace Maps {
 
 using Log = LogInContext<LogContext::name_resolution>;
 
+namespace {
+
+// this should be scope's responsibility
+bool resolve_identifier(CompilationState& state, const std::vector<Scope*>& scopes, 
+    Expression* expression) {
+    
+    // check builtins
+    if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
+        Log::debug_extra("Parsed built-in", expression->location);
+        expression->expression_type = ExpressionType::reference;
+        expression->type = (*builtin)->get_type();
+        expression->value = *builtin;
+        return true;
+    }
+
+    std::optional<Callable*> callable;
+    for (auto scope: scopes) {
+        callable = scope->get_identifier(expression->string_value());
+        if (callable)
+            break;
+    }
+
+    if (!callable) {
+        Log::error("unknown identifier: " + expression->string_value(), expression->location);
+        return false;
+    }
+
+    expression->expression_type = ExpressionType::reference;
+    expression->type = (*callable)->get_type();
+    expression->value = *callable;
+    return true;
+}
+
+bool resolve_type_identifier(CompilationState& state,
+    const std::vector<Scope*>& scopes, Expression* expression) {
+    // check builtins
+    std::optional<const Type*> type = state.types_->get(expression->string_value());
+    if (!type) {
+        Log::error("unkown type identifier: " + expression->string_value(), expression->location);
+        return false;
+    }
+    
+    expression->expression_type = ExpressionType::type_reference;
+    expression->value = *type;
+    return true;
+}
+
+bool resolve_operator(CompilationState& state, const std::vector<Scope*>& scopes, 
+    Expression* expression) {
+    
+    if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
+        if (!(*builtin)->is_operator()) {
+            Log::compiler_error("during name resolution: encountered a builtin operator_e \
+that pointed to not an operator", expression->location);
+            assert(false && 
+                "during name resolution: encountered a builtin operator_e that pointed to \
+not an operator");
+            return false;
+        }
+
+        Log::debug_extra("Resolved built-in operator", expression->location);
+        
+        expression->convert_to_operator_reference(*builtin);
+        return true;
+    }
+
+    std::optional<Callable*> callable;
+    for (auto scope: scopes) {
+        callable = scope->get_identifier(expression->string_value());
+        if (callable)
+            break;
+    }
+
+    if (!callable) {
+        Log::error("unknown operator: " + expression->string_value(), expression->location);
+        return false;
+    }
+
+    expression->convert_to_operator_reference(*callable);
+    return true;
+}
+
+} // anonymous namespace
+
+
 // Replaces all identifiers and operators with references to the correct callables
-bool resolve_identifiers(CompilationState& state) {
-    for (Expression* expression: state.unresolved_identifiers_) {
+bool resolve_identifiers(CompilationState& state, const std::vector<Scope*>& scopes, 
+    std::vector<Expression*>& unresolved_identifiers) {
+    for (Expression* expression: unresolved_identifiers) {
         switch (expression->expression_type) {
             case ExpressionType::identifier:
                 // assert(ast_->builtins_.identifier_exists(expression->string_value()) 
                 //     && "Builtin identifier passed to layer2");
-                resolve_identifier(state, expression);
+                if (!resolve_identifier(state, scopes, expression))
+                    return false;
                 break;
             case ExpressionType::operator_identifier:
-                resolve_operator(state, expression);
+                if (!resolve_operator(state, scopes, expression))
+                    return false;
                 break;
 
             case ExpressionType::type_identifier:
-                resolve_type_identifier(state, expression);
+                if (!resolve_type_identifier(state, scopes, expression))
+                    return false;
                 break;
 
             default:
@@ -46,74 +135,7 @@ bool resolve_identifiers(CompilationState& state) {
                 return false;
         }
     }
-
-    if (!state.is_valid)
-        return false;
-
-    state.unresolved_identifiers_ = {};
     return true;
-}
-
-// this should be scope's responsibility
-bool resolve_identifier(CompilationState& state, Expression* expression) {
-    // check builtins
-    if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
-        Log::debug_extra("Parsed built-in", expression->location);
-        expression->expression_type = ExpressionType::reference;
-        expression->type = (*builtin)->get_type();
-        expression->value = *builtin;
-        return true;
-    }
-
-    std::optional<Callable*> callable = state.globals_.get_identifier(expression->string_value());
-
-    if (!callable) {
-        Log::error("unknown identifier: " + expression->string_value(), expression->location);
-        state.declare_invalid();
-        return false;
-    }
-
-    expression->expression_type = ExpressionType::reference;
-    expression->type = (*callable)->get_type();
-    expression->value = *callable;
-    return true;
-}
-
-bool resolve_type_identifier(CompilationState& state, Expression* expression) {
-    // check builtins
-    std::optional<const Type*> type = state.types_->get(expression->string_value());
-    if (!type) {
-        Log::error("unkown type identifier: " + expression->string_value(), expression->location);
-        state.declare_invalid();
-        return false;
-    }
-    
-    expression->expression_type = ExpressionType::type_reference;
-    expression->value = *type;
-    return true;
-}
-
-bool resolve_operator(CompilationState& state, Expression* expression) {
-    if (auto builtin = state.builtins_->get_identifier(expression->string_value())) {
-        if (!(*builtin)->is_operator()) {
-            Log::error("during name resolution: encountered a builtin operator_e \
-that pointed to not an operator", expression->location);
-            assert(false && 
-                "during name resolution: encountered a builtin operator_e that pointed to \
-not an operator");
-            state.declare_invalid();
-            return false;
-        }
-
-        Log::debug_extra("Resolved built-in operator", expression->location);
-        
-        expression->convert_to_operator_reference(*builtin);
-        return true;
-    }
-
-    Log::error("unknown operator: " + expression->string_value(), expression->location);
-    state.declare_invalid();
-    return false;
 }
 
 } // namespace Maps

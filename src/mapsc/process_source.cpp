@@ -57,7 +57,8 @@ std::unique_ptr<CompilationState> process_source(const CompilationState& base, s
 
     // ----- name resolution -----
 
-    if (!resolve_identifiers(*compilation_state) && !options.ignore_errors)
+    if (!resolve_identifiers(*compilation_state, {&compilation_state->globals_}, 
+            compilation_state->unresolved_identifiers_) && !options.ignore_errors)
         return compilation_state;
 
     // ----- layer2 -----

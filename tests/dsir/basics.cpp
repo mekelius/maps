@@ -9,18 +9,20 @@
 #include "mapsc/dsir/parse_dsir.hh"
 
 using namespace Maps;
+using namespace Maps::DSIR;
 
 TEST_CASE("String literal") {
     auto [state, _1, _2] = CompilationState::create_test_state();
     std::stringstream source{"\"hmm\""};
     
-    auto result = eval_parse_dsir(state, source);
+    auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
 
     CHECK(state.is_valid);
-    CHECK(result);
-    CHECK(*(*result)->get_type() == String);
+    CHECK(success);
+    CHECK(top_level);
+    CHECK(*(*top_level)->get_type() == String);
 
-    auto body = std::get<Expression*>((*result)->body_);
+    auto body = std::get<Expression*>((*top_level)->body_);
     CHECK(body->expression_type == ExpressionType::string_literal);
     CHECK(body->string_value() == "hmm");
 }
@@ -29,17 +31,16 @@ TEST_CASE("Numeric literal") {
     auto [state, _1, _2] = CompilationState::create_test_state();
     std::stringstream source{"435"};
     
-    auto result = eval_parse_dsir(state, source);
+    auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
 
     CHECK(state.is_valid);
-    CHECK(result);
-    CHECK(*(*result)->get_type() == NumberLiteral);
+    CHECK(top_level);
+    CHECK(*(*top_level)->get_type() == NumberLiteral);
 
-    auto body = std::get<Expression*>((*result)->body_);
+    auto body = std::get<Expression*>((*top_level)->body_);
     CHECK(body->expression_type == ExpressionType::numeric_literal);
     CHECK(body->string_value() == "435");
 }
-
 
 TEST_CASE("Identifier into reference") {
     auto [state, _1, _2] = CompilationState::create_test_state();
@@ -49,34 +50,92 @@ TEST_CASE("Identifier into reference") {
 
     std::stringstream source{"hello"};
     
-    auto result = eval_parse_dsir(state, source);
+    auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
 
     CHECK(state.is_valid);
-    CHECK(result);
-    CHECK(*(*result)->get_type() == Hole);
+    CHECK(top_level);
+    CHECK(*(*top_level)->get_type() == Hole);
 
-    auto body = std::get<Expression*>((*result)->body_);
+    auto body = std::get<Expression*>((*top_level)->body_);
     CHECK(body->expression_type == ExpressionType::reference);
     CHECK(body->reference_value() == hello);
 }
 
-// TEST_CASE("let x = \"asd\"") {
-//     auto [state, _1, _2] = CompilationState::create_test_state();
-//     std::stringstream source{"x"};
+TEST_CASE("Definition") {
+    auto [state, _1, _2] = CompilationState::create_test_state();
+    std::stringstream source{"let x = 23"};
     
-//     CHECK(parse_dsir(state, source));
+    auto [success, top_level, definitions, _] = parse_dsir(state, source);
 
-//     CHECK(state.globals_.size() == 1);
-//     auto x = state.globals_.get_identifier("x");
+    CHECK(success);
+    CHECK(!top_level);
+    CHECK(definitions.size() == 1);
+    auto x = definitions.get_identifier("x");
 
-//     CHECK(x);
-//     CHECK((*x)->name_ == "x");
-//     CHECK(*(*x)->get_type() == String);
+    CHECK(x);
+    CHECK((*x)->name_ == "x");
+    CHECK(*(*x)->get_type() == NumberLiteral);
 
-//     auto body = std::get<Expression*>((*x)->body_);
-//     CHECK(body->expression_type == ExpressionType::string_literal);
-//     CHECK(body->string_value() == "asd");
+    auto body = std::get<Expression*>((*x)->body_);
+    CHECK(body->expression_type == ExpressionType::numeric_literal);
+    CHECK(body->string_value() == "23");
+}
+
+// TEST_CASE("Reference into a previous definition") {
+//     auto [state, _1, _2] = CompilationState::create_test_state();
+
+//     SUBCASE("internal previous definition") {
+//         std::stringstream source{"let x = 2"};
+//     }
 // }
+
+
+
+TEST_CASE("Shouldn't insert into globals") {
+    auto [state, _1, _2] = CompilationState::create_test_state();
+    REQUIRE(state.globals_.empty());
+
+    SUBCASE("Top level eval shouldn't") {
+        std::stringstream source{"\"hmm\""};
+        
+        auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
+        
+        CHECK(state.is_valid);
+        CHECK(!state.entry_point_);
+        CHECK(success);
+        CHECK(top_level);
+        CHECK(definitions.empty());
+        CHECK(state.globals_.empty());
+    }
+
+    SUBCASE("Definition in eval shouldn't") {
+        std::stringstream source{"let x = 2"};
+        
+        auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
+        
+        CHECK(state.is_valid);
+        CHECK(!state.entry_point_);
+        CHECK(success);
+        CHECK(!top_level);
+        CHECK(definitions.size() == 1);
+        CHECK(state.globals_.empty());
+    }
+
+    SUBCASE("Definition not in eval shouldn't") {
+        std::stringstream source{"let x = 2"};
+        
+        auto [success, top_level, definitions, _] = parse_dsir(state, source);
+        
+        CHECK(state.is_valid);
+        CHECK(!state.entry_point_);
+        CHECK(success);
+        CHECK(!top_level);
+        CHECK(definitions.size() == 1);
+        CHECK(state.globals_.empty());
+    }
+}
+
+
 
 // TEST_CASE("Int x(Int a, Int b)") {
 //     std::stringstream source{"\

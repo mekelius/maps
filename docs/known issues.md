@@ -30,9 +30,11 @@
 - Lambdas would not be visited by AST::visit_nodes if they existed
 - editline library is limited to lines of 80 characters (in the REPL that is)
 - PragmaStore WILL break silently when we get to multiple source files
+    - Pragmas are a mess atm
 - ReverseParser looks like a stream but can't handle a lot of stuff and doesn't inherit from ostream
     - also stack overflow if you feed it a pointer??
         - sounds like a disaster
+- type identifiers arent scoped, how should this be handled?
 
 ## Misc jank
 

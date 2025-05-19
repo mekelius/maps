@@ -6,23 +6,28 @@
 #include <sstream>
 
 #include "mapsc/source.hh"
-#include "mapsc/ast/expression.hh"
-#include "mapsc/ast/callable.hh"
-#include "mapsc/compilation_state.hh"
-#include "mapsc/ast/expression.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/words.hh"
+#include "mapsc/compilation_state.hh"
+
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/expression.hh"
+
+#include "mapsc/procedures/name_resolution.hh"
 
 using std::optional, std::nullopt;
+
 
 namespace Maps {
 
 using Log = LogInContext<LogContext::dsir_parser>;
 
 namespace DSIR {
+namespace {
 
-constexpr std::array<std::string_view, 5> reserved_words {
-    "let", "return",
+constexpr std::array<std::string_view, 6> reserved_words {
+    "let", "fn", "return",
     "if", "then", "else"
 };
 
@@ -30,11 +35,11 @@ struct Token {
     enum class Type {
         eof,
         identifier, type_identifier,
-        parenthesis_open, parenthesis_close, comma, semicolon, assignment_operator,
+        parenthesis_open, parenthesis_close, comma, semicolon, equals,
         curly_brace_open, curly_brace_close,
         string_literal, number_literal,
-        ternary_operator, ternary_else,
-        let, return_t, if_t, then_t, else_t
+        question_mark, colon,
+        let, fn, return_t, if_t, then_t, else_t
     };
 
     Type token_type;
@@ -57,8 +62,8 @@ struct Token {
                 return "\",\""; 
             case Type::semicolon:
                 return "\";\""; 
-            case Type::assignment_operator:
-                return "";
+            case Type::equals:
+                return "\"=\"";
             case Type::curly_brace_open:
                 return "\"{\""; 
             case Type::curly_brace_close:
@@ -67,12 +72,14 @@ struct Token {
                 return "string literal \"" + value + "\""; 
             case Type::number_literal:
                 return "number literal " + value;
-            case Type::ternary_operator:
+            case Type::question_mark:
                 return "\"?\""; 
-            case Type::ternary_else:
+            case Type::colon:
                 return "\":\"";
             case Type::let:
                 return "\"let\""; 
+            case Type::fn:
+                return "\"fn\"";
             case Type::return_t:
                 return "\"return\""; 
             case Type::if_t:
@@ -109,11 +116,11 @@ public:
             case ')':
                 return { Token::Type::parenthesis_close };
             case '?':
-                return { Token::Type::ternary_operator };
+                return { Token::Type::question_mark };
             case ':':
-                return { Token::Type::ternary_operator };
+                return { Token::Type::colon };
             case '=':
-                return { Token::Type::assignment_operator };
+                return { Token::Type::equals };
             case ';':
                 while (read_char() == ';');
                 return { Token::Type::semicolon };
@@ -160,7 +167,21 @@ public:
         do buffer.sputc(current_char_);
         while (is_allowed_in_identifiers(read_char()) && !source_->eof());
 
-        return { Token::Type::identifier, "" };
+        auto value = buffer.str();
+        if (value == "let")
+            return { Token::Type::let };
+        if (value == "fn")
+            return { Token::Type::fn };
+        if (value == "return")
+            return { Token::Type::return_t };
+        if (value == "if")
+            return { Token::Type::if_t };
+        if (value == "then")
+            return { Token::Type::then_t };
+        if (value == "else")
+            return { Token::Type::else_t };
+
+        return { Token::Type::identifier, value };
     }
 
     void read_comment() {
@@ -193,38 +214,38 @@ public:
      lexer_(source) {
     }
 
-    bool run() {
+    ParseResult run() {
         get_token();
-        
-        return compilation_state_->is_valid;
+
+        while(!(current_token_.token_type == Token::Type::eof))
+            parse_declaration();
+
+        return result_;
     }
 
-    optional<Callable*> run_eval() {
+    ParseResult run_eval() {
         get_token();
 
-        auto root_expression = parse_expression();
+        if (current_token_.token_type == Token::Type::let) {
+            parse_declaration();
+        } else {
+            auto top_level_expression = parse_expression();
 
-        if (!compilation_state_->is_valid) {
+        if (!result_.success) {
             Log::error("DSIR eval failed", NO_SOURCE_LOCATION);
-            return nullopt;
+            return { false };
         }
 
-        auto root_callable = ast_store_->allocate_callable(
-            {"root", root_expression, NO_SOURCE_LOCATION});
-
-
-        if (!compilation_state_->set_entry_point(root_callable)) {
-            Log::error("DSIR eval failed: couldn't set entry point", NO_SOURCE_LOCATION);
-            compilation_state_->declare_invalid();
-            return nullopt;
+        result_.top_level_callable = ast_store_->allocate_callable(
+            {"root", top_level_expression, NO_SOURCE_LOCATION});
         }
 
-        return root_callable; 
+        return result_; 
     }
 
 private:
     void fail(std::string_view message) {
-        compilation_state_->declare_invalid();
+        result_.success = false;
         Log::error(message, current_token_.location);
     }
 
@@ -233,19 +254,86 @@ private:
         return current_token_;
     }
 
-    Callable* parse_declaration() {
+    optional<Callable*> parse_declaration() {
+        switch (current_token_.token_type) {
+            case Token::Type::let:
+                return parse_let_declaration();
+
+            case Token::Type::fn:
+                return parse_fn_declaration();
+
+            default:
+                fail("Unexpected " + current_token_.to_string() + ", expected let or fn");
+                return nullopt;
+        }
+    }
+    
+    optional<Callable*> parse_fn_declaration() {
+        if (current_token_.token_type != Token::Type::fn) {
+            fail("Unexpected " + current_token_.to_string() + ", expected fn");
+            return nullopt;
+        }
+
         assert(false && "not implemented");
-        // return;
+        // identifier
+        // (
+        // arglist
+        // )
+        // :
+        // return type
+        // block
+
+        // if (get_token().token_type != Token::Type::identifier) {
+        //     a
+        // }
+             
+        // auto name = current_token_.value;
+
+        // if (get_token().token_type != Token::Type::) {
+        //     aseasr
+        // }
+
+        // auto body = parse_expression();
+
+        // create callable;
+    }
+
+    optional<Callable*> parse_let_declaration() {
+        if (current_token_.token_type != Token::Type::let) {
+            fail("Unexpected " + current_token_.to_string() + ", expected let");
+            return nullopt;
+        }
+
+        auto location = current_token_.location;
+
+        if (get_token().token_type != Token::Type::identifier) {
+            fail("Unexpected " + current_token_.to_string() + ", expected an identifier");
+            return nullopt;
+        }
+             
+        auto name = current_token_.value;
+
+        if (get_token().token_type != Token::Type::equals) {
+            fail("Unexpected " + current_token_.to_string() + ", expected an \"=\"");
+            return nullopt;
+        }
+
+        get_token(); // eat the =
+
+        auto body = parse_expression();
+        auto callable = ast_store_->allocate_callable({name, body, location});
+        if (!result_.definitions.create_identifier(callable)) {
+            fail("Couldn't create identifier \"" + name + "\"");
+            return nullopt;
+        }
+        return callable;
     }
 
     Statement* parse_statement() {
         switch (current_token_.token_type) {
-            case Token::Type::let:
-                assert(false && "not implemented");
-
             case Token::Type::string_literal:
             case Token::Type::number_literal:
-            case Token::Type::ternary_operator:
+            case Token::Type::question_mark:
             case Token::Type::identifier:
             case Token::Type::type_identifier:
                 return parse_expression_statement(); 
@@ -263,15 +351,18 @@ private:
             case Token::Type::if_t:
                 return parse_if_statement();
 
-            case Token::Type::ternary_else:
+            case Token::Type::colon:
             case Token::Type::then_t:
             case Token::Type::else_t:
             case Token::Type::parenthesis_open:
             case Token::Type::eof:
             case Token::Type::parenthesis_close:
             case Token::Type::comma:
-            case Token::Type::assignment_operator:
+            case Token::Type::equals:
             case Token::Type::curly_brace_close:
+            case Token::Type::fn:
+            case Token::Type::let:
+                assert(false && "inner scopes not implemented");
             default:
                 fail("Unexpected " + current_token_.to_string() + ", expected a statement");
                 return Statement::syntax_error(*ast_store_, current_token_.location);
@@ -289,7 +380,7 @@ private:
             case Token::Type::type_identifier:
                 return parse_type_identifier();
                 
-            case Token::Type::ternary_operator:
+            case Token::Type::question_mark:
                 return parse_ternary_expression();
 
             case Token::Type::string_literal:
@@ -300,7 +391,7 @@ private:
             // case Token::Type::curly_brace_open:
                 // return 
 
-            case Token::Type::ternary_else:
+            case Token::Type::colon:
             case Token::Type::semicolon:
             case Token::Type::parenthesis_open:
             case Token::Type::parenthesis_close:
@@ -360,6 +451,7 @@ private:
     Expression* parse_identifier() {
         auto expression = Expression::identifier(*compilation_state_,
             current_token_.value, current_token_.location);
+        result_.unresolved_identifiers.push_back(expression);
 
         get_token();
         return expression;
@@ -369,33 +461,70 @@ private:
         auto expression = Expression::identifier(*compilation_state_,
             current_token_.value, current_token_.location);
 
+        result_.unresolved_identifiers.push_back(expression);
+
         get_token();
         return expression;
     }
 
+    ParseResult result_;
     Token current_token_;
     CompilationState* compilation_state_;
     AST_Store* ast_store_;
     Lexer lexer_;
 };
 
+} // anonymous namespace
+
+ParseResult eval_parse_dsir(CompilationState& state, std::istream& source) {
+    ParseResult result = DSIR::Parser{&state, &source}.run_eval();
+
+    if (!result.success)
+        return result;
+
+    if (result.top_level_callable) {
+        if (!resolve_identifiers(state, {&result.definitions, &state.globals_}, 
+            result.unresolved_identifiers)) {
+            
+            Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
+            return { false };
+        }
+    } else {
+        if (!resolve_identifiers(state, {&result.definitions, &state.globals_}, 
+            result.unresolved_identifiers)) {
+            
+            Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
+            return { false };
+        }
+    }
+
+    return result;
+}
+
+ParseResult parse_dsir(CompilationState& state, std::istream& source) {
+    ParseResult result = DSIR::Parser{&state, &source}.run();
+
+    if (!result.success)
+        return result;
+
+    if (result.top_level_callable) {
+        if (!resolve_identifiers(state, {&result.definitions, &state.globals_}, 
+            result.unresolved_identifiers)) {
+            
+            Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
+            return { false };
+        }
+    } else {
+        if (!resolve_identifiers(state, {&result.definitions, &state.globals_}, 
+            result.unresolved_identifiers)) {
+            
+            Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
+            return { false };
+        }
+    }
+
+    return result;
+}
+
 } // namespace DSIR
-
-optional<Callable*> eval_parse_dsir(CompilationState& state, std::istream& source) {
-    if (!DSIR::Parser{&state, &source}.run_eval())
-        return nullopt;
-
-    // resolve names
-
-    return state.entry_point_;
-}
-
-bool parse_dsir(CompilationState& state, std::istream& source) {
-    if (!DSIR::Parser{&state, &source}.run())
-        return false;
-    // resolve names
-
-    return state.is_valid;
-}
-
 } // namespace Maps

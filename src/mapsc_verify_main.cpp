@@ -106,7 +106,8 @@ int main(int argc, char* argv[]) {
         std::cout << "layer1 done\n\n";
         std::cout << "run name resolution\n\n";
 
-        resolve_identifiers(compilation_state);
+        resolve_identifiers(compilation_state, {&compilation_state.globals_}, 
+            compilation_state.unresolved_identifiers_);
 
         if(Maps::logs_since_last_check()) 
             std::cout << "\n";

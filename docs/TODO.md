@@ -2,20 +2,18 @@
 
 ## Priorities
 
-Current long term goal: write a cl arg parsing library in maps <br>
-Needed features:
-    - mappings
-    - mutable state
-    - loops/map
-    - type casts
-    - mutable strings
-    - possibly hashing
-    - structs/records
-
 #### Short term
 
-- deal with add unary
-- move creating callables to a separate step after layer1 (layer1 should return a tree instead)
+- split declarations/definitions off from statements
+- finish dsir
+    - definitions
+    - calls
+    - type casts
+- do the ifs in dsir
+- do like loops an stuff in dsir
+- move inserting to global scope into a separate step after layer1 (layer1 should return like dsir does)
+- fix arithmetic etc.
+- rename layers to stages and clear up the structure
 - then:
     - maybe make expression constructors private?
 - then:
@@ -24,6 +22,19 @@ Needed features:
         - runtime casts in our design require both mutable strings and optionals
             - optionals require conditionals
             - optionals require some form of contexts to unwrap
+
+#### Current long term goal
+
+write a cl arg parsing library in maps <br>
+
+Needed features:
+    - mappings
+    - mutable state
+    - loops/map
+    - type casts
+    - mutable strings
+    - possibly hashing
+    - structs/records
 
 #### slightly longer term
 
@@ -71,13 +82,17 @@ Needed features:
 - move simplifying blocks and other ast nodes out of layer1
 - use vector or array instead of hashmap as TypeMap for efficiency
 - expression factory functions are a bit all over the place
-    - args not in consistent order
     - need factories for the remaining types
+    - also for remaining statements
 
 #### UX tweaks
 
 - aliases
 - :no-eval and :eval
+
+#### Untested features
+
+- hex and octal numbers
 
 ## Planned for 0.0.2
 
