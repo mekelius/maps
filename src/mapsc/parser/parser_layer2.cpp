@@ -166,6 +166,8 @@ Expression* TermedExpressionParser::parse_termed_expression() {
             initial_reference_state();
             break;
 
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_call:
             shift();
             initial_partial_call_state();
@@ -332,10 +334,18 @@ void TermedExpressionParser::initial_value_state() {
             return fail("unexpected value expression " + peek()->log_message_string() +
                 " in termed expression, expected an operator", peek()->location);
 
+        case ExpressionType::partial_binop_call_left: {
+            auto location = current_term()->location;
+            add_to_partial_call_and_push(get_term(), {*pop_term()}, location);
+            return initial_call_state();
+        }
+        case ExpressionType::partial_binop_call_right:
+        case ExpressionType::partial_call:
+            return fail("Unexpected partial call, expected an operator", peek()->location);
+
         case ExpressionType::type_reference:
         case ExpressionType::type_argument:
         case ExpressionType::type_construct:
-        case ExpressionType::partial_call:
         case ExpressionType::type_constructor_reference:
             assert(false && "not implemented");
     
@@ -367,8 +377,8 @@ void TermedExpressionParser::initial_binary_operator_state() {
                 *dynamic_cast<const FunctionType*>(op->type)->param_types().begin(), op->location);
 
             auto call =
-                Expression::call(*compilation_state_,
-                    op->reference_value(), { missing_argument, rhs }, expression_->location);
+                Expression::partial_binop_call(*compilation_state_,
+                    op->reference_value(), missing_argument, rhs, expression_->location);
             
             if (!call)
                 return fail("Creating call expression failed", op->location);
@@ -390,6 +400,8 @@ void TermedExpressionParser::initial_binary_operator_state() {
             assert(false && "not implemented");
         }
 
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_call:
         case ExpressionType::binary_operator_reference:
             assert(false && "not implemented");
@@ -557,6 +569,8 @@ void TermedExpressionParser::post_binary_operator_state() {
             }
             return compare_precedence_state();
 
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
         case ExpressionType::call: {
             shift();
             
@@ -766,6 +780,35 @@ void TermedExpressionParser::push_partial_call(Expression* callee_ref,
         return fail("During layer2: Creating partial call failed", location);
         
     parse_stack_.push_back(*call);
+}
+
+void TermedExpressionParser::add_to_partial_call_and_push(Expression* partial_call, 
+    const std::vector<Expression*>& args, SourceLocation location) {
+
+    assert(partial_call->is_partial_call() && 
+        "TermedExpressionParser::add_to_partial_call_and_push called with not a partial call");
+
+    auto [callee, old_args] = partial_call->call_value();
+    std::vector<Expression*> new_args;
+
+    auto new_arg_it = args.begin();
+    for (auto arg: old_args) {
+        if (arg->expression_type == ExpressionType::missing_arg && new_arg_it != args.end()) {
+            new_args.push_back(*new_arg_it);
+            new_arg_it++;
+            continue;
+        }
+
+        new_args.push_back(arg);
+    }
+
+    auto expression = Expression::call(*compilation_state_, callee, std::move(new_args), 
+        location);
+
+    if (!expression)
+        return fail("Creating partial call to " + callee->to_string() + " failed", location);
+
+    return parse_stack_.push_back(*expression);
 }
 
 void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, Expression* value) {

@@ -74,6 +74,8 @@ private:
     void push_partial_call(Expression* callee_ref, const std::vector<Expression*>& args);
     void push_partial_call(Expression* callee_ref, const std::vector<Expression*>& args,
         SourceLocation location);
+    void add_to_partial_call_and_push(Expression* partial_call, const std::vector<Expression*>& args, 
+        SourceLocation location);
     // convenience function that creates an unary call expression and pushes it onto the parse stack
     void push_unary_operator_call(Expression* operator_ref, Expression* value);
     void apply_type_declaration(Expression* type_declaration, Expression* value);

@@ -44,20 +44,28 @@ Callable* Expression::operator_reference_value() const {
 }
 
 bool Expression::is_partial_call() const {
-    if (expression_type != ExpressionType::call)
-        return false;
-
-    auto [callee, args] = std::get<CallExpressionValue>(value);
-
-    if (args.size() < callee->get_type()->arity())
-        return true;
-
-    for (auto arg: args) {
-        if (arg->expression_type == ExpressionType::missing_arg)
+    switch (expression_type) {
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
+        case ExpressionType::partial_call:
             return true;
-    }
 
-    return false;
+        case ExpressionType::call:{
+            auto [callee, args] = std::get<CallExpressionValue>(value);
+
+            if (args.size() < callee->get_type()->arity())
+                return true;
+
+            for (auto arg: args) {
+                if (arg->expression_type == ExpressionType::missing_arg)
+                    return true;
+            }
+
+            return false;
+        }
+        default:
+            return false;
+    }
 }
 
 bool Expression::is_reduced_value() const {
@@ -271,6 +279,8 @@ std::string Expression::log_message_string() const {
         case ExpressionType::not_implemented:
             return "nonimplemented expression";
 
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_call:
         case ExpressionType::call: {
             std::stringstream output{};
@@ -472,12 +482,56 @@ optional<Expression*> Expression::call(CompilationState& state,
     auto partial_return_type = state.types_->get_function_type(
         *return_type, missing_arg_types, callee_f_type->is_pure());
 
-    assert(args.size() == param_types.size() && "Something went wrong while creating placeholders for \
-missing args");
+    assert(args.size() == param_types.size() && 
+        "Something went wrong while creating placeholders for missing args");
 
     return store.allocate_expression(
-        {ExpressionType::partial_call, CallExpressionValue{callable, args}, partial_return_type, 
-            location});
+        {ExpressionType::partial_call, CallExpressionValue{callable, args}, 
+        partial_return_type, location});
+}
+
+optional<Expression*> Expression::partial_binop_call(CompilationState& state, 
+    Callable* callable, Expression* lhs, Expression* rhs, SourceLocation location) {
+
+    auto& store = *state.ast_store_;
+    auto callee_type = callable->get_type();
+    
+    assert(callable->is_operator() && 
+        "Expression::partial_binop_call called with not an operator");
+    
+    assert(dynamic_cast<Operator*>(callable)->is_binary() && 
+        "Expression::partial_binop_call called with not a binary operator");
+
+    auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
+    auto return_type = callee_f_type->return_type();
+
+    // TODO: deal with declared types
+
+    if (lhs->expression_type == ExpressionType::missing_arg) {
+        assert(callee_f_type->param_type(0) == lhs->type && 
+            "Expression::partial_binop_call called with a non matching lhs type");
+        
+        auto partial_return_type = state.types_->get_function_type(
+            *return_type, {lhs->type}, callee_f_type->is_pure());
+
+        return store.allocate_expression(
+            {ExpressionType::partial_binop_call_left, 
+                CallExpressionValue{callable, {lhs, rhs}}, partial_return_type, 
+                location});
+    }
+    
+    assert(rhs->expression_type == ExpressionType::missing_arg && 
+        "Expression::partial_binop_call called without a missing argument");
+    
+    assert(callee_f_type->param_type(1) == rhs->type && 
+            "Expression::partial_binop_call called with a non matching lhs type");
+
+    auto partial_return_type = state.types_->get_function_type(
+        *return_type, {rhs->type}, callee_f_type->is_pure());
+    return store.allocate_expression(
+            {ExpressionType::partial_binop_call_left, 
+                CallExpressionValue{callable, {lhs, rhs}}, partial_return_type, 
+                location});
 }
 
 Expression* Expression::minus_sign(AST_Store& store, SourceLocation location) {

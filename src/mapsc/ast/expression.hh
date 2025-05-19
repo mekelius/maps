@@ -59,6 +59,8 @@ enum class ExpressionType {
     
     call,                   // value: 
     partial_call,
+    partial_binop_call_left,
+    partial_binop_call_right,
     missing_arg,
 
     deleted,                // value: std::monostate
@@ -135,6 +137,9 @@ struct Expression {
     static std::optional<Expression*> call(
         CompilationState& state, Callable* callable, std::vector<Expression*>&& args, 
         SourceLocation location);
+
+    static std::optional<Expression*> partial_binop_call(CompilationState& state, 
+        Callable* callable, Expression* lhs, Expression* rhs, SourceLocation location);
 
     static Expression* valueless(
         AST_Store& store, ExpressionType expression_type, SourceLocation location);

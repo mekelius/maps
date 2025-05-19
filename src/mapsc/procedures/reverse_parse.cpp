@@ -230,6 +230,8 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
             return *this << arg << " " << (name ? *name : ""); 
         }
 
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_call:
         case ExpressionType::call: {
             auto [callee, args] = std::get<CallExpressionValue>(expression.value);
