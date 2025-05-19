@@ -170,6 +170,8 @@ struct Expression {
 
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();
+    const std::vector<Expression*>& terms() const;
+
     CallExpressionValue& call_value();
     Callable* reference_value() const;
     Callable* operator_reference_value() const;

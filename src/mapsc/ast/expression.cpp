@@ -25,6 +25,12 @@ using Log = LogNoContext;
 std::vector<Expression*>& Expression::terms() {
     return std::get<TermedExpressionValue>(value).terms;
 }
+
+const std::vector<Expression*>& Expression::terms() const {
+    return std::get<TermedExpressionValue>(value).terms;
+}
+
+
 CallExpressionValue& Expression::call_value() {
     return std::get<CallExpressionValue>(value);
 }

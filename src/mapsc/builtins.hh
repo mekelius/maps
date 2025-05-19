@@ -26,16 +26,21 @@ namespace Maps {
 const CT_Scope* get_builtins();
 
 using BuiltinValue = std::variant<maps_Boolean, maps_String, maps_Int, maps_Float>;
-using BuiltinBody = std::variant<External>;
+using BuiltinBody = std::variant<External, Expression>;
 
 class CT_Callable: public Callable {
 public:
-    // CT_Callable(std::string_view name, Expression&& expression);
+    CT_Callable(std::string_view name, const Expression&& expression)
+    :name_(name),
+     builtin_body_(expression),
+     type_(expression.type),
+     location_(BUILTIN_SOURCE_LOCATION) {}
+
     // CT_Callable(std::string_view name, Statement&& statement, const Type& type);
-    // CT_Callable(std::string_view name, BuiltinBody&& body, const Type& type)
-    // :name_(name), 
-    //  builtin_body_(body), 
-    //  type_(&type), location_(BUILTIN_SOURCE_LOCATION) {}
+    CT_Callable(std::string_view name, BuiltinBody&& body, const Type& type)
+    :name_(name),
+     builtin_body_(body), 
+     type_(&type), location_(BUILTIN_SOURCE_LOCATION) {}
 
     constexpr CT_Callable(std::string_view name, External external, const Type& type)
     :name_(name), 
@@ -46,7 +51,7 @@ public:
     virtual bool is_const() const { return true; }
 
     virtual constexpr std::string_view name() const { return name_; }
-    virtual CallableBody const_body() const;
+    virtual const_CallableBody const_body() const;
     virtual constexpr const SourceLocation& location() const { return location_; }
 
     // since statements don't store types, we'll have to store them here
@@ -65,6 +70,10 @@ public:
     }
 
 private:
+    const Expression* get_ptr_to_expression() const {
+        return &std::get<Expression>(builtin_body_);
+    }
+
     std::string_view name_;
     BuiltinBody builtin_body_;
     const Type* type_;
@@ -73,8 +82,8 @@ private:
 
 class CT_Operator: public CT_Callable, public Operator {
 public:
-    // CT_Operator(std::string_view name, const Expression&& expression, 
-    //     Operator::Properties operator_props);
+    CT_Operator(std::string_view name, const Expression&& expression, 
+        Operator::Properties operator_props);
 
     constexpr CT_Operator(std::string_view name, External external, const Type& type, 
         Operator::Properties operator_props)

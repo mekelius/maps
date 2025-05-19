@@ -28,38 +28,38 @@ namespace Maps {
 using Log = LogInContext<LogContext::compiler_init>;
 class Type;
 
-CallableBody CT_Callable::const_body() const {
-    return std::get<External>(builtin_body_);
-    // if (auto external = std::get_if<External>(&builtin_body_)) {
-    //     return *external;
-    // }// } else if (Expression* expression = std::get_if<Expression>(&builtin_body_)) {
-    //     return expression;
-    // }
+const_CallableBody CT_Callable::const_body() const {
+    if (auto external = std::get_if<External>(&builtin_body_)) {
+        return *external;
+    } else if (auto expression = std::get_if<Expression>(&builtin_body_)) {
+        return expression;
+    }
 
+    assert(false && "huh?");
     // return std::visit(overloaded {
     //     [](External external) { return external; },
-    //     [this](Expression expression) { return &expression; },
-    //     [this](Statement statement) { return &statement; }
+    //     [](Expression expression) { return &expression; }
+        // [this](Statement statement) { return &statement; }
     // }, builtin_body_);
 }
 
-// CT_Callable::CT_Callable(std::string_view name, Expression&& expression)
+// CT_Callable::CT_Callable(std::string_view name, const Expression&& expression)
 // :CT_Callable(name, expression, *expression.type)
 // {}
 
 // CT_Callable::CT_Callable(std::string_view name, Statement&& statement, const Type& type)
 // :CT_Callable(name, statement, type) {}
 
-// CT_Operator::CT_Operator(std::string_view name, Expression&& expression, 
-//     Operator::Properties operator_props)
-// :CT_Callable(name, std::move(expression)),
-//     operator_props_(operator_props) {
-// }
+CT_Operator::CT_Operator(std::string_view name, const Expression&& expression, 
+    Operator::Properties operator_props)
+:CT_Callable(name, std::move(expression)),
+    operator_props_(operator_props) {
+}
 
 // ----- BUILTIN DEFINITIONS -----
 
-// CT_Callable true_{"true", Expression::builtin(true, Boolean)};
-// CT_Callable false_{"false", Expression::builtin(false, Boolean)};
+CT_Callable true_{"true", Expression::builtin(true, Boolean)};
+CT_Callable false_{"false", Expression::builtin(false, Boolean)};
 CT_Callable print{"print", External{}, String_to_IO_Void};
 
 // ----- BUILTINS SCOPE -----
@@ -91,8 +91,8 @@ bool init_builtins(CT_Scope& scope) {
     builtins_initialized = true;
 
     return (
-        // init_builtin(scope, true_      ) &&
-        // init_builtin(scope, false_     ) &&
+        init_builtin(scope, true_      ) &&
+        init_builtin(scope, false_     ) &&
         init_builtin(scope, print      ) &&
         init_builtin(scope, plus_Int   ) &&
         init_builtin(scope, mult_Int   )

@@ -98,7 +98,8 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
             if (!body.index())
                 break;
 
-            *this << " = " << body;
+            assert(false && "reverse parsing let statements not implemented");
+            // *this << " = " << body;
                 
             // for (const AST::Type* arg_type: arg_types) {
             //     *this << arg_type->name << " -> ";
@@ -120,7 +121,9 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
         
         case StatementType::assignment: {
             auto [name, body] = std::get<Assignment>(statement.value);
-            *this << name << " = " << body;
+            assert(false && "reverse parsing assignments not implemented");
+
+            // *this << name << " = " << body;
             break;
         }
 
@@ -274,16 +277,16 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 }
 
 // reverse-parse expression into the stream
-ReverseParser& ReverseParser::print_callable(CallableBody body) {
+ReverseParser& ReverseParser::print_callable(const_CallableBody body) {
     switch (body.index()) {
         case 0:
             return *this << "@empty callable body@";
 
         case 1: // expression
-            return *this << *std::get<Expression*>(body);
+            return *this << *std::get<const Expression*>(body);
 
         case 2: // statement
-            return *this << *std::get<Statement*>(body);
+            return *this << *std::get<const Statement*>(body);
 
         default:
             assert(false && "unhandled callable body type in reverse_parse");

@@ -52,7 +52,7 @@ namespace {
 // this should be ran after all the checks are cleared
 [[nodiscard]] bool perform_substitution(Expression& expression, Callable& callee) {
     auto callee_body = callee.const_body();
-    if (auto inner_expression = std::get_if<Expression*>(&callee_body)) {
+    if (auto inner_expression = std::get_if<const Expression*>(&callee_body)) {
         expression = **inner_expression;
         return true;   
     }

@@ -288,7 +288,7 @@ void ParserLayer1::parse_top_level_statement() {
                 (pragmas_->check_flag_value("top-level evaluation", statement->location) || 
                     force_top_level_eval_)) {            
                 std::get<Block>(std::get<Statement*>(
-                    (*compilation_state_->entry_point_)->const_body())->value)
+                    (*compilation_state_->entry_point_)->body())->value)
                         .push_back(statement);
             }
             return;

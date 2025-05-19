@@ -27,6 +27,7 @@ struct Undefined {
 };
 
 using CallableBody = std::variant<Undefined, Expression*, Statement*, External>;
+using const_CallableBody = std::variant<Undefined, const Expression*, const Statement*, External>;
 
 /**
  * Callables represent either expressions or statements, along with extra info like
@@ -39,7 +40,7 @@ class Callable {
 public:
     virtual std::string_view name() const = 0;
     virtual std::string to_string() const { return std::string{name()}; };
-    virtual CallableBody const_body() const = 0;
+    virtual const_CallableBody const_body() const = 0;
     virtual const SourceLocation& location() const = 0;
     virtual const Type* get_type() const = 0;
     virtual std::optional<const Type*> get_declared_type() const = 0;
@@ -79,7 +80,7 @@ public:
     // ----- OVERRIDES ------
     virtual std::string_view name() const { return name_; }
     virtual std::string to_string() const { return name_; }
-    virtual CallableBody const_body() const { return body_; }
+    virtual const_CallableBody const_body() const;
     virtual CallableBody& body() { return body_; }
     virtual const SourceLocation& location() const { return location_; }
 

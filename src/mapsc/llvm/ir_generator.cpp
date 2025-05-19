@@ -287,7 +287,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
     auto callable_body = callable.const_body();
 
     if (const Expression* const* expression = 
-            std::get_if<Maps::Expression*>(&callable_body))
+            std::get_if<const Maps::Expression*>(&callable_body))
         return wrap_value_in_function(callable.to_string(), **expression);
 
     fail("In IR_Generator::handle_global_definition: callable didn't have a function type but wasn't an expression");

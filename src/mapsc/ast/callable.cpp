@@ -21,9 +21,9 @@ namespace Maps {
 bool Callable::is_empty() const {
     return std::visit(overloaded {
         [](External) { return false; },
-        [](Expression*) { return false; },
         [](Undefined) { return true; },
-        [](Statement* statement) { return statement->is_empty(); }
+        [](const Expression*) { return false; },
+        [](const Statement* statement) { return statement->is_empty(); }
     }, const_body());
 }
 
@@ -49,6 +49,15 @@ RT_Callable::RT_Callable(CallableBody body, SourceLocation location)
 
 RT_Callable::RT_Callable(CallableBody body, const Type& type, SourceLocation location)
 :name_("anonymous callable"), body_(body), location_(location), type_(&type) {}
+
+const_CallableBody RT_Callable::const_body() const {
+    return std::visit(overloaded {
+        [](External external) { return const_CallableBody{external}; },
+        [](Undefined undefined) { return const_CallableBody{undefined}; },
+        [](Statement* statement) { return const_CallableBody{statement}; },
+        [](Expression* expression) { return const_CallableBody{expression}; }
+    }, body_);
+}
 
 // TODO: change to std::visitor
 const Type* RT_Callable::get_type() const {
@@ -117,7 +126,7 @@ std::optional<const Type*> RT_Callable::get_declared_type() const {
 
         return declared_type_;
 
-    } else if (auto builtin = std::get_if<External>(&body_)) {
+    } else if (std::holds_alternative<External>(body_)) {
         return type_;
     }
 
@@ -140,8 +149,8 @@ bool RT_Callable::set_declared_type(const Type& type) {
         declared_type_ = &type;
         return true;
 
-    } else if (auto external = std::get_if<External>(&body_)) {
-        LogNoContext::compiler_error("tried to set the declared type on a builtin", location_);
+    } else if (std::holds_alternative<External>(body_)) {
+        LogNoContext::compiler_error("tried to set the declared type on an external", location_);
         assert(false && "tried to set the declared type on a builtin");
         return false;
     }
