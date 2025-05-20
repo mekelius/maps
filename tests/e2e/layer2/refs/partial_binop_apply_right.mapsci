@@ -7,7 +7,7 @@ let d;
 
 a* b            // CHECK: a * b
 a- b            // CHECK: a - b
-a* -b           // CHECK: a * (-b)
+a* -b           // CHECK: a * ( -b )
 a* - b          // CHECK: a * (-b)
 a- - b          // CHECK: a - (-b)
--a+ -b          // CHECK: (-a) + (-b)
+-a+ -b          // CHECK: ( -a ) + ( -b )

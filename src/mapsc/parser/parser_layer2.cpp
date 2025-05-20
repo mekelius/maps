@@ -642,29 +642,8 @@ void TermedExpressionParser::initial_partial_binop_call_right_state() {
             return partial_binop_call_standoff_state();
 
         case GUARANTEED_VALUE:
-            break;
-
         case ExpressionType::call:
-            shift();
-            call_state();
-            switch (current_term()->expression_type) {
-                case GUARANTEED_VALUE:
-                case ExpressionType::reference:
-                case ExpressionType::call:
-                    break;
-
-                default:
-                    return fail(
-                        "Call didn't produce a value for partial application of binary operator", 
-                        current_term()->location);
-            }
-            break;
-
         case ExpressionType::reference:
-            shift();
-            reference_state();
-            break;
-
         case ExpressionType::partially_applied_minus:
         case ExpressionType::prefix_operator_reference:
         case ExpressionType::minus_sign:
@@ -732,12 +711,12 @@ void TermedExpressionParser::value_state() {
         return;
 
     switch (peek()->expression_type) {
-        case ExpressionType::partial_binop_call_both:
-            assert(false && "not implemented");
-
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(peek());
             return value_state();
+
+        case ExpressionType::partial_binop_call_both:
+            assert(false && "not implemented");
 
         case ExpressionType::binary_operator_reference: {
             shift();
