@@ -225,7 +225,22 @@ void TermedExpressionParser::initial_call_state() {
     if (at_expression_end())
         return;
 
-    assert(false && "initial call state not implemented");
+    auto type_to_use = current_term()->declared_type ?
+        *current_term()->declared_type : current_term()->type;
+
+    if (*type_to_use == Hole) {
+        switch (peek()->expression_type) {
+            default:
+                assert(false && "Initial call type inference not implemented");
+        }
+    }
+
+    // known non-nullary function
+    if (type_to_use->arity() > 0)
+        return deferred_call_state();
+
+    // known nullary type
+    return initial_value_state();
 }
 
 void TermedExpressionParser::initial_partial_call_state() {
@@ -332,6 +347,9 @@ void TermedExpressionParser::reduce_prefix_operator() {
     auto value = *pop_term();
     auto op = *pop_term();
     
+    assert(op->expression_type == ExpressionType::prefix_operator_reference && 
+        "reduce_prefix_operator called with not a prefix operator 2nd on the stack");
+
     auto expression = Expression::call(*compilation_state_, op->reference_value(), 
         {value}, op->location);
 
@@ -582,19 +600,19 @@ void TermedExpressionParser::initial_minus_sign_state() {
 
             switch (peek()->expression_type) {
                 case ExpressionType::binary_operator_reference:
-                    reduce_unary_minus_ref();
+                    reduce_unary_minus_call();
                     shift();
                     return post_binary_operator_state();
 
                 case ExpressionType::partial_binop_call_left: {
-                    reduce_unary_minus_ref();
+                    reduce_unary_minus_call();
                     auto location = current_term()->location;
                     add_to_partial_call_and_push(get_term(), {*pop_term()}, location);
                     return initial_call_state();
                 }
 
                 case ExpressionType::minus_sign:
-                    reduce_unary_minus_ref();
+                    reduce_unary_minus_call();
                     parse_stack_.push_back(binary_minus_ref(get_term()->location));
                     return post_binary_operator_state();
 
@@ -801,6 +819,21 @@ where operator didn't hold a reference to a callable");
     parse_stack_.push_back(*reduced);
 }
 
+void TermedExpressionParser::reduce_unary_minus_call() {
+    auto arg = pop_term();
+    assert(arg && "reduce_unary_minus_call called with nothing on the stack");
+
+    assert(current_term()->expression_type == ExpressionType::minus_sign && 
+        "reduce_unary_minus_call called with no minus sign on the stack");
+    auto location = (*pop_term())->location; // eat the minus
+
+    auto call = Expression::call(*compilation_state_, &unary_minus_Int, {*arg}, location);
+    if (!call)
+        return fail("Creating unary call to - failed", location);
+
+    parse_stack_.push_back(*call);
+}
+
 void TermedExpressionParser::initial_type_reference_state() {
     assert(current_term()->expression_type == ExpressionType::type_reference && 
         "TermedExpressionParser::type_specifier_state entered with not a type_specifier/type_reference \
@@ -947,7 +980,7 @@ void TermedExpressionParser::call_expression_state() {
     
     assert(reference->expression_type == ExpressionType::reference 
         && "TermedExpressionParser called with a callee that was not a reference");
-    assert(reference->type->arity() > 0 && "call_expression_state cassed with arity 0");
+    assert(reference->type->arity() > 0 && "call_expression_state called with arity 0");
 
     std::vector<Expression*> args;
     
@@ -989,9 +1022,9 @@ void TermedExpressionParser::partial_call_state() {
 
     // parse args
     for (unsigned int i = 0; i < callee->get_type()->arity(); i++) {
-        if (at_expression_end()) {
+        if (at_expression_end())
             return;
-        }
+        
         // handle missing args left in args list
         if (i < args.size()) {
             if (args.at(i)->expression_type == ExpressionType::missing_arg) {
@@ -1009,6 +1042,29 @@ void TermedExpressionParser::partial_call_state() {
     // expression should already be the one on top
     assert(current_term() == original && "partial_call_state didn't maintain the current_term");
     return;
+}
+
+void TermedExpressionParser::deferred_call_state() {
+    if (at_expression_end())
+        return;
+
+    switch (peek()->expression_type) {
+        case GUARANTEED_VALUE:
+
+        case ExpressionType::binary_operator_reference:
+        case ExpressionType::minus_sign:
+        case ExpressionType::call:
+        case ExpressionType::reference:
+        case TYPE_DECLARATION_TERM:
+            assert(false && "Deferred call state not implemented");
+
+        default:
+            break;
+    }
+
+    return fail("Unexpected " + peek()->log_message_string() + 
+        ", expected an argument, operator or a type declaration", 
+        peek()->location);
 }
 
 Expression* TermedExpressionParser::handle_arg_state(

@@ -71,6 +71,7 @@ private:
 
     // reductions
     void reduce_binop_call();
+    void reduce_unary_minus_call();
     void reduce_partial_binop_call_right();
     void reduce_unary_minus_ref();
     void reduce_prefix_operator();
@@ -97,6 +98,8 @@ private:
       
     void call_expression_state();
     void partial_call_state();
+    void deferred_call_state();
+
     Expression* handle_arg_state(Callable* callee, const std::vector<Expression*>& args);
 
     // creating minus refs
