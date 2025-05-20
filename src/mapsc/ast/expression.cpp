@@ -418,12 +418,6 @@ Expression* Expression::operator_reference(AST_Store& store, Callable* callable,
     return store.allocate_expression(operator_reference(callable, location));
 }
 
-void Expression::convert_to_operator_reference(Callable* callable) {
-    auto declared_type = this->declared_type;
-    *this = operator_reference(callable, location);
-    this->declared_type = declared_type;
-}
-
 void Expression::convert_to_partial_binop_minus_call_left(AST_Store& store) {
     if (expression_type != ExpressionType::partially_applied_minus) {
         assert(false && 
@@ -464,8 +458,37 @@ void Expression::convert_to_unary_minus_call() {
     type = &Int;
 }
 
+// do we even have to do anything?
 void Expression::convert_to_partial_call() {
     return;
+}
+
+void Expression::convert_to_reference(Callable* callable) {
+    expression_type = ExpressionType::reference;
+    value = callable;
+    type = callable->get_type();
+}
+
+void Expression::convert_to_operator_reference(Callable* callable) {
+    assert(callable->is_operator() && 
+        "convert_to_operator_reference called with not an operator");
+
+    auto op = dynamic_cast<Operator*>(callable);
+
+    switch (op->fixity()) {
+        case Operator::Fixity::binary:
+            expression_type = ExpressionType::binary_operator_reference;
+            break;
+        case Operator::Fixity::unary_prefix:
+            expression_type = ExpressionType::prefix_operator_reference;
+            break;
+        case Operator::Fixity::unary_postfix:
+            expression_type = ExpressionType::postfix_operator_reference;
+            break;
+    }
+
+    value = callable;
+    type = callable->get_type();
 }
 
 // valueless expression types are tie, empty, syntax_error and not_implemented

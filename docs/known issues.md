@@ -2,6 +2,7 @@
 
 ## Critical
 
+- 8* reduces to 8
 - REPL should check if a definition can produce valid IR before saving it, currently easy to get stuck
     - also allow deleting names
 - Callable::attempt_simplify doesn't delete the nodes when simplifying single-statement blocks and sometimes segfaults (the problem line is commented out atm)
