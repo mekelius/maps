@@ -281,6 +281,9 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 
         case ExpressionType::missing_arg:
             return *this << "@missing arg@";
+
+        case ExpressionType::partial_binop_call_both:
+            assert(false && "not implemented");
     }
 }
 

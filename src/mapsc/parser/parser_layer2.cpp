@@ -256,6 +256,9 @@ void TermedExpressionParser::initial_value_state() {
         return;
 
     switch (peek()->expression_type) {
+        case ExpressionType::partial_binop_call_both:
+            assert(false && "not implemented");
+
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(peek());
             return initial_value_state();
@@ -356,6 +359,10 @@ void TermedExpressionParser::reduce_to_partial_binop_call_right() {
     parse_stack_.push_back(*call);
 }
 
+void TermedExpressionParser::reduce_to_partial_binop_call_both() {
+    assert(false && "not implemented");
+}
+
 
 void TermedExpressionParser::reduce_unary_minus_ref() {
     parse_stack_.push_back(unary_minus_ref((*pop_term())->location));
@@ -411,6 +418,9 @@ void TermedExpressionParser::initial_goto() {
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(current_term());
             return initial_goto();
+
+        case ExpressionType::partial_binop_call_both:
+            assert(false && "not implemented");
 
         // terminals
         case ExpressionType::reference:
@@ -479,9 +489,32 @@ void TermedExpressionParser::initial_binary_operator_state() {
             handle_termed_sub_expression(peek());
             return initial_binary_operator_state();
 
+        case ExpressionType::partial_binop_call_both:
+            assert(false && "not implemented");
+
         case GUARANTEED_VALUE:
+            precedence_stack_.push_back(
+                dynamic_cast<Operator*>(current_term()->operator_reference_value())
+                    ->precedence());
             shift();
-            return reduce_to_partial_binop_call_left();
+            initial_value_state();
+
+            // TODO: look at the precedence stack
+
+            switch (current_term()->expression_type) {
+                case GUARANTEED_VALUE:
+                case POTENTIAL_FUNCTION:
+                    reduce_to_partial_binop_call_left();
+                    return initial_partial_binop_call_left_state();
+
+                case ExpressionType::partial_binop_call_right:
+                    reduce_to_partial_binop_call_both();
+                    return initial_partial_binop_call_both_state();
+
+                default:
+                    return fail("Unexpected " + current_term()->log_message_string() + 
+                        ", expected a value", current_term()->location);
+            }
 
         case ExpressionType::minus_sign:{
             auto location = get_term()->location;
@@ -781,6 +814,14 @@ void TermedExpressionParser::initial_partial_binop_call_left_state() {
     assert(false && "not implemented");
 }
 
+void TermedExpressionParser::initial_partial_binop_call_both_state() {
+    if (at_expression_end())
+        return;
+
+    assert(false && "not implemented");
+}
+
+
 void TermedExpressionParser::partial_binop_call_standoff_state() {
     assert(false && "not implemented");
 }
@@ -823,6 +864,7 @@ void TermedExpressionParser::post_binary_operator_state() {
             return compare_precedence_state();
         }
 
+        case ExpressionType::partial_binop_call_both:
         case ExpressionType::partially_applied_minus:
         case ExpressionType::partial_call:
         case ExpressionType::minus_sign:

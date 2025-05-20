@@ -282,6 +282,9 @@ std::string Expression::log_message_string() const {
         case ExpressionType::not_implemented:
             return "nonimplemented expression";
 
+        case ExpressionType::partial_binop_call_both:
+            assert(false && "not implemented");
+
         case ExpressionType::partial_binop_call_left:
         case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_call:
@@ -582,6 +585,12 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
             {ExpressionType::partial_binop_call_right, 
                 CallExpressionValue{callable, {lhs, rhs}}, partial_return_type, 
                 location});
+}
+
+static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
+    Callable* lhs, Expression* lambda, Callable* rhs, SourceLocation location) {
+
+    assert(false && "not implemented");
 }
 
 Expression* Expression::partially_applied_minus(AST_Store& store, Expression* rhs, 

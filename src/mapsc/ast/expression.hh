@@ -62,6 +62,7 @@ enum class ExpressionType {
     partial_call,
     partial_binop_call_left,
     partial_binop_call_right,
+    partial_binop_call_both,
     partially_applied_minus,
     missing_arg,
 
@@ -143,6 +144,10 @@ struct Expression {
 
     static std::optional<Expression*> partial_binop_call(CompilationState& state, 
         Callable* callable, Expression* lhs, Expression* rhs, SourceLocation location);
+
+    // not implemented
+    static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
+        Callable* lhs, Expression* lambda, Callable* rhs, SourceLocation location);
     
     static Expression* partially_applied_minus(AST_Store& store, 
         Expression* rhs, SourceLocation location);
