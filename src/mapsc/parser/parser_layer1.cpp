@@ -88,7 +88,7 @@ void ParserLayer1::run_parse(std::istream& source_is) {
         int prev_buf_slot = which_buf_slot_; // a bit of a hack, an easy way to do the assertion below
         #endif
 
-        parse_top_level_statement();
+        parse_top_level_chunk();
 
         assert(which_buf_slot_ != prev_buf_slot && 
             "Parser::parse_top_level_statement didn't advance the tokenstream");
@@ -208,28 +208,12 @@ std::optional<Definition*> ParserLayer1::lookup_identifier(const std::string& id
 
 // ----- EXPRESSION AND STATEMENT HELPERS -----
 
-void ParserLayer1::expression_start() {
-    current_expression_start_.push_back(current_token().location);
+Definition* ParserLayer1::create_definition(DefinitionBody body, SourceLocation location) {
+    return ast_store_->allocate_definition(RT_Definition{body, location});
 }
 
-void ParserLayer1::statement_start() {
-    current_statement_start_.push_back(current_token().location);
-}
-
-// creates an expression using ast_, marking the location as the current_expression_start_
-// or if it's not set, the current token location
-void ParserLayer1::expression_end() {
-    current_expression_start_.pop_back();
-}
-
-// creates a statement using ast_, marking the location as the current_statement_start_
-// or if it's not set, the current token location
-Statement* ParserLayer1::create_statement(StatementType statement_type) {
-    if (current_statement_start_.empty())
-        return ast_store_->allocate_statement({statement_type, current_token().location});
-
-    Statement* statement = ast_store_->allocate_statement({statement_type, current_statement_start_.back()});
-    current_statement_start_.pop_back();
+Statement* ParserLayer1::create_statement(StatementType statement_type, SourceLocation location) {
+    Statement* statement = ast_store_->allocate_statement({statement_type, location});
     return statement;
 }
 
@@ -268,27 +252,47 @@ void ParserLayer1::handle_pragma() {
     get_token();
 }
 
+Definition* ParserLayer1::broken_definition_helper(const std::string& message, 
+    SourceLocation location) {
+    
+    fail(message);
+    Definition* definition = create_definition(UserError{}, location);
+    reset_to_top_level();
+    return definition;
+}
 
 // --------- STATEMENTS --------
 
-Statement* ParserLayer1::broken_statement_helper(const std::string& message) {
+Statement* ParserLayer1::broken_statement_helper(const std::string& message, SourceLocation location) {
     fail(message);
-    Statement* statement = create_statement(StatementType::broken);
+    Statement* statement = create_statement(StatementType::broken, location);
     reset_to_top_level();
     return statement;
 }
 
-void ParserLayer1::parse_top_level_statement() {
+Chunk ParserLayer1::parse_top_level_chunk() {
     Statement* statement;
 
     switch (current_token().token_type) {
         case TokenType::pragma:
             handle_pragma();
-            return parse_top_level_statement();
+            return parse_top_level_chunk();
 
         case TokenType::eof:
             finished_ = true;
-            return;
+            return std::monostate{};
+
+        case TokenType::reserved_word:
+            if (current_token().string_value() == "let") {
+                log("Scoping not yet implemented", LogLevel::warning);
+                return parse_let_definition();
+            }
+
+            if (current_token().string_value() == "operator")
+                return parse_operator_definition();
+            
+            assert(false && "Unhandled reserved word in Parser::parse_top_level_statement");
+            
 
         default:
             // TODO: check pragmas for top-level statement types
@@ -301,7 +305,7 @@ void ParserLayer1::parse_top_level_statement() {
                     (*compilation_state_->entry_point_)->body())->value)
                         .push_back(statement);
             }
-            return;
+            return statement;
     }
 }
 
@@ -311,15 +315,17 @@ DefinitionBody ParserLayer1::parse_definition_body() {
 }
 
 Statement* ParserLayer1::parse_non_global_statement() {
+    auto location = current_token().location;
+
     switch (current_token().token_type) {
         case TokenType::pragma:
             fail("unexpected non top-level pragma");
             reset_to_top_level();
-            return create_statement(StatementType::broken); 
+            return create_statement(StatementType::broken, location); 
 
         case TokenType::eof:
             finished_ = true;
-            return create_statement(StatementType::broken);
+            return create_statement(StatementType::broken, location);
 
         default:
             return parse_statement();
@@ -327,22 +333,13 @@ Statement* ParserLayer1::parse_non_global_statement() {
 }
 
 Statement* ParserLayer1::parse_statement() {
+    auto location = current_token().location;
+
     switch (current_token().token_type) {
         case TokenType::eof:
             finished_ = true;
-            return create_statement(StatementType::empty);
+            return create_statement(StatementType::empty, location);
 
-        case TokenType::reserved_word:
-            if (current_token().string_value() == "let") {
-                log("Scoping not yet implemented", LogLevel::warning);
-                return parse_let_statement();
-            }
-
-            if (current_token().string_value() == "operator")
-                return parse_operator_definition();
-            
-            assert(false && "Unhandled reserved word in Parser::parse_top_level_statement");
-            
         case TokenType::identifier:
             if (peek().token_type == TokenType::operator_t && peek().string_value() == "=") {
                 return parse_assignment_statement();
@@ -365,33 +362,35 @@ Statement* ParserLayer1::parse_statement() {
 
         case TokenType::semicolon:
             get_token(); // eat the semicolon
-            return create_statement(StatementType::empty);
+            return create_statement(StatementType::empty, location);
 
         // ----- ignored -----
         case TokenType::dummy:
             get_token(); // eat the dummy
-            return create_statement(StatementType::empty);
+            return create_statement(StatementType::empty, location);
 
         case TokenType::indent_block_end:
             assert(false && "parse_statement called at indent_block_end");
-            return create_statement(StatementType::broken);
+            return create_statement(StatementType::broken, location);
         
         case TokenType::indent_error_fatal:
             fail("indent error");
             reset_to_top_level();
-            return create_statement(StatementType::broken);
+            return create_statement(StatementType::broken, location);
 
         // ---- errors -----
         default:
             fail("Unexpected "+ current_token().get_string() + ", expected a statement");
             reset_to_top_level();
-            return create_statement(StatementType::broken);
+            return create_statement(StatementType::broken, location);
     }
 }
 
 Statement* ParserLayer1::parse_expression_statement() {
+    auto location = current_token().location;
+
     Expression* expression = parse_expression();
-    Statement* statement = create_statement(StatementType::expression_statement);
+    Statement* statement = create_statement(StatementType::expression_statement, location);
     statement->value = expression;
 
     assert(is_block_starter(current_token()) || is_statement_separator(current_token()) && 
@@ -404,8 +403,8 @@ Statement* ParserLayer1::parse_expression_statement() {
     return statement;
 }
 
-Statement* ParserLayer1::parse_let_statement() {
-    statement_start();
+Definition* ParserLayer1::parse_let_definition() {
+    auto location = current_token().location;
     
     switch (get_token().token_type) {
         case TokenType::identifier:
@@ -416,9 +415,10 @@ Statement* ParserLayer1::parse_let_statement() {
                 // check if name already exists
                 if (identifier_exists(name)) {
                     fail("Attempting to redefine identifier " + name);
-                    Statement* statement = create_statement(StatementType::illegal);
+                    Statement* statement = create_statement(StatementType::illegal, location);
                     statement->value = "Attempting to redefine identifier: " + name;
-                    return statement;
+                    return ast_store_->allocate_definition(RT_Definition{UserError{}, 
+                        location});
                 }
 
                 get_token(); // eat the identifier
@@ -428,13 +428,12 @@ Statement* ParserLayer1::parse_let_statement() {
                         LogLevel::debug_extra);
                     
                     get_token(); // eat the semicolon
-                    Statement* statement = create_statement(StatementType::let);
 
                     // create an unitialized identifier
-                    create_identifier(name, Undefined{}, statement->location);
-                    statement->value = Let{ name , Undefined{} };
+                    create_identifier(name, Undefined{}, location);
 
-                    return statement;
+                    return ast_store_->allocate_definition(RT_Definition{UserError{}, 
+                        location});
                 }
 
                 if (is_assignment_operator(current_token())) {
@@ -442,60 +441,59 @@ Statement* ParserLayer1::parse_let_statement() {
 
                     DefinitionBody body = parse_definition_body();
 
-                    Statement* statement = create_statement(StatementType::let);
-                    statement->value = Let{name, body};
-
-                    create_identifier(name, body, statement->location);
+                    create_identifier(name, body, location);
                     log("parsed let statement", LogLevel::debug_extra);
-                    return statement;
+                    return ast_store_->allocate_definition(RT_Definition{UserError{}, 
+                        location});
                 }
 
                 get_token();
                 fail("unexpected " + current_token().get_string() + ", in let-statement");
                 reset_to_top_level();
-                return create_statement(StatementType::broken);
+                return ast_store_->allocate_definition(RT_Definition{UserError{}, 
+                        location});
             }
 
         case TokenType::operator_t:
-            log("operator overloading not yet implemented, ignoring", LogLevel::warning);
-            reset_to_top_level();
-            return create_statement(StatementType::empty);
+            return broken_definition_helper(
+                "operator overloading not yet implemented, ignoring", location);
 
         default:
-            fail("unexpected token: " + current_token().get_string() + " in let statement");
-            reset_to_top_level();
-            return create_statement(StatementType::broken);
+            return broken_definition_helper(
+                "unexpected token: " + current_token().get_string() + " in let definition", location);
     }
 }
 
-Statement* ParserLayer1::parse_operator_definition() {
-    statement_start();
+Definition* ParserLayer1::parse_operator_definition() {
+    auto location = current_token().location;
 
     switch (get_token().token_type) {
         case TokenType::operator_t: {
             std::string op_string = current_token().string_value();
 
             if (compilation_state_->builtins_->identifier_exists(op_string)) 
-                return broken_statement_helper("attempting to redefine built-in operator: " + op_string);
+                return broken_definition_helper(
+                    "attempting to redefine built-in operator: " + op_string, location);
 
             if (compilation_state_->globals_.identifier_exists(op_string))
-                return broken_statement_helper("attempting to redefine user-defined operator: " + op_string);
+                return broken_definition_helper(
+                    "attempting to redefine user-defined operator: " + op_string, location);
 
             get_token();
 
             if (!is_assignment_operator(current_token()))
-                return broken_statement_helper(
+                return broken_definition_helper(
                     "unexpected token: " + current_token().get_string() + 
-                    " in operator statement, expected \"=\"");
+                    " in operator statement, expected \"=\"", location);
 
             get_token();
 
             if (current_token().token_type != TokenType::reserved_word || 
                 (current_token().string_value() != "unary" && 
                 current_token().string_value() != "binary"))
-                    return broken_statement_helper(
+                    return broken_definition_helper(
                         "unexpected token: " + current_token().get_string() + 
-                        " in operator statement, expected \"unary|binary\"");
+                        " in operator statement, expected \"unary|binary\"", location);
 
             unsigned int arity = current_token().string_value() == "binary" ? 2 : 1;
 
@@ -506,7 +504,7 @@ Statement* ParserLayer1::parse_operator_definition() {
                 if (current_token().token_type != TokenType::reserved_word || 
                         (current_token().string_value() != "prefix" && 
                         current_token().string_value() != "postfix"))
-                    return broken_statement_helper("unexpected token: " + current_token().get_string() + 
+                    ("unexpected token: " + current_token().get_string() + 
                         " in unary operator statement, expected \"prefix|postfix\"");
 
                 assert(current_token().get_string() == "prefix" && "postfix operators not implemented");
@@ -522,24 +520,23 @@ Statement* ParserLayer1::parse_operator_definition() {
                     body = parse_expression();
                 }
 
-                Statement* statement = create_statement(StatementType::operator_definition);
-                statement->value = OperatorStatementValue{op_string, 1, body};
 
-                compilation_state_->globals_.create_identifier(ast_store_->allocate_definition(
-                    RT_Operator{op_string, body, {fixity}, statement->location}));
+                auto definition = ast_store_->allocate_definition(
+                    RT_Operator{op_string, body, {fixity}, location});
+                compilation_state_->globals_.create_identifier(definition);
                 log("parsed let statement", LogLevel::debug_extra);
-                return statement;
+                return definition;
             }
 
             // BINARY OPERATOR
             if (current_token().token_type != TokenType::number)
-                return broken_statement_helper("unexpected token: " + current_token().get_string() + 
-                    " in unary operator statement, expected precedence specifier(positive integer)");
+                return broken_definition_helper("unexpected token: " + current_token().get_string() + 
+                    " in unary operator statement, expected precedence specifier(positive integer)", location);
 
             unsigned int precedence = std::stoi(current_token().string_value());
             if (precedence >= Operator::MAX_PRECEDENCE)
-                return broken_statement_helper("max operator precedence is " + 
-                    std::to_string(Operator::MAX_PRECEDENCE));
+                return broken_definition_helper("max operator precedence is " + 
+                    std::to_string(Operator::MAX_PRECEDENCE), location);
 
             get_token(); // eat the precedence specifier
 
@@ -550,27 +547,26 @@ Statement* ParserLayer1::parse_operator_definition() {
                 body = parse_expression();
             }
 
-            Statement* statement = create_statement(StatementType::operator_definition);
-            statement->value = OperatorStatementValue{op_string, 2, body};
-
-            compilation_state_->globals_.create_identifier(ast_store_->allocate_definition(
+            auto definition = ast_store_->allocate_definition(
                 RT_Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
-                        statement->location}));
+                        location});
+            compilation_state_->globals_.create_identifier(definition);
             log("parsed let statement", LogLevel::debug_extra);
-            return statement;   
+            return definition;
 
         }
         default:
-            return broken_statement_helper("unexpected token: " + current_token().get_string() + 
-                " in operator statement");            
+            return broken_definition_helper("unexpected token: " + current_token().get_string() + 
+                " in operator statement", location);     
     }
 }
 
 Statement* ParserLayer1::parse_assignment_statement() {
+    auto location = current_token().location;
+
     assert(current_token().token_type == TokenType::identifier 
         && "parse_assignment_statement called with current_token that was not an identifier");
 
-    statement_start();
     std::string name = current_token().string_value();
 
     get_token();
@@ -582,7 +578,7 @@ Statement* ParserLayer1::parse_assignment_statement() {
     get_token(); // eat '='
 
     Statement* inner_statement = parse_statement();
-    Statement* statement = create_statement(StatementType::assignment);
+    Statement* statement = create_statement(StatementType::assignment, location);
     statement->value = Assignment{name, inner_statement};
 
     // expect parse_statement to eat the semicolon etc.
@@ -593,13 +589,14 @@ Statement* ParserLayer1::parse_assignment_statement() {
 }
 
 Statement* ParserLayer1::parse_block_statement() {
+    auto location = current_token().location;
+
     assert(is_block_starter(current_token())
         && "parse_block_statement called with current token that is not a block starter");
 
     unsigned int indent_at_start = indent_level_;
     unsigned int curly_brace_at_start = curly_brace_level_;
 
-    statement_start();
     log("start parsing block statement", LogLevel::debug_extra);
     
     // determine the block type, i.e. curly-brace or indent
@@ -616,12 +613,13 @@ Statement* ParserLayer1::parse_block_statement() {
         default:
             fail("Something went wrong: " + current_token().get_string() + " is not a block starter");
             assert(false && "unhandled block started in parse_block_statement");
-            return ast_store_->allocate_statement({StatementType::broken, current_token().location});
+            return ast_store_->allocate_statement(
+                {StatementType::broken, current_token().location});
     }
 
     get_token(); // eat start token
 
-    Statement* statement = create_statement(StatementType::block);
+    Statement* statement = create_statement(StatementType::block, location);
     // fetch the substatements vector
     std::vector<Statement*>* substatements = &std::get<Block>(statement->value);
 
@@ -691,12 +689,14 @@ bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
 }
 
 Statement* ParserLayer1::parse_return_statement() {
+    auto location = current_token().location;
+
     assert(current_token().token_type == TokenType::reserved_word && current_token().string_value() == "return" 
         && "parse_return_statement called with current token other than \"return\"");
 
     get_token(); //eat return
     Expression* expression = parse_expression();
-    Statement* statement = create_statement(StatementType::return_);
+    Statement* statement = create_statement(StatementType::return_, location);
     statement->value = expression;
 
     assert(is_statement_separator(current_token()) 
@@ -710,11 +710,12 @@ Statement* ParserLayer1::parse_return_statement() {
 // ----------- EXPRESSIONS ----------
 
 Expression* ParserLayer1::parse_expression() {
+    auto location = current_token().location;
+
     switch (current_token().token_type) {
         case TokenType::eof: {
             Expression* expression = Expression::valueless(*ast_store_,
-                ExpressionType::syntax_error, current_expression_start_.back());
-            expression_end();
+                ExpressionType::syntax_error, location);
             return expression;
         }
 
@@ -790,8 +791,7 @@ Expression* ParserLayer1::parse_expression() {
             if (current_token().string_value() != "let") {
                 fail("unknown " + current_token().get_string());
                 Expression* expression = Expression::valueless(*ast_store_, 
-                    ExpressionType::syntax_error, current_expression_start_.back());
-                expression_end();
+                    ExpressionType::syntax_error, location);
                 expression->value = "unknown " + current_token().get_string();
                 
                 get_token();
@@ -799,8 +799,7 @@ Expression* ParserLayer1::parse_expression() {
             }
             fail("Scoped let not yet implemented");
             Expression* expression = Expression::valueless(*ast_store_, 
-                ExpressionType::syntax_error, current_expression_start_.back());
-            expression_end();
+                ExpressionType::syntax_error, location);
             expression->value = "Scoped let not yet implemented";
             
             get_token();
@@ -809,8 +808,7 @@ Expression* ParserLayer1::parse_expression() {
             
         default:
             fail("unexpected " + current_token().get_string() + ", at the start of an expression");
-            Expression* expression = Expression::valueless(*ast_store_, ExpressionType::syntax_error, current_expression_start_.back());
-            expression_end();
+            Expression* expression = Expression::valueless(*ast_store_, ExpressionType::syntax_error, location);
             expression->value = "unexpected " + current_token().get_string() + ", at the start of an expression";
 
             get_token();
@@ -821,7 +819,6 @@ Expression* ParserLayer1::parse_expression() {
 // expects to be called with the first term as current
 // tied expression = no whitespace
 Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
-    expression_start();
     Expression* expression = Expression::termed(*ast_store_, {}, current_token().location);
 
     log(
@@ -922,7 +919,6 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
         log("removed \"parentheses\" from " + expression->location.to_string(), 
             LogLevel::debug_extra);
-        expression_end();
         return term;
     }
 
@@ -940,7 +936,6 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     
     log("finished parsing termed expression from " + expression->location.to_string(), 
         LogLevel::debug_extra);
-    expression_end();
     return expression;
 }
 
@@ -1015,11 +1010,9 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
 
 Expression* ParserLayer1::parse_access_expression() {
     // TODO: eat until the closing character
-    expression_start();
     Expression* expression = Expression::valueless(*ast_store_, 
         ExpressionType::not_implemented, current_token().location);
     get_token();
-    expression_end();
     return expression;
 }
 
@@ -1028,7 +1021,6 @@ Expression* ParserLayer1::parse_ternary_expression() {
 }
 
 Expression* ParserLayer1::parse_lambda_expression() {
-    expression_start();
     auto location = current_token().location;
     get_token(); // eat the '\'
 
@@ -1041,7 +1033,6 @@ Expression* ParserLayer1::parse_lambda_expression() {
 
     DefinitionBody body = parse_definition_body();
 
-    expression_end();
     return Expression::lambda(*ast_store_, btd, body, location);
 }
 
@@ -1053,7 +1044,6 @@ Expression* ParserLayer1::parse_binding_type_declaration() {
 
 // expects to be called with the opening parenthese as the current_token_
 Expression* ParserLayer1::parse_parenthesized_expression() {
-    expression_start();
     get_token(); // eat '('
 
     if (current_token().token_type == TokenType::parenthesis_close) {
@@ -1061,7 +1051,6 @@ Expression* ParserLayer1::parse_parenthesized_expression() {
         Expression* expression = Expression::valueless(*ast_store_, 
             ExpressionType::syntax_error, current_token().location);
         get_token();
-        expression_end();
         return expression;
     }
 
@@ -1076,7 +1065,6 @@ Expression* ParserLayer1::parse_parenthesized_expression() {
 }
 
 Expression* ParserLayer1::parse_mapping_literal() {
-    expression_start();
     Expression* expression = Expression::valueless(*ast_store_, ExpressionType::not_implemented, 
         current_token().location);
     get_token();
@@ -1084,7 +1072,6 @@ Expression* ParserLayer1::parse_mapping_literal() {
 
     fail("parsed mapping literal (not implemented)");
 
-    expression_end();
     return expression;
 }
 
@@ -1202,9 +1189,6 @@ Expression* ParserLayer1::handle_type_identifier() {
 
 void ParserLayer1::reset_to_top_level() {
     log("resetting to global scope", LogLevel::debug);
-
-    current_expression_start_ = {};
-    current_statement_start_ = {};
 
     while (
         current_token().token_type != TokenType::eof          && (

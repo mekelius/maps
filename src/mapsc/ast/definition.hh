@@ -26,8 +26,14 @@ struct Undefined {
     bool operator==(T&) const { return false; }
 };
 
-using DefinitionBody = std::variant<Undefined, Expression*, Statement*, External>;
-using const_DefinitionBody = std::variant<Undefined, const Expression*, const Statement*, External>;
+struct UserError {
+    template<typename T>
+    bool operator==(T&) const { return false; }
+};
+
+using DefinitionBody = std::variant<Undefined, Expression*, Statement*, External, UserError>;
+using const_DefinitionBody = 
+    std::variant<Undefined, const Expression*, const Statement*, External, UserError>;
 
 /**
  * Definitions represent either expressions or statements, along with extra info like

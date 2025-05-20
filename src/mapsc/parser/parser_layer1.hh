@@ -15,6 +15,7 @@
 #include "mapsc/ast/definition.hh"
 #include "mapsc/parser/token.hh"
 #include "mapsc/parser/lexer.hh"
+#include "mapsc/ast/chunk.hh"
 
 
 namespace Maps {
@@ -48,6 +49,8 @@ protected:
     // declare the program invalid. Parsing may still continue, but no final output should be produced
     void declare_invalid();
 
+    void reset_to_top_level();
+
     void fail(const std::string& message, SourceLocation location);
     void fail(const std::string& message);
     Expression* fail_expression(const std::string& message, SourceLocation location);
@@ -63,27 +66,24 @@ protected:
     void create_identifier(const std::string& name, SourceLocation location);
     std::optional<Definition*> lookup_identifier(const std::string& name);
 
-    // mark down the location for logging purposes
-    void expression_start();
-    void expression_end();
-
-    void statement_start();
-
-    // creates an expression using ast_, marking the location as the current_expression_start_
-    Statement* create_statement(StatementType statement_type);
+    Definition* create_definition(DefinitionBody body, SourceLocation location);
+    // creates an expression using ast_, marking the location as the expression_location_stack_
+    Statement* create_statement(StatementType statement_type, SourceLocation location);
 
     void handle_pragma();
 
-    Statement* broken_statement_helper(const std::string& message);
-
-    void parse_top_level_statement();
+    Chunk parse_top_level_chunk();
+    Definition* broken_definition_helper(const std::string& message, SourceLocation location);
+    Statement* broken_statement_helper(const std::string& message, SourceLocation location);
+    
+    Definition* parse_let_definition();
+    Definition* parse_operator_definition();
     DefinitionBody parse_definition_body();
+    
     Statement* parse_non_global_statement();
     Statement* parse_statement();
 
     Statement* parse_expression_statement();
-    Statement* parse_let_statement();
-    Statement* parse_operator_definition();
     Statement* parse_assignment_statement();
     Statement* parse_return_statement();
     Statement* parse_block_statement();
@@ -108,15 +108,12 @@ protected:
 
     Expression* parse_binding_type_declaration();
 
-
     // ----- TERMINALS -----
     Expression* handle_string_literal();
     Expression* handle_numeric_literal();
     Expression* handle_identifier();
     Expression* handle_type_identifier();
     Expression* handle_type_constructor_identifier();
-
-    void reset_to_top_level();
     
     std::unique_ptr<Lexer> lexer_;
     CompilationState* const compilation_state_;
@@ -125,9 +122,6 @@ protected:
     
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_ = { Token::dummy_token, Token::dummy_token };
-
-    std::vector<SourceLocation> current_expression_start_;
-    std::vector<SourceLocation> current_statement_start_;
 
     bool force_top_level_eval_ = false;
 
@@ -138,12 +132,6 @@ protected:
     unsigned int angle_bracket_level_ = 0;
 
     bool finished_ = false;
-
-    // #ifdef DOCTEST_LIBRARY_INCLUDED
-    
-    // #include "layer1_tests.hh"
-
-    // #endif
 };
 
 } // namespace Maps

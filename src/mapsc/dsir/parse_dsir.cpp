@@ -257,7 +257,7 @@ private:
     optional<Definition*> parse_declaration() {
         switch (current_token_.token_type) {
             case Token::Type::let:
-                return parse_let_declaration();
+                return parse_let_definition();
 
             case Token::Type::fn:
                 return parse_fn_declaration();
@@ -298,7 +298,7 @@ private:
         // create definition;
     }
 
-    optional<Definition*> parse_let_declaration() {
+    optional<Definition*> parse_let_definition() {
         if (current_token_.token_type != Token::Type::let) {
             fail("Unexpected " + current_token_.to_string() + ", expected let");
             return nullopt;

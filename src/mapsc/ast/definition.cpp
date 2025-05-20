@@ -20,6 +20,7 @@ namespace Maps {
 
 bool Definition::is_empty() const {
     return std::visit(overloaded {
+        [](UserError) { return true; },
         [](External) { return false; },
         [](Undefined) { return true; },
         [](const Expression*) { return false; },
@@ -50,8 +51,10 @@ RT_Definition::RT_Definition(DefinitionBody body, SourceLocation location)
 RT_Definition::RT_Definition(DefinitionBody body, const Type& type, SourceLocation location)
 :name_("anonymous definition"), body_(body), location_(location), type_(&type) {}
 
+
 const_DefinitionBody RT_Definition::const_body() const {
     return std::visit(overloaded {
+        [](UserError error) { return const_DefinitionBody{error}; },
         [](External external) { return const_DefinitionBody{external}; },
         [](Undefined undefined) { return const_DefinitionBody{undefined}; },
         [](Statement* statement) { return const_DefinitionBody{statement}; },

@@ -55,8 +55,7 @@ using Maps::Helpers::capitalize;
                       case StatementType::illegal:\
                       case StatementType::deleted
 
-#define IGNORED_STATEMENT_TYPE StatementType::operator_definition:\
-                          case StatementType::empty
+#define IGNORED_STATEMENT_TYPE StatementType::empty
 
 
 using Log = Maps::LogInContext<Maps::LogContext::ir_gen>;
@@ -367,7 +366,6 @@ bool IR_Generator::handle_statement(const Statement& statement) {
             return builder_->CreateRet(*value);
         }
 
-        case StatementType::let:
         case StatementType::assignment:
             assert(false && "not implemented");
             return false;

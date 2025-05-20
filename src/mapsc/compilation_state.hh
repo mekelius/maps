@@ -154,11 +154,6 @@ bool CompilationState::walk_statement(T visitor, Statement* statement) {
             }
             return true;
 
-        case StatementType::let:
-            assert(false && "not implemented");
-            return false;
-
-        case StatementType::operator_definition:
         default:
             return true;
     }

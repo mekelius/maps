@@ -24,12 +24,6 @@ Statement::Statement(StatementType statement_type, SourceLocation location)
         case StatementType::block:
             value = Block{};
             break;  
-        case StatementType::let:
-            value = Let{};
-            break;
-        case StatementType::operator_definition:
-            value = OperatorStatementValue{};
-            break;
         case StatementType::assignment:
             break;          
         case StatementType::return_:
@@ -60,12 +54,6 @@ std::string Statement::log_message_string() const {
 
         case StatementType::block:
             return "block";
-
-        case StatementType::let:
-            return "let statement";
-
-        case StatementType::operator_definition:
-            return "operator definition";
 
         case StatementType::assignment:
             return "assignment to " + std::get<Assignment>(value).identifier;
@@ -101,9 +89,7 @@ bool Statement::is_illegal_as_single_statement_block() const {
             // ???
             return true;
 
-        case StatementType::operator_definition:
         case StatementType::deleted:
-        case StatementType::let:
             return true;
     }
 }
@@ -114,9 +100,7 @@ bool Statement::is_empty() const {
 
 bool Statement::is_definition() const {
     switch (statement_type) {
-        case StatementType::let:
         case StatementType::assignment:
-        case StatementType::operator_definition:
             return true;
 
         default:

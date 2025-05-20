@@ -17,21 +17,6 @@ struct Statement;
 class AST_Store;
 
 // ----- STATEMENTS -----
-struct Let {
-    std::string identifier; 
-    DefinitionBody body;
-
-    bool operator==(const Let& other) const = default;
-};
-
-struct OperatorStatementValue {
-    std::string op;
-    unsigned int arity;
-    DefinitionBody body;
-    // include the specifiers
-    bool operator==(const OperatorStatementValue& other) const = default;
-
-};
 
 struct Assignment {
     std::string identifier; 
@@ -49,8 +34,6 @@ enum class StatementType {
     empty,
     expression_statement,   // statement consisting of a single expression
     block,
-    let,
-    operator_definition,
     assignment,
     return_,
     // if,
@@ -67,8 +50,6 @@ using StatementValue = std::variant<
     std::string,
     Expression*,
 
-    Let,
-    OperatorStatementValue,
     Assignment,
     Block,
     Undefined

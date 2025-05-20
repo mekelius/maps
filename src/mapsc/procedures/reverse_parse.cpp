@@ -88,36 +88,6 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
             *this << linebreak() << '}';
             break;
         }
-
-        case StatementType::let: {
-            auto [name, body] = std::get<Let>(statement.value);
-            // assume top level identifiers are created by let-statements
-            *this << "let " << name;
-            
-            // noninitialized
-            if (!body.index())
-                break;
-
-            assert(false && "reverse parsing let statements not implemented");
-            // *this << " = " << body;
-                
-            // for (const AST::Type* arg_type: arg_types) {
-            //     *this << arg_type->name << " -> ";
-            // }
-            // *this << return type
-            break;
-        }
-
-        case StatementType::operator_definition: {
-            auto [name, arity, body] = std::get<OperatorStatementValue>(statement.value);
-
-            *this << "operator " << name << " = "
-                    << (arity == 2 ? "binary" : "unary")
-                    << " something something:"
-                    << linebreak()
-                    << "body here";
-            break;
-        }
         
         case StatementType::assignment: {
             auto [name, body] = std::get<Assignment>(statement.value);
