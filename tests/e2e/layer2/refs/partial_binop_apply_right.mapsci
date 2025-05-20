@@ -1,0 +1,13 @@
+// RUN: %mapsci --layer2 --stop-after=layer2 < %s | filecheck %s
+
+let a;
+let b;
+let c;
+let d;
+
+a* b            // CHECK: a * b
+a- b            // CHECK: a - b
+a* -b           // CHECK: a * (-b)
+a* - b          // CHECK: a * (-b)
+a- - b          // CHECK: a - (-b)
+-a+ -b          // CHECK: (-a) + (-b)

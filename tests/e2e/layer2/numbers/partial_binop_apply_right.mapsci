@@ -1,0 +1,8 @@
+// RUN: %mapsci < %s | filecheck %s
+
+5* 7                // CHECK: 35
+5- 7                // CHECK: -2
+8* -4               // CHECK: -32
+8* - 3              // CHECK: -24
+7- - 3              // CHECK: 10
+-8+ -1              // CHECK: -9

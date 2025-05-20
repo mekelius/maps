@@ -1,0 +1,5 @@
+// RUN: %mapsci < %s | filecheck %s
+
+12 *2+3             // CHECK: 27
+3 *2+5 * 2          // CHECK: 22
+5 (* 2) + 1         // CHECK: 11
