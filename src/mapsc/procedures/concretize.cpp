@@ -108,13 +108,21 @@ bool concretize(Expression& expression) {
     switch (expression.expression_type) {
         case ExpressionType::call:
             return concretize_call(expression);
+
         case ExpressionType::string_literal:
             return true;
+
         case ExpressionType::numeric_literal:
         case ExpressionType::value:
             return concretize_value(expression);
+
         case ExpressionType::reference:
             return concretize_reference(expression);
+
+        case ExpressionType::partially_applied_minus:
+            expression.convert_to_unary_minus_call();
+            return concretize_call(expression);
+
         default:
             Log::error("Concretizer encountered an expression that was not a value or a call", 
                 expression.location);

@@ -431,3 +431,20 @@ TEST_CASE("Layer2 should handle type specifiers") {
         CHECK(*args.at(0) == value);
     }
 }
+
+TEST_CASE("Unary minus by itself should result in a partially applied minus") {
+    auto [state, _0, types] = CompilationState::create_test_state();
+    auto& ast_store = *state.ast_store_;
+
+    auto value = Expression::numeric_literal(ast_store, "456", TSL);
+    auto minus = Expression::minus_sign(ast_store, TSL);
+
+    auto expr = Expression{ExpressionType::termed_expression, 
+            TermedExpressionValue{{minus, value}, db_false}, TSL};    
+
+    TermedExpressionParser{&state, &expr}.run();
+
+    CHECK(expr.expression_type == ExpressionType::partially_applied_minus);
+    CHECK(std::get<Expression*>(expr.value) == value);
+    CHECK(*expr.type == Int);
+}

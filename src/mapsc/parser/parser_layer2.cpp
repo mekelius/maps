@@ -570,8 +570,41 @@ void TermedExpressionParser::initial_minus_sign_state() {
             return initial_minus_sign_state();
 
         case GUARANTEED_VALUE: {
-            auto location = (*pop_term())->location;
-            push_unary_operator_call(unary_minus_ref(location), get_term());
+            shift();
+
+            if (at_expression_end()) {
+                auto arg = *pop_term();
+                auto location = (*pop_term())->location;
+                auto expression = Expression::partially_applied_minus(
+                    *ast_store_, arg, location);
+                return parse_stack_.push_back(expression);
+            }
+
+            switch (peek()->expression_type) {
+                case ExpressionType::binary_operator_reference:
+                    reduce_unary_minus_ref();
+                    shift();
+                    return post_binary_operator_state();
+
+                case ExpressionType::partial_binop_call_left: {
+                    reduce_unary_minus_ref();
+                    auto location = current_term()->location;
+                    add_to_partial_call_and_push(get_term(), {*pop_term()}, location);
+                    return initial_call_state();
+                }
+
+                case ExpressionType::minus_sign:
+                    reduce_unary_minus_ref();
+                    parse_stack_.push_back(binary_minus_ref(get_term()->location));
+                    return post_binary_operator_state();
+
+                case TYPE_DECLARATION_TERM:
+                    assert(false && "Type declaration after a minus term not implemented");
+
+                default:
+                    return fail("Unexpected " + peek()->log_message_string() + 
+                    " after a value, expected an operator", peek()->location);
+            }
 
             return initial_value_state();
         }

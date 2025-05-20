@@ -584,7 +584,8 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
 Expression* Expression::partially_applied_minus(AST_Store& store, Expression* rhs, 
     SourceLocation location) {
 
-    return store.allocate_expression({ExpressionType::partially_applied_minus, rhs, location});
+    return store.allocate_expression(
+        {ExpressionType::partially_applied_minus, rhs, &Int, location});
 }
 
 
