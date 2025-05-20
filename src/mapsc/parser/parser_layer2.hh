@@ -75,6 +75,7 @@ private:
     void reduce_partial_binop_call_right();
     void reduce_unary_minus_ref();
     void reduce_prefix_operator();
+    void reduce_partially_applied_minus();
 
     // gotos
     void initial_goto();

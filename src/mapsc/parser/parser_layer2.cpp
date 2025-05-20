@@ -360,6 +360,17 @@ void TermedExpressionParser::reduce_prefix_operator() {
     parse_stack_.push_back(*expression);
 }
 
+void TermedExpressionParser::reduce_partially_applied_minus() {
+    auto arg = *pop_term();
+
+    assert(current_term()->expression_type == ExpressionType::minus_sign && 
+        "reduce_partially_applied_minus called with not a minus sign 2nd on the stack");
+    auto location = (*pop_term())->location;
+    auto expression = Expression::partially_applied_minus(
+        *ast_store_, arg, location);
+    return parse_stack_.push_back(expression);
+}
+
 void TermedExpressionParser::initial_goto() {
     switch (current_term()->expression_type) {
         case ExpressionType::termed_expression:
@@ -590,13 +601,8 @@ void TermedExpressionParser::initial_minus_sign_state() {
         case GUARANTEED_VALUE: {
             shift();
 
-            if (at_expression_end()) {
-                auto arg = *pop_term();
-                auto location = (*pop_term())->location;
-                auto expression = Expression::partially_applied_minus(
-                    *ast_store_, arg, location);
-                return parse_stack_.push_back(expression);
-            }
+            if (at_expression_end())
+                return reduce_partially_applied_minus();
 
             switch (peek()->expression_type) {
                 case ExpressionType::binary_operator_reference:
@@ -626,6 +632,18 @@ void TermedExpressionParser::initial_minus_sign_state() {
 
             return initial_value_state();
         }
+
+        case ExpressionType::minus_sign:
+            shift();
+            initial_minus_sign_state();
+            reduce_partially_applied_minus();
+            return initial_goto();
+
+        case ExpressionType::partially_applied_minus:
+            shift();
+            current_term()->convert_to_unary_minus_call();
+            reduce_partially_applied_minus();
+            return initial_goto();
 
         case ExpressionType::reference:
         case ExpressionType::call:
