@@ -2,7 +2,7 @@
 #define __OPERATOR_HH
 
 #include "mapsc/source.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 
 namespace Maps {
 
@@ -42,9 +42,9 @@ public:
     virtual Properties operator_props() const = 0;
 };
 
-class RT_Operator: public RT_Callable, public Operator {
+class RT_Operator: public RT_Definition, public Operator {
 public:
-    static RT_Operator create_binary(std::string_view name, CallableBody body, 
+    static RT_Operator create_binary(std::string_view name, DefinitionBody body, 
         Operator::Precedence precedence, Operator::Associativity associativity, 
         SourceLocation location) {
 
@@ -53,7 +53,7 @@ public:
             location };
     }
 
-    static RT_Operator create_binary(std::string_view name, CallableBody body, const Type& type, 
+    static RT_Operator create_binary(std::string_view name, DefinitionBody body, const Type& type, 
         Operator::Precedence precedence, Operator::Associativity associativity, 
         SourceLocation location) {
 
@@ -64,17 +64,17 @@ public:
 
     RT_Operator(std::string_view name, const External external, const Type& type, 
         const Operator::Properties& operator_props)
-    :RT_Callable(name, external, type),
+    :RT_Definition(name, external, type),
      operator_props_(operator_props) {}
 
-    RT_Operator(std::string_view name, CallableBody body, const Type& type, 
+    RT_Operator(std::string_view name, DefinitionBody body, const Type& type, 
         Operator::Properties operator_props, SourceLocation location)
-    :RT_Callable(name, body, type, location), 
+    :RT_Definition(name, body, type, location), 
      operator_props_(operator_props) {}
 
-    RT_Operator(std::string_view name, CallableBody body, 
+    RT_Operator(std::string_view name, DefinitionBody body, 
         Operator::Properties operator_props, SourceLocation location)
-    :RT_Callable(name, body, location), 
+    :RT_Definition(name, body, location), 
      operator_props_(operator_props) {}
 
     RT_Operator(const RT_Operator& other) = default;

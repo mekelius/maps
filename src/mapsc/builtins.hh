@@ -15,7 +15,7 @@
 #include "mapsc/types/function_type.hh"
 #include "mapsc/types/type_defs.hh"
 
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
@@ -28,21 +28,21 @@ const CT_Scope* get_builtins();
 using BuiltinValue = std::variant<maps_Boolean, maps_String, maps_Int, maps_Float>;
 using BuiltinBody = std::variant<External, Expression>;
 
-class CT_Callable: public Callable {
+class CT_Definition: public Definition {
 public:
-    CT_Callable(std::string_view name, const Expression&& expression)
+    CT_Definition(std::string_view name, const Expression&& expression)
     :name_(name),
      builtin_body_(expression),
      type_(expression.type),
      location_(BUILTIN_SOURCE_LOCATION) {}
 
-    // CT_Callable(std::string_view name, Statement&& statement, const Type& type);
-    CT_Callable(std::string_view name, BuiltinBody&& body, const Type& type)
+    // CT_Definition(std::string_view name, Statement&& statement, const Type& type);
+    CT_Definition(std::string_view name, BuiltinBody&& body, const Type& type)
     :name_(name),
      builtin_body_(body), 
      type_(&type), location_(BUILTIN_SOURCE_LOCATION) {}
 
-    constexpr CT_Callable(std::string_view name, External external, const Type& type)
+    constexpr CT_Definition(std::string_view name, External external, const Type& type)
     :name_(name), 
      builtin_body_(external), 
      type_(&type),
@@ -51,7 +51,7 @@ public:
     virtual bool is_const() const { return true; }
 
     virtual constexpr std::string_view name() const { return name_; }
-    virtual const_CallableBody const_body() const;
+    virtual const_DefinitionBody const_body() const;
     virtual constexpr const SourceLocation& location() const { return location_; }
 
     // since statements don't store types, we'll have to store them here
@@ -59,7 +59,7 @@ public:
     virtual const Type* get_type() const { return type_; }
     virtual std::optional<const Type*> get_declared_type() const { return std::nullopt; }
     
-    virtual bool operator==(const Callable& other) const {
+    virtual bool operator==(const Definition& other) const {
         if (this == &other)
             return true;
 
@@ -80,14 +80,14 @@ private:
     SourceLocation location_;
 };
 
-class CT_Operator: public CT_Callable, public Operator {
+class CT_Operator: public CT_Definition, public Operator {
 public:
     CT_Operator(std::string_view name, const Expression&& expression, 
         Operator::Properties operator_props);
 
     constexpr CT_Operator(std::string_view name, External external, const Type& type, 
         Operator::Properties operator_props)
-    :CT_Callable(name, external, type),
+    :CT_Definition(name, external, type),
      operator_props_(operator_props) {}
 
     constexpr bool is_operator() const { return true; }

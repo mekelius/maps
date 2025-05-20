@@ -27,7 +27,7 @@ namespace Maps {
 
 struct Expression;
 struct Statement;
-class Callable;
+class Definition;
 class FunctionType;
 class TypeStore;
 class PragmaStore;
@@ -102,8 +102,8 @@ private:
         const Maps::Expression& expression);
 
     // ----- DEFINITION HANDLERS -----
-    std::optional<llvm::FunctionCallee> handle_global_definition(const Maps::Callable& callable);
-    std::optional<llvm::FunctionCallee> handle_function(const Maps::Callable& callable);
+    std::optional<llvm::FunctionCallee> handle_global_definition(const Maps::Definition& definition);
+    std::optional<llvm::FunctionCallee> handle_function(const Maps::Definition& definition);
 
     // ----- STATEMENT HANDLERS -----
     bool handle_statement(const Maps::Statement& statement);

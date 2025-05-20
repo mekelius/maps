@@ -7,7 +7,7 @@ v0.1
 Currently there are 3 types of AST nodes:
 - expressions
 - statements
-- callables
+- definitions
 
 In short, expressions are things that reduce to a single value and always have a type, while statements represent imperative constructs that may or may not result in a value, and don't always have a type. Callables are typed constructs that have a body that might be an expression, a statement or a builtin (in the future also externals other than builtins).
 

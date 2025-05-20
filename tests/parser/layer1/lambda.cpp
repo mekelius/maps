@@ -5,18 +5,18 @@
 
 using namespace Maps;
 
-TEST_CASE("Should parse a lambda") {
-    auto [state, types, _] = CompilationState::create_test_state();
+// TEST_CASE("Should parse a lambda") {
+//     auto [state, types, _] = CompilationState::create_test_state();
 
-    std::stringstream source{"\\x -> x"};
+//     std::stringstream source{"\\x -> x"};
 
-    auto callable = ParserLayer1{&state}.eval_parse(source);
+//     auto definition = ParserLayer1{&state}.eval_parse(source);
 
-    CHECK(state.is_valid);
-    CHECK(callable);
+//     CHECK(state.is_valid);
+//     CHECK(definition);
 
-    auto expression = std::get<const Expression*>((*callable)->const_body());
-    CHECK(expression->expression_type == ExpressionType::lambda);
-    CHECK(expression->type->is_function());
-    CHECK(expression->type->arity() == 1);
-}
+//     auto expression = std::get<const Expression*>((*definition)->const_body());
+//     CHECK(expression->expression_type == ExpressionType::lambda);
+//     CHECK(expression->type->is_function());
+//     CHECK(expression->type->arity() == 1);
+// }

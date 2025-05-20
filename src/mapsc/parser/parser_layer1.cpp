@@ -48,7 +48,7 @@ bool ParserLayer1::run(std::istream& source_is) {
     return compilation_state_->is_valid;
 }
 
-optional<Callable*> ParserLayer1::eval_parse(std::istream& source_is) {
+optional<Definition*> ParserLayer1::eval_parse(std::istream& source_is) {
     force_top_level_eval_ = true;
     run_parse(source_is);
     force_top_level_eval_ = false;
@@ -77,10 +77,10 @@ void ParserLayer1::run_parse(std::istream& source_is) {
     prime_tokens();
 
     Statement* root_statement = ast_store_->allocate_statement({StatementType::block, {0,0}});
-    RT_Callable* root_callable = ast_store_->allocate_callable(RT_Callable{
+    RT_Definition* root_definition = ast_store_->allocate_definition(RT_Definition{
         "root", root_statement, {0,0}});
 
-    if (!compilation_state_->set_entry_point(root_callable))
+    if (!compilation_state_->set_entry_point(root_definition))
         return fail("failed to set entry point");
 
     while (current_token().token_type != TokenType::eof) {
@@ -194,14 +194,14 @@ void ParserLayer1::create_identifier(const std::string& name, SourceLocation loc
 }
 
 void ParserLayer1::create_identifier(const std::string& name,
-    CallableBody body, SourceLocation location) {
+    DefinitionBody body, SourceLocation location) {
     log("created identifier " + name, LogLevel::debug_extra);
     compilation_state_->globals_.create_identifier(
-        ast_store_->allocate_callable(RT_Callable{name, body, location})
+        ast_store_->allocate_definition(RT_Definition{name, body, location})
     );
 }
 
-std::optional<Callable*> ParserLayer1::lookup_identifier(const std::string& identifier) {
+std::optional<Definition*> ParserLayer1::lookup_identifier(const std::string& identifier) {
     return compilation_state_->globals_.get_identifier(identifier);
 }
 
@@ -305,9 +305,9 @@ void ParserLayer1::parse_top_level_statement() {
     }
 }
 
-CallableBody ParserLayer1::parse_definition_body() {
+DefinitionBody ParserLayer1::parse_definition_body() {
     return is_block_starter(current_token()) ?
-        CallableBody{parse_block_statement()} : CallableBody{parse_expression()};
+        DefinitionBody{parse_block_statement()} : DefinitionBody{parse_expression()};
 }
 
 Statement* ParserLayer1::parse_non_global_statement() {
@@ -440,7 +440,7 @@ Statement* ParserLayer1::parse_let_statement() {
                 if (is_assignment_operator(current_token())) {
                     get_token(); // eat the assignment operator
 
-                    CallableBody body = parse_definition_body();
+                    DefinitionBody body = parse_definition_body();
 
                     Statement* statement = create_statement(StatementType::let);
                     statement->value = Let{name, body};
@@ -515,7 +515,7 @@ Statement* ParserLayer1::parse_operator_definition() {
 
                 get_token(); // eat the fixity specifier
 
-                CallableBody body;
+                DefinitionBody body;
                 if (is_block_starter(current_token())) {
                     body = parse_block_statement();
                 } else {
@@ -525,7 +525,7 @@ Statement* ParserLayer1::parse_operator_definition() {
                 Statement* statement = create_statement(StatementType::operator_definition);
                 statement->value = OperatorStatementValue{op_string, 1, body};
 
-                compilation_state_->globals_.create_identifier(ast_store_->allocate_callable(
+                compilation_state_->globals_.create_identifier(ast_store_->allocate_definition(
                     RT_Operator{op_string, body, {fixity}, statement->location}));
                 log("parsed let statement", LogLevel::debug_extra);
                 return statement;
@@ -543,7 +543,7 @@ Statement* ParserLayer1::parse_operator_definition() {
 
             get_token(); // eat the precedence specifier
 
-            CallableBody body;
+            DefinitionBody body;
             if (is_block_starter(current_token())) {
                 body = parse_block_statement();
             } else {
@@ -553,7 +553,7 @@ Statement* ParserLayer1::parse_operator_definition() {
             Statement* statement = create_statement(StatementType::operator_definition);
             statement->value = OperatorStatementValue{op_string, 2, body};
 
-            compilation_state_->globals_.create_identifier(ast_store_->allocate_callable(
+            compilation_state_->globals_.create_identifier(ast_store_->allocate_definition(
                 RT_Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
                         statement->location}));
             log("parsed let statement", LogLevel::debug_extra);
@@ -1039,7 +1039,7 @@ Expression* ParserLayer1::parse_lambda_expression() {
             " in lambda expression, expected a \"->\" or \"=>\" ");
     get_token();
 
-    CallableBody body = parse_definition_body();
+    DefinitionBody body = parse_definition_body();
 
     expression_end();
     return Expression::lambda(*ast_store_, btd, body, location);
@@ -1186,7 +1186,7 @@ Expression* ParserLayer1::handle_type_identifier() {
 //             return expr;
 //         }
 //         default:
-//             assert(false && "Parser::parse_call_expression called with an expression that's not callable");
+//             assert(false && "Parser::parse_call_expression called with an expression that's not definition");
 //     }
 // }
 

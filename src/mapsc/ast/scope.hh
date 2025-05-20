@@ -10,15 +10,15 @@
 #include "mapsc/source.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/ast/statement.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/operator.hh"
 
 namespace Maps {
 
-class CT_Callable;
+class CT_Definition;
 
 /**
- * Scopes contain names bound to callables
+ * Scopes contain names bound to definitions
  * TODO: implement a constexpr hashmap that can be initialized in static memory 
  */
 template <typename T>
@@ -48,18 +48,18 @@ public:
         return it->second;
     }
 
-    std::optional<T> create_identifier(const std::string& name, T callable) {
+    std::optional<T> create_identifier(const std::string& name, T definition) {
         if (identifier_exists(name))
             return std::nullopt;
 
-        identifiers_.insert(std::pair<std::string, T>{name, callable});
-        identifiers_in_order_.push_back({name, callable});
+        identifiers_.insert(std::pair<std::string, T>{name, definition});
+        identifiers_in_order_.push_back({name, definition});
         
-        return callable;
+        return definition;
     }
 
-    std::optional<T> create_identifier(T callable) {
-        return create_identifier(callable->to_string(), callable);
+    std::optional<T> create_identifier(T definition) {
+        return create_identifier(definition->to_string(), definition);
     }
 
     std::vector<std::pair<std::string, T>> identifiers_in_order_ = {};
@@ -68,9 +68,9 @@ private:
     std::unordered_map<std::string, T> identifiers_;
 };
 
-using Scope = Scope_T<Callable*>;
-using RT_Scope = Scope_T<RT_Callable*>;
-using CT_Scope = Scope_T<CT_Callable*>;
+using Scope = Scope_T<Definition*>;
+using RT_Scope = Scope_T<RT_Definition*>;
+using CT_Scope = Scope_T<CT_Definition*>;
 
 } // namespace AST
 

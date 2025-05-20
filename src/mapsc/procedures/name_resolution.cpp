@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/compilation_state.hh"
@@ -25,19 +25,19 @@ using Log = LogInContext<LogContext::name_resolution>;
 
 namespace {
 
-optional<Callable*> lookup_identifier(const Scopes& scopes, const std::string& name) {
+optional<Definition*> lookup_identifier(const Scopes& scopes, const std::string& name) {
     auto [ct_scopes, rt_scopes] = scopes;
 
     for (auto scope: ct_scopes) {
-        auto callable = scope->get_identifier(name);
-        if (callable)
-            return callable;
+        auto definition = scope->get_identifier(name);
+        if (definition)
+            return definition;
     }
 
     for (auto scope: rt_scopes) {
-        auto callable = scope->get_identifier(name);
-        if (callable)
-            return callable;
+        auto definition = scope->get_identifier(name);
+        if (definition)
+            return definition;
     }   
 
     return nullopt;
@@ -56,16 +56,16 @@ bool resolve_identifier(CompilationState& state, const Scopes& scopes,
         return true;
     }
 
-    auto callable = lookup_identifier(scopes, expression->string_value());
+    auto definition = lookup_identifier(scopes, expression->string_value());
 
-    if (!callable) {
+    if (!definition) {
         Log::error("unknown identifier: " + expression->string_value(), expression->location);
         return false;
     }
 
     expression->expression_type = ExpressionType::reference;
-    expression->type = (*callable)->get_type();
-    expression->value = *callable;
+    expression->type = (*definition)->get_type();
+    expression->value = *definition;
     return true;
 }
 
@@ -104,21 +104,21 @@ not an operator");
         return true;
     }
 
-    auto callable = lookup_identifier(scopes, expression->string_value());
+    auto definition = lookup_identifier(scopes, expression->string_value());
 
-    if (!callable) {
+    if (!definition) {
         Log::error("unknown operator: " + expression->string_value(), expression->location);
         return false;
     }
 
-    expression->convert_to_operator_reference(*callable);
+    expression->convert_to_operator_reference(*definition);
     return true;
 }
 
 } // anonymous namespace
 
 
-// Replaces all identifiers and operators with references to the correct callables
+// Replaces all identifiers and operators with references to the correct definitions
 bool resolve_identifiers(CompilationState& state, const Scopes& scopes, 
     std::vector<Expression*>& unresolved_identifiers) {
     for (Expression* expression: unresolved_identifiers) {

@@ -30,7 +30,7 @@ Enum mapping types should be iterable, how to do that?
         - could be kinda confusing
 - how about types acting as constrains on traits bottom-up
     type TypeA:
-        callable TypeA::method1
+        definition TypeA::method1
 - automatic invariant checking
     - some way to define invariants for a type as assertions, then some descriptive way to check them at
         the start of a function at correct times

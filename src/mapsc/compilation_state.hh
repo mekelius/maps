@@ -17,7 +17,7 @@
 #include "mapsc/types/type_store.hh"
 
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/statement.hh" 
@@ -33,7 +33,7 @@ template<class T>
 concept AST_Visitor = requires(T t) {
     {t.visit_expression(std::declval<Expression*>())} -> std::convertible_to<bool>;
     {t.visit_statement(std::declval<Statement*>())} -> std::convertible_to<bool>;
-    {t.visit_callable(std::declval<RT_Callable*>())} -> std::convertible_to<bool>;
+    {t.visit_definition(std::declval<RT_Definition*>())} -> std::convertible_to<bool>;
 };
 
 class CompilationState {
@@ -42,7 +42,7 @@ public:
         ReverseParser::Options reverse_parse{};
     };
 
-    struct SpecialCallables {
+    struct SpecialDefinitions {
         CT_Operator* unary_minus;
         CT_Operator* binary_minus;
     };
@@ -55,17 +55,17 @@ public:
     template<AST_Visitor T>
     bool walk_statement(T visitor, Statement* statement);
     template<AST_Visitor T>
-    bool walk_callable(T visitor, RT_Callable* callable);
+    bool walk_definition(T visitor, RT_Definition* definition);
 
     static std::tuple<CompilationState, std::unique_ptr<const CT_Scope>, std::unique_ptr<TypeStore>> 
         create_test_state();
 
     CompilationState(const CT_Scope* builtins, TypeStore* types, 
-        SpecialCallables specials = {&unary_minus_Int, &binary_minus_Int});
+        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int});
 
     CompilationState(const CT_Scope* builtins, TypeStore* types, 
         Options compiler_options,
-        SpecialCallables specials = {&unary_minus_Int, &binary_minus_Int});
+        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int});
 
     // copy constructor
     CompilationState(const CompilationState&) = default;
@@ -75,7 +75,7 @@ public:
 
     bool empty() const;
 
-    [[nodiscard]] bool set_entry_point(RT_Callable* entrypoint);
+    [[nodiscard]] bool set_entry_point(RT_Definition* entrypoint);
     [[nodiscard]] bool set_entry_point(std::string name);
 
     void declare_invalid() { is_valid = false; };
@@ -89,11 +89,11 @@ public:
     PragmaStore pragmas_ = {};
     
     // container for top-level statements
-    std::optional<RT_Callable*> entry_point_ = std::nullopt;
+    std::optional<RT_Definition*> entry_point_ = std::nullopt;
     
     TypeStore* types_;
     const CT_Scope* builtins_;
-    SpecialCallables special_callables_ = SpecialCallables{&unary_minus_Int, &binary_minus_Int};
+    SpecialDefinitions special_definitions_ = SpecialDefinitions{&unary_minus_Int, &binary_minus_Int};
 
     // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
     // need to walk the tree to find them
@@ -165,13 +165,13 @@ bool CompilationState::walk_statement(T visitor, Statement* statement) {
 }
 
 template<AST_Visitor T>
-bool CompilationState::walk_callable(T visitor, RT_Callable* callable) {
-    if (!visitor.visit_callable(callable))
+bool CompilationState::walk_definition(T visitor, RT_Definition* definition) {
+    if (!visitor.visit_definition(definition))
         return false;
 
-    if (Expression* const* expression = get_if<Expression*>(&callable->body())) {
+    if (Expression* const* expression = get_if<Expression*>(&definition->body())) {
         return walk_expression(visitor, *expression);
-    } else if (Statement* const* statement = get_if<Statement*>(&callable->body())) {
+    } else if (Statement* const* statement = get_if<Statement*>(&definition->body())) {
         return walk_statement(visitor, *statement);
     }
 
@@ -180,12 +180,12 @@ bool CompilationState::walk_callable(T visitor, RT_Callable* callable) {
 
 template<AST_Visitor T>
 bool CompilationState::walk_tree(T& visitor) {
-    for (auto [_1, callable]: globals_.identifiers_in_order_) {
-        if (!walk_callable(visitor, callable))
+    for (auto [_1, definition]: globals_.identifiers_in_order_) {
+        if (!walk_definition(visitor, definition))
             return false;
     }
 
-    if (entry_point_ && !walk_callable(visitor, *entry_point_))
+    if (entry_point_ && !walk_definition(visitor, *entry_point_))
         return false;
 
     return true;

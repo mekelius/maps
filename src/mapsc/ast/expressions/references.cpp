@@ -22,26 +22,26 @@ bool Expression::is_reference() const {
 }
 
 
-Callable* Expression::reference_value() const {
-    return std::get<Callable*>(value);
+Definition* Expression::reference_value() const {
+    return std::get<Definition*>(value);
 }
 
-Callable* Expression::operator_reference_value() const {
-    return std::get<Callable*>(value);
+Definition* Expression::operator_reference_value() const {
+    return std::get<Definition*>(value);
 }
 
-Expression* Expression::reference(AST_Store& store, Callable* callable, 
+Expression* Expression::reference(AST_Store& store, Definition* definition, 
     SourceLocation location) {
     
     return store.allocate_expression(
-        {ExpressionType::reference, callable, callable->get_type(), location});
+        {ExpressionType::reference, definition, definition->get_type(), location});
 }
 
 std::optional<Expression*> Expression::reference(AST_Store& store, const Scope& scope, 
     const std::string& name, SourceLocation location) {
     
-    if (auto callable = scope.get_identifier(name))
-        return reference(store, *callable, location);
+    if (auto definition = scope.get_identifier(name))
+        return reference(store, *definition, location);
 
     return std::nullopt;
 }
@@ -52,12 +52,12 @@ Expression* Expression::type_reference(AST_Store& store, const Type* type,
     return store.allocate_expression({ExpressionType::type_reference, type, &Void, location});
 }
 
-Expression Expression::operator_reference(Callable* callable, SourceLocation location) {
-    assert(callable->is_operator() && "AST::create_operator_ref called with not an operator");
+Expression Expression::operator_reference(Definition* definition, SourceLocation location) {
+    assert(definition->is_operator() && "AST::create_operator_ref called with not an operator");
 
     ExpressionType expression_type;
     
-    switch (dynamic_cast<Operator*>(callable)->fixity()) {
+    switch (dynamic_cast<Operator*>(definition)->fixity()) {
         case Operator::Fixity::unary_prefix:
             expression_type = ExpressionType::prefix_operator_reference;
             break;
@@ -69,26 +69,26 @@ Expression Expression::operator_reference(Callable* callable, SourceLocation loc
             break;
     }
 
-    return {expression_type, callable, callable->get_type(), location};
+    return {expression_type, definition, definition->get_type(), location};
 }
 
-Expression* Expression::operator_reference(AST_Store& store, Callable* callable, 
+Expression* Expression::operator_reference(AST_Store& store, Definition* definition, 
     SourceLocation location) {
     
-    return store.allocate_expression(operator_reference(callable, location));
+    return store.allocate_expression(operator_reference(definition, location));
 }
 
-void Expression::convert_to_reference(Callable* callable) {
+void Expression::convert_to_reference(Definition* definition) {
     expression_type = ExpressionType::reference;
-    value = callable;
-    type = callable->get_type();
+    value = definition;
+    type = definition->get_type();
 }
 
-void Expression::convert_to_operator_reference(Callable* callable) {
-    assert(callable->is_operator() && 
+void Expression::convert_to_operator_reference(Definition* definition) {
+    assert(definition->is_operator() && 
         "convert_to_operator_reference called with not an operator");
 
-    auto op = dynamic_cast<Operator*>(callable);
+    auto op = dynamic_cast<Operator*>(definition);
 
     switch (op->fixity()) {
         case Operator::Fixity::binary:
@@ -102,8 +102,8 @@ void Expression::convert_to_operator_reference(Callable* callable) {
             break;
     }
 
-    value = callable;
-    type = callable->get_type();
+    value = definition;
+    type = definition->get_type();
 }
     
 Operator::Precedence get_operator_precedence(const Expression& operator_ref) {

@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
 
@@ -18,10 +18,6 @@ public:
     bool empty() const;
     size_t size() const;
 
-    // ----- WALKING TREE NODE BY NODE -----
-
-    // ----- ITERATING THROUGH CALLABLES -----
-    
     void delete_expression(Expression* expression);
     void delete_expression_recursive(Expression* expression);
 
@@ -30,8 +26,8 @@ public:
 
     Expression* allocate_expression(const Expression&& expr);
     Statement* allocate_statement(const Statement&& statement);
-    RT_Callable* allocate_callable(const RT_Callable&& callable);
-    RT_Callable* allocate_operator(const RT_Operator&& op);
+    RT_Definition* allocate_definition(const RT_Definition&& definition);
+    RT_Definition* allocate_operator(const RT_Operator&& op);
 
 private:
 
@@ -42,7 +38,7 @@ private:
     // TODO: move from vector of unique_ptrs to unique_ptr of vectors
     std::vector<std::unique_ptr<Statement>> statements_ = {};
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
-    std::vector<std::unique_ptr<RT_Callable>> callables_ = {};
+    std::vector<std::unique_ptr<RT_Definition>> definitions_ = {};
 };
 
 } // namespace Maps

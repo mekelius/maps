@@ -1,5 +1,5 @@
-#ifndef __CALLABLE_HH
-#define __CALLABLE_HH
+#ifndef __DEFINITION_HH
+#define __DEFINITION_HH
 
 #include <optional>
 #include <string_view>
@@ -26,21 +26,21 @@ struct Undefined {
     bool operator==(T&) const { return false; }
 };
 
-using CallableBody = std::variant<Undefined, Expression*, Statement*, External>;
-using const_CallableBody = std::variant<Undefined, const Expression*, const Statement*, External>;
+using DefinitionBody = std::variant<Undefined, Expression*, Statement*, External>;
+using const_DefinitionBody = std::variant<Undefined, const Expression*, const Statement*, External>;
 
 /**
- * Callables represent either expressions or statements, along with extra info like
+ * Definitions represent either expressions or statements, along with extra info like
  * holding types for statements. A bit convoluted but we'll see.
- * The source location is needed on every callable that is not a built-in
+ * The source location is needed on every definition that is not a built-in
  * 
  * NOTE: if it's anonymous, it needs a source location
  */
-class Callable {
+class Definition {
 public:
     virtual std::string_view name() const = 0;
     virtual std::string to_string() const { return std::string{name()}; };
-    virtual const_CallableBody const_body() const = 0;
+    virtual const_DefinitionBody const_body() const = 0;
     virtual const SourceLocation& location() const = 0;
     virtual const Type* get_type() const = 0;
     virtual std::optional<const Type*> get_declared_type() const = 0;
@@ -54,34 +54,34 @@ public:
     virtual bool is_operator() const { return false; }
     virtual bool is_const() const { return false; }
 
-    virtual bool operator==(const Callable& other) const = 0;
+    virtual bool operator==(const Definition& other) const = 0;
 };
 
-class RT_Callable: public Callable {
+class RT_Definition: public Definition {
 public:
-    // creates a new dummy callable suitable for unit testing
-    static RT_Callable testing_callable(const Type* type = &Hole); 
+    // creates a new dummy definition suitable for unit testing
+    static RT_Definition testing_definition(const Type* type = &Hole); 
 
-    RT_Callable(std::string_view name, External external, const Type& type)
+    RT_Definition(std::string_view name, External external, const Type& type)
     :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(&type) {
     }
 
-    RT_Callable(std::string_view name, CallableBody body, SourceLocation location);
-    RT_Callable(CallableBody body, SourceLocation location); // create anonymous callable
+    RT_Definition(std::string_view name, DefinitionBody body, SourceLocation location);
+    RT_Definition(DefinitionBody body, SourceLocation location); // create anonymous definition
 
-    // anonymous callables
-    RT_Callable(std::string_view name, CallableBody body, const Type& type, SourceLocation location);
-    RT_Callable(CallableBody body, const Type& type, SourceLocation location);
+    // anonymous definitions
+    RT_Definition(std::string_view name, DefinitionBody body, const Type& type, SourceLocation location);
+    RT_Definition(DefinitionBody body, const Type& type, SourceLocation location);
 
-    RT_Callable(const RT_Callable& other) = default;
-    RT_Callable& operator=(const RT_Callable& other) = default;
-    virtual constexpr ~RT_Callable() = default;
+    RT_Definition(const RT_Definition& other) = default;
+    RT_Definition& operator=(const RT_Definition& other) = default;
+    virtual constexpr ~RT_Definition() = default;
 
     // ----- OVERRIDES ------
     virtual std::string_view name() const { return name_; }
     virtual std::string to_string() const { return name_; }
-    virtual const_CallableBody const_body() const;
-    virtual CallableBody& body() { return body_; }
+    virtual const_DefinitionBody const_body() const;
+    virtual DefinitionBody& body() { return body_; }
     virtual const SourceLocation& location() const { return location_; }
 
     // since statements don't store types, we'll have to store them here
@@ -93,7 +93,7 @@ public:
     void set_type(const Type& type);
     bool set_declared_type(const Type& type);
 
-    virtual bool operator==(const Callable& other) const {
+    virtual bool operator==(const Definition& other) const {
         if (this == &other)
             return true;
 
@@ -105,7 +105,7 @@ public:
 
 private:
     std::string name_;
-    CallableBody body_;
+    DefinitionBody body_;
     SourceLocation location_;
     std::optional<const Type*> type_;
     std::optional<const Type*> declared_type_;

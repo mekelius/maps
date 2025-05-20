@@ -13,15 +13,15 @@ tuple<CompilationState, unique_ptr<const CT_Scope>, unique_ptr<TypeStore>> Compi
 }
 
 CompilationState::CompilationState(const CT_Scope* builtins, TypeStore* types, 
-    SpecialCallables special_callables)
-:CompilationState(builtins, types, {}, special_callables) {}
+    SpecialDefinitions special_definitions)
+:CompilationState(builtins, types, {}, special_definitions) {}
 
 CompilationState::CompilationState(const CT_Scope* builtins, TypeStore* types, 
-    Options compiler_options, SpecialCallables special_callables)
+    Options compiler_options, SpecialDefinitions special_definitions)
 :compiler_options_(compiler_options), 
  types_(types), 
  builtins_(builtins), 
- special_callables_(special_callables) {}
+ special_definitions_(special_definitions) {}
 
 bool CompilationState::empty() const {
     if (!globals_.empty())
@@ -33,7 +33,7 @@ bool CompilationState::empty() const {
     return true;
 }
 
-bool CompilationState::set_entry_point(RT_Callable* entrypoint) {
+bool CompilationState::set_entry_point(RT_Definition* entrypoint) {
     entry_point_ = entrypoint;
     return true;
 }
@@ -61,7 +61,7 @@ void CompilationState::dump(std::ostream& stream) const {
 
     stream << "global identifiers:\n";
 
-    for (auto [name, callable]: globals_.identifiers_in_order_) {
+    for (auto [name, _]: globals_.identifiers_in_order_) {
         stream << "  " << name << "\n";
     }
 

@@ -71,13 +71,13 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
             std::string source = test_string;\
             std::stringstream source_s{source};\
             \
-            auto callable = layer1.eval_parse(source_s);\
+            auto definition = layer1.eval_parse(source_s);\
             \
             CHECK(state.is_valid);\
-            CHECK(callable);\
-            CHECK(std::holds_alternative<const Expression*>((*callable)->const_body()));\
+            CHECK(definition);\
+            CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));\
             \
-            auto expression = std::get<const Expression*>((*callable)->const_body());\
+            auto expression = std::get<const Expression*>((*definition)->const_body());\
             \
             CHECK(expression->expression_type == ExpressionType::numeric_literal);\
             CHECK(expression->string_value() == "4");\
@@ -98,24 +98,24 @@ TEST_CASE("Should handle various cases") {
     
     SUBCASE("(\"asd\")") {
         auto source = std::stringstream{"(\"asd\")"};
-        auto callable = layer1.eval_parse(source);
+        auto definition = layer1.eval_parse(source);
     
         CHECK(state.is_valid);
-        CHECK(callable);
-        CHECK(std::holds_alternative<const Expression*>((*callable)->const_body()));
-        auto expression = std::get<const Expression*>((*callable)->const_body());
+        CHECK(definition);
+        CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
+        auto expression = std::get<const Expression*>((*definition)->const_body());
         CHECK(expression->expression_type == ExpressionType::string_literal);
         CHECK(expression->string_value() == "asd");
     }
 
     SUBCASE("\"10\" + 5") {
         auto source = std::stringstream{"\"10\" + 5"};
-        auto callable = layer1.eval_parse(source);
+        auto definition = layer1.eval_parse(source);
         
         CHECK(state.is_valid);
-        CHECK(callable);
-        CHECK(std::holds_alternative<const Expression*>((*callable)->const_body()));
-        auto expression = std::get<const Expression*>((*callable)->const_body());
+        CHECK(definition);
+        CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
+        auto expression = std::get<const Expression*>((*definition)->const_body());
         
         CHECK(expression->expression_type == ExpressionType::termed_expression);
         
@@ -135,12 +135,12 @@ TEST_CASE("Should handle various cases") {
 
     SUBCASE("\"10\"+5") {
         auto source = std::stringstream{"\"10\"+5"};
-        auto callable = layer1.eval_parse(source);
+        auto definition = layer1.eval_parse(source);
 
         CHECK(state.is_valid);
-        CHECK(callable);
-        CHECK(std::holds_alternative<const Expression*>((*callable)->const_body()));
-        auto expression = std::get<const Expression*>((*callable)->const_body());
+        CHECK(definition);
+        CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
+        auto expression = std::get<const Expression*>((*definition)->const_body());
 
         CHECK(expression->expression_type == ExpressionType::termed_expression);
         
@@ -160,12 +160,12 @@ TEST_CASE("Should handle various cases") {
 
     SUBCASE("(\"10\"+5)") {
         auto source = std::stringstream{"\"10\"+5"};
-        auto callable = layer1.eval_parse(source);
+        auto definition = layer1.eval_parse(source);
 
         CHECK(state.is_valid);
-        CHECK(callable);
-        CHECK(std::holds_alternative<const Expression*>((*callable)->const_body()));
-        auto expression = std::get<const Expression*>((*callable)->const_body());
+        CHECK(definition);
+        CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
+        auto expression = std::get<const Expression*>((*definition)->const_body());
 
         CHECK(expression->expression_type == ExpressionType::termed_expression);
         
@@ -192,12 +192,12 @@ TEST_CASE("Should recognize minus as a special case") {
 
     ParserLayer1 layer1{&state};
 
-    auto callable = layer1.eval_parse(source);
+    auto definition = layer1.eval_parse(source);
     CHECK(state.is_valid);
-    CHECK(callable);
+    CHECK(definition);
 
-    CHECK(std::holds_alternative<const Expression*>((*callable)->const_body()));
-    auto expression = std::get<const Expression*>((*callable)->const_body());
+    CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
+    auto expression = std::get<const Expression*>((*definition)->const_body());
 
     CHECK(expression->expression_type == ExpressionType::termed_expression);
     auto terms = expression->terms();

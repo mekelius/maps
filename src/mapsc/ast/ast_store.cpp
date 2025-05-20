@@ -9,7 +9,7 @@ bool AST_Store::empty() const {
 }
 
 size_t AST_Store::size() const {
-    return callables_.size() + expressions_.size() + statements_.size();
+    return definitions_.size() + expressions_.size() + statements_.size();
 }
 
 void AST_Store::delete_expression(Expression* expression) {
@@ -36,14 +36,14 @@ Statement* AST_Store::allocate_statement(const Statement&& statement) {
     return statements_.back().get();
 }
 
-RT_Callable* AST_Store::allocate_callable(const RT_Callable&& callable) {
-    callables_.push_back(std::make_unique<RT_Callable>(callable));
-    return callables_.back().get();
+RT_Definition* AST_Store::allocate_definition(const RT_Definition&& definition) {
+    definitions_.push_back(std::make_unique<RT_Definition>(definition));
+    return definitions_.back().get();
 }
 
-RT_Callable* AST_Store::allocate_operator(const RT_Operator&& op) {
-    callables_.push_back(std::make_unique<RT_Operator>(op));
-    return callables_.back().get();
+RT_Definition* AST_Store::allocate_operator(const RT_Operator&& op) {
+    definitions_.push_back(std::make_unique<RT_Operator>(op));
+    return definitions_.back().get();
 }
 
 } // namespace AST

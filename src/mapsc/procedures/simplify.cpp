@@ -5,7 +5,7 @@
 
 #include "common/std_visit_helper.hh"
 
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/types/type.hh"
@@ -16,35 +16,35 @@
 namespace Maps {
 
 // TODO: delete the simplified nodes properly
-bool attempt_simplify(RT_Callable& callable) {
+bool attempt_simplify(RT_Definition& definition) {
     return std::visit(overloaded {
         [](Undefined) { return true; },
         [](External) { return true; },
 
-        [&callable](Statement* statement) {
+        [&definition](Statement* statement) {
             switch (statement->statement_type) {                
                 // expression statements get replaced by their expressions
                 case StatementType::expression_statement:
                     // TODO: check type
-                    callable.body() = std::get<Expression*>(statement->value);
+                    definition.body() = std::get<Expression*>(statement->value);
                     statement->statement_type = StatementType::deleted;
-                    return attempt_simplify(callable);
+                    return attempt_simplify(definition);
                     
                 case StatementType::block: {
                     // TODO: check type
                     auto block = &std::get<Block>(statement->value);
 
                     if (block->size() == 0) {
-                        callable.body() = Undefined{};
+                        definition.body() = Undefined{};
                         statement->statement_type = StatementType::deleted;
                         return true;
                     }
 
                     if (block->size() == 1) {
                         *statement = *block->back();
-                        // callable SEGFAULTS! ???:
+                        // definition SEGFAULTS! ???:
                         // block->back()->statement_type = StatementType::deleted;
-                        return attempt_simplify(callable);
+                        return attempt_simplify(definition);
                     }
 
                     return false;
@@ -52,17 +52,17 @@ bool attempt_simplify(RT_Callable& callable) {
 
                 // pure functions and non-function return statements get converted to expressions
                 case StatementType::return_: {
-                    auto type = callable.get_type();
+                    auto type = definition.get_type();
                     if (!type->is_function()) {
                         statement->statement_type = StatementType::deleted;
-                        callable.body() = std::get<Expression*>(statement->value);
-                        return attempt_simplify(callable);
+                        definition.body() = std::get<Expression*>(statement->value);
+                        return attempt_simplify(definition);
                     }
 
                     if (type->is_pure() && type->arity() == 0) {
-                        callable.body() = std::get<Expression*>(statement->value);
+                        definition.body() = std::get<Expression*>(statement->value);
                         statement->statement_type = StatementType::deleted;
-                        return attempt_simplify(callable);
+                        return attempt_simplify(definition);
                     }
 
                     return false;
@@ -70,7 +70,7 @@ bool attempt_simplify(RT_Callable& callable) {
 
                 case StatementType::empty:
                     statement->statement_type = StatementType::deleted;
-                    callable.body() = Undefined{};
+                    definition.body() = Undefined{};
                     return true;
 
                 default:
@@ -78,15 +78,15 @@ bool attempt_simplify(RT_Callable& callable) {
             }
         },
 
-        [&callable](Expression* expression) {
+        [&definition](Expression* expression) {
             switch (expression->expression_type) {
                 case ExpressionType::call: {
                     auto type = expression->type;
                     if (!type->is_function())
-                        return inline_call(*expression, callable);
+                        return inline_call(*expression, definition);
 
                     if (type->is_pure() && type->arity() == 0)
-                        return inline_call(*expression, callable);
+                        return inline_call(*expression, definition);
 
                     return false;
                 }
@@ -95,7 +95,7 @@ bool attempt_simplify(RT_Callable& callable) {
                     return false;
             }
         },
-    }, callable.body());
+    }, definition.body());
 }
 
 } // namespace Maps

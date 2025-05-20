@@ -45,13 +45,13 @@
 | Term                              | Meaning    |
 | ---                               | ---        |
 | AST <br> Abstract Syntax Tree     | Representation of the grammatical structure of source code |
-| AST Node                          | Currently either an expression, a statement or a Callable |
+| AST Node                          | Currently either an expression, a statement or a Definition |
 | Expression                        | Node of an AST that can be reduced to a single value, typed |
 | Statement             | Node of the AST that might not be reducible to a value, possibly untyped |
-| Builtin                           | A hard-coded typed object a callable can point to |
+| Builtin                           | A hard-coded typed object a definition can point to |
 | Block                 | Statement consisting of 0 or more sub-statements <br> may create a scope |
-| Callable                          | A named node in the AST that points to an expression, a statement or a builtin. In case of statements holds a type for the statement, while in case of expressions proxies the expressions type |
-| Scope          | Collection of callables limiting their visibility to certain parts of the program |
+| Definition                          | A named node in the AST that points to an expression, a statement or a builtin. In case of statements holds a type for the statement, while in case of expressions proxies the expressions type |
+| Scope          | Collection of definitions limiting their visibility to certain parts of the program |
 | Context                           | Nobody knows |
 | Pragma                            | Declaration affecting the parsing and compilation process |
 | Top-level                         | Space outside functions |

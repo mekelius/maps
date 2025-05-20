@@ -14,7 +14,7 @@
 #include "mapsc/types/function_type.hh"
 
 #include "mapsc/ast/expression.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 
 
 namespace Maps {
@@ -29,19 +29,19 @@ bool inline_call(Expression& expression) {
     return inline_call(expression, *callee);
 }
 
-bool inline_call(Expression& expression, Callable& callable) {
+bool inline_call(Expression& expression, Definition& definition) {
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
 
     auto [callee, args] = expression.call_value();
     
-    if (callable.get_type()->is_impure())
+    if (definition.get_type()->is_impure())
         return false;
 
     if (args.empty()) {
         Log::debug_extra("Changed nullary call back to a reference", expression.location);
         expression.expression_type = ExpressionType::reference;
-        return substitute_value_reference(expression, callable);
+        return substitute_value_reference(expression, definition);
     }
 
     return false;
@@ -50,7 +50,7 @@ bool inline_call(Expression& expression, Callable& callable) {
 namespace {
 
 // this should be ran after all the checks are cleared
-[[nodiscard]] bool perform_substitution(Expression& expression, Callable& callee) {
+[[nodiscard]] bool perform_substitution(Expression& expression, Definition& callee) {
     auto callee_body = callee.const_body();
     if (auto inner_expression = std::get_if<const Expression*>(&callee_body)) {
         expression = **inner_expression;
@@ -70,7 +70,7 @@ bool substitute_value_reference(Expression& expression) {
     return substitute_value_reference(expression, *callee);
 }
 
-bool substitute_value_reference(Expression& expression, Callable& callee) {
+bool substitute_value_reference(Expression& expression, Definition& callee) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
 

@@ -14,7 +14,7 @@
 #include "readline.h"
 
 #include "mapsc/builtins.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/compilation_state.hh"
 
 #include "mapsc/process_source.hh"
@@ -235,7 +235,7 @@ void REPL::run_command(Maps::CompilationState& state, const std::string& input) 
         if (state.globals_.empty())
             std::cout << "Global scope is empty\n";
 
-        for (auto [name, callable]: state.globals_.identifiers_in_order_) {
+        for (auto [name, definition]: state.globals_.identifiers_in_order_) {
             std::cout << name << "\n";
         }
         

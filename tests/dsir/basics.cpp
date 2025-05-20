@@ -3,7 +3,7 @@
 #include <sstream>
 
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/dsir/parse_dsir.hh"
@@ -45,7 +45,7 @@ TEST_CASE("Numeric literal") {
 TEST_CASE("Identifier into reference") {
     auto [state, _1, _2] = CompilationState::create_test_state();
 
-    auto hello = state.ast_store_->allocate_callable({"hello", Undefined{}, TSL});
+    auto hello = state.ast_store_->allocate_definition({"hello", Undefined{}, TSL});
     state.globals_.create_identifier("hello", hello);
 
     std::stringstream source{"hello"};

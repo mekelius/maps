@@ -1,4 +1,4 @@
-#include "callable.hh"
+#include "definition.hh"
 
 #include <variant>
 #include <cassert>
@@ -18,7 +18,7 @@ using std::optional, std::nullopt;
 
 namespace Maps {
 
-bool Callable::is_empty() const {
+bool Definition::is_empty() const {
     return std::visit(overloaded {
         [](External) { return false; },
         [](Undefined) { return true; },
@@ -27,40 +27,40 @@ bool Callable::is_empty() const {
     }, const_body());
 }
 
-RT_Callable RT_Callable::testing_callable(const Type* type) {
-    return RT_Callable{"DUMMY_CALLABLE", External{}, *type, TEST_SOURCE_LOCATION};
+RT_Definition RT_Definition::testing_definition(const Type* type) {
+    return RT_Definition{"DUMMY_DEFINITION", External{}, *type, TEST_SOURCE_LOCATION};
 }
 
-RT_Callable::RT_Callable(std::string_view name, CallableBody body, const Type& type, 
+RT_Definition::RT_Definition(std::string_view name, DefinitionBody body, const Type& type, 
     SourceLocation location)
 : name_(name), body_(body), location_(location), type_(&type) {
     assert((!std::holds_alternative<Expression*>(body)  || 
             type == Hole                                ||
             type == *std::get<Expression*>(body)->type) &&
-            "Tried to initialize expression-bodied callable with a type, \
+            "Tried to initialize expression-bodied definition with a type, \
 type should be set on the expression");
 }
 
-RT_Callable::RT_Callable(std::string_view name, CallableBody body, SourceLocation location)
-:RT_Callable(name, body, Hole, location) {}
+RT_Definition::RT_Definition(std::string_view name, DefinitionBody body, SourceLocation location)
+:RT_Definition(name, body, Hole, location) {}
 
-RT_Callable::RT_Callable(CallableBody body, SourceLocation location)
-:name_("anonymous callable"), body_(body), location_(location) {}
+RT_Definition::RT_Definition(DefinitionBody body, SourceLocation location)
+:name_("anonymous definition"), body_(body), location_(location) {}
 
-RT_Callable::RT_Callable(CallableBody body, const Type& type, SourceLocation location)
-:name_("anonymous callable"), body_(body), location_(location), type_(&type) {}
+RT_Definition::RT_Definition(DefinitionBody body, const Type& type, SourceLocation location)
+:name_("anonymous definition"), body_(body), location_(location), type_(&type) {}
 
-const_CallableBody RT_Callable::const_body() const {
+const_DefinitionBody RT_Definition::const_body() const {
     return std::visit(overloaded {
-        [](External external) { return const_CallableBody{external}; },
-        [](Undefined undefined) { return const_CallableBody{undefined}; },
-        [](Statement* statement) { return const_CallableBody{statement}; },
-        [](Expression* expression) { return const_CallableBody{expression}; }
+        [](External external) { return const_DefinitionBody{external}; },
+        [](Undefined undefined) { return const_DefinitionBody{undefined}; },
+        [](Statement* statement) { return const_DefinitionBody{statement}; },
+        [](Expression* expression) { return const_DefinitionBody{expression}; }
     }, body_);
 }
 
 // TODO: change to std::visitor
-const Type* RT_Callable::get_type() const {
+const Type* RT_Definition::get_type() const {
     switch (body_.index()) {
         case 0: // Undefined
             return type_ ? *type_ : &Hole;
@@ -80,13 +80,13 @@ const Type* RT_Callable::get_type() const {
         case 3: // External
             return *type_; 
         default: 
-            assert(false && "unhandled CallableBody in CallableBody::get_type");
+            assert(false && "unhandled DefinitionBody in DefinitionBody::get_type");
             return &Hole;
     }
 }
 
 // !!! this feels pretty sus, manipulating state with way too many layers of indirection
-void RT_Callable::set_type(const Type& type) {
+void RT_Definition::set_type(const Type& type) {
     switch (body_.index()) {
         case 0: // uninitialized
             type_ = std::make_optional<const Type*>(&type);
@@ -108,15 +108,15 @@ void RT_Callable::set_type(const Type& type) {
             return;
         }
         case 3: // Cannot set type of an external
-            assert(false && "tried to set_type of a builtin callable");
+            assert(false && "tried to set_type of a builtin definition");
             return;
 
         default:
-            assert(false && "unhandled CallableBody in CallableBody::set_type");
+            assert(false && "unhandled DefinitionBody in DefinitionBody::set_type");
     }
 }
 
-std::optional<const Type*> RT_Callable::get_declared_type() const {
+std::optional<const Type*> RT_Definition::get_declared_type() const {
     if (Expression* const* expression = std::get_if<Expression*>(&body_)) {
         return (*expression)->declared_type;
 
@@ -130,11 +130,11 @@ std::optional<const Type*> RT_Callable::get_declared_type() const {
         return type_;
     }
 
-    assert(false && "unhandled callable type in Callable::get_declared_type");
+    assert(false && "unhandled definition type in Definition::get_declared_type");
     return std::nullopt;
 }
 
-bool RT_Callable::set_declared_type(const Type& type) {
+bool RT_Definition::set_declared_type(const Type& type) {
     if (Expression* const* expression = std::get_if<Expression*>(&body_)) {
         (*expression)->declared_type = &type;
         return true;

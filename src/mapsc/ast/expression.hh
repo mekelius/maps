@@ -20,7 +20,7 @@ namespace Maps {
 
 class CompilationState;
 class AST_Store;
-class Callable;
+class Definition;
 class Operator;
 struct Expression;
 
@@ -72,7 +72,7 @@ enum class ExpressionType {
     deleted,                // value: std::monostate
 };
 
-using CallExpressionValue = std::tuple<Callable*, std::vector<Expression*>>;
+using CallExpressionValue = std::tuple<Definition*, std::vector<Expression*>>;
 
 using TypeArgument = std::tuple<
     Expression*,                // type construct or type identifier
@@ -95,7 +95,7 @@ struct TermedExpressionValue {
 
 struct LambdaExpressionValue {
     Expression* binding_type_declaration;
-    CallableBody body;
+    DefinitionBody body;
     std::optional<RT_Scope> scope = std::nullopt;
 
     bool operator==(const LambdaExpressionValue& other) const {
@@ -118,7 +118,7 @@ using ExpressionValue = std::variant<
     bool,
     std::string,
     Expression*,
-    Callable*,                       // for references to operators and functions
+    Definition*,                       // for references to operators and functions
     const Type*,                     // for type expressions
     TermedExpressionValue,
     CallExpressionValue,
@@ -148,13 +148,13 @@ struct Expression {
         AST_Store& store, std::vector<Expression*>&& terms, SourceLocation location);
 
     static Expression* reference(
-        AST_Store& store, Callable* callable, SourceLocation location);
+        AST_Store& store, Definition* definition, SourceLocation location);
     static Expression* type_reference(
         AST_Store& store, const Type* type, SourceLocation location);
     static Expression operator_reference(
-        Callable* callable, SourceLocation location);
+        Definition* definition, SourceLocation location);
     static Expression* operator_reference(
-        AST_Store& store, Callable* callable, SourceLocation location);
+        AST_Store& store, Definition* definition, SourceLocation location);
 
     static std::optional<Expression*> reference(
         AST_Store& store, const Scope& scope, const std::string& name, SourceLocation location);
@@ -162,21 +162,21 @@ struct Expression {
         AST_Store& store, const std::string& name, const Type* type, SourceLocation location);
 
     static std::optional<Expression*> call(
-        CompilationState& state, Callable* callable, std::vector<Expression*>&& args, 
+        CompilationState& state, Definition* definition, std::vector<Expression*>&& args, 
         SourceLocation location);
 
     static std::optional<Expression*> partial_binop_call(CompilationState& state, 
-        Callable* callable, Expression* lhs, Expression* rhs, SourceLocation location);
+        Definition* definition, Expression* lhs, Expression* rhs, SourceLocation location);
 
     // not implemented
     static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
-        Callable* lhs, Expression* lambda, Callable* rhs, SourceLocation location);
+        Definition* lhs, Expression* lambda, Definition* rhs, SourceLocation location);
     
     static Expression* partially_applied_minus(AST_Store& store, 
         Expression* rhs, SourceLocation location);
 
     static Expression* lambda(AST_Store& store, Expression* binding_type_declaration, 
-        CallableBody body, SourceLocation location);
+        DefinitionBody body, SourceLocation location);
 
     static Expression* valueless(
         AST_Store& store, ExpressionType expression_type, SourceLocation location);
@@ -215,16 +215,16 @@ struct Expression {
     // For example partial binop call, currently a no-op
     void convert_to_partial_call();
 
-    void convert_to_reference(Callable* callable);
-    void convert_to_operator_reference(Callable* callable);
+    void convert_to_reference(Definition* definition);
+    void convert_to_operator_reference(Definition* definition);
 
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();
     const std::vector<Expression*>& terms() const;
 
     CallExpressionValue& call_value();
-    Callable* reference_value() const;
-    Callable* operator_reference_value() const;
+    Definition* reference_value() const;
+    Definition* operator_reference_value() const;
 
     LambdaExpressionValue& lambda_value();
     const LambdaExpressionValue& lambda_value() const;

@@ -15,7 +15,7 @@
 #include "mapsc/types/function_type.hh"
 
 #include "mapsc/ast/expression.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/ast_store.hh"
 
 
@@ -327,7 +327,7 @@ void TermedExpressionParser::initial_goto() {
 
         case ExpressionType::lambda:
             assert(false && "not implemented");
-            // initial_callable_state();
+            // initial_definition_state();
             break;
 
         case ExpressionType::partial_binop_call_both:
@@ -956,7 +956,7 @@ void TermedExpressionParser::compare_precedence_state() {
 
         case ExpressionType::minus_sign:
             peek()->convert_to_operator_reference(
-                compilation_state_->special_callables_.binary_minus);
+                compilation_state_->special_definitions_.binary_minus);
             break;
 
         default:
@@ -1031,17 +1031,17 @@ void TermedExpressionParser::reduce_binop_call() {
     Expression* lhs = *pop_term();
 
     // TODO: check types here
-    assert(std::holds_alternative<Callable*>(operator_->value) && 
+    assert(std::holds_alternative<Definition*>(operator_->value) && 
         "TermedExpressionParser::reduce_operator_left called with a call stack \
-where operator didn't hold a reference to a callable");
+where operator didn't hold a reference to a definition");
 
     auto reduced = Expression::call(*compilation_state_,
-        std::get<Callable*>(operator_->value), {lhs, rhs}, lhs->location);
+        std::get<Definition*>(operator_->value), {lhs, rhs}, lhs->location);
 
     if (!reduced)
         return fail("Creating a binary operator call failed", rhs->location);
 
-    (*reduced)->value = CallExpressionValue{std::get<Callable*>(operator_->value), 
+    (*reduced)->value = CallExpressionValue{std::get<Definition*>(operator_->value), 
         std::vector<Expression*>{lhs, rhs}};
 
     parse_stack_.push_back(*reduced);
@@ -1193,7 +1193,7 @@ void TermedExpressionParser::apply_type_declaration(Expression* type_declaration
     assert(false && "not implemented");
 }
 
-bool TermedExpressionParser::is_acceptable_next_arg(Callable* callee, 
+bool TermedExpressionParser::is_acceptable_next_arg(Definition* callee, 
     const std::vector<Expression*>& args/*, Expression* next_arg*/) {
     if (args.size() >= callee->get_type()->arity())
         return false;
@@ -1225,7 +1225,7 @@ void TermedExpressionParser::call_expression_state() {
     }
 
     auto call_expression = Expression::call(*compilation_state_,
-        std::get<Callable*>(reference->value), std::vector<Expression*>{args}, reference->location);
+        std::get<Definition*>(reference->value), std::vector<Expression*>{args}, reference->location);
     
     if (!call_expression)
         return Log::error("Creating call expression failed", reference->location);
@@ -1296,7 +1296,7 @@ void TermedExpressionParser::deferred_call_state() {
 }
 
 Expression* TermedExpressionParser::handle_arg_state(
-    Callable* callee, const std::vector<Expression*>& args) { 
+    Definition* callee, const std::vector<Expression*>& args) { 
     
     switch (current_term()->expression_type) {
         case ExpressionType::termed_expression:
@@ -1327,12 +1327,12 @@ Expression* TermedExpressionParser::handle_arg_state(
 
 Expression* TermedExpressionParser::binary_minus_ref(SourceLocation location) {
     return Expression::operator_reference(
-        *ast_store_, compilation_state_->special_callables_.binary_minus, location);
+        *ast_store_, compilation_state_->special_definitions_.binary_minus, location);
 }
 
 Expression* TermedExpressionParser::unary_minus_ref(SourceLocation location) {
     return Expression::operator_reference(
-        *ast_store_, compilation_state_->special_callables_.unary_minus, location);
+        *ast_store_, compilation_state_->special_definitions_.unary_minus, location);
 }
 
 } // namespace Maps

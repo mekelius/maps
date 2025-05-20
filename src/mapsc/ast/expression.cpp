@@ -9,7 +9,7 @@
 #include "mapsc/compilation_state.hh"
 
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/types/function_type.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 
@@ -37,9 +37,9 @@ bool Expression::is_reduced_value() const {
 }
 
 std::string Expression::string_value() const {
-    if (std::holds_alternative<Callable*>(value)) {
+    if (std::holds_alternative<Definition*>(value)) {
         // !!! this will cause crashes when lambdas come in
-        return std::get<Callable*>(value)->to_string();
+        return std::get<Definition*>(value)->to_string();
     }
     return std::get<std::string>(value);
 }

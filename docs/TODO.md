@@ -68,7 +68,7 @@ Needed features:
     - restore mapsc functionality
 
 - architecture and code quality
-    - print callables in messages nicely
+    - print definitions in messages nicely
     - clean up IR_Generator
     - what to do with ast nodes?
         - how to convert between statements and expressions in-place

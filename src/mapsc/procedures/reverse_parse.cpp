@@ -38,8 +38,8 @@ std::string ReverseParser::linebreak() {
 ReverseParser& ReverseParser::reverse_parse(const CompilationState& state) {
     reset();
 
-    for (auto [name, callable]: state.globals_.identifiers_in_order_) {
-        *this << "let " << name << " = " << callable->const_body() << ";\n\n";
+    for (auto [name, definition]: state.globals_.identifiers_in_order_) {
+        *this << "let " << name << " = " << definition->const_body() << ";\n\n";
     }
 
     if (state.entry_point_)
@@ -298,10 +298,10 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 }
 
 // reverse-parse expression into the stream
-ReverseParser& ReverseParser::print_callable(const_CallableBody body) {
+ReverseParser& ReverseParser::print_definition(const_DefinitionBody body) {
     switch (body.index()) {
         case 0:
-            return *this << "@empty callable body@";
+            return *this << "@empty definition body@";
 
         case 1: // expression
             return *this << *std::get<const Expression*>(body);
@@ -310,16 +310,16 @@ ReverseParser& ReverseParser::print_callable(const_CallableBody body) {
             return *this << *std::get<const Statement*>(body);
 
         default:
-            assert(false && "unhandled callable body type in reverse_parse");
+            assert(false && "unhandled definition body type in reverse_parse");
             return *this;
     }
 }
 
 // reverse-parse expression into the stream
-ReverseParser& ReverseParser::print_callable(CallableBody body) {
+ReverseParser& ReverseParser::print_definition(DefinitionBody body) {
     switch (body.index()) {
         case 0:
-            return *this << "@empty callable body@";
+            return *this << "@empty definition body@";
 
         case 1: // expression
             return *this << *std::get<Expression*>(body);
@@ -328,7 +328,7 @@ ReverseParser& ReverseParser::print_callable(CallableBody body) {
             return *this << *std::get<Statement*>(body);
 
         default:
-            assert(false && "unhandled callable body type in reverse_parse");
+            assert(false && "unhandled definition body type in reverse_parse");
             return *this;
     }
 }

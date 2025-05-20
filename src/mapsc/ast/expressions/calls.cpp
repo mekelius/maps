@@ -46,15 +46,15 @@ Expression* Expression::missing_argument(AST_Store& store, const Type* type,
 }
 
 optional<Expression*> Expression::call(CompilationState& state, 
-    Callable* callable, std::vector<Expression*>&& args, SourceLocation location) {
+    Definition* definition, std::vector<Expression*>&& args, SourceLocation location) {
 
     auto& store = *state.ast_store_;
-    auto callee_type = callable->get_type();
+    auto callee_type = definition->get_type();
     
     if (!callee_type->is_function() && args.size() > 0) {
-        Log::error(callable->to_string() + 
+        Log::error(definition->to_string() + 
             " cannot take arguments, tried giving " + to_string(args.size()), 
-            callable->location());
+            definition->location());
         return nullopt;
     }
 
@@ -62,14 +62,14 @@ optional<Expression*> Expression::call(CompilationState& state,
 
     if (!callee_type->is_function())
         return store.allocate_expression(
-            {ExpressionType::call, CallExpressionValue{callable, args}, callee_type, location});
+            {ExpressionType::call, CallExpressionValue{definition, args}, callee_type, location});
 
     auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
     auto param_types = callee_f_type->param_types();
     auto return_type = callee_f_type->return_type();
 
     if (args.size() > param_types.size()) {
-        Log::error(callable->to_string() + " takes a maximum of " + 
+        Log::error(definition->to_string() + " takes a maximum of " + 
             to_string(param_types.size()) + " arguments, tried giving " + to_string(args.size()), 
             location);
         return nullopt;
@@ -83,7 +83,7 @@ optional<Expression*> Expression::call(CompilationState& state,
 
     if (args.size() == param_types.size() && !missing_args)
         return store.allocate_expression(
-            {ExpressionType::call, CallExpressionValue{callable, args}, return_type, location});
+            {ExpressionType::call, CallExpressionValue{definition, args}, return_type, location});
 
     // TODO: deal with declared types
 
@@ -102,20 +102,20 @@ optional<Expression*> Expression::call(CompilationState& state,
         "Something went wrong while creating placeholders for missing args");
 
     return store.allocate_expression(
-        {ExpressionType::partial_call, CallExpressionValue{callable, args}, 
+        {ExpressionType::partial_call, CallExpressionValue{definition, args}, 
         partial_return_type, location});
 }
 
 optional<Expression*> Expression::partial_binop_call(CompilationState& state, 
-    Callable* callable, Expression* lhs, Expression* rhs, SourceLocation location) {
+    Definition* definition, Expression* lhs, Expression* rhs, SourceLocation location) {
 
     auto& store = *state.ast_store_;
-    auto callee_type = callable->get_type();
+    auto callee_type = definition->get_type();
     
-    assert(callable->is_operator() && 
+    assert(definition->is_operator() && 
         "Expression::partial_binop_call called with not an operator");
     
-    assert(dynamic_cast<Operator*>(callable)->is_binary() && 
+    assert(dynamic_cast<Operator*>(definition)->is_binary() && 
         "Expression::partial_binop_call called with not a binary operator");
 
     auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
@@ -132,7 +132,7 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
 
         return store.allocate_expression(
             {ExpressionType::partial_binop_call_left, 
-                CallExpressionValue{callable, {lhs, rhs}}, partial_return_type, 
+                CallExpressionValue{definition, {lhs, rhs}}, partial_return_type, 
                 location});
     }
     
@@ -146,12 +146,12 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
         *return_type, {rhs->type}, callee_f_type->is_pure());
     return store.allocate_expression(
             {ExpressionType::partial_binop_call_right, 
-                CallExpressionValue{callable, {lhs, rhs}}, partial_return_type, 
+                CallExpressionValue{definition, {lhs, rhs}}, partial_return_type, 
                 location});
 }
 
 static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
-    Callable* lhs, Expression* lambda, Callable* rhs, SourceLocation location) {
+    Definition* lhs, Expression* lambda, Definition* rhs, SourceLocation location) {
 
     assert(false && "not implemented");
 }

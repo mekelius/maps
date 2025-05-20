@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "mapsc/source.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 
 namespace Maps {
 
@@ -19,7 +19,7 @@ class AST_Store;
 // ----- STATEMENTS -----
 struct Let {
     std::string identifier; 
-    CallableBody body;
+    DefinitionBody body;
 
     bool operator==(const Let& other) const = default;
 };
@@ -27,7 +27,7 @@ struct Let {
 struct OperatorStatementValue {
     std::string op;
     unsigned int arity;
-    CallableBody body;
+    DefinitionBody body;
     // include the specifiers
     bool operator==(const OperatorStatementValue& other) const = default;
 
@@ -35,7 +35,7 @@ struct OperatorStatementValue {
 
 struct Assignment {
     std::string identifier; 
-    CallableBody body;
+    DefinitionBody body;
 
     bool operator==(const Assignment& other) const = default;
 };

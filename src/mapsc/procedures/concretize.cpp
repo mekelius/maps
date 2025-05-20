@@ -12,7 +12,7 @@
 
 
 #include "mapsc/ast/expression.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/function_type.hh"
 
@@ -32,7 +32,7 @@ bool concretize_call(Expression& call) {
     if (inline_call(call, *callee))
         return concretize(call);
 
-    // TODO: callable should probably return a function type?
+    // TODO: definition should probably return a function type?
     auto callee_type = dynamic_cast<const FunctionType*>(callee->get_type());
 
     // if it's not a function, it should have been inlinable?

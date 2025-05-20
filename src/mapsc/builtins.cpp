@@ -14,7 +14,7 @@
 #include "mapsc/types/function_type.hh"
 #include "mapsc/types/type_defs.hh"
 
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
@@ -28,7 +28,7 @@ namespace Maps {
 using Log = LogInContext<LogContext::compiler_init>;
 class Type;
 
-const_CallableBody CT_Callable::const_body() const {
+const_DefinitionBody CT_Definition::const_body() const {
     if (auto external = std::get_if<External>(&builtin_body_)) {
         return *external;
     } else if (auto expression = std::get_if<Expression>(&builtin_body_)) {
@@ -43,24 +43,24 @@ const_CallableBody CT_Callable::const_body() const {
     // }, builtin_body_);
 }
 
-// CT_Callable::CT_Callable(std::string_view name, const Expression&& expression)
-// :CT_Callable(name, expression, *expression.type)
+// CT_Definition::CT_Definition(std::string_view name, const Expression&& expression)
+// :CT_Definition(name, expression, *expression.type)
 // {}
 
-// CT_Callable::CT_Callable(std::string_view name, Statement&& statement, const Type& type)
-// :CT_Callable(name, statement, type) {}
+// CT_Definition::CT_Definition(std::string_view name, Statement&& statement, const Type& type)
+// :CT_Definition(name, statement, type) {}
 
 CT_Operator::CT_Operator(std::string_view name, const Expression&& expression, 
     Operator::Properties operator_props)
-:CT_Callable(name, std::move(expression)),
+:CT_Definition(name, std::move(expression)),
     operator_props_(operator_props) {
 }
 
 // ----- BUILTIN DEFINITIONS -----
 
-CT_Callable true_{"true", Expression::builtin(true, Boolean)};
-CT_Callable false_{"false", Expression::builtin(false, Boolean)};
-CT_Callable print{"print", External{}, String_to_IO_Void};
+CT_Definition true_{"true", Expression::builtin(true, Boolean)};
+CT_Definition false_{"false", Expression::builtin(false, Boolean)};
+CT_Definition print{"print", External{}, String_to_IO_Void};
 
 // ----- BUILTINS SCOPE -----
 
@@ -77,9 +77,9 @@ constinit CT_Operator binary_minus_Int{"-", External{}, IntInt_to_Int,
 constinit CT_Operator mult_Int{"*", External{}, IntInt_to_Int,
     {Operator::Fixity::binary,520}};
 
-bool init_builtin(CT_Scope& scope, CT_Callable& callable) {
-    if (!scope.create_identifier(&callable)) {
-        Log::compiler_error("Creating builtin " + callable.to_string() + " failed",
+bool init_builtin(CT_Scope& scope, CT_Definition& definition) {
+    if (!scope.create_identifier(&definition)) {
+        Log::compiler_error("Creating builtin " + definition.to_string() + " failed",
             COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }

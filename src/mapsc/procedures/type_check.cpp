@@ -13,7 +13,7 @@
 
 #include "mapsc/types/type.hh"
 
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 
 #include "mapsc/procedures/concretize.hh"
@@ -38,19 +38,19 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
     return false;
 }
 
-bool SimpleTypeChecker::visit_callable(RT_Callable* callable) {
+bool SimpleTypeChecker::visit_definition(RT_Definition* definition) {
     return std::visit(overloaded{
         [](External) { return true; },
         [](Undefined) { return true; },
         [](Expression*) { return true; },
-        [callable](Statement* statement) {                        
-            auto type = callable->get_type();
-            auto declared_type = callable->get_declared_type();
+        [definition](Statement* statement) {                        
+            auto type = definition->get_type();
+            auto declared_type = definition->get_declared_type();
 
             if (declared_type) {
                 if (type && *type != **declared_type) {
                     assert(false && 
-                        "in visit_callable: declared type mismatch, handling not implemented");
+                        "in visit_definition: declared type mismatch, handling not implemented");
                     return false;
                 }
             }
@@ -60,7 +60,7 @@ bool SimpleTypeChecker::visit_callable(RT_Callable* callable) {
 
             return coerce_return_type(*statement, type);
         }
-    }, callable->body());
+    }, definition->body());
 }
 
 // Note, statements shouldn't mess with contained expressions, since they will be visited

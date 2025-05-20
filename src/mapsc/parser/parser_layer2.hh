@@ -17,7 +17,7 @@
 namespace Maps {
 
 struct Expression;
-class Callable;
+class Definition;
 class CompilationState;
 class AST_Store;
 
@@ -107,14 +107,14 @@ private:
     void initial_type_constructor_state();
 
     // calls/access operations
-    bool is_acceptable_next_arg(Callable* callee, 
+    bool is_acceptable_next_arg(Definition* callee, 
       const std::vector<Expression*>& args/*, Expression* next_arg*/);
       
     void call_expression_state();
     void partial_call_state();
     void deferred_call_state();
 
-    Expression* handle_arg_state(Callable* callee, const std::vector<Expression*>& args);
+    Expression* handle_arg_state(Definition* callee, const std::vector<Expression*>& args);
 
     // creating minus refs
     Expression* binary_minus_ref(SourceLocation location);

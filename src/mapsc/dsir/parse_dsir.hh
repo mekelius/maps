@@ -11,14 +11,14 @@
 namespace Maps {
 
 class CompilationState;
-class Callable;
+class Definition;
 struct Expression;
 
 namespace DSIR {
 
 struct ParseResult {
     bool success = true;
-    std::optional<Callable*> top_level_callable = std::nullopt;
+    std::optional<Definition*> top_level_definition = std::nullopt;
     RT_Scope definitions{};
     std::vector<Expression*> unresolved_identifiers{};
 };

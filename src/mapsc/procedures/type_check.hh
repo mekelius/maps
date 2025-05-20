@@ -5,14 +5,14 @@ namespace Maps {
 
 struct Expression;
 struct Statement;
-class RT_Callable;
+class RT_Definition;
 class CompilationState;
 
 class SimpleTypeChecker {
 public:
     bool visit_expression(Expression*);
     bool visit_statement(Statement*);
-    bool visit_callable(RT_Callable*);
+    bool visit_definition(RT_Definition*);
 
     bool run(CompilationState& state);
 };

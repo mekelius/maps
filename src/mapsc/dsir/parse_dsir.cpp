@@ -11,7 +11,7 @@
 #include "mapsc/compilation_state.hh"
 
 #include "mapsc/ast/expression.hh"
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 
 #include "mapsc/procedures/name_resolution.hh"
@@ -236,7 +236,7 @@ public:
             return { false };
         }
 
-        result_.top_level_callable = ast_store_->allocate_callable(
+        result_.top_level_definition = ast_store_->allocate_definition(
             {"root", top_level_expression, NO_SOURCE_LOCATION});
         }
 
@@ -254,7 +254,7 @@ private:
         return current_token_;
     }
 
-    optional<Callable*> parse_declaration() {
+    optional<Definition*> parse_declaration() {
         switch (current_token_.token_type) {
             case Token::Type::let:
                 return parse_let_declaration();
@@ -268,7 +268,7 @@ private:
         }
     }
     
-    optional<Callable*> parse_fn_declaration() {
+    optional<Definition*> parse_fn_declaration() {
         if (current_token_.token_type != Token::Type::fn) {
             fail("Unexpected " + current_token_.to_string() + ", expected fn");
             return nullopt;
@@ -295,10 +295,10 @@ private:
 
         // auto body = parse_expression();
 
-        // create callable;
+        // create definition;
     }
 
-    optional<Callable*> parse_let_declaration() {
+    optional<Definition*> parse_let_declaration() {
         if (current_token_.token_type != Token::Type::let) {
             fail("Unexpected " + current_token_.to_string() + ", expected let");
             return nullopt;
@@ -321,12 +321,12 @@ private:
         get_token(); // eat the =
 
         auto body = parse_expression();
-        auto callable = ast_store_->allocate_callable({name, body, location});
-        if (!result_.definitions.create_identifier(callable)) {
+        auto definition = ast_store_->allocate_definition({name, body, location});
+        if (!result_.definitions.create_identifier(definition)) {
             fail("Couldn't create identifier \"" + name + "\"");
             return nullopt;
         }
-        return callable;
+        return definition;
     }
 
     Statement* parse_statement() {
@@ -407,7 +407,7 @@ private:
         return Statement::expression(*ast_store_, parse_expression(), current_token_.location);
     }
 
-    Callable* parse_let_statement() {
+    Definition* parse_let_statement() {
         assert(false && "not implemented");
     }
 
@@ -482,7 +482,7 @@ ParseResult eval_parse_dsir(CompilationState& state, std::istream& source) {
     if (!result.success)
         return result;
 
-    if (result.top_level_callable) {
+    if (result.top_level_definition) {
         if (!resolve_identifiers(state, result.definitions, result.unresolved_identifiers)) {
             Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
             return { false };
@@ -503,7 +503,7 @@ ParseResult parse_dsir(CompilationState& state, std::istream& source) {
     if (!result.success)
         return result;
 
-    if (result.top_level_callable) {
+    if (result.top_level_definition) {
         if (!resolve_identifiers(state, result.definitions, result.unresolved_identifiers)) {
             Log::compiler_error("Name resolution failed", NO_SOURCE_LOCATION);
             return { false };

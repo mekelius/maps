@@ -12,7 +12,7 @@
 
 #include "mapsc/logging.hh"
 
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/parser/token.hh"
 #include "mapsc/parser/lexer.hh"
 
@@ -32,7 +32,7 @@ public:
 
     // if fails, sets ast->is_valid to false
     bool run(std::istream& source_is);
-    std::optional<Callable*> eval_parse(std::istream& source_is);
+    std::optional<Definition*> eval_parse(std::istream& source_is);
 
 // protected for unit tests
 protected:
@@ -59,9 +59,9 @@ protected:
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& name) const;
 
-    void create_identifier(const std::string& name, CallableBody body, SourceLocation location);
+    void create_identifier(const std::string& name, DefinitionBody body, SourceLocation location);
     void create_identifier(const std::string& name, SourceLocation location);
-    std::optional<Callable*> lookup_identifier(const std::string& name);
+    std::optional<Definition*> lookup_identifier(const std::string& name);
 
     // mark down the location for logging purposes
     void expression_start();
@@ -77,7 +77,7 @@ protected:
     Statement* broken_statement_helper(const std::string& message);
 
     void parse_top_level_statement();
-    CallableBody parse_definition_body();
+    DefinitionBody parse_definition_body();
     Statement* parse_non_global_statement();
     Statement* parse_statement();
 

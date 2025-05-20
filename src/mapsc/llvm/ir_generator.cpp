@@ -39,7 +39,7 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/type_store.hh"
 
-#include "mapsc/ast/callable.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/statement.hh"
@@ -47,7 +47,7 @@
 using llvm::LLVMContext;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if;
 using std::unique_ptr, std::make_unique;
-using Maps::Expression, Maps::Statement, Maps::Callable, Maps::ExpressionType, 
+using Maps::Expression, Maps::Statement, Maps::Definition, Maps::ExpressionType, 
     Maps::StatementType, Maps::PragmaStore;
 using Maps::Helpers::capitalize;
 
@@ -270,8 +270,8 @@ optional<llvm::Function*> IR_Generator::eval_and_print_root() {
 }
 
 bool IR_Generator::handle_global_functions() {
-    for (auto [_1, callable]: compilation_state_->globals_) {
-        if (!handle_global_definition(*callable))
+    for (auto [_1, definition]: compilation_state_->globals_) {
+        if (!handle_global_definition(*definition))
             return false;
     }
     
@@ -279,18 +279,18 @@ bool IR_Generator::handle_global_functions() {
 }
 
 std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
-    const Maps::Callable& callable) {
+    const Maps::Definition& definition) {
     
-    if (callable.get_type()->is_function())
-        return handle_function(callable);
+    if (definition.get_type()->is_function())
+        return handle_function(definition);
 
-    auto callable_body = callable.const_body();
+    auto definition_body = definition.const_body();
 
     if (const Expression* const* expression = 
-            std::get_if<const Maps::Expression*>(&callable_body))
-        return wrap_value_in_function(callable.to_string(), **expression);
+            std::get_if<const Maps::Expression*>(&definition_body))
+        return wrap_value_in_function(definition.to_string(), **expression);
 
-    fail("In IR_Generator::handle_global_definition: callable didn't have a function type but wasn't an expression");
+    fail("In IR_Generator::handle_global_definition: definition didn't have a function type but wasn't an expression");
     return nullopt;
 }
 
@@ -325,24 +325,24 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
     return wrapper;
 }
 
-std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Callable& callable) {
-    assert(callable.get_type()->is_function() && 
-        "IR_Generator::handle function called with a non-function callable");
+std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Definition& definition) {
+    assert(definition.get_type()->is_function() && 
+        "IR_Generator::handle function called with a non-function definition");
 
     const Maps::FunctionType* function_type = dynamic_cast<const Maps::FunctionType*>(
-        callable.get_type());
+        definition.get_type());
 
     optional<llvm::FunctionType*> signature = types_.convert_function_type(
         *function_type->return_type(), function_type->param_types());
 
     if (!signature) {
         Log::error("unable to convert type signature for " + 
-            callable.to_string(), callable.location());
+            definition.to_string(), definition.location());
         return nullopt;
     }
 
-    optional<llvm::Function*> function = function_definition(callable.to_string(), 
-        *dynamic_cast<const Maps::FunctionType*>(callable.get_type()), *signature);
+    optional<llvm::Function*> function = function_definition(definition.to_string(), 
+        *dynamic_cast<const Maps::FunctionType*>(definition.get_type()), *signature);
 
     if (!function)
         return nullopt;
