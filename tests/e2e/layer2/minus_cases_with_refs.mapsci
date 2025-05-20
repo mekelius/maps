@@ -4,10 +4,10 @@ let a;
 let b;
 let c;
 
-a - b           // CHECK: ( a - b )
--b              // CHECK: ( -b )
-(-b)            // CHECK: ( -b )
--(a + b)        // CHECK: ( -(a + b) )
-a -b            // CHECK: ( a + ( -b ) )
-a - ( b - c )   // CHECK: ( a - ( b - c ) )
-a - b-c         // CHECK: ( a - ( b - c ) )
+a - b           // CHECK: a - b
+-b              // CHECK: -b
+(-b)            // CHECK: -b
+-(a + b)        // CHECK: -( a + b )
+a -b            // CHECK: a - b
+a - ( b - c )   // CHECK: a - ( b - c )
+a - b-c         // CHECK: a - ( b - c )

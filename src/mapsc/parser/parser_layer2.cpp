@@ -647,8 +647,9 @@ void TermedExpressionParser::initial_minus_sign_state() {
 
         case ExpressionType::reference:
         case ExpressionType::call:
-            reduce_unary_minus_ref();
-            return initial_prefix_operator_state();
+            shift();
+            reduce_partially_applied_minus();
+            return initial_partially_applied_minus_state();
 
         case TYPE_DECLARATION_TERM:
         default:
@@ -658,6 +659,9 @@ void TermedExpressionParser::initial_minus_sign_state() {
 }
 
 void TermedExpressionParser::initial_partially_applied_minus_state() {
+    if (at_expression_end())
+        return;
+        
     current_term()->convert_to_unary_minus_call();
     return initial_call_state();
 }
