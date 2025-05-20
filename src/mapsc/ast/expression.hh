@@ -94,10 +94,13 @@ struct TermedExpressionValue {
 };
 
 struct LambdaExpressionValue {
-    Expression* parameters; // BTD
-    Expression* body;
+    Expression* binding_type_declaration;
+    CallableBody body;
+    std::optional<RT_Scope> scope = std::nullopt;
 
-    bool operator==(const LambdaExpressionValue&) const = default;
+    bool operator==(const LambdaExpressionValue& other) const {
+        return this == &other;
+    };
 };
 
 struct TernaryExpressionValue {
@@ -171,6 +174,9 @@ struct Expression {
     
     static Expression* partially_applied_minus(AST_Store& store, 
         Expression* rhs, SourceLocation location);
+
+    static Expression* lambda(AST_Store& store, Expression* binding_type_declaration, 
+        CallableBody body, SourceLocation location);
 
     static Expression* valueless(
         AST_Store& store, ExpressionType expression_type, SourceLocation location);

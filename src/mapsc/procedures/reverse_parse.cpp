@@ -72,7 +72,7 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
             break;
 
         case StatementType::expression_statement:
-            *this << std::get<Expression*>(statement.value);
+            *this << *std::get<Expression*>(statement.value);
             break;
 
         case StatementType::block: {
@@ -81,7 +81,7 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
 
             for (Statement* substatement: 
                     std::get<Block>(statement.value)) {
-                *this << substatement;
+                *this << *substatement;
             }
 
             indent_stack_--;
@@ -129,7 +129,7 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
 
         case StatementType::return_:
             *this << "return" 
-                    << std::get<Expression*>(statement.value);
+                    << *std::get<Expression*>(statement.value);
             break;
     }
 
@@ -161,7 +161,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
                 if (options_.include_debug_info)
                     *this << "/*term:*/";
 
-                *this << term;
+                *this << *term;
                 pad_left = true; 
             }
             
@@ -227,7 +227,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 
         case ExpressionType::type_argument: {
             auto [arg, name] = std::get<TypeArgument>(expression.value);
-            return *this << arg << " " << (name ? *name : ""); 
+            return *this << *arg << " " << (name ? *name : ""); 
         }
 
         case ExpressionType::partial_binop_call_left:
@@ -241,15 +241,15 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
                 switch (args.size()) {
                     case 2:
                         return *this << "( " 
-                                    << args.at(0) 
+                                    << *args.at(0) 
                                     << " " 
                                     << callee->to_string()
                                     << " " 
-                                    << args.at(1) 
+                                    << *args.at(1) 
                                     << " )";
 
                     case 1:
-                        return *this << "( " << callee->to_string() << args.at(0) << " )";
+                        return *this << "( " << callee->to_string() << *args.at(0) << " )";
                    
                     case 0:
                         return *this << "(" << callee->to_string() << ")";
@@ -260,7 +260,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
             
             bool first_arg = true;
             for (Expression* arg_expression: args) {
-                *this << (first_arg ? "" : ", ") << arg_expression;
+                *this << (first_arg ? "" : ", ") << *arg_expression;
                 first_arg = false;
             }            
 
@@ -274,9 +274,9 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
             return *this << "-";
 
         case ExpressionType::lambda:
-            return *this << "\\" << *expression.lambda_value().parameters 
+            return *this << "\\" << *expression.lambda_value().binding_type_declaration 
                          << ( expression.type->is_pure() ? "->" : "=>" ) 
-                         << *expression.lambda_value().body;
+                         << expression.lambda_value().body;
 
         case ExpressionType::ternary_expression:
             return *this << *expression.ternary_value().condition << "?" 
@@ -308,6 +308,24 @@ ReverseParser& ReverseParser::print_callable(const_CallableBody body) {
 
         case 2: // statement
             return *this << *std::get<const Statement*>(body);
+
+        default:
+            assert(false && "unhandled callable body type in reverse_parse");
+            return *this;
+    }
+}
+
+// reverse-parse expression into the stream
+ReverseParser& ReverseParser::print_callable(CallableBody body) {
+    switch (body.index()) {
+        case 0:
+            return *this << "@empty callable body@";
+
+        case 1: // expression
+            return *this << *std::get<Expression*>(body);
+
+        case 2: // statement
+            return *this << *std::get<Statement*>(body);
 
         default:
             assert(false && "unhandled callable body type in reverse_parse");

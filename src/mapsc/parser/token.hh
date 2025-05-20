@@ -17,12 +17,11 @@ enum class TokenType: int {
     curly_brace_open, curly_brace_close,
     parenthesis_open, parenthesis_close,
     bracket_open, bracket_close,
-    semicolon, colon, double_colon, comma, lambda,
+    semicolon, colon, question_mark, double_colon, comma, lambda, underscore,
     tie,
     pragma,
     dummy,  // dummy token used to initialize token values
-    syntax_error,
-    unknown // unhandled, means a bug
+    syntax_error
 };
 
 struct Token {

@@ -163,6 +163,9 @@ add_executable(unit_tests
     tests/parser/layer2.cpp
     tests/parser/unary_minus.cpp
     tests/parser/unary_operators.cpp
+
+    tests/parser/layer1/lambda.cpp
+    tests/parser/layer1/ternary.cpp
     
     tests/types/type_casts.cpp
     tests/types/type_store.cpp

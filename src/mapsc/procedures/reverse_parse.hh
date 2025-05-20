@@ -31,6 +31,7 @@ public:
     ReverseParser& operator<<(const std::string& str) { *ostream_ << str; return *this; }
     ReverseParser& operator<<(const char ch) { *ostream_ << ch; return *this; }
     ReverseParser& operator<<(const CompilationState& state) { return reverse_parse(state); }
+    ReverseParser& operator<<(const CallableBody body) { return print_callable(body); }
     ReverseParser& operator<<(const const_CallableBody body) { return print_callable(body); }
     ReverseParser& operator<<(const Expression& expression) { return print_expression(expression); }
     ReverseParser& operator<<(const Statement& statement) { return print_statement(statement); }
@@ -45,6 +46,7 @@ private:
     ReverseParser& print_statement(const Statement& statement);
     ReverseParser& print_expression(const Expression& expression);
     ReverseParser& print_callable(const const_CallableBody body);
+    ReverseParser& print_callable(const CallableBody body);
 
     ReverseParser& print_type_declaration(const Expression& expression);
 

@@ -53,6 +53,8 @@ std::string Token::get_string() const {
             return "]";
         case TokenType::semicolon:
             return ";";
+        case TokenType::question_mark:
+            return "?";
         case TokenType::colon:
             return ":";
         case TokenType::double_colon:
@@ -61,6 +63,8 @@ std::string Token::get_string() const {
             return ",";
         case TokenType::lambda:
             return "\\";
+        case TokenType::underscore:
+            return "_";
 
         case TokenType::tie:
             return "tie";
@@ -70,10 +74,6 @@ std::string Token::get_string() const {
 
         case TokenType::syntax_error:
             return "syntax error: " + string_value();
-
-        case TokenType::unknown:
-            assert(false && "unknown tokens shouldn't exist");
-            return "unknown token type";
     }
 }
 
@@ -137,15 +137,19 @@ bool is_block_starter(const Token& token) {
 // these can be FOLLOWED by a tie
 bool is_right_tieable_token(const Token& token) {
     // ? should type identifiers be tieable?
-    return (
-        token.token_type == TokenType::operator_t      ||
-        token.token_type == TokenType::identifier      ||
-        token.token_type == TokenType::number          ||
-        token.token_type == TokenType::double_colon    ||
-        token.token_type == TokenType::string_literal  ||
-        token.token_type == TokenType::type_identifier ||
-        token.token_type == TokenType::arrow_operator
-    );
+    switch (token.token_type) {
+        case TokenType::operator_t:
+        case TokenType::identifier:
+        case TokenType::number:
+        case TokenType::double_colon:
+        case TokenType::string_literal:
+        case TokenType::type_identifier:
+        case TokenType::arrow_operator:
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 // these are allowed to appear in termed expressions

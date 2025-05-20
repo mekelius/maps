@@ -112,11 +112,11 @@ Token ParserLayer1::get_token() {
     return current_token();
 }
 
-Token ParserLayer1::current_token() const {
+const Token& ParserLayer1::current_token() const {
     return token_buf_[which_buf_slot_ % 2];
 }
 
-Token ParserLayer1::peek() const {
+const Token& ParserLayer1::peek() const {
     return token_buf_[(which_buf_slot_+1) % 2];
 }
 
@@ -153,14 +153,24 @@ void ParserLayer1::declare_invalid() {
 
 // ----- OUTPUT HELPERS -----
 
-void ParserLayer1::fail(const std::string& message) {
-    fail(message, current_token().location);
-}
-
 void ParserLayer1::fail(const std::string& message, SourceLocation location) {
     Log::error(message, location);
     declare_invalid();
 }
+void ParserLayer1::fail(const std::string& message) {
+    fail(message, current_token().location);
+}
+
+Expression* ParserLayer1::fail_expression(const std::string& message, SourceLocation location) {
+    fail(message, location);
+    Expression* expression = Expression::syntax_error(*ast_store_, location);
+    get_token();
+    return expression;
+}
+Expression* ParserLayer1::fail_expression(const std::string& message) {
+    return fail_expression(message, current_token().location);
+}
+    
 
 void ParserLayer1::log(const std::string& message, LogLevel loglevel) const {
     Log::on_level(message, loglevel, current_token().location);
@@ -295,6 +305,11 @@ void ParserLayer1::parse_top_level_statement() {
     }
 }
 
+CallableBody ParserLayer1::parse_definition_body() {
+    return is_block_starter(current_token()) ?
+        CallableBody{parse_block_statement()} : CallableBody{parse_expression()};
+}
+
 Statement* ParserLayer1::parse_non_global_statement() {
     switch (current_token().token_type) {
         case TokenType::pragma:
@@ -334,13 +349,13 @@ Statement* ParserLayer1::parse_statement() {
             }
             return parse_expression_statement();
 
-        case TokenType::type_identifier:
-            return parse_expression_statement();
-
         case TokenType::indent_block_start:
         case TokenType::curly_brace_open:
             return parse_block_statement();
 
+        case TokenType::type_identifier:
+        case TokenType::lambda:
+        case TokenType::question_mark:
         case TokenType::parenthesis_open:
         case TokenType::bracket_open:
         case TokenType::operator_t:
@@ -356,13 +371,7 @@ Statement* ParserLayer1::parse_statement() {
         case TokenType::dummy:
             get_token(); // eat the dummy
             return create_statement(StatementType::empty);
-            
-        // ---- errors -----
-        default:
-            fail("Unexpected "+ current_token().get_string() + ", expected a statement");
-            reset_to_top_level();
-            return create_statement(StatementType::broken);
-        
+
         case TokenType::indent_block_end:
             assert(false && "parse_statement called at indent_block_end");
             return create_statement(StatementType::broken);
@@ -372,8 +381,9 @@ Statement* ParserLayer1::parse_statement() {
             reset_to_top_level();
             return create_statement(StatementType::broken);
 
-        case TokenType::unknown:
-            fail("unknown token");
+        // ---- errors -----
+        default:
+            fail("Unexpected "+ current_token().get_string() + ", expected a statement");
             reset_to_top_level();
             return create_statement(StatementType::broken);
     }
@@ -430,12 +440,7 @@ Statement* ParserLayer1::parse_let_statement() {
                 if (is_assignment_operator(current_token())) {
                     get_token(); // eat the assignment operator
 
-                    CallableBody body;
-                    if (is_block_starter(current_token())) {
-                        body = parse_block_statement();
-                    } else {
-                        body = parse_expression();
-                    }
+                    CallableBody body = parse_definition_body();
 
                     Statement* statement = create_statement(StatementType::let);
                     statement->value = Let{name, body};
@@ -740,6 +745,11 @@ Expression* ParserLayer1::parse_expression() {
             }
         }
 
+        case TokenType::lambda:
+            return parse_lambda_expression();
+        case TokenType::question_mark:
+            return parse_ternary_expression();
+
         case TokenType::type_identifier: 
         case TokenType::arrow_operator:
         case TokenType::operator_t:
@@ -873,6 +883,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
                     expression->mark_not_type_declaration();
             }
 
+            case TokenType::lambda:
             case TokenType::parenthesis_open:
             case TokenType::bracket_open:
             case TokenType::curly_brace_open:
@@ -984,9 +995,15 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return handle_type_identifier();
 
         case TokenType::arrow_operator:
-            return Expression::type_operator_identifier(*compilation_state_, current_token().string_value(), 
-                current_token().location);
-        
+            return Expression::type_operator_identifier(*compilation_state_, 
+                current_token().string_value(), current_token().location);
+
+        case TokenType::question_mark:
+            return parse_ternary_expression();
+
+        case TokenType::lambda:
+            return parse_lambda_expression();
+
         default:
             fail("unhandled token type: " + current_token().get_string() + 
                 ", reached ParserLayer1::parse_term");
@@ -1004,6 +1021,34 @@ Expression* ParserLayer1::parse_access_expression() {
     get_token();
     expression_end();
     return expression;
+}
+
+Expression* ParserLayer1::parse_ternary_expression() {
+    assert(false && "not implemented");
+}
+
+Expression* ParserLayer1::parse_lambda_expression() {
+    expression_start();
+    auto location = current_token().location;
+    get_token(); // eat the '\'
+
+    Expression* btd = parse_binding_type_declaration();
+
+    if (current_token().token_type != TokenType::arrow_operator)
+        return fail_expression("Undexpected " + current_token().get_string() + 
+            " in lambda expression, expected a \"->\" or \"=>\" ");
+    get_token();
+
+    CallableBody body = parse_definition_body();
+
+    expression_end();
+    return Expression::lambda(*ast_store_, btd, body, location);
+}
+
+Expression* ParserLayer1::parse_binding_type_declaration() {
+    assert(false && "not implemented");
+
+    // just go to termed expression
 }
 
 // expects to be called with the opening parenthese as the current_token_

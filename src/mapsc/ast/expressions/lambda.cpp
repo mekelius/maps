@@ -15,4 +15,12 @@ const LambdaExpressionValue& Expression::lambda_value() const {
     return std::get<LambdaExpressionValue>(value);
 }
 
+Expression* Expression::lambda(AST_Store& store, Expression* binding_type_declaration, 
+    CallableBody body, SourceLocation location) {
+
+    return store.allocate_expression(
+        {ExpressionType::lambda, LambdaExpressionValue{binding_type_declaration, body}, location});
+}
+
+
 } // namespace Maps

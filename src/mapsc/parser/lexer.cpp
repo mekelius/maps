@@ -118,24 +118,7 @@ Token Lexer::get_token_() {
 
         case '-':
         case '=':
-            if (peek_char() != '>')
-                return read_operator();
-
-            if (tie_possible_) {
-                tie_possible_ = false;
-                return create_token(TokenType::tie);
-            }
-    
-            buffer_.sputc(current_char_);
-            buffer_.sputc(read_char());  
-            
-            if (is_operator_glyph(current_char_)) {
-                Log::error("Syntax error: operator cannot start with \"" + buffer_.str() + "\"",
-                    {static_cast<int>(current_token_start_line_), 
-                        static_cast<int>(current_token_start_col_)});
-                return create_token(TokenType::unknown);
-            }
-            return create_token(TokenType::arrow_operator, buffer_.str());
+            return read_operator();
 
         case '(':
             if (tie_possible_) {
@@ -180,6 +163,12 @@ Token Lexer::get_token_() {
         
         case '\n':
             return read_linebreak();
+
+        case '?':
+            if (is_operator_glyph(peek_char()))
+                return read_operator();
+
+            return create_token(TokenType::question_mark);
 
         case ';':
             while(read_char() == ';' && !source_is_->eof());
@@ -227,7 +216,7 @@ Token Lexer::get_token_() {
             // unknown token
             assert(false && "unhandled token type in Lexer::get_token_()");
             read_char();
-            return create_token(TokenType::unknown);
+            return create_token(TokenType::syntax_error);
     }
 }
 
@@ -270,7 +259,11 @@ Token Lexer::read_operator() {
             return create_token(TokenType::eof);
     }
 
-    return create_token(TokenType::operator_t, buffer_.str());
+    auto result = buffer_.str();
+    if (result == "->" || result == "=>")
+        return create_token(TokenType::arrow_operator, result);
+
+    return create_token(TokenType::operator_t, result);
 }
 
 Token Lexer::read_string_literal() {

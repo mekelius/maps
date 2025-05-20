@@ -41,15 +41,17 @@ protected:
 
     // gets the next token from the lexer and stores it in current_token_
     Token get_token();
-    Token current_token() const;
-    Token peek() const;
+    const Token& current_token() const;
+    const Token& peek() const;
 
     void update_brace_levels(Token token);
     // declare the program invalid. Parsing may still continue, but no final output should be produced
     void declare_invalid();
 
-    void fail(const std::string& message);
     void fail(const std::string& message, SourceLocation location);
+    void fail(const std::string& message);
+    Expression* fail_expression(const std::string& message, SourceLocation location);
+    Expression* fail_expression(const std::string& message);
     
     void log(const std::string& message, LogLevel loglevel) const;
     void log(const std::string& message, LogLevel loglevel, SourceLocation location) const;
@@ -75,6 +77,7 @@ protected:
     Statement* broken_statement_helper(const std::string& message);
 
     void parse_top_level_statement();
+    CallableBody parse_definition_body();
     Statement* parse_non_global_statement();
     Statement* parse_statement();
 
@@ -100,6 +103,11 @@ protected:
     Expression* parse_parenthesized_expression();
     Expression* parse_mapping_literal();
     Expression* parse_access_expression();
+    Expression* parse_ternary_expression();
+    Expression* parse_lambda_expression();
+
+    Expression* parse_binding_type_declaration();
+
 
     // ----- TERMINALS -----
     Expression* handle_string_literal();
