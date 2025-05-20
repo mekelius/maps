@@ -62,11 +62,11 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
             assert(false && "deleted statement encountered in-tree");
             *this << "@deleted statement@";
             break;
-        case StatementType::broken:
-            *this << "@broken statement@";
+        case StatementType::compiler_error:
+            *this << "@compiler error@";
             break;
-        case StatementType::illegal:
-            *this << "@illegal statement@";
+        case StatementType::user_error:
+            *this << "@broken statement@";
             break;
         case StatementType::empty:
             break;
@@ -154,9 +154,6 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
                 *this << "/*reference to:*/ ";
             return *this << expression.reference_value()->to_string();
 
-        case ExpressionType::not_implemented:
-            return *this << "Expression type not implemented in parser: " + expression.string_value();
-
         case ExpressionType::identifier:
             if (options_.include_debug_info)
                 *this << "/*unresolved identifier:*/ ";
@@ -189,7 +186,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
                 *this << "/*unresolved identifier:*/ ";
             return *this << expression.string_value();
 
-        case ExpressionType::syntax_error:
+        case ExpressionType::user_error:
             return *this << "@SYNTAX ERROR@";
 
         case ExpressionType::type_construct:

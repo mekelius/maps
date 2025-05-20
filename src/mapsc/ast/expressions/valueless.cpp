@@ -17,8 +17,12 @@ Expression* Expression::minus_sign(AST_Store& store, SourceLocation location) {
         Expression{ExpressionType::minus_sign, std::monostate{}, location});
 }
 
-Expression* Expression::syntax_error(AST_Store& store, SourceLocation location) {
-    return store.allocate_expression(Expression{ExpressionType::syntax_error, location});
+Expression* Expression::user_error(AST_Store& store, SourceLocation location) {
+    return store.allocate_expression(Expression{ExpressionType::user_error, location});
+}
+
+Expression* Expression::compiler_error(AST_Store& store, SourceLocation location) {
+    return store.allocate_expression(Expression{ExpressionType::compiler_error, location});
 }
 
 } // namespace Maps

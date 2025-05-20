@@ -28,9 +28,9 @@ struct Assignment {
 using Block = std::vector<Statement*>;
 
 enum class StatementType {
+    user_error,                 // parsing failed
+    compiler_error,
     deleted,
-    broken,                 // parsing failed
-    illegal,                // well formed but illegal statements
     empty,
     expression_statement,   // statement consisting of a single expression
     block,

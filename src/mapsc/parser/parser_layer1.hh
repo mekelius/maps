@@ -47,14 +47,16 @@ protected:
 
     void update_brace_levels(Token token);
     // declare the program invalid. Parsing may still continue, but no final output should be produced
-    void declare_invalid();
 
     void reset_to_top_level();
-
-    void fail(const std::string& message, SourceLocation location);
-    void fail(const std::string& message);
-    Expression* fail_expression(const std::string& message, SourceLocation location);
-    Expression* fail_expression(const std::string& message);
+    
+    void fail(const std::string& message, SourceLocation location, bool compiler_error = false);
+    Expression* fail_expression(const std::string& message, SourceLocation location, 
+        bool compiler_error = false);
+    Definition* fail_definition(const std::string& message, SourceLocation location, 
+        bool compiler_error = false);
+    Statement* fail_statement(const std::string& message, SourceLocation location, 
+        bool compiler_error = false);
     
     void log(const std::string& message, LogLevel loglevel) const;
     void log(const std::string& message, LogLevel loglevel, SourceLocation location) const;
@@ -66,6 +68,9 @@ protected:
     void create_identifier(const std::string& name, SourceLocation location);
     std::optional<Definition*> lookup_identifier(const std::string& name);
 
+    // attempts to collapse a single statement block
+    bool simplify_single_statement_block(Statement* outer);
+
     Definition* create_definition(DefinitionBody body, SourceLocation location);
     // creates an expression using ast_, marking the location as the expression_location_stack_
     Statement* create_statement(StatementType statement_type, SourceLocation location);
@@ -73,14 +78,11 @@ protected:
     void handle_pragma();
 
     Chunk parse_top_level_chunk();
-    Definition* broken_definition_helper(const std::string& message, SourceLocation location);
-    Statement* broken_statement_helper(const std::string& message, SourceLocation location);
     
     Definition* parse_let_definition();
     Definition* parse_operator_definition();
     DefinitionBody parse_definition_body();
     
-    Statement* parse_non_global_statement();
     Statement* parse_statement();
 
     Statement* parse_expression_statement();
@@ -88,17 +90,10 @@ protected:
     Statement* parse_return_statement();
     Statement* parse_block_statement();
 
-    // attempts to collapse a single statement block
-    bool simplify_single_statement_block(Statement* outer);
-
     Expression* parse_expression();
 
     Expression* parse_termed_expression(bool is_tied = false);
     Expression* parse_term(bool is_tied = false);
-    // AST::Expression* parse_call_expression(const std::string& callee);
-    // Takes an expression for the callee, and optionally a signature if it's known
-    // AST::Expression* parse_call_expression(AST::Expression* callee, const std::vector<AST::Type*>& signature = {});
-    // std::vector<AST::Expression*> parse_argument_list();
 
     Expression* parse_parenthesized_expression();
     Expression* parse_mapping_literal();
@@ -130,8 +125,6 @@ protected:
     unsigned int parenthese_level_ = 0;
     unsigned int curly_brace_level_ = 0;
     unsigned int angle_bracket_level_ = 0;
-
-    bool finished_ = false;
 };
 
 } // namespace Maps

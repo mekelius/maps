@@ -54,9 +54,8 @@ enum class ExpressionType {
 
     termed_expression,      // value: std::vector<Expression*>
     
-    syntax_error,           // value: std::string
+    user_error,           // value: std::string
     compiler_error,
-    not_implemented,
     
     call,                   // value: 
     partial_call,
@@ -185,7 +184,8 @@ struct Expression {
     static Expression* minus_sign(
         AST_Store& store, SourceLocation location);
 
-    static Expression* syntax_error(AST_Store& store, SourceLocation location);
+    static Expression* user_error(AST_Store& store, SourceLocation location);
+    static Expression* compiler_error(AST_Store& store, SourceLocation location);
 
     static Expression builtin(const ExpressionValue& value, const Type& type) {
         return Expression{ExpressionType::value, value, &type, BUILTIN_SOURCE_LOCATION};

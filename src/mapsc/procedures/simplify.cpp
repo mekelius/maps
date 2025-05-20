@@ -18,7 +18,7 @@ namespace Maps {
 // TODO: delete the simplified nodes properly
 bool attempt_simplify(RT_Definition& definition) {
     return std::visit(overloaded {
-        [](UserError) { return false; },
+        [](Error) { return false; },
         [](Undefined) { return true; },
         [](External) { return true; },
 

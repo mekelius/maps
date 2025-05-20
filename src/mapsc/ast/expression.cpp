@@ -47,8 +47,8 @@ std::string Expression::string_value() const {
 bool Expression::is_illegal() const {
     switch (expression_type) {
         case ExpressionType::deleted:
-        case ExpressionType::not_implemented:
-        case ExpressionType::syntax_error:
+        case ExpressionType::user_error:
+        case ExpressionType::compiler_error:
             return true;
 
         default:
@@ -151,14 +151,11 @@ std::string Expression::log_message_string() const {
         case ExpressionType::type_field_name:
             return "named field" + string_value();
 
-        case ExpressionType::syntax_error:
+        case ExpressionType::user_error:
             return "broken expession (syntax error)";
         
         case ExpressionType::compiler_error:
             return "broken expression (compiler error)";
-
-        case ExpressionType::not_implemented:
-            return "nonimplemented expression";
 
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");

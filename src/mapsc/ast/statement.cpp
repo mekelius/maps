@@ -9,12 +9,14 @@ namespace Maps {
 Statement::Statement(StatementType statement_type, SourceLocation location)
 :statement_type(statement_type), location(location) {
     switch (statement_type) {
-        case StatementType::broken:
-        case StatementType::illegal:
+        case StatementType::compiler_error:
+        case StatementType::user_error:
             value = static_cast<std::string>("");
             break;
         case StatementType::deleted:
             assert(false && "why are we creating statements pre-deleted?");
+            value = Undefined{};
+            break;
         case StatementType::empty:
             value = Undefined{};
             break;               
@@ -43,10 +45,10 @@ std::string Statement::log_message_string() const {
     switch (statement_type) {
         case StatementType::deleted:
             return "deleted statement";
-        case StatementType::broken:
+        case StatementType::compiler_error:
+            return "compiler error";
+        case StatementType::user_error:
             return "broken statement";
-        case StatementType::illegal:
-            return "illegal statement";
         case StatementType::empty:
             return "empty statement";
         case StatementType::expression_statement:
@@ -79,8 +81,8 @@ bool Statement::is_illegal_as_single_statement_block() const {
     switch (statement_type) {
         case StatementType::expression_statement:
         case StatementType::return_:
-        case StatementType::illegal:
-        case StatementType::broken:
+        case StatementType::user_error:
+        case StatementType::compiler_error:
         case StatementType::empty:
         case StatementType::block:
             return false;

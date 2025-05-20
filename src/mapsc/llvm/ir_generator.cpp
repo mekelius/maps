@@ -51,8 +51,8 @@ using Maps::Expression, Maps::Statement, Maps::Definition, Maps::ExpressionType,
     Maps::StatementType, Maps::PragmaStore;
 using Maps::Helpers::capitalize;
 
-#define BAD_STATEMENT_TYPE StatementType::broken:\
-                      case StatementType::illegal:\
+#define BAD_STATEMENT_TYPE StatementType::user_error:\
+                      case StatementType::compiler_error:\
                       case StatementType::deleted
 
 #define IGNORED_STATEMENT_TYPE StatementType::empty

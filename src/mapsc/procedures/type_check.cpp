@@ -40,7 +40,7 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
 
 bool SimpleTypeChecker::visit_definition(RT_Definition* definition) {
     return std::visit(overloaded{
-        [](UserError) { return false; },
+        [](Error) { return false; },
         [](External) { return true; },
         [](Undefined) { return true; },
         [](Expression*) { return true; },

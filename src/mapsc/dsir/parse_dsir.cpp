@@ -373,7 +373,7 @@ private:
         switch (current_token_.token_type) {
             case Token::Type::eof:
                 fail("Unexpected eof");
-                return Expression::syntax_error(*ast_store_, current_token_.location);
+                return Expression::user_error(*ast_store_, current_token_.location);
 
             case Token::Type::identifier:
                 return parse_identifier();
@@ -399,7 +399,7 @@ private:
             case Token::Type::comma:
             default:
                 fail("Unexpected " + current_token_.to_string() + ", expected an expression");
-                return Expression::syntax_error(*ast_store_, current_token_.location);
+                return Expression::user_error(*ast_store_, current_token_.location);
         }
     }
 

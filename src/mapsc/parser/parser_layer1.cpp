@@ -54,7 +54,7 @@ optional<Definition*> ParserLayer1::eval_parse(std::istream& source_is) {
     force_top_level_eval_ = false;
 
     if (!compilation_state_->entry_point_) {
-        fail("No entry point");
+        fail("No entry point", NO_SOURCE_LOCATION);
         return nullopt;
     }
 
@@ -81,7 +81,7 @@ void ParserLayer1::run_parse(std::istream& source_is) {
         "root", root_statement, {0,0}});
 
     if (!compilation_state_->set_entry_point(root_definition))
-        return fail("failed to set entry point");
+        return fail("failed to set entry point", NO_SOURCE_LOCATION);
 
     while (current_token().token_type != TokenType::eof) {
         #ifndef NDEBUG
@@ -146,31 +146,47 @@ void ParserLayer1::update_brace_levels(Token token) {
     }
 }
 
-void ParserLayer1::declare_invalid() {
+// ----- OUTPUT HELPERS -----
+
+void ParserLayer1::fail(const std::string& message, SourceLocation location, 
+    bool compiler_error) {
+    
+    if (compiler_error) {
+        Log::compiler_error(message, location);
+    } else {
+        Log::error(message, location);
+    }
+
     compilation_state_->is_valid = false;
 }
 
-
-// ----- OUTPUT HELPERS -----
-
-void ParserLayer1::fail(const std::string& message, SourceLocation location) {
-    Log::error(message, location);
-    declare_invalid();
-}
-void ParserLayer1::fail(const std::string& message) {
-    fail(message, current_token().location);
-}
-
-Expression* ParserLayer1::fail_expression(const std::string& message, SourceLocation location) {
-    fail(message, location);
-    Expression* expression = Expression::syntax_error(*ast_store_, location);
-    get_token();
-    return expression;
-}
-Expression* ParserLayer1::fail_expression(const std::string& message) {
-    return fail_expression(message, current_token().location);
-}
+Expression* ParserLayer1::fail_expression(const std::string& message, SourceLocation location, 
+    bool compiler_error) {
     
+    fail(message, location, compiler_error);
+    get_token();
+    return compiler_error ? 
+        Expression::compiler_error(*ast_store_, location) : 
+        Expression::user_error(*ast_store_, location);
+}
+ 
+Definition* ParserLayer1::fail_definition(const std::string& message, SourceLocation location, 
+    bool compiler_error) {
+    
+    fail(message, location, compiler_error);
+    reset_to_top_level();
+    return create_definition(Error{compiler_error}, location);
+}
+
+Statement* ParserLayer1::fail_statement(const std::string& message, SourceLocation location, 
+    bool compiler_error) {
+    
+    fail(message, location, compiler_error);
+    reset_to_top_level();
+    return create_statement(compiler_error ? 
+        StatementType::compiler_error : StatementType::user_error, 
+        location);
+}
 
 void ParserLayer1::log(const std::string& message, LogLevel loglevel) const {
     Log::on_level(message, loglevel, current_token().location);
@@ -182,6 +198,20 @@ void ParserLayer1::log(const std::string& message, LogLevel loglevel,
     Log::on_level(message, loglevel, location);
 }
 
+void ParserLayer1::reset_to_top_level() {
+    log("resetting to global scope", LogLevel::debug);
+
+    while (
+        current_token().token_type != TokenType::eof          && (
+            !is_statement_separator(current_token())    || 
+            angle_bracket_level_    >   0               ||
+            curly_brace_level_      >   0               ||
+            parenthese_level_       >   0               ||
+            indent_level_           >   0
+        )
+    ) get_token();
+    get_token();
+}
 
 // ----- IDENTIFIERS -----
 
@@ -205,7 +235,6 @@ std::optional<Definition*> ParserLayer1::lookup_identifier(const std::string& id
     return compilation_state_->globals_.get_identifier(identifier);
 }
 
-
 // ----- EXPRESSION AND STATEMENT HELPERS -----
 
 Definition* ParserLayer1::create_definition(DefinitionBody body, SourceLocation location) {
@@ -222,6 +251,8 @@ Statement* ParserLayer1::create_statement(StatementType statement_type, SourceLo
 
 // NOTE: pragma.cpp does its own logging
 void ParserLayer1::handle_pragma() {
+    auto location = current_token().location;
+
     // get the first word
     std::istringstream token_value_iss{current_token().string_value()};
     std::string value_string;
@@ -237,7 +268,7 @@ void ParserLayer1::handle_pragma() {
     } else if (value_string == "disable") {
         value = false;
     } else {
-        fail("invalid pragma declaration");
+        fail("invalid pragma declaration", location);
         get_token();
         return;
     }
@@ -247,27 +278,9 @@ void ParserLayer1::handle_pragma() {
         flag_name, value, current_token().location);
     
     if (!succeeded) 
-        declare_invalid();
+        fail("handling pragma failed", location);
 
     get_token();
-}
-
-Definition* ParserLayer1::broken_definition_helper(const std::string& message, 
-    SourceLocation location) {
-    
-    fail(message);
-    Definition* definition = create_definition(UserError{}, location);
-    reset_to_top_level();
-    return definition;
-}
-
-// --------- STATEMENTS --------
-
-Statement* ParserLayer1::broken_statement_helper(const std::string& message, SourceLocation location) {
-    fail(message);
-    Statement* statement = create_statement(StatementType::broken, location);
-    reset_to_top_level();
-    return statement;
 }
 
 Chunk ParserLayer1::parse_top_level_chunk() {
@@ -279,7 +292,6 @@ Chunk ParserLayer1::parse_top_level_chunk() {
             return parse_top_level_chunk();
 
         case TokenType::eof:
-            finished_ = true;
             return std::monostate{};
 
         case TokenType::reserved_word:
@@ -314,30 +326,11 @@ DefinitionBody ParserLayer1::parse_definition_body() {
         DefinitionBody{parse_block_statement()} : DefinitionBody{parse_expression()};
 }
 
-Statement* ParserLayer1::parse_non_global_statement() {
-    auto location = current_token().location;
-
-    switch (current_token().token_type) {
-        case TokenType::pragma:
-            fail("unexpected non top-level pragma");
-            reset_to_top_level();
-            return create_statement(StatementType::broken, location); 
-
-        case TokenType::eof:
-            finished_ = true;
-            return create_statement(StatementType::broken, location);
-
-        default:
-            return parse_statement();
-    }
-}
-
 Statement* ParserLayer1::parse_statement() {
     auto location = current_token().location;
 
     switch (current_token().token_type) {
         case TokenType::eof:
-            finished_ = true;
             return create_statement(StatementType::empty, location);
 
         case TokenType::identifier:
@@ -371,18 +364,15 @@ Statement* ParserLayer1::parse_statement() {
 
         case TokenType::indent_block_end:
             assert(false && "parse_statement called at indent_block_end");
-            return create_statement(StatementType::broken, location);
+            return fail_statement("parse_statement called at indent_block_end", location, true);
         
         case TokenType::indent_error_fatal:
-            fail("indent error");
-            reset_to_top_level();
-            return create_statement(StatementType::broken, location);
+            return fail_statement("indent error", location);
 
         // ---- errors -----
         default:
-            fail("Unexpected "+ current_token().get_string() + ", expected a statement");
-            reset_to_top_level();
-            return create_statement(StatementType::broken, location);
+            return fail_statement(
+                "Unexpected "+ current_token().get_string() + ", expected a statement", location);
     }
 }
 
@@ -407,24 +397,17 @@ Definition* ParserLayer1::parse_let_definition() {
     auto location = current_token().location;
     
     switch (get_token().token_type) {
-        case TokenType::identifier:
-            // TODO: check lower case here
-            {
+        case TokenType::identifier: {
                 std::string name = current_token().string_value();
                 
                 // check if name already exists
-                if (identifier_exists(name)) {
-                    fail("Attempting to redefine identifier " + name);
-                    Statement* statement = create_statement(StatementType::illegal, location);
-                    statement->value = "Attempting to redefine identifier: " + name;
-                    return ast_store_->allocate_definition(RT_Definition{UserError{}, 
-                        location});
-                }
+                if (identifier_exists(name))
+                    return fail_definition("Attempting to redefine identifier " + name, location);
 
                 get_token(); // eat the identifier
 
                 if (is_statement_separator(current_token())) {
-                    log("parsed let statement declaring \"" + name + "\" with no definition", 
+                    log("parsed let definition declaring \"" + name + "\" with no definition", 
                         LogLevel::debug_extra);
                     
                     get_token(); // eat the semicolon
@@ -432,8 +415,7 @@ Definition* ParserLayer1::parse_let_definition() {
                     // create an unitialized identifier
                     create_identifier(name, Undefined{}, location);
 
-                    return ast_store_->allocate_definition(RT_Definition{UserError{}, 
-                        location});
+                    return nullptr; //!!!
                 }
 
                 if (is_assignment_operator(current_token())) {
@@ -442,24 +424,21 @@ Definition* ParserLayer1::parse_let_definition() {
                     DefinitionBody body = parse_definition_body();
 
                     create_identifier(name, body, location);
-                    log("parsed let statement", LogLevel::debug_extra);
-                    return ast_store_->allocate_definition(RT_Definition{UserError{}, 
-                        location});
+                    log("parsed let definition", LogLevel::debug_extra);
+                    return nullptr; //!!!
                 }
 
                 get_token();
-                fail("unexpected " + current_token().get_string() + ", in let-statement");
-                reset_to_top_level();
-                return ast_store_->allocate_definition(RT_Definition{UserError{}, 
-                        location});
+                return fail_definition(
+                    "Unexpected " + current_token().get_string() + ", in let-definition", location);
             }
 
         case TokenType::operator_t:
-            return broken_definition_helper(
+            return fail_definition(
                 "operator overloading not yet implemented, ignoring", location);
 
         default:
-            return broken_definition_helper(
+            return fail_definition(
                 "unexpected token: " + current_token().get_string() + " in let definition", location);
     }
 }
@@ -472,28 +451,28 @@ Definition* ParserLayer1::parse_operator_definition() {
             std::string op_string = current_token().string_value();
 
             if (compilation_state_->builtins_->identifier_exists(op_string)) 
-                return broken_definition_helper(
+                return fail_definition(
                     "attempting to redefine built-in operator: " + op_string, location);
 
             if (compilation_state_->globals_.identifier_exists(op_string))
-                return broken_definition_helper(
+                return fail_definition(
                     "attempting to redefine user-defined operator: " + op_string, location);
 
             get_token();
 
             if (!is_assignment_operator(current_token()))
-                return broken_definition_helper(
+                return fail_definition(
                     "unexpected token: " + current_token().get_string() + 
                     " in operator statement, expected \"=\"", location);
 
             get_token();
 
             if (current_token().token_type != TokenType::reserved_word || 
-                (current_token().string_value() != "unary" && 
-                current_token().string_value() != "binary"))
-                    return broken_definition_helper(
-                        "unexpected token: " + current_token().get_string() + 
-                        " in operator statement, expected \"unary|binary\"", location);
+                    (current_token().string_value() != "unary" && 
+                        current_token().string_value() != "binary"))
+                return fail_definition(
+                    "unexpected token: " + current_token().get_string() + 
+                    " in operator statement, expected \"unary|binary\"", location);
 
             unsigned int arity = current_token().string_value() == "binary" ? 2 : 1;
 
@@ -520,7 +499,6 @@ Definition* ParserLayer1::parse_operator_definition() {
                     body = parse_expression();
                 }
 
-
                 auto definition = ast_store_->allocate_definition(
                     RT_Operator{op_string, body, {fixity}, location});
                 compilation_state_->globals_.create_identifier(definition);
@@ -530,12 +508,12 @@ Definition* ParserLayer1::parse_operator_definition() {
 
             // BINARY OPERATOR
             if (current_token().token_type != TokenType::number)
-                return broken_definition_helper("unexpected token: " + current_token().get_string() + 
+                return fail_definition("unexpected token: " + current_token().get_string() + 
                     " in unary operator statement, expected precedence specifier(positive integer)", location);
 
             unsigned int precedence = std::stoi(current_token().string_value());
             if (precedence >= Operator::MAX_PRECEDENCE)
-                return broken_definition_helper("max operator precedence is " + 
+                return fail_definition("max operator precedence is " + 
                     std::to_string(Operator::MAX_PRECEDENCE), location);
 
             get_token(); // eat the precedence specifier
@@ -556,7 +534,7 @@ Definition* ParserLayer1::parse_operator_definition() {
 
         }
         default:
-            return broken_definition_helper("unexpected token: " + current_token().get_string() + 
+            return fail_definition("unexpected token: " + current_token().get_string() + 
                 " in operator statement", location);     
     }
 }
@@ -580,8 +558,6 @@ Statement* ParserLayer1::parse_assignment_statement() {
     Statement* inner_statement = parse_statement();
     Statement* statement = create_statement(StatementType::assignment, location);
     statement->value = Assignment{name, inner_statement};
-
-    // expect parse_statement to eat the semicolon etc.
 
     log("finished parsing assignment statement from " + statement->location.to_string(), 
         LogLevel::debug_extra);
@@ -611,10 +587,8 @@ Statement* ParserLayer1::parse_block_statement() {
             ending_token = TokenType::indent_block_end;
             break;
         default:
-            fail("Something went wrong: " + current_token().get_string() + " is not a block starter");
-            assert(false && "unhandled block started in parse_block_statement");
-            return ast_store_->allocate_statement(
-                {StatementType::broken, current_token().location});
+            return fail_statement("Something went wrong: " + current_token().get_string() + 
+                " is not a block starter", current_token().location, true);
     }
 
     get_token(); // eat start token
@@ -627,10 +601,8 @@ Statement* ParserLayer1::parse_block_statement() {
             indent_level_ > indent_at_start             || // allow nested blocks
             curly_brace_level_ > curly_brace_at_start      // allow nested blocks
     ) {
-        if (current_token().token_type == TokenType::eof) {
-            fail("Unexpected eof while parsing block statement");
-            return statement;
-        }
+        if (current_token().token_type == TokenType::eof)
+            return fail_statement("Unexpected eof while parsing block statement", location);
 
         Statement* substatement = parse_statement();
         // discard empty statements
@@ -648,11 +620,8 @@ Statement* ParserLayer1::parse_block_statement() {
 
     if (substatements->size() == 1) {
         // attempt to simplify
-        if (!simplify_single_statement_block(statement)) {
-            statement->statement_type = StatementType::illegal;
-            statement->value = Undefined{};
-            return statement;
-        }
+        if (!simplify_single_statement_block(statement))
+            return fail_statement("Simplification failed", statement->location, true);
     }
 
     // simplify empty block
@@ -715,7 +684,7 @@ Expression* ParserLayer1::parse_expression() {
     switch (current_token().token_type) {
         case TokenType::eof: {
             Expression* expression = Expression::valueless(*ast_store_,
-                ExpressionType::syntax_error, location);
+                ExpressionType::user_error, location);
             return expression;
         }
 
@@ -777,42 +746,23 @@ Expression* ParserLayer1::parse_expression() {
             get_token(); // eat the starting indent
             Expression* expression = parse_expression();
             
-            if (current_token().token_type != TokenType::indent_block_end) {
-                fail("Mismatched indents!");
-                return expression;
-            }
+            if (current_token().token_type != TokenType::indent_block_end)
+                return fail_expression("Mismatched indents!", current_token().location);
 
             get_token(); // eat the ending indent
             assert(indent_level_ <= starting_indent_level && "Mismatched indents");
             return expression;
         }
 
-        case TokenType::reserved_word: {
-            if (current_token().string_value() != "let") {
-                fail("unknown " + current_token().get_string());
-                Expression* expression = Expression::valueless(*ast_store_, 
-                    ExpressionType::syntax_error, location);
-                expression->value = "unknown " + current_token().get_string();
-                
-                get_token();
-                return expression;
-            }
-            fail("Scoped let not yet implemented");
-            Expression* expression = Expression::valueless(*ast_store_, 
-                ExpressionType::syntax_error, location);
-            expression->value = "Scoped let not yet implemented";
-            
-            get_token();
-            return expression;
-        }
+        case TokenType::reserved_word:
+            if (current_token().string_value() != "let")
+                assert(false && "not implemented");
+            assert(false && "not implemented");            
             
         default:
-            fail("unexpected " + current_token().get_string() + ", at the start of an expression");
-            Expression* expression = Expression::valueless(*ast_store_, ExpressionType::syntax_error, location);
-            expression->value = "unexpected " + current_token().get_string() + ", at the start of an expression";
-
-            get_token();
-            return expression;
+            return fail_expression(
+                "unexpected " + current_token().get_string() + ", at the start of an expression",
+                current_token().location);
     }
 }
 
@@ -902,13 +852,9 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
                 break;
 
             default:
-                fail("unexpected: " + current_token().get_string() + ", in termed expression");
-                Expression* term = Expression::valueless(*ast_store_, 
-                    ExpressionType::not_implemented, current_token().location);
-                term->value = current_token().get_string();
-                expression->terms().push_back(term);
-                
-                get_token();
+                return fail_expression(
+                    "unexpected: " + current_token().get_string() + ", in termed expression",
+                    current_token().location);
         }
     }
 
@@ -942,9 +888,8 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 // Expects not to be called if the current token is not parseable into a term
 Expression* ParserLayer1::parse_term(bool is_tied) {
     // if we see a tie, go down into a tied expression if not already in one
-    if (peek().token_type == TokenType::tie && !is_tied) {
+    if (peek().token_type == TokenType::tie && !is_tied)
         return parse_termed_expression(true);
-    }
 
     switch (current_token().token_type) {
         case TokenType::identifier:
@@ -957,9 +902,9 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
 
         case TokenType::colon:
             fail("unhandled token type: " + current_token().get_string() + 
-                ", reached ParserLayer1::parse_term");
+                ", reached ParserLayer1::parse_term", current_token().location);
             assert(false && "colons should be handled by parse_termed expression");
-            return Expression::valueless(*ast_store_, ExpressionType::syntax_error, 
+            return Expression::valueless(*ast_store_, ExpressionType::user_error, 
                 current_token().location);
 
         case TokenType::parenthesis_open: 
@@ -1000,20 +945,14 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return parse_lambda_expression();
 
         default:
-            fail("unhandled token type: " + current_token().get_string() + 
-                ", reached ParserLayer1::parse_term");
             assert(false && "unhandled token type in parse_term");
-            return Expression::valueless(*ast_store_, ExpressionType::syntax_error, 
-                current_token().location);
+            return fail_expression("unhandled token type: " + current_token().get_string() + 
+                ", reached ParserLayer1::parse_term", current_token().location, true);
     }
 }
 
 Expression* ParserLayer1::parse_access_expression() {
-    // TODO: eat until the closing character
-    Expression* expression = Expression::valueless(*ast_store_, 
-        ExpressionType::not_implemented, current_token().location);
-    get_token();
-    return expression;
+    assert(false && "not implemented");
 }
 
 Expression* ParserLayer1::parse_ternary_expression() {
@@ -1028,7 +967,7 @@ Expression* ParserLayer1::parse_lambda_expression() {
 
     if (current_token().token_type != TokenType::arrow_operator)
         return fail_expression("Undexpected " + current_token().get_string() + 
-            " in lambda expression, expected a \"->\" or \"=>\" ");
+            " in lambda expression, expected a \"->\" or \"=>\" ", current_token().location);
     get_token();
 
     DefinitionBody body = parse_definition_body();
@@ -1047,32 +986,21 @@ Expression* ParserLayer1::parse_parenthesized_expression() {
     get_token(); // eat '('
 
     if (current_token().token_type == TokenType::parenthesis_close) {
-        fail("Empty parentheses in an expression");
-        Expression* expression = Expression::valueless(*ast_store_, 
-            ExpressionType::syntax_error, current_token().location);
+        auto location = current_token().location;
         get_token();
-        return expression;
+        return fail_expression("Empty parentheses in an expression", location);
     }
 
     Expression* expression = parse_expression();
-    if (current_token().token_type != TokenType::parenthesis_close) {
-        fail("Mismatched parentheses");
-        return expression;
-    }
+    if (current_token().token_type != TokenType::parenthesis_close)
+        return fail_expression("Mismatched parentheses", current_token().location);
 
     get_token(); // eat ')'
     return expression;
 }
 
 Expression* ParserLayer1::parse_mapping_literal() {
-    Expression* expression = Expression::valueless(*ast_store_, ExpressionType::not_implemented, 
-        current_token().location);
-    get_token();
-    // eat until the closing character
-
-    fail("parsed mapping literal (not implemented)");
-
-    return expression;
+    assert(false && "not implemented");
 }
 
 Expression* ParserLayer1::handle_string_literal() {
@@ -1113,93 +1041,6 @@ Expression* ParserLayer1::handle_type_identifier() {
     
     log("parsed unresolved type identifier", LogLevel::debug_extra);
     return expression;
-}
-
-// AST::Expression* Parser::parse_call_expression(const std::string& callee) {
-//     // TODO: handle tuple arg lists
-//     assert(
-//         (current_token().type == TokenType::identifier)
-//         && "Parser::parse_call_expression(Token) called when the current_token() was not an identifier"
-//     );
-
-//     // check that the function exists here, or mark as hanging
-//     auto call = ast_->create_expression(AST::ExpressionType::call);
-
-//     // parse the following tokens as an argument list
-//     call->call_expr = {callee, parse_argument_list()};
-//     return call;
-// }
-
-// AST::Expression* Parser::parse_call_expression(AST::Expression* callee, const std::vector<AST::Type*>& signature) {
-//     assert(callee && "Passed nullptr to Parser::parse_call_expression");
-
-//     if (signature.size() > 0)
-//         print_error("Parser::parse_call_expression doesn't know how to handle type signatures yet, ignoring the signature");
-    
-//     switch (callee->expression_type) {
-//         case AST::ExpressionType::unresolved_identifier:
-//             return parse_call_expression(callee->string_value);
-
-//         case AST::ExpressionType::native_function:
-//         case AST::ExpressionType::native_operator: { // why the heck not
-        
-//             auto maybe_callee = lookup_identifier(current_token().string_value());
-//             // TODO: ideally assert here that the callee exists as a builtin
-//             auto [callee_identifier, _2,  arg_types] = **maybe_callee;
-//             unsigned int arity = arg_types.size();
-            
-//             if (arity == 0) {
-//                 auto expr = ast_->create_expression(AST::ExpressionType::call);
-//                 expr->call_expr = {current_token().string_value(), {}};
-//                 return expr;
-//             }
-            
-//             if (arity != 1) {
-//                 print_error("CAN'T YET PARSE ARG LISTS LONGER THAN 1");
-//                 declare_invalid();
-//                 return ast_->create_expression(AST::ExpressionType::call);
-//             }
-            
-//             // !!! this arg stuff is something to be deferred, since we might later get polymorphic defs with different arity
-//             // !!! On the other hand, with built ins and such we already know the arity
-//             // Therefore, builtins are different semantically?
-//             // We must make sure that whether something is a builtin or not does not affect semantics
-//             // Yes, with inference we must concretize types as soon as we can to reduce the complexity
-
-//             AST::Expression* arg = parse_expression();
-
-//             auto expr = ast_->create_expression(AST::ExpressionType::call);
-//             expr->call_expr = {callee_identifier, {arg}};
-//             return expr;
-//         }
-//         default:
-//             assert(false && "Parser::parse_call_expression called with an expression that's not definition");
-//     }
-// }
-
-// AST::Expression* Parser::parse_operator_expression(Token previous_token) {
-//     return ast_->create_expression(AST::ExpressionType::not_implemented);
-// }
-
-// // TODO: make arg lists an expressiontype
-// std::vector<AST::Expression*> Parser::parse_argument_list() {
-//     assert(false && "Not ready");
-//     return {};    
-// }
-
-void ParserLayer1::reset_to_top_level() {
-    log("resetting to global scope", LogLevel::debug);
-
-    while (
-        current_token().token_type != TokenType::eof          && (
-            !is_statement_separator(current_token())    || 
-            angle_bracket_level_    >   0               ||
-            curly_brace_level_      >   0               ||
-            parenthese_level_       >   0               ||
-            indent_level_           >   0
-        )
-    ) get_token();
-    get_token();
 }
 
 } // namespace Maps

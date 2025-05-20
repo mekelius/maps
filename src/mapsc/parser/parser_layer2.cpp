@@ -32,8 +32,7 @@ using Log = LogInContext<LogContext::layer2>;
                          case ExpressionType::type_operator_reference:\
                          case ExpressionType::deleted:\
                          case ExpressionType::missing_arg:\
-                         case ExpressionType::syntax_error:\
-                         case ExpressionType::not_implemented:\
+                         case ExpressionType::user_error:\
                          case ExpressionType::compiler_error
 
 #define TYPE_DECLARATION_TERM ExpressionType::type_argument:\
@@ -156,7 +155,7 @@ bool is_value_literal(Expression* expression) {
 Expression* TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
         fail("layer2 tried to parse an empty expression", expression_->location);
-        return Expression::valueless(*ast_store_, ExpressionType::syntax_error, expression_->location);
+        return Expression::valueless(*ast_store_, ExpressionType::user_error, expression_->location);
     }
 
     // enter initial goto to find the first state
@@ -165,7 +164,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
 
     if (!compilation_state_->is_valid) {
         Log::error("parsing termed expression failed", expression_->location);
-        return Expression::valueless(*ast_store_, ExpressionType::syntax_error, expression_->location);
+        return Expression::valueless(*ast_store_, ExpressionType::user_error, expression_->location);
     }
 
     if (!at_expression_end()) {
