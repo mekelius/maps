@@ -66,6 +66,9 @@ enum class ExpressionType {
     partially_applied_minus,
     missing_arg,
 
+    lambda,
+    ternary_expression,
+
     deleted,                // value: std::monostate
 };
 
@@ -90,6 +93,21 @@ struct TermedExpressionValue {
     std::string to_string() const;
 };
 
+struct LambdaExpressionValue {
+    Expression* parameters; // BTD
+    Expression* body;
+
+    bool operator==(const LambdaExpressionValue&) const = default;
+};
+
+struct TernaryExpressionValue {
+    Expression* condition;
+    Expression* success;
+    Expression* failure;
+
+    bool operator==(const TernaryExpressionValue&) const = default;
+};
+
 using ExpressionValue = std::variant<
     std::monostate,
     maps_Int,
@@ -101,6 +119,8 @@ using ExpressionValue = std::variant<
     const Type*,                     // for type expressions
     TermedExpressionValue,
     CallExpressionValue,
+    LambdaExpressionValue,
+    TernaryExpressionValue,
     TypeArgument,
     TypeConstruct
 >;
@@ -199,6 +219,12 @@ struct Expression {
     CallExpressionValue& call_value();
     Callable* reference_value() const;
     Callable* operator_reference_value() const;
+
+    LambdaExpressionValue& lambda_value();
+    const LambdaExpressionValue& lambda_value() const;
+    
+    TernaryExpressionValue& ternary_value();
+    const TernaryExpressionValue& ternary_value() const;
 
     bool is_partial_call() const;
     bool is_reduced_value() const;

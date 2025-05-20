@@ -49,7 +49,11 @@ using Log = LogInContext<LogContext::layer2>;
 
 #define POTENTIAL_FUNCTION ExpressionType::call:\
                       case ExpressionType::reference:\
-                      case ExpressionType::termed_expression
+                      case ExpressionType::termed_expression:\
+                      case ExpressionType::ternary_expression
+
+#define GUARANTEED_NON_OPERATOR_FUNCTION ExpressionType::lambda:\
+                       case ExpressionType::partial_call
 
 ParserLayer2::ParserLayer2(CompilationState* compilation_state)
 :compilation_state_(compilation_state) {
@@ -321,10 +325,15 @@ void TermedExpressionParser::initial_goto() {
             handle_termed_sub_expression(current_term());
             return initial_goto();
 
+        case ExpressionType::lambda:
+            assert(false && "not implemented");
+            // initial_callable_state();
+            break;
+
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");
 
-        // terminals
+        case ExpressionType::ternary_expression:
         case ExpressionType::reference:
             initial_reference_state();
             break;
@@ -391,6 +400,8 @@ void TermedExpressionParser::initial_binary_operator_state() {
             handle_termed_sub_expression(peek());
             return initial_binary_operator_state();
 
+        case ExpressionType::lambda:
+        case ExpressionType::ternary_expression:
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");
 
@@ -711,6 +722,10 @@ void TermedExpressionParser::value_state() {
         return;
 
     switch (peek()->expression_type) {
+        case ExpressionType::lambda:
+        case ExpressionType::ternary_expression:
+            assert(false && "not implemented");
+
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(peek());
             return value_state();
@@ -861,6 +876,8 @@ void TermedExpressionParser::post_binary_operator_state() {
         case ExpressionType::binary_operator_reference:
         case ExpressionType::prefix_operator_reference:
         case ExpressionType::postfix_operator_reference:
+        case ExpressionType::lambda:
+        case ExpressionType::ternary_expression:
             assert(false && "not implemented");
 
         case ExpressionType::reference:
