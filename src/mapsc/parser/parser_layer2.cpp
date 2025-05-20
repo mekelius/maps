@@ -320,12 +320,11 @@ void TermedExpressionParser::initial_value_state() {
     }
 }
 
-void TermedExpressionParser::reduce_partial_binop_call_right() {
+void TermedExpressionParser::reduce_to_partial_binop_call_left() {
     Expression* rhs = *pop_term();
     Expression* op = *pop_term();
 
     // TODO: handle precedence here
-    // it's a binary operator being partially applied
     Expression* missing_argument = Expression::missing_argument(*ast_store_,
         *dynamic_cast<const FunctionType*>(op->type)->param_types().begin(), op->location);
 
@@ -338,6 +337,25 @@ void TermedExpressionParser::reduce_partial_binop_call_right() {
 
     parse_stack_.push_back(*call);
 }
+
+void TermedExpressionParser::reduce_to_partial_binop_call_right() {
+    Expression* op = *pop_term();
+    Expression* lhs = *pop_term();
+
+    // TODO: handle precedence here
+    Expression* missing_argument = Expression::missing_argument(*ast_store_,
+        *dynamic_cast<const FunctionType*>(op->type)->param_types().begin(), op->location);
+
+    auto call =
+        Expression::partial_binop_call(*compilation_state_,
+            op->reference_value(), lhs, missing_argument, expression_->location);
+    
+    if (!call)
+        return fail("Creating call expression failed", op->location);
+
+    parse_stack_.push_back(*call);
+}
+
 
 void TermedExpressionParser::reduce_unary_minus_ref() {
     parse_stack_.push_back(unary_minus_ref((*pop_term())->location));
@@ -354,7 +372,24 @@ void TermedExpressionParser::reduce_prefix_operator() {
         {value}, op->location);
 
     if (!expression)
-        return fail("Applying unary operator " + op->log_message_string() + " to " + 
+        return fail("Applying unary prefix " + op->log_message_string() + " to " + 
+            value->log_message_string() + " failed", op->location);
+
+    parse_stack_.push_back(*expression);
+}
+
+void TermedExpressionParser::reduce_postfix_operator() {
+    auto op = *pop_term();
+    auto value = *pop_term();
+
+    assert(op->expression_type == ExpressionType::postfix_operator_reference && 
+        "reduce_postfix_operator called with not a postfix operator 1nd on the stack");
+
+    auto expression = Expression::call(*compilation_state_, op->reference_value(), 
+        {value}, op->location);
+
+    if (!expression)
+        return fail("Applying unary postfix " + op->log_message_string() + " to " + 
             value->log_message_string() + " failed", op->location);
 
     parse_stack_.push_back(*expression);
@@ -383,7 +418,13 @@ void TermedExpressionParser::initial_goto() {
             break;
 
         case ExpressionType::partial_binop_call_left:
+            initial_partial_binop_call_left_state();
+            break;
+
         case ExpressionType::partial_binop_call_right:
+            initial_partial_binop_call_right_state();
+            break;
+
         case ExpressionType::partial_call:
             initial_partial_call_state();
             break;
@@ -440,7 +481,7 @@ void TermedExpressionParser::initial_binary_operator_state() {
 
         case GUARANTEED_VALUE:
             shift();
-            return reduce_partial_binop_call_right();
+            return reduce_to_partial_binop_call_left();
 
         case ExpressionType::minus_sign:{
             auto location = get_term()->location;
@@ -489,7 +530,7 @@ void TermedExpressionParser::initial_binary_operator_state() {
                 case GUARANTEED_VALUE:
                 case ExpressionType::reference:
                 case ExpressionType::call:
-                    return reduce_partial_binop_call_right();
+                    return reduce_to_partial_binop_call_left();
                 
                 default:
                     fail("Unexpected " + current_term()->log_message_string() + 
@@ -503,7 +544,7 @@ void TermedExpressionParser::initial_binary_operator_state() {
                 case GUARANTEED_VALUE:
                 case ExpressionType::reference:
                 case ExpressionType::call:
-                    return reduce_partial_binop_call_right();
+                    return reduce_to_partial_binop_call_left();
 
                 default:
                     fail("Unexpected " + current_term()->log_message_string() + 
@@ -661,35 +702,92 @@ void TermedExpressionParser::initial_minus_sign_state() {
 void TermedExpressionParser::initial_partially_applied_minus_state() {
     if (at_expression_end())
         return;
-        
+
     current_term()->convert_to_unary_minus_call();
     return initial_call_state();
 }
 
-void TermedExpressionParser::post_binary_operator_state() {
-    if (at_expression_end()) {
-        Expression* op = *pop_term(); // pop the operator
-        Expression* lhs = *pop_term();
-        auto op_type = op->type;
-
-        if (op_type->arity() == 0 || !op_type->is_function()) {
-            fail(op->log_message_string() + " is not a function", op->location);
-            return;
-        }
-
-        auto missing_arg_type = *dynamic_cast<const FunctionType*>(op_type)->param_types().begin();
-        Expression* missing_argument = Expression::missing_argument(*ast_store_,
-            missing_arg_type, op->location);
-
-        auto call = Expression::call(*compilation_state_, op->reference_value(), 
-            {lhs, missing_argument}, lhs->location);
-
-        if (!call)
-            return fail("Creating a call failed", lhs->location);
-
-        parse_stack_.push_back(*call);
+// Basically we just unwrap it
+void TermedExpressionParser::initial_partial_binop_call_right_state() {
+    if (at_expression_end())
         return;
+
+    auto location = current_term()->location;
+    auto [callee, args] = current_term()->call_value();
+    assert(callee->is_operator() 
+        && "initial_partial_binop_call_right_state called with not an operator call");
+    assert(dynamic_cast<Operator*>(callee)->is_binary() && 
+        "initial_partial_binop_call_right_state called with not a binary operator call");
+
+    assert(((args.size() == 2 && args.at(1)->expression_type == ExpressionType::missing_arg) || 
+            args.size()) == 1 && 
+                "initial_partial_binop_call_right_state called with invalid args");
+
+    // auto precedence = dynamic_cast<Operator*>(callee)->precedence();
+
+    switch (peek()->expression_type) {
+        case ExpressionType::binary_operator_reference:
+            current_term()->convert_to_partial_call(); // treat it as a value
+            shift();
+            return post_binary_operator_state();
+
+        case ExpressionType::postfix_operator_reference:
+            current_term()->convert_to_partial_call();
+            shift();
+            reduce_postfix_operator(); // It could be an operator that can act on this partial call
+            return initial_goto();
+
+        case ExpressionType::partial_binop_call_left:
+            return partial_binop_call_standoff_state();
+
+        case GUARANTEED_VALUE:
+            pop_term();
+            parse_stack_.push_back(args.at(0));
+            parse_stack_.push_back(Expression::operator_reference(*ast_store_, callee, location));
+            return post_binary_operator_state();
+
+        case ExpressionType::call:
+            shift();
+            initial_call_state();
+            switch (current_term()->expression_type) {
+                case GUARANTEED_VALUE:
+                case ExpressionType::reference:
+                case ExpressionType::call:
+                    break;
+
+                default:
+                    return fail("Call didn't produce a value for partial application of binary operator"
+                        , current_term()->location);
+            }
+
+        case ExpressionType::reference:
+        case ExpressionType::prefix_operator_reference:
+        case ExpressionType::minus_sign:
+            assert(false && "not implemented");
+
+        case TYPE_DECLARATION_TERM:
+            assert(false && "type declarations not implemented here");
+        case NOT_ALLOWED_IN_LAYER2:
+        default:
+            return fail("Unexpected " + peek()->log_message_string() + ", expected a value",
+            peek()->location);
     }
+}
+
+void TermedExpressionParser::initial_partial_binop_call_left_state() {
+    if (at_expression_end())
+        return;
+
+    assert(false && "not implemented");
+}
+
+void TermedExpressionParser::partial_binop_call_standoff_state() {
+    assert(false && "not implemented");
+}
+
+void TermedExpressionParser::post_binary_operator_state() {
+    if (at_expression_end())
+        return reduce_to_partial_binop_call_right();
 
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:

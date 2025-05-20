@@ -461,6 +461,9 @@ void Expression::convert_to_unary_minus_call() {
     type = &Int;
 }
 
+void Expression::convert_to_partial_call() {
+    return;
+}
 
 // valueless expression types are tie, empty, syntax_error and not_implemented
 Expression* Expression::valueless(AST_Store& store, ExpressionType expression_type, 
@@ -576,7 +579,7 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
     auto partial_return_type = state.types_->get_function_type(
         *return_type, {rhs->type}, callee_f_type->is_pure());
     return store.allocate_expression(
-            {ExpressionType::partial_binop_call_left, 
+            {ExpressionType::partial_binop_call_right, 
                 CallExpressionValue{callable, {lhs, rhs}}, partial_return_type, 
                 location});
 }

@@ -5,18 +5,19 @@ let b;
 let c;
 let d;
 
-a +b          // CHECK: a + b
-a -b          // CHECK: a - b
-a- b          // CHECK: a - b
--(a + b)      // CHECK: - ( a + b )
-(-a + -b) + c // CHECK: ( (-a) + (-b) ) + c
-a - - b       // CHECK: a - (-b)
-a* - b        // CHECK: a * (-b)
--a*b          // CHECK: (-a) * b
--a+ -b        // CHECK: (-a) + (-b)
-a *b+c        // CHECK: ( a * b ) + c
-a *b+c * d    // CHECK: ( ( a * b ) + c ) * d  
-a (* b) + c   // CHECK: ( a * b ) + c          
-a * b+c* d    // CHECK: a * ( b + ( c * d ) )  
-a * b+c+ d    // CHECK: a * ( b + ( c + d ) )   
-a * -b+c+ d   // CHECK: a * ( -b + ( c + d ) )  
+a +b            // CHECK: a + b
+a -b            // CHECK: a - b
+a- b            // CHECK: a - b
+-(a + b)        // CHECK: - ( a + b )
+(-a + -b) + c   // CHECK: ( (-a) + (-b) ) + c
+a - - b         // CHECK: a - (-b)
+a* - b          // CHECK: a * (-b)
+a+ b * c        // CHECK: a + ( b * c )
+-a*b            // CHECK: (-a) * b
+-a+ -b          // CHECK: (-a) + (-b)
+a *b+c          // CHECK: ( a * b ) + c
+a *b+c * d      // CHECK: ( ( a * b ) + c ) * d  
+a (* b) + c     // CHECK: ( a * b ) + c          
+a * b+c* d      // CHECK: a * ( b + ( c * d ) )  
+a * b+c+ d      // CHECK: a * ( b + ( c + d ) )   
+a * -b+c+ d     // CHECK: a * ( -b + ( c + d ) )  

@@ -65,6 +65,9 @@ private:
     void initial_postfix_operator_state();
     void initial_minus_sign_state();
     void initial_partially_applied_minus_state();
+    void initial_partial_binop_call_right_state();
+    void initial_partial_binop_call_left_state();
+    void partial_binop_call_standoff_state();
 
     void post_binary_operator_state();
     void compare_precedence_state();
@@ -72,10 +75,13 @@ private:
     // reductions
     void reduce_binop_call();
     void reduce_unary_minus_call();
-    void reduce_partial_binop_call_right();
+    void reduce_to_partial_binop_call_left();
+    void reduce_to_partial_binop_call_right();
     void reduce_unary_minus_ref();
     void reduce_prefix_operator();
+    void reduce_postfix_operator();
     void reduce_partially_applied_minus();
+    void reduce_partial_call();
 
     // gotos
     void initial_goto();

@@ -38,6 +38,9 @@ Enum mapping types should be iterable, how to do that?
 - pre-hashed static hashmaps and prebuilt static trees
     - for example cl args
 
+- comment and logstring macros
+    - current function name etc.
+
 ## inpurity and purity, strictness, laziness
 - {}-access denotes lazy access
 - ()-access denotes impure function call

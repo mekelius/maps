@@ -182,6 +182,8 @@ struct Expression {
     // expect to be a partially applied minus
     void convert_to_partial_binop_minus_call_left(AST_Store& store);
     void convert_to_unary_minus_call();
+    // For example partial binop call, currently a no-op
+    void convert_to_partial_call();
 
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();
