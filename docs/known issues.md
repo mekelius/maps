@@ -2,6 +2,7 @@
 
 ## Critical
 
+- concretizer should copy/runtime cast the values instead of changing the original
 - repl only takes a shallow copy of the definitions
 - 8* reduces to 8
 - REPL should check if a definition can produce valid IR before saving it, currently easy to get stuck

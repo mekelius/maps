@@ -168,6 +168,14 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         // !has_something_to_evaluate(state)
     // ) return true;
 
+    if (options_.print_layer3) {
+        std::cout <<   "------- post-typecheck -------\n\n";
+        reverse_parser_ << global_scope;
+
+        if (top_level_definition)
+            reverse_parser_ << **top_level_definition;
+        std::cout << "\n----- post-typecheck end -----\n\n";
+    }
 
     // ---------- CREATE REPL WRAPPER ----------
 
@@ -188,17 +196,19 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
     IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
 
-    std::cout <<   "------- pre-ir gen -------\n\n";
-    reverse_parser_ << global_scope;
+    if (false) {
+        std::cout <<   "------- pre-ir gen -------\n\n";
+        reverse_parser_ << global_scope;
 
-    if (top_level_definition)
-        reverse_parser_ << **top_level_definition;
+        if (top_level_definition)
+            reverse_parser_ << **top_level_definition;
 
-    if (repl_wrapper)
-        reverse_parser_ << **repl_wrapper;
-    
-    std::cout << "\n----- pre-ir gen end -----\n\n";
-    
+        if (repl_wrapper)
+            reverse_parser_ << **repl_wrapper;
+        
+        std::cout << "\n----- pre-ir gen end -----\n\n";
+    }
+
     insert_builtins(generator);
     bool ir_success = generator.run({std::array<RT_Scope* const, 1>{&global_scope}}, 
         std::array<Definition*, 2>{*top_level_definition, *repl_wrapper});
@@ -220,6 +230,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 
     // ---------- COMPILE AND RUN ----------
 
+    std::cout << '\n';
     return compile_and_run(std::move(module_), options_.repl_wrapper_name);
 }
 
@@ -253,15 +264,6 @@ bool REPL::run_type_checks_and_concretize(CompilationState& state,
         if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, {}))
             return false;
     }
-
-    // if (options.print_layer3) {
-    std::cout <<   "------- post-typecheck -------\n\n";
-    reverse_parser_ << scope;
-
-    if (top_level_definition)
-        reverse_parser_ << **top_level_definition;
-    std::cout << "\n----- post-typecheck end -----\n\n";
-    // }
 
     return true;
 }
