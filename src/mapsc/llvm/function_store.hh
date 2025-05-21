@@ -4,7 +4,7 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <unordered_map>
+#include <map>
 
 #include "llvm/IR/DerivedTypes.h"
 
@@ -25,11 +25,11 @@ public:
     bool insert(const std::string& name, const Maps::FunctionType& ast_type, 
         llvm::FunctionCallee function_callee);
 
-private:
-    using InnerMapType = std::unordered_map<Signature, llvm::FunctionCallee>;
+// private:
+    using InnerMapType = std::map<Signature, llvm::FunctionCallee>;
 
-    std::unordered_map<std::string, std::unique_ptr<InnerMapType>>
-        functions_ = std::unordered_map<std::string, std::unique_ptr<InnerMapType>>();
+    std::map<std::string, std::unique_ptr<InnerMapType>>
+        functions_ = std::map<std::string, std::unique_ptr<InnerMapType>>();
 };
 
 } // namespace IR

@@ -37,10 +37,10 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
     return inner_it->second;
 }
 
-bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& ast_type, 
+bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& maps_type, 
     llvm::FunctionCallee function_callee) {    
     
-    auto signature = ast_type.to_string();
+    auto signature = maps_type.to_string();
 
     auto outer_it = functions_.find(name);
 

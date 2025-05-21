@@ -100,7 +100,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
     TypeStore types{};
     REQUIRE(types.empty());
 
-    auto IntIntInt = types.get_function_type(Int, {&Int, &Int});
+    auto IntIntInt = types.get_function_type(Int, {&Int, &Int}, true);
     RT_Definition dummy_definition = RT_Definition::testing_definition(IntIntInt);
 
     REQUIRE(*dummy_definition.get_type() == *IntIntInt);
@@ -142,7 +142,7 @@ TEST_CASE("Concretizer should be able to cast arguments up if needed") {
     TypeStore types{};
     REQUIRE(types.empty());
 
-    auto IntIntInt = types.get_function_type(Float, {&Float, &Float});
+    auto IntIntInt = types.get_function_type(Float, {&Float, &Float}, true);
     RT_Definition dummy_definition = RT_Definition::testing_definition(IntIntInt);
 
     SUBCASE("Number -> Int -> Float into Float -> Float -> Float") {

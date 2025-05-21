@@ -76,7 +76,7 @@ private:
         std::vector<Maps::Expression*> unparsed_termed_expressions);
 
     bool run_type_checks_and_concretize(Maps::CompilationState& state, 
-        Maps::RT_Scope& scopes, Maps::RT_Definition* const definition);
+        Maps::RT_Scope& scopes, std::optional<Maps::RT_Definition* const> definition);
 
     std::unique_ptr<llvm::Module> run_ir_gen(Maps::CompilationState& state, 
         Maps::Definition* definition);

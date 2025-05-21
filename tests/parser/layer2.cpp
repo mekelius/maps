@@ -14,7 +14,7 @@ using namespace std;
 inline tuple<Expression*, Definition*> create_operator_helper(CompilationState& state, 
     const string& op_string, unsigned int precedence = 500) {
 
-    const Type* type = state.types_->get_function_type(Void, {&Number, &Number});
+    const Type* type = state.types_->get_function_type(Void, {&Number, &Number}, true);
     Definition* op_definition = state.ast_store_->allocate_operator(
         RT_Operator::create_binary(op_string, External{}, *type, precedence, 
             RT_Operator::Associativity::left, TSL));
@@ -237,7 +237,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     Expression* expr = Expression::termed(ast, {}, {0,0});
     
     SUBCASE("1 arg") {    
-        const Type* function_type = types->get_function_type(Void, {&String});
+        const Type* function_type = types->get_function_type(Void, {&String}, true);
 
         RT_Definition function{"test_f", External{}, *function_type, TSL};
         globals.create_identifier(&function);
@@ -259,7 +259,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
 
     SUBCASE("4 args") {    
         const Type* function_type = types->get_function_type(Void, 
-            {&String, &String, &String, &String});
+            {&String, &String, &String, &String}, true);
         
         RT_Definition function{"test_f", External{}, *function_type, TSL};
         Expression* id{Expression::reference(ast, &function, {0,0})};
@@ -407,7 +407,8 @@ TEST_CASE("Layer2 should handle type specifiers") {
     }
 
     SUBCASE("Int \"32\" + 987") {
-        auto op = RT_Operator{"+", External{}, *types->get_function_type(Int, {&Int, &Int}),
+        auto op = RT_Operator{"+", External{}, 
+            *types->get_function_type(Int, {&Int, &Int}, true),
             {Operator::Fixity::binary}, TSL};
         
         auto op_ref = Expression{ExpressionType::binary_operator_reference, &op, TSL};

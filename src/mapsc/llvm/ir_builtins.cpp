@@ -46,7 +46,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     // create print types
     for (auto [maps_type, llvm_type]: PRINTABLE_TYPES) {
         if (!generator.forward_declaration("print", *generator.maps_types_->get_function_type(
-                Maps::IO_Void, {maps_type}),
+                Maps::IO_Void, {maps_type}, false),
                 llvm::FunctionType::get(generator.types_.void_t, {llvm_type}, false))) {
 
             Log::compiler_error("Creating builtin print functions failed", 
@@ -57,24 +57,24 @@ bool insert_builtins(IR::IR_Generator& generator) {
 
     // arithmetic function types
     const Maps::FunctionType* IntInt = generator.maps_types_->get_function_type(
-        Maps::Int, {&Maps::Int});
+        Maps::Int, {&Maps::Int}, true);
     llvm::FunctionType* llvm_IntInt = llvm::FunctionType::get(generator.types_.int_t, 
         {generator.types_.int_t}, false);
 
     const Maps::FunctionType* IntIntInt = generator.maps_types_->get_function_type(
-        Maps::Int, {&Maps::Int, &Maps::Int});
+        Maps::Int, {&Maps::Int, &Maps::Int}, true);
     llvm::FunctionType* llvm_IntIntInt = llvm::FunctionType::get(generator.types_.int_t, 
         {generator.types_.int_t, generator.types_.int_t}, false);
     
     const Maps::FunctionType* maps_FloatFloatFloat = generator.maps_types_->get_function_type(
-        Maps::Float, {&Maps::Float, &Maps::Float});
+        Maps::Float, {&Maps::Float, &Maps::Float}, true);
     llvm::FunctionType* llvm_FloatFloatFloat = llvm::FunctionType::get(generator.types_.double_t, 
         {generator.types_.double_t, generator.types_.double_t}, false);
 
     llvm::Value* zero = llvm::ConstantInt::get(*generator.context_, llvm::APInt(32, 0, true));
     
     optional<llvm::Function*> cast_Boolean_to_String = generator.function_definition("to_String", 
-        *generator.maps_types_->get_function_type(Maps::String, {&Maps::Boolean}), 
+        *generator.maps_types_->get_function_type(Maps::String, {&Maps::Boolean}, true), 
         llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.boolean_t}, 
             false));
     

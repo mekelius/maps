@@ -35,7 +35,7 @@ public:
     const Type* get_unsafe(const std::string& identifier);
 
     const FunctionType* get_function_type(const Type& return_type,
-        const std::vector<const Type*>& arg_types, bool pure = true);
+        const std::vector<const Type*>& arg_types, bool pure);
     
     std::string make_function_signature(const Type& return_type,
         const std::span<const Type* const> arg_types, bool is_pure = true) const;

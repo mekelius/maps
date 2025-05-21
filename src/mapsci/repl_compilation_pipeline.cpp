@@ -66,7 +66,7 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
     auto definition = state.ast_store_->allocate_definition(
         RT_Definition{options_.repl_wrapper_name, *eval_and_print, location});
 
-    SimpleTypeChecker{}.run(state, {}, std::array<RT_Definition* const, 1>{definition});
+    // SimpleTypeChecker{}.run(state, {}, std::array<RT_Definition* const, 1>{definition});
 
     return definition;    
 }
@@ -157,10 +157,12 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (options_.stop_after == Stage::layer2)
         return true;
 
+    if (!top_level_definition || (*top_level_definition)->get_type()->is_voidish())
+        return true;
 
     // ---------- TYPE CHECKS ----------
 
-    if (!run_type_checks_and_concretize(state, global_scope, *top_level_definition))
+    if (!run_type_checks_and_concretize(state, global_scope, top_level_definition))
         return false;
 
         // !has_something_to_evaluate(state)
@@ -239,18 +241,25 @@ bool REPL::run_layer2(CompilationState& state, std::vector<Expression*> unparsed
 }
 
 bool REPL::run_type_checks_and_concretize(CompilationState& state, 
-    RT_Scope& scope, RT_Definition* const definition) {
+    RT_Scope& scope, optional<RT_Definition* const> top_level_definition) {
     
     // ----- type checks -----
 
-    if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, 
-        std::array<RT_Definition* const, 1>{definition}))
-        return false;
+    if (top_level_definition) {
+        if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, 
+                std::array<RT_Definition* const, 1>{*top_level_definition}))
+            return false;
+    } else {
+        if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, {}))
+            return false;
+    }
 
     // if (options.print_layer3) {
     std::cout <<   "------- post-typecheck -------\n\n";
     reverse_parser_ << scope;
-    reverse_parser_ << *definition;
+
+    if (top_level_definition)
+        reverse_parser_ << **top_level_definition;
     std::cout << "\n----- post-typecheck end -----\n\n";
     // }
 

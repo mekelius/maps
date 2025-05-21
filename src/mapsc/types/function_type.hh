@@ -26,7 +26,7 @@ public:
 
         for (const Type* param_type: param_types) {
             output += param_type->name();
-            output += " -> ";
+            output += is_pure ? " -> " : " => ";
         }
 
         output += return_type->name();

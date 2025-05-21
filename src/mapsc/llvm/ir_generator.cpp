@@ -170,8 +170,7 @@ bool IR_Generator::close_function_definition(const llvm::Function& function,
 }
 
 optional<llvm::Function*> IR_Generator::forward_declaration(const std::string& name, 
-    const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
-    
+    const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type,
     llvm::Function::LinkageTypes linkage) {
     
     llvm::Function* function = llvm::Function::Create(llvm_type, linkage, 
@@ -186,59 +185,6 @@ bool IR_Generator::verify_module() {
 
     return (!llvm::verifyModule(*module_, errs_));
 }
-
-// --------- HIGH-LEVEL HANDLERS ---------
-
-// optional<llvm::Function*> IR_Generator::eval_and_print_root() {
-//     if (!compilation_state_->entry_point_) {
-//         Log::compiler_error("IR_Generator::eval_and_print_root called with no entry point on CompilationState", 
-//             NO_SOURCE_LOCATION);
-//         fail("No entry point");
-//         return nullopt;
-//     }
-
-//     auto entry_point = *compilation_state_->entry_point_;
-
-//     if (holds_alternative<Maps::Undefined>(entry_point->const_body())) {
-//         fail("Undefined entry_point");
-//         return nullopt;
-//     }
-
-//     optional<llvm::Function*> top_level_function;
-
-//     auto root_function = handle_global_definition(*entry_point);
-
-//     if (!root_function) {
-//         fail("Creating REPL wrapper failed");
-//         return nullopt;
-//     }
-
-//     top_level_function = function_definition(static_cast<std::string>(REPL_WRAPPER_NAME), 
-//         *maps_types_->get_function_type(Maps::Void, {}), types_.repl_wrapper_signature);
-    
-//     auto entry_point_type = entry_point->get_type();
-
-//     optional<llvm::FunctionCallee> print = 
-//         function_store_->get("print", 
-//             *maps_types_->get_function_type(Maps::IO_Void, {entry_point_type}), false);
-
-//     if (!print && entry_point_type->is_pure()) {
-//         fail("Type " + entry_point_type->to_string() + " is not printable (and has no side-effects)");
-//         return nullopt;
-//     }
-
-//     auto value = builder_->CreateCall(*root_function);
-
-//     if (print)
-//         builder_->CreateCall(*print, value);
-
-//     if (!close_function_definition(**top_level_function)) {
-//         fail("REPL wrapper failed verification");
-//         return nullopt;    
-//     }
-
-//     return top_level_function;
-// }
 
 bool IR_Generator::handle_global_functions(const Maps::RT_Scope& scope) {
     for (auto [_1, definition]: scope) {
@@ -269,7 +215,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
     const std::string& name, const Maps::Expression& expression) {
     
     const Maps::FunctionType* maps_type = 
-        maps_types_->get_function_type(*expression.type, {});
+        maps_types_->get_function_type(*expression.type, {}, expression.type->is_pure());
 
     optional<llvm::FunctionType*> llvm_type = types_.convert_function_type(
         *maps_type->return_type(), maps_type->param_types());
@@ -396,7 +342,7 @@ std::optional<llvm::Value*> IR_Generator::handle_expression_statement(
 
     optional<llvm::FunctionCallee> print = 
         function_store_->get("print", *maps_types_->get_function_type(
-            Maps::Void, {expression->type}));
+            Maps::Void, {expression->type}, false));
 
     if (!print) {
         fail("no print function for top level expression");
@@ -433,11 +379,31 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
     }
 }
 
+const Maps::FunctionType* deduce_function_type(Maps::TypeStore& types, 
+    const Maps::Expression& call) {
+
+    auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
+
+    // hack to make printing work for now
+    auto callee_type = dynamic_cast<const Maps::FunctionType*>(callee->get_type());
+    auto return_type = callee_type->return_type();
+    std::vector<const Maps::Type*> arg_types;
+
+    for (auto arg: args)
+        arg_types.push_back(arg->type);
+
+    assert(arg_types.size() == callee_type->arity() && 
+        "handle call encountered a call with wrong number of args");
+
+    return types.get_function_type(
+        *return_type, arg_types, callee_type->is_pure());
+}
+
 llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
 
     std::optional<llvm::FunctionCallee> function = function_store_->get(
-        callee->to_string(), *dynamic_cast<const Maps::FunctionType*>(callee->get_type()));
+        callee->to_string(), *deduce_function_type(*compilation_state_->types_, call));
 
     if (!function) {
         fail("attempt to call unknown function: \"" + callee->to_string() + "\"");
