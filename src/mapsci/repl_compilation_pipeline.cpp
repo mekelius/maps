@@ -98,6 +98,8 @@ std::string REPL::eval_type(std::istream& input_stream) {
 bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_scope, 
     std::istream& source) {
 
+    // ---------- LAYER1 ----------
+
     auto [ 
         layer1_success,
         top_level_definition,
@@ -122,16 +124,8 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
         std::cout << "\n----- layer1 end -----\n\n";
     }
 
-// name_resolution() {
-//     // ----- name resolution -----
-//     if (!resolve_identifiers(*state, {state->globals_}, 
-//             layer1_result.unresolved_identifiers) && !options.ignore_errors)
-//         return state;
 
-//     if (!resolve_identifiers(*state, {state->globals_}, 
-//             layer1_result.unresolved_type_identifiers) && !options.ignore_errors)
-//         return state;
-
+    // --------- NAME RESOLUTION ----------
 
     if (!resolve_identifiers(state, global_scope, unresolved_type_identifiers) && 
             !options_.ignore_errors)
@@ -143,6 +137,9 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
     if (!resolve_identifiers(state, global_scope, unresolved_identifiers) && 
             !options_.ignore_errors)
         return false;
+
+
+    // ---------- LAYER2 ----------
 
     if (!run_layer2(state, unparsed_termed_expressions) && !options_.ignore_errors)
         return false;
@@ -160,16 +157,17 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
     if (options_.stop_after == Stage::layer2)
         return true;
 
+
+    // ---------- TYPE CHECKS ----------
+
     if (!run_type_checks_and_concretize(state, global_scope, *top_level_definition))
         return false;
 
-    // if (options_.print_compilation_state)
-    //     state.dump(std::cout);
-
-    if (options_.stop_after == Stage::layer3)
-        return true;
         // !has_something_to_evaluate(state)
     // ) return true;
+
+
+    // ---------- REPL WRAPPER ----------
 
     auto repl_wrapper = create_repl_wrapper(state, *top_level_definition);
 
@@ -178,6 +176,8 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
         if (!options_.ignore_errors)
             return false;
     }
+
+    // ---------- IR GEN ----------
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
     IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
@@ -210,6 +210,9 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
 
     if (options_.stop_after == Stage::ir || !options_.eval)
         return true;
+
+
+    // ---------- COMPILE AND RUN ----------
 
     return compile_and_run(std::move(module_), options_.repl_wrapper_name);
 }
