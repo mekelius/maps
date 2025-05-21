@@ -44,6 +44,7 @@ public:
         std::filesystem::path history_file_path;
 
         Maps::CompilationState::Options compiler_options{};
+        Maps::ReverseParser::Options reverse_parse{};
 
         std::string module_name = std::string{DEFAULT_MODULE_NAME};
         std::string prompt = std::string{DEFAULT_PROMPT};
@@ -87,6 +88,7 @@ private:
     JIT_Manager* jit_;
     llvm::raw_ostream* error_stream_;
     Options options_ = {};
+    Maps::ReverseParser reverse_parser_;
 };
     
 #endif

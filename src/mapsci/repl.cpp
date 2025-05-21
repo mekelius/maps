@@ -34,7 +34,11 @@ using Maps::TypeStore, Maps::CompilationState;
 
 REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, 
     Options options)
-: context_(context), jit_(jit), error_stream_(error_stream), options_(options) {
+:context_(context), 
+ jit_(jit), 
+ error_stream_(error_stream), 
+ options_(options), 
+ reverse_parser_(ReverseParser{&std::cout, options.reverse_parse}) {
     if (options_.save_history) {
         if (options_.history_file_path.empty()) {
             std::cout << "no history file given" << std::endl;
@@ -51,9 +55,8 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
     }
 }
 
-REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream) {
-    REPL(jit, context, error_stream, {});
-}
+REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream)
+:REPL(jit, context, error_stream, {}) {}
 
 bool REPL::run() {    
     auto types = TypeStore{};

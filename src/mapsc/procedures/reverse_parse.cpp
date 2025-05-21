@@ -167,7 +167,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
                 return *this << (std::get<bool>(expression.value) ? "true" : "false");
 
             if (*expression.type == String)
-                return *this << std::get<std::string>(expression.value);
+                return *this << '"' << std::get<std::string>(expression.value) << '"';
 
             assert(false && "valuetype not implemented in reverse parser");
             return *this;

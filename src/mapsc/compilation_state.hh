@@ -39,7 +39,6 @@ concept AST_Visitor = requires(T t) {
 class CompilationState {
 public:
     struct Options {
-        ReverseParser::Options reverse_parse{};
     };
 
     struct SpecialDefinitions {

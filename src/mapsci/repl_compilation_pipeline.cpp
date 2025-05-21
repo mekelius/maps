@@ -112,7 +112,15 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
 
     if (options_.stop_after == Stage::layer1)
         return true;
+    
+    if (options_.print_layer1) {
+        std::cout <<   "\n------- layer1 -------\n\n";
+        reverse_parser_ << global_scope;
 
+        if (top_level_definition)
+            reverse_parser_ << **top_level_definition;
+        std::cout << "\n----- layer1 end -----\n\n";
+    }
 
 // name_resolution() {
 //     // ----- name resolution -----
@@ -139,15 +147,15 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
     if (!run_layer2(state, unparsed_termed_expressions) && !options_.ignore_errors)
         return false;
 
-    // if (options_.print_layer2) {
-    std::cout <<   "------- layer2 -------\n\n";
-    ReverseParser{&std::cout} << global_scope;
+    if (options_.print_layer2) {
+        std::cout <<   "------- layer2 -------\n\n";
+        reverse_parser_ << global_scope;
 
-    if (top_level_definition)
-        ReverseParser{&std::cout} << **top_level_definition;
-    
-    std::cout << "\n----- layer2 end -----\n\n";
-    // }
+        if (top_level_definition)
+            reverse_parser_ << **top_level_definition;
+        
+        std::cout << "\n----- layer2 end -----\n\n";
+    }
 
     if (options_.stop_after == Stage::layer2)
         return true;
@@ -175,13 +183,13 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
     IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
 
     std::cout <<   "------- pre-ir gen -------\n\n";
-    ReverseParser{&std::cout} << global_scope;
+    reverse_parser_ << global_scope;
 
     if (top_level_definition)
-        ReverseParser{&std::cout} << **top_level_definition;
+        reverse_parser_ << **top_level_definition;
 
     if (repl_wrapper)
-        ReverseParser{&std::cout} << **repl_wrapper;
+        reverse_parser_ << **repl_wrapper;
     
     std::cout << "\n----- pre-ir gen end -----\n\n";
     
@@ -213,15 +221,6 @@ ParserLayer1::Result REPL::run_layer1(CompilationState& state, RT_Scope& global_
     ParserLayer1::Result result = 
         ParserLayer1{&state, &global_scope}.run_eval(source);
 
-    // if (options_.print_layer1) {
-        std::cout <<   "\n------- layer1 -------\n\n";
-        ReverseParser{&std::cout} << global_scope;
-
-        if (result.top_level_definition)
-            ReverseParser{&std::cout} << **result.top_level_definition;
-        std::cout << "\n----- layer1 end -----\n\n";
-    // }
-
     return result;
 }
 
@@ -243,8 +242,8 @@ bool REPL::run_type_checks_and_concretize(CompilationState& state,
 
     // if (options.print_layer3) {
     std::cout <<   "------- post-typecheck -------\n\n";
-    ReverseParser{&std::cout} << scope;
-    ReverseParser{&std::cout} << *definition;
+    reverse_parser_ << scope;
+    reverse_parser_ << *definition;
     std::cout << "\n----- post-typecheck end -----\n\n";
     // }
 

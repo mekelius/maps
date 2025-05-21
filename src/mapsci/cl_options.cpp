@@ -137,7 +137,7 @@ std::pair<bool, int> process_cl_options(int argc, char* argv[], REPL::Options& r
             repl_options.ignore_errors = false;
 
         } else if (key == "--types" || key == "--print-all-types" || key == "--print-types" || key == "--include-all-types" || key == "--include-types") {
-            repl_options.compiler_options.reverse_parse.include_all_types = true;
+            repl_options.reverse_parse.include_all_types = true;
 
         } else if (key == "--no-history") {
             repl_options.save_history = false;
