@@ -2,6 +2,7 @@
 
 ## Critical
 
+- repl only takes a shallow copy of the definitions
 - 8* reduces to 8
 - REPL should check if a definition can produce valid IR before saving it, currently easy to get stuck
     - also allow deleting names

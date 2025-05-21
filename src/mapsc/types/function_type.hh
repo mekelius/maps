@@ -41,7 +41,8 @@ public:
     virtual const Type* return_type() const = 0;
     virtual std::span<const Type* const> param_types() const = 0;
     virtual std::optional<const Type* const> param_type(uint param_index) const = 0;
-
+    virtual bool is_voidish() const { return (arity() != 0 || return_type()->is_voidish()); }
+    
     virtual bool is_complex() const { return true; }
     virtual bool is_function() const { return true; }
 

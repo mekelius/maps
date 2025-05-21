@@ -169,6 +169,9 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 
     // ---------- CREATE REPL WRAPPER ----------
 
+    if (!top_level_definition || (*top_level_definition)->get_type()->is_voidish())
+        return true;
+
     auto repl_wrapper = create_repl_wrapper(state, *top_level_definition);
 
     if (!repl_wrapper) {

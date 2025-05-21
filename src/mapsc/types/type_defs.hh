@@ -17,13 +17,13 @@ constexpr uint Boolean_ID   = 2;
 constexpr uint Float_ID     = 3;
 constexpr uint String_ID    = 4;
 
-constexpr ConcreteType Void { Void_ID, "Void", &not_castable };
+constexpr ConcreteType Void { Void_ID, "Void", &not_castable, true };
 constexpr ConcreteType Int { Int_ID, "Int", &cast_from_Int };
 constexpr ConcreteType Boolean { Boolean_ID, "Boolean", &cast_from_Boolean };
 constexpr ConcreteType Float { Float_ID, "Float", &cast_from_Float };
 constexpr ConcreteType String { String_ID, "String", &cast_from_String };
 
-constexpr CT_Type Absurd{ "Absurd", &not_castable, &not_concretizable };
+constexpr CT_Type Absurd{ "Absurd", &not_castable, &not_concretizable, true };
 constexpr CT_Type Hole{ "Hole", &not_castable, &not_concretizable };
 constexpr CT_Type Number{ "Number", &cast_from_Number, &concretize_Number };
 constexpr CT_Type NumberLiteral{ "NumberLiteral", &cast_from_NumberLiteral, &concretize_NumberLiteral };

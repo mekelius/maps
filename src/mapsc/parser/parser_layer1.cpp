@@ -57,6 +57,11 @@ ParserLayer1::Result ParserLayer1::run_eval(std::istream& source_is) {
     if (result_.top_level_definition)
         attempt_simplify(**result_.top_level_definition);
 
+    if (!result_.top_level_definition                   || 
+        (*result_.top_level_definition)->is_undefined() ||
+        (*result_.top_level_definition)->is_empty()
+    ) result_.top_level_definition = nullopt;
+
     return result_;
 }
 

@@ -5,6 +5,7 @@
 #### Short term
 
 - clean up the mapsci output
+- clear pure expression statements in blocks etc
 - split declarations/definitions off from statements
 - finish dsir
     - definitions
