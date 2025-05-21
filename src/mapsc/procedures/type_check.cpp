@@ -71,10 +71,19 @@ bool SimpleTypeChecker::visit_statement(Statement* statement) {
 
 bool SimpleTypeChecker::run(CompilationState& state, Scopes scopes, 
     std::span<RT_Definition* const> extra_definitions) {
-    
-    // return ast.walk_tree(*this);
-    // !!! ignoring failures
-    // state.walk_tree(*this);
+
+    for (auto scope: scopes) {
+        for (auto [_1, definition]: scope->identifiers_in_order_) {
+            if (!state.walk_definition(*this, definition))
+                return false;
+        }
+    }
+
+    for (auto definition: extra_definitions) {
+        if (!state.walk_definition(*this, definition))
+            return false;
+    }
+
     return true;
 }
 

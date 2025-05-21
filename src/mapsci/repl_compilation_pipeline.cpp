@@ -56,7 +56,6 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
         eval_and_print = Expression::call(state, state.special_definitions_.print_String,
             {std::get<Expression*>(top_level_definition->body())}, 
             location);
-
     }
 
     if (!eval_and_print) {
@@ -64,9 +63,12 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
         return nullopt;
     }
 
-    return state.ast_store_->allocate_definition(
+    auto definition = state.ast_store_->allocate_definition(
         RT_Definition{options_.repl_wrapper_name, *eval_and_print, location});
-    
+
+    SimpleTypeChecker{}.run(state, {}, std::array<RT_Definition* const, 1>{definition});
+
+    return definition;    
 }
 
 bool REPL::compile_and_run(std::unique_ptr<llvm::Module> module_, const std::string& entry_point) {
@@ -161,9 +163,6 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
         // !has_something_to_evaluate(state)
     // ) return true;
 
-    unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
-    IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
-
     auto repl_wrapper = create_repl_wrapper(state, *top_level_definition);
 
     if (!repl_wrapper) {
@@ -171,6 +170,9 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
         if (!options_.ignore_errors)
             return false;
     }
+
+    unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
+    IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
 
     std::cout <<   "------- pre-ir gen -------\n\n";
     ReverseParser{&std::cout} << global_scope;
