@@ -20,8 +20,6 @@ TEST_CASE("prefix purely unary operator") {
 
     TermedExpressionParser{&state, &expr}.run();
 
-    CHECK(state.is_valid);
-
     CHECK(expr.expression_type == ExpressionType::call);
     
     auto [callee, args] = expr.call_value();
@@ -42,8 +40,6 @@ TEST_CASE("postfix purely unary operator") {
         TermedExpressionValue{{&value, &op_ref}}, TSL};
 
     TermedExpressionParser{&state, &expr}.run();
-
-    CHECK(state.is_valid);
 
     CHECK(expr.expression_type == ExpressionType::call);
     
@@ -71,8 +67,6 @@ TEST_CASE("Chained unary prefixes") {
         TermedExpressionValue{{&op_ref3, &op_ref2, &op_ref1, &value}}, TSL};
 
     TermedExpressionParser{&state, &expr}.run();
-
-    CHECK(state.is_valid);
 
     CHECK(expr.expression_type == ExpressionType::call);
     

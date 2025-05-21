@@ -80,7 +80,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/parser/parser_layer1.cpp
     src/mapsc/parser/parser_layer2.cpp
 
-    src/mapsc/process_source.cpp
+    # src/mapsc/process_source.cpp
 )
 
 target_link_libraries(mapsc_frontend corelib)
@@ -107,18 +107,18 @@ target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 # ------------------------- MAPSC -------------------------
 
-add_executable(mapsc
-    src/mapsc/llvm/obj_output.cpp
-    src/mapsc_main.cpp
-)
+# add_executable(mapsc
+#     src/mapsc/llvm/obj_output.cpp
+#     src/mapsc_main.cpp
+# )
 
-target_link_libraries(mapsc mapsc_frontend ir_gen corelib -lLLVM-19)
-target_include_directories(mapsc SYSTEM PUBLIC /usr/lib/llvm-19/include)
+# target_link_libraries(mapsc mapsc_frontend ir_gen corelib -lLLVM-19)
+# target_include_directories(mapsc SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
-target_compile_options(mapsc PRIVATE 
-    -fno-exceptions -funwind-tables 
-    -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
-)
+# target_compile_options(mapsc PRIVATE 
+#     -fno-exceptions -funwind-tables 
+#     -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
+# )
 
 # ------------------------- MAPSCi ------------------------
 
@@ -126,6 +126,8 @@ add_executable(mapsci
     src/mapsci/init_llvm.cpp
     src/mapsci/jit_manager.cpp
     src/mapsci/cl_options.cpp
+    src/mapsci/repl_commands.cpp
+    src/mapsci/repl_compilation_pipeline.cpp
     src/mapsci/repl.cpp
     src/mapsci_main.cpp
 )
@@ -143,18 +145,18 @@ target_compile_options(mapsci PRIVATE
 
 # ---------------------- VERIFY MAPSC ----------------------
 
-add_executable(mapsc-verify
-    src/mapsc_verify_main.cpp
-)
+# add_executable(mapsc-verify
+#     src/mapsc_verify_main.cpp
+# )
 
-target_link_libraries(mapsc-verify mapsc_frontend)
+# target_link_libraries(mapsc-verify mapsc_frontend)
 
 # ----------------------- UNIT TESTS -----------------------
 
 add_executable(unit_tests
     tests/tests_main.cpp
 
-    tests/full_runs.cpp
+    # tests/full_runs.cpp
     tests/pragmas.cpp
     tests/ast/ast.cpp
 

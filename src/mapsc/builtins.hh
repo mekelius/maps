@@ -106,6 +106,7 @@ extern constinit CT_Operator unary_minus_Int;
 extern constinit CT_Operator plus_Int;
 extern constinit CT_Operator binary_minus_Int;
 extern constinit CT_Operator mult_Int;
+extern constinit CT_Definition print_String;
 
 } // namespace Maps
 

@@ -35,15 +35,12 @@ std::string ReverseParser::linebreak() {
     return "\n" + std::string(indent_stack_ * options_.indent_width, ' ');
 }
 
-ReverseParser& ReverseParser::reverse_parse(const CompilationState& state) {
+ReverseParser& ReverseParser::reverse_parse(const RT_Scope& scope) {
     reset();
 
-    for (auto [name, definition]: state.globals_.identifiers_in_order_) {
+    for (auto [name, definition]: scope.identifiers_in_order_) {
         *this << "let " << name << " = " << definition->const_body() << ";\n\n";
     }
-
-    if (state.entry_point_)
-        return *this << (*state.entry_point_)->const_body() << '\n';
 
     return *this;
 }
@@ -262,6 +259,10 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");
     }
+}
+
+ReverseParser& ReverseParser::print_definition(const Definition& definition) {
+    return *this << "let " << definition.to_string() << " = " << definition.const_body() << "\n";
 }
 
 // reverse-parse expression into the stream

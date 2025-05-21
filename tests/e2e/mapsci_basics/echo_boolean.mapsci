@@ -1,3 +1,3 @@
-// RUN: cat %s | %mapsci | grep "true"
+// RUN: %mapsci < %s | grep true
 
 true

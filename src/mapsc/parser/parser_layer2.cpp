@@ -58,8 +58,8 @@ ParserLayer2::ParserLayer2(CompilationState* compilation_state)
 :compilation_state_(compilation_state) {
 }
 
-void ParserLayer2::run() {
-    for (Expression* expression: compilation_state_->unparsed_termed_expressions_) {
+void ParserLayer2::run(std::vector<Expression*> unparsed_termed_expressions) {
+    for (Expression* expression: unparsed_termed_expressions) {
         // some expressions might be parsed early as sub-expressions
         if (expression->expression_type != ExpressionType::termed_expression)
             continue;
@@ -127,7 +127,7 @@ std::optional<Expression*> TermedExpressionParser::pop_term() {
 
 void TermedExpressionParser::fail(const std::string& message, SourceLocation location) {
     Log::error(message, location);
-    compilation_state_->declare_invalid();
+    success_ = false;
 }
 
 bool TermedExpressionParser::at_expression_end() const {
@@ -162,7 +162,7 @@ Expression* TermedExpressionParser::parse_termed_expression() {
     shift();
     initial_goto();
 
-    if (!compilation_state_->is_valid) {
+    if (!success_) {
         Log::error("parsing termed expression failed", expression_->location);
         return Expression::valueless(*ast_store_, ExpressionType::user_error, expression_->location);
     }

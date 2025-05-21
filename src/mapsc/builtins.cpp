@@ -60,7 +60,7 @@ CT_Operator::CT_Operator(std::string_view name, const Expression&& expression,
 
 CT_Definition true_{"true", Expression::builtin(true, Boolean)};
 CT_Definition false_{"false", Expression::builtin(false, Boolean)};
-CT_Definition print{"print", External{}, String_to_IO_Void};
+constinit CT_Definition print_String{"print", External{}, String_to_IO_Void};
 
 // ----- BUILTINS SCOPE -----
 
@@ -91,11 +91,11 @@ bool init_builtins(CT_Scope& scope) {
     builtins_initialized = true;
 
     return (
-        init_builtin(scope, true_      ) &&
-        init_builtin(scope, false_     ) &&
-        init_builtin(scope, print      ) &&
-        init_builtin(scope, plus_Int   ) &&
-        init_builtin(scope, mult_Int   )
+        init_builtin(scope, true_           ) &&
+        init_builtin(scope, false_          ) &&
+        init_builtin(scope, print_String    ) &&
+        init_builtin(scope, plus_Int        ) &&
+        init_builtin(scope, mult_Int        )
     );
 
     // if (!ast.create_builtin_binary_operator("+", *ast.types_->get_function_type(Int, 

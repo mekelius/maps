@@ -95,7 +95,8 @@ int main(int argc, char* argv[]) {
         Maps::TypeStore types{};
         Maps::CompilationState compilation_state{Maps::get_builtins(), &types};
 
-        Maps::ParserLayer1{&compilation_state}.run(source_file);
+        auto [success, _1, unresolved_identifiers, unparsed_termed_expressions, unresolved_type_identifiers, _5] = 
+            Maps::ParserLayer1{&compilation_state}.run(source_file);
 
         if (Maps::logs_since_last_check()) 
             std::cout << "\n";
@@ -106,7 +107,8 @@ int main(int argc, char* argv[]) {
         std::cout << "layer1 done\n\n";
         std::cout << "run name resolution\n\n";
 
-        resolve_identifiers(compilation_state, compilation_state.unresolved_identifiers_);
+        resolve_identifiers(compilation_state, unresolved_identifiers);
+        resolve_identifiers(compilation_state, unresolved_type_identifiers);
 
         if(Maps::logs_since_last_check()) 
             std::cout << "\n";
@@ -117,7 +119,7 @@ int main(int argc, char* argv[]) {
         std::cout << "name resolution done\n\n";
         std::cout << "run layer 2\n\n";
 
-        Maps::ParserLayer2{&compilation_state}.run();
+        Maps::ParserLayer2{&compilation_state}.run(unparsed_termed_expressions);
 
         if(Maps::logs_since_last_check()) 
             std::cout << "\n";

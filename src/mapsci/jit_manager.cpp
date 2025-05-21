@@ -27,14 +27,14 @@ JIT_Manager::JIT_Manager(llvm::orc::ThreadSafeContext* context, llvm::raw_ostrea
 //     auto resource_tracker = jit_->getMainJITDylib().createResourceTracker();
 // }
     
-bool JIT_Manager::compile_and_run(const std::string& name, std::unique_ptr<llvm::Module> module) {
+bool JIT_Manager::compile_and_run(std::unique_ptr<llvm::Module> module, const std::string& entry_point) {
     if (auto err = jit_->addIRModule(llvm::orc::ThreadSafeModule{std::move(module), *context_})) {
         *error_stream_ << err << '\n';
         error_stream_->flush();
         return false;
     }
 
-    auto f1_sym = jit_->lookup(name);
+    auto f1_sym = jit_->lookup(entry_point);
     if (!f1_sym) {
         *error_stream_ << f1_sym.takeError() << '\n';
         error_stream_->flush();

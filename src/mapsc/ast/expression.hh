@@ -129,43 +129,42 @@ using ExpressionValue = std::variant<
 
 struct Expression {
     // ----- STATIC METHODS -----
-    static Expression* string_literal(
-        AST_Store& store, const std::string& value, SourceLocation location);
-    static Expression* numeric_literal(
-        AST_Store& store, const std::string& value, SourceLocation location);
+    static Expression* string_literal(AST_Store& store, 
+        const std::string& value, SourceLocation location);
+    static Expression* numeric_literal(AST_Store& store, 
+        const std::string& value, SourceLocation location);
 
-    static Expression* identifier(
-        CompilationState& state, const std::string& value, SourceLocation location);
-    static Expression* type_identifier(
-        CompilationState& state, const std::string& value, SourceLocation location);
-    static Expression* operator_identifier(
-        CompilationState& state, const std::string& value, SourceLocation location);
-    static Expression* type_operator_identifier(
-        CompilationState& state, const std::string& value, SourceLocation location);
+    static Expression* identifier(AST_Store& store, RT_Scope* scope, 
+        const std::string& value, SourceLocation location);
+    static Expression* operator_identifier(AST_Store& store, RT_Scope* scope, 
+        const std::string& value, SourceLocation location);
+    static Expression* type_identifier(AST_Store& store, 
+        const std::string& value, SourceLocation location);
+    static Expression* type_operator_identifier(AST_Store& store, 
+        const std::string& value, SourceLocation location);
 
-    static Expression* termed(
-        AST_Store& store, std::vector<Expression*>&& terms, SourceLocation location);
+    static Expression* termed(AST_Store& store, 
+        std::vector<Expression*>&& terms, SourceLocation location);
 
-    static Expression* reference(
-        AST_Store& store, Definition* definition, SourceLocation location);
-    static Expression* type_reference(
-        AST_Store& store, const Type* type, SourceLocation location);
+    static Expression* reference(AST_Store& store, 
+        Definition* callee, SourceLocation location);
+    static Expression* type_reference(AST_Store& store, 
+        const Type* type, SourceLocation location);
     static Expression operator_reference(
-        Definition* definition, SourceLocation location);
-    static Expression* operator_reference(
-        AST_Store& store, Definition* definition, SourceLocation location);
+        Definition* callee, SourceLocation location);
+    static Expression* operator_reference(AST_Store& store, 
+        Definition* callee, SourceLocation location);
 
-    static std::optional<Expression*> reference(
-        AST_Store& store, const Scope& scope, const std::string& name, SourceLocation location);
-    static std::optional<Expression*> type_operator_reference(
-        AST_Store& store, const std::string& name, const Type* type, SourceLocation location);
+    static std::optional<Expression*> reference(AST_Store& store, const Scope& scope, 
+        const std::string& name, SourceLocation location);
+    static std::optional<Expression*> type_operator_reference(AST_Store& store, 
+        const std::string& name, const Type* type, SourceLocation location);
 
-    static std::optional<Expression*> call(
-        CompilationState& state, Definition* definition, std::vector<Expression*>&& args, 
-        SourceLocation location);
+    static std::optional<Expression*> call(CompilationState& state, 
+        Definition* callee, std::vector<Expression*>&& args, SourceLocation location);
 
     static std::optional<Expression*> partial_binop_call(CompilationState& state, 
-        Definition* definition, Expression* lhs, Expression* rhs, SourceLocation location);
+        Definition* callee, Expression* lhs, Expression* rhs, SourceLocation location);
 
     // not implemented
     static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
@@ -177,12 +176,11 @@ struct Expression {
     static Expression* lambda(AST_Store& store, Expression* binding_type_declaration, 
         DefinitionBody body, SourceLocation location);
 
-    static Expression* valueless(
-        AST_Store& store, ExpressionType expression_type, SourceLocation location);
-    static Expression* missing_argument(
-        AST_Store& store, const Type* type, SourceLocation location);
-    static Expression* minus_sign(
-        AST_Store& store, SourceLocation location);
+    static Expression* valueless(AST_Store& store, 
+        ExpressionType expression_type, SourceLocation location);
+    static Expression* missing_argument(AST_Store& store, 
+        const Type* type, SourceLocation location);
+    static Expression* minus_sign(AST_Store& store, SourceLocation location);
 
     static Expression* user_error(AST_Store& store, SourceLocation location);
     static Expression* compiler_error(AST_Store& store, SourceLocation location);
@@ -215,8 +213,8 @@ struct Expression {
     // For example partial binop call, currently a no-op
     void convert_to_partial_call();
 
-    void convert_to_reference(Definition* definition);
-    void convert_to_operator_reference(Definition* definition);
+    void convert_to_reference(Definition* callee);
+    void convert_to_operator_reference(Definition* callee);
 
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();

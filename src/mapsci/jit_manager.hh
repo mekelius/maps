@@ -24,7 +24,7 @@ public:
     //     auto resource_tracker = jit_->getMainJITDylib().createResourceTracker();
     // }
 
-    bool compile_and_run(const std::string& name, std::unique_ptr<llvm::Module> module);
+    bool compile_and_run(std::unique_ptr<llvm::Module> module, const std::string& entry_point);
 
     // resets everything in the jitDYlib
     void reset();

@@ -45,6 +45,7 @@ public:
     struct SpecialDefinitions {
         CT_Operator* unary_minus;
         CT_Operator* binary_minus;
+        CT_Definition* print_String;
     };
 
     template<AST_Visitor T>
@@ -61,11 +62,11 @@ public:
         create_test_state();
 
     CompilationState(const CT_Scope* builtins, TypeStore* types, 
-        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int});
+        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String});
 
     CompilationState(const CT_Scope* builtins, TypeStore* types, 
         Options compiler_options,
-        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int});
+        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String});
 
     // copy constructor
     CompilationState(const CompilationState&) = default;
@@ -73,35 +74,14 @@ public:
     CompilationState& operator=(const CompilationState&) = default;
     ~CompilationState() = default;
 
-    bool empty() const;
-
-    [[nodiscard]] bool set_entry_point(RT_Definition* entrypoint);
-    [[nodiscard]] bool set_entry_point(std::string name);
-
-    void declare_invalid() { is_valid = false; };
-    void dump(std::ostream&) const;
-
-    bool is_valid = true;
-    
     Options compiler_options_{};
-    RT_Scope globals_ = {};
     std::shared_ptr<AST_Store> ast_store_ = std::make_shared<AST_Store>();
     PragmaStore pragmas_ = {};
     
-    // container for top-level statements
-    std::optional<RT_Definition*> entry_point_ = std::nullopt;
-    
     TypeStore* types_;
     const CT_Scope* builtins_;
-    SpecialDefinitions special_definitions_ = SpecialDefinitions{&unary_minus_Int, &binary_minus_Int};
-
-    // layer1 fills these with pointers to expressions that need work so that layer 2 doesn't
-    // need to walk the tree to find them
-    std::vector<Expression*> unresolved_identifiers_ = {};
-    std::vector<Expression*> unresolved_type_identifiers_ = {};
-    // these have to be dealt with before name resolution
-    std::vector<Expression*> possible_binding_type_declarations_ = {};
-    std::vector<Expression*> unparsed_termed_expressions_ = {};
+    SpecialDefinitions special_definitions_ = 
+        SpecialDefinitions{&unary_minus_Int, &binary_minus_Int, &print_String};
 };
 
 template<AST_Visitor T>
@@ -175,15 +155,13 @@ bool CompilationState::walk_definition(T visitor, RT_Definition* definition) {
 
 template<AST_Visitor T>
 bool CompilationState::walk_tree(T& visitor) {
-    for (auto [_1, definition]: globals_.identifiers_in_order_) {
-        if (!walk_definition(visitor, definition))
-            return false;
-    }
+    assert(false && "not implemented");
+    // for (auto [_1, definition]: globals_.identifiers_in_order_) {
+    //     if (!walk_definition(visitor, definition))
+    //         return false;
+    // }
 
-    if (entry_point_ && !walk_definition(visitor, *entry_point_))
-        return false;
-
-    return true;
+    // return true;
 }
 
 } // namespace Maps

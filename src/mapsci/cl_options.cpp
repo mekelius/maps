@@ -103,14 +103,11 @@ std::pair<bool, int> process_cl_options(int argc, char* argv[], REPL::Options& r
         } else if (key == "--layer3" || key == "--print-layer3" || key == "--pre-ir" || key == "--print-pre-ir" || key == "--reverse-parse") {
             repl_options.print_layer3 = true;
 
-        } else if (key == "--quit-on-error" || key == "--exit-on-error") {
+        } else if (key == "--quit-on-error" || key == "--exit-on-error" || key == "--quit-on-fail" || key == "--exit-on-fail") {
             repl_options.quit_on_error = true;
 
-        } else if (key == "--prefix-output") {
-            repl_options.prefix_output = true;
-
         } else if (key == "--no-prompt") {
-            repl_options.prompt = false;
+            repl_options.prompt = "";
 
         } else if (key == "--e2e-tests-mode") {
             repl_options.save_history = false;

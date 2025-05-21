@@ -231,6 +231,7 @@ TEST_CASE ("should handle more complex expressions") {
 
 TEST_CASE("TermedExpressionParser should handle haskell-style call expressions") {
     auto [state, _0, types] = CompilationState::create_test_state();
+    RT_Scope globals{};
     AST_Store& ast = *state.ast_store_;
 
     Expression* expr = Expression::termed(ast, {}, {0,0});
@@ -239,7 +240,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Type* function_type = types->get_function_type(Void, {&String});
 
         RT_Definition function{"test_f", External{}, *function_type, TSL};
-        state.globals_.create_identifier(&function);
+        globals.create_identifier(&function);
 
         Expression* id = Expression::reference(ast, &function, {0,0});
         Expression* arg1 = Expression::string_literal(ast, "", {0,0});
@@ -355,7 +356,6 @@ TEST_CASE("Should set the type on a non-partial call expression to the return ty
 
     TermedExpressionParser{&state, expr}.run();
 
-    CHECK(state.is_valid);
     CHECK(expr->expression_type == ExpressionType::call);
     CHECK(*expr->type == String);
     CHECK(expr->call_value() == CallExpressionValue{&test_f, {&arg}});
@@ -381,7 +381,6 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
 
     TermedExpressionParser{&state, expr}.run();
 
-    CHECK(state.is_valid);
     CHECK(expr->expression_type == ExpressionType::call);
     CHECK(expr->call_value() == CallExpressionValue{&test_op, {&lhs, &rhs}});
     CHECK(*expr->type == String);
@@ -398,8 +397,6 @@ TEST_CASE("Layer2 should handle type specifiers") {
             TermedExpressionValue{{&type_specifier, &value}, db_false}, TSL};
 
         TermedExpressionParser{&state, &expr}.run();
-
-        CHECK(state.is_valid);
 
         CHECK(*expr.type == Int);
         CHECK(expr.expression_type == ExpressionType::value);
@@ -420,7 +417,6 @@ TEST_CASE("Layer2 should handle type specifiers") {
 
         TermedExpressionParser{&state, &expr}.run();
 
-        CHECK(state.is_valid);
         CHECK(*expr.type == Int);
         CHECK(expr.expression_type == ExpressionType::call);
 

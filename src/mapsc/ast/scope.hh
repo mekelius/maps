@@ -72,6 +72,9 @@ using Scope = Scope_T<Definition*>;
 using RT_Scope = Scope_T<RT_Definition*>;
 using CT_Scope = Scope_T<CT_Definition*>;
 
+using Scopes = std::span<RT_Scope* const>;
+using const_Scopes = std::span<const RT_Scope* const>;
+
 } // namespace AST
 
 #endif

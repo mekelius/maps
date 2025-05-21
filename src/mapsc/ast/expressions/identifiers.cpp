@@ -18,39 +18,35 @@ bool Expression::is_identifier() const {
     }
 }
 
-Expression* Expression::identifier(CompilationState& state, const std::string& value, 
+Expression* Expression::identifier(AST_Store& store, RT_Scope* scope, const std::string& value, 
     SourceLocation location) {
     
-    Expression* expression = state.ast_store_->allocate_expression(
+    Expression* expression = store.allocate_expression(
         {ExpressionType::identifier, value, &Hole, location});
-    state.unresolved_identifiers_.push_back(expression);
     return expression;
 }
 
-Expression* Expression::type_identifier(CompilationState& state, 
+Expression* Expression::operator_identifier(AST_Store& store, RT_Scope* scope, 
     const std::string& value, SourceLocation location) {
     
-    Expression* expression = state.ast_store_->allocate_expression(
-        {ExpressionType::type_identifier, value, &Hole, location});
-    state.unresolved_identifiers_.push_back(expression);
+    Expression* expression = store.allocate_expression(
+        {ExpressionType::operator_identifier, value, &Hole, location});
     return expression;
 }
 
-Expression* Expression::operator_identifier(CompilationState& state, const std::string& value, 
+Expression* Expression::type_identifier(AST_Store& store, const std::string& value, 
     SourceLocation location) {
     
-    Expression* expression = state.ast_store_->allocate_expression(
-        {ExpressionType::operator_identifier, value, &Hole, location});
-    state.unresolved_identifiers_.push_back(expression);
+    Expression* expression = store.allocate_expression(
+        {ExpressionType::type_identifier, value, &Hole, location});
     return expression;
 }
 
-Expression* Expression::type_operator_identifier(
-    CompilationState& state, const std::string& value, SourceLocation location) {
+Expression* Expression::type_operator_identifier(AST_Store& store, const std::string& value, 
+    SourceLocation location) {
     
-    Expression* expression = state.ast_store_->allocate_expression({
+    Expression* expression = store.allocate_expression({
         ExpressionType::type_operator_identifier, value, &Void, location});
-    state.unresolved_type_identifiers_.push_back(expression);
     return expression;
 }
     

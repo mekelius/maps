@@ -9,16 +9,4 @@ config.test_source_root = os.path.dirname(__file__)
 config.test_exec_root = os.path.join(config.build_dir, 'test')
 
 config.substitutions.append(('%mapsci',
-    os.path.join(config.build_dir, 'mapsci --e2e-tests-mode')))
-
-# config.substitutions.append(('%mapsc',
-#     os.path.join(config.build_dir, 'mapsc')))
-
-# config.substitutions.append(('%mapsci',
-#     os.path.join(config.build_dir, 'mapsci')))
-
-# config.substitutions.append(('%mapsci-args', 
-#     '-s --no-history --quit-on-error'))
-
-# config.substitutions.append(('%mapsc-verify',
-#     os.path.join(config.build_dir, 'mapsc-verify')))
+    os.path.join(config.build_dir, 'mapsci --quit-on-error --no-history -q')))

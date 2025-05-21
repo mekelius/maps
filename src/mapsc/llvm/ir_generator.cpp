@@ -98,22 +98,26 @@ IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module,
     builder_ = std::make_unique<llvm::IRBuilder<>>(*context_);
 }
 
-bool IR_Generator::run() {
+bool IR_Generator::run(Maps::Scopes scopes) {
+    return run(scopes, {});
+}
+
+bool IR_Generator::run(Maps::Scopes scopes, std::span<Maps::Definition* const> additional_definitions) {
     // Not allowed to run if we have already failed
     if (has_failed_)
         return false;
 
-    if (!handle_global_functions())
-        return false;
+    for (auto scope: scopes) {
+        if (!handle_global_functions(*scope))
+            return false;
+    }
 
-    // TODO 0.2: check if global eval context
-    
-    // TODO 0.1: add main wrapper
-    // fix main to have the correct type
-    // std::optional<AST::Callable*> main = ast->globals_->get_identifier("main");
-    // if (main) {
-    //     (*main)->arg_types = { &AST::Int, &AST::String };
-    // }
+    for (auto definition: additional_definitions) {
+        if (!handle_global_definition(*definition)) {
+            fail("Couldn't generate ir for " + definition->to_string());
+            return false;
+        }
+    }
 
     if (!verify_module()) {
         fail("Module verification failed");
@@ -122,38 +126,6 @@ bool IR_Generator::run() {
 
     return !has_failed_;
 }
-
-bool IR_Generator::repl_run() {
-    // Not allowed to run if we have already failed
-    if (has_failed_)
-        return false;
-
-    if (!handle_global_functions())
-        return false;
-
-    if (!eval_and_print_root())
-        return false;
-
-    if (!verify_module()) {
-        fail("Module verification failed");
-        return false;
-    }
-
-    return true;
-}
-
-bool IR_Generator::print_ir_to_file(const std::string& filename) {
-    // prepare the stream
-    std::error_code error_code; //??? what to do with this?
-    llvm::raw_fd_ostream ostream{filename, error_code, llvm::sys::fs::OF_None};
-
-    module_->print(ostream, nullptr);
-    ostream.flush();
-
-    return true;
-}
-
-// --------- HELPERS ---------
 
 void IR_Generator::fail(const std::string& message) {
     has_failed_ = true;
@@ -217,59 +189,59 @@ bool IR_Generator::verify_module() {
 
 // --------- HIGH-LEVEL HANDLERS ---------
 
-optional<llvm::Function*> IR_Generator::eval_and_print_root() {
-    if (!compilation_state_->entry_point_) {
-        Log::compiler_error("IR_Generator::eval_and_print_root called with no entry point on CompilationState", 
-            NO_SOURCE_LOCATION);
-        fail("No entry point");
-        return nullopt;
-    }
+// optional<llvm::Function*> IR_Generator::eval_and_print_root() {
+//     if (!compilation_state_->entry_point_) {
+//         Log::compiler_error("IR_Generator::eval_and_print_root called with no entry point on CompilationState", 
+//             NO_SOURCE_LOCATION);
+//         fail("No entry point");
+//         return nullopt;
+//     }
 
-    auto entry_point = *compilation_state_->entry_point_;
+//     auto entry_point = *compilation_state_->entry_point_;
 
-    if (holds_alternative<Maps::Undefined>(entry_point->const_body())) {
-        fail("Undefined entry_point");
-        return nullopt;
-    }
+//     if (holds_alternative<Maps::Undefined>(entry_point->const_body())) {
+//         fail("Undefined entry_point");
+//         return nullopt;
+//     }
 
-    optional<llvm::Function*> top_level_function;
+//     optional<llvm::Function*> top_level_function;
 
-    auto root_function = handle_global_definition(*entry_point);
+//     auto root_function = handle_global_definition(*entry_point);
 
-    if (!root_function) {
-        fail("Creating REPL wrapper failed");
-        return nullopt;
-    }
+//     if (!root_function) {
+//         fail("Creating REPL wrapper failed");
+//         return nullopt;
+//     }
 
-    top_level_function = function_definition(static_cast<std::string>(REPL_WRAPPER_NAME), 
-        *maps_types_->get_function_type(Maps::Void, {}), types_.repl_wrapper_signature);
+//     top_level_function = function_definition(static_cast<std::string>(REPL_WRAPPER_NAME), 
+//         *maps_types_->get_function_type(Maps::Void, {}), types_.repl_wrapper_signature);
     
-    auto entry_point_type = entry_point->get_type();
+//     auto entry_point_type = entry_point->get_type();
 
-    optional<llvm::FunctionCallee> print = 
-        function_store_->get("print", 
-            *maps_types_->get_function_type(Maps::IO_Void, {entry_point_type}), false);
+//     optional<llvm::FunctionCallee> print = 
+//         function_store_->get("print", 
+//             *maps_types_->get_function_type(Maps::IO_Void, {entry_point_type}), false);
 
-    if (!print && entry_point_type->is_pure()) {
-        fail("Type " + entry_point_type->to_string() + " is not printable (and has no side-effects)");
-        return nullopt;
-    }
+//     if (!print && entry_point_type->is_pure()) {
+//         fail("Type " + entry_point_type->to_string() + " is not printable (and has no side-effects)");
+//         return nullopt;
+//     }
 
-    auto value = builder_->CreateCall(*root_function);
+//     auto value = builder_->CreateCall(*root_function);
 
-    if (print)
-        builder_->CreateCall(*print, value);
+//     if (print)
+//         builder_->CreateCall(*print, value);
 
-    if (!close_function_definition(**top_level_function)) {
-        fail("REPL wrapper failed verification");
-        return nullopt;    
-    }
+//     if (!close_function_definition(**top_level_function)) {
+//         fail("REPL wrapper failed verification");
+//         return nullopt;    
+//     }
 
-    return top_level_function;
-}
+//     return top_level_function;
+// }
 
-bool IR_Generator::handle_global_functions() {
-    for (auto [_1, definition]: compilation_state_->globals_) {
+bool IR_Generator::handle_global_functions(const Maps::RT_Scope& scope) {
+    for (auto [_1, definition]: scope) {
         if (!handle_global_definition(*definition))
             return false;
     }

@@ -13,6 +13,7 @@
 
 #include "mapsc/llvm/type_mapping.hh"
 #include "mapsc/llvm/function_store.hh"
+#include "mapsc/ast/scope.hh"
 
 namespace llvm {
 
@@ -53,7 +54,8 @@ public:
 
     // ----- CONSTRUCTORS -----
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, 
-        const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream, Options options);
+        const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream, 
+        Options options);
 
     // delegating contructor to make options optional
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, 
@@ -61,11 +63,8 @@ public:
     :IR_Generator(context, module, compilation_state, error_stream, Options{}) {}
 
     // ----- RUNNING THE GENERATOR -----
-    bool run();
-
-    // version of run that always processes top-level statements, and wraps them in print calls
-    bool repl_run();
-    bool print_ir_to_file(const std::string& filename);
+    bool run(Maps::Scopes scopes);
+    bool run(Maps::Scopes, std::span<Maps::Definition* const> additional_definitions);
 
     // ----- PUBLIC FIELDS -----
 
@@ -85,7 +84,8 @@ private:
         const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
     
-    bool close_function_definition(const llvm::Function& function, llvm::Value* return_value = nullptr);
+    bool close_function_definition(const llvm::Function& function, 
+        llvm::Value* return_value = nullptr);
 
     std::optional<llvm::Function*> forward_declaration(const std::string& name, 
         const Maps::FunctionType& ast_type, llvm::FunctionType* type, 
@@ -96,8 +96,7 @@ private:
     bool verify_module();
 
     // ---- HIGH-LEVEL HANDLERS -----
-    std::optional<llvm::Function*> eval_and_print_root();
-    bool handle_global_functions();
+    bool handle_global_functions(const Maps::RT_Scope& scope);
     std::optional<llvm::FunctionCallee> wrap_value_in_function(const std::string& name, 
         const Maps::Expression& expression);
 

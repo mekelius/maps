@@ -129,6 +129,8 @@ private:
     bool possibly_type_expression_ = true;
     std::vector<Expression*> parse_stack_ = {};
     std::vector<Operator::Precedence> precedence_stack_ = {Operator::MIN_PRECEDENCE};
+
+    bool success_ = true;
 };
 
 // basically a small wrapper that creates TermedExpressionParser for each unparsed termed 
@@ -136,7 +138,7 @@ private:
 class ParserLayer2 {
 public:
     ParserLayer2(CompilationState* compilation_state);
-    void run();
+    void run(std::vector<Expression*> unparsed_termed_expressions);
 
 private:
 

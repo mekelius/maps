@@ -37,11 +37,15 @@ std::unique_ptr<CompilationState> process_source(const CompilationState& base, s
 
     ParserLayer1 layer1{compilation_state.get()};
     
+    ParserLayer1::Result layer1_result;
     if (!options.in_repl) {
-        layer1.run(source_is);
+        layer1_result = layer1.run(source_is);
     } else {
-        layer1.eval_parse(source_is);
+        layer1_result = layer1.run_eval(source_is);
     }
+
+    compilation_state->is_valid = layer1_result.success;
+    compilation_state->set_entry_point(*layer1_result.top_level_definition);
 
     if (options.print_layer1) {
         debug_ostream <<   "\n------- layer1 -------\n\n";
@@ -56,15 +60,16 @@ std::unique_ptr<CompilationState> process_source(const CompilationState& base, s
         return compilation_state;
 
     // ----- name resolution -----
-
     if (!resolve_identifiers(*compilation_state, {compilation_state->globals_}, 
-            compilation_state->unresolved_identifiers_) && !options.ignore_errors)
+            layer1_result.unresolved_identifiers) && !options.ignore_errors)
         return compilation_state;
 
-    compilation_state->unresolved_identifiers_ = {};
-    // ----- layer2 -----
+    if (!resolve_identifiers(*compilation_state, {compilation_state->globals_}, 
+            layer1_result.unresolved_type_identifiers) && !options.ignore_errors)
+        return compilation_state;
 
-    ParserLayer2{compilation_state.get()}.run();
+    // ----- layer2 -----
+    ParserLayer2{compilation_state.get()}.run(layer1_result.unparsed_termed_expressions);
 
     if (options.print_layer2) {
         debug_ostream <<   "------- layer2 -------\n\n";

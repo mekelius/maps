@@ -449,7 +449,7 @@ private:
     }
 
     Expression* parse_identifier() {
-        auto expression = Expression::identifier(*compilation_state_,
+        auto expression = Expression::identifier(*ast_store_, &result_.definitions,
             current_token_.value, current_token_.location);
         result_.unresolved_identifiers.push_back(expression);
 
@@ -458,9 +458,8 @@ private:
     }
 
     Expression* parse_type_identifier() {
-        auto expression = Expression::identifier(*compilation_state_,
+        auto expression = Expression::identifier(*ast_store_, &result_.definitions,
             current_token_.value, current_token_.location);
-
         result_.unresolved_identifiers.push_back(expression);
 
         get_token();

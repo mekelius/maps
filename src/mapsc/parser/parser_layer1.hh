@@ -16,6 +16,7 @@
 #include "mapsc/parser/token.hh"
 #include "mapsc/parser/lexer.hh"
 #include "mapsc/ast/chunk.hh"
+#include "mapsc/ast/scope.hh"
 
 
 namespace Maps {
@@ -29,11 +30,19 @@ struct Statement;
 
 class ParserLayer1 {
 public:
-    ParserLayer1(CompilationState* const state);
+    struct Result {
+        bool success = true;
+        std::optional<RT_Definition*> top_level_definition;
+        std::vector<Expression*> unresolved_identifiers;
+        std::vector<Expression*> unresolved_type_identifiers;
+        std::vector<Expression*> unparsed_termed_expressions;
+        std::vector<Expression*> possible_binding_type_declarations;
+    };
 
-    // if fails, sets ast->is_valid to false
-    bool run(std::istream& source_is);
-    std::optional<Definition*> eval_parse(std::istream& source_is);
+    ParserLayer1(CompilationState* const state, RT_Scope* scope);
+
+    Result run(std::istream& source_is);
+    Result run_eval(std::istream& source_is);
 
 // protected for unit tests
 protected:
@@ -46,8 +55,6 @@ protected:
     const Token& peek() const;
 
     void update_brace_levels(Token token);
-    // declare the program invalid. Parsing may still continue, but no final output should be produced
-
     void reset_to_top_level();
     
     void fail(const std::string& message, SourceLocation location, bool compiler_error = false);
@@ -111,9 +118,13 @@ protected:
     Expression* handle_type_constructor_identifier();
     
     std::unique_ptr<Lexer> lexer_;
+    Result result_ = {};
+
     CompilationState* const compilation_state_;
+    RT_Scope* parse_scope_;
+    
     AST_Store* const ast_store_;
-    PragmaStore* const pragmas_;
+    PragmaStore* const pragma_store_;
     
     int which_buf_slot_ = 0;
     std::array<Token, 2> token_buf_ = { Token::dummy_token, Token::dummy_token };

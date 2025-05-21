@@ -11,13 +11,14 @@ using namespace Maps;
 class Layer1tests: public ParserLayer1 {
 public:
 
-    Layer1tests(CompilationState* state): ParserLayer1{state} {}
-
+    Layer1tests(CompilationState* state, auto scope): ParserLayer1{state, scope} {}
+    
     TEST_CASE_CLASS("simplify_single_statement_block") {
+        RT_Scope scope{};
         TypeStore types{};
         CompilationState state{get_builtins(), &types};
 
-        Layer1tests layer1{&state};
+        Layer1tests layer1{&state, &scope};
         auto ast = state.ast_store_.get();
 
         Statement* block = ast->allocate_statement({StatementType::block, TEST_SOURCE_LOCATION});
@@ -32,7 +33,7 @@ public:
         auto success = layer1.simplify_single_statement_block(block);
 
         CHECK(success);
-        CHECK(state.is_valid);
+        CHECK(success);
         CHECK(block->statement_type == StatementType::expression_statement);
         CHECK(std::get<Expression*>(block->value) == value);
         CHECK(*block == inner_copy);
@@ -41,18 +42,19 @@ public:
 
 TEST_CASE("layer1 eval should not put top level let statements into the root") {
     auto [state, types, builtins] = CompilationState::create_test_state();
+    RT_Scope scope{};
 
-    ParserLayer1 layer1{&state};
+    ParserLayer1 layer1{&state, &scope};
 
     std::stringstream source{"let x = 5"};
-    layer1.eval_parse(source);
+    auto [success, top_level_definition, _2, _3, _4, _5] = layer1.run_eval(source);
 
-    CHECK(state.is_valid);
-    CHECK(!state.empty());
-    CHECK(!state.entry_point_);
+    CHECK(success);
+    CHECK(!scope.empty());
+    CHECK(!top_level_definition);
 
-    CHECK(state.globals_.identifier_exists("x"));
-    auto x = *state.globals_.get_identifier("x");
+    CHECK(scope.identifier_exists("x"));
+    auto x = *scope.get_identifier("x");
     CHECK(std::holds_alternative<const Expression*>(x->const_body()));
     auto expression = std::get<const Expression*>(x->const_body());
     CHECK(expression->string_value() == "5");
@@ -60,9 +62,10 @@ TEST_CASE("layer1 eval should not put top level let statements into the root") {
 
 TEST_CASE("layer1 eval should simplify single statement blocks") {
     TypeStore types{};
+    RT_Scope scope{};
     CompilationState state{get_builtins(), &types};
     
-    ParserLayer1 layer1{&state};
+    ParserLayer1 layer1{&state, &scope};
 
     REQUIRE(state.ast_store_->empty());
 
@@ -71,9 +74,9 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
             std::string source = test_string;\
             std::stringstream source_s{source};\
             \
-            auto definition = layer1.eval_parse(source_s);\
+            auto [success, definition, _1, _2, _3, _4] = layer1.run_eval(source_s);\
             \
-            CHECK(state.is_valid);\
+            CHECK(success);\
             CHECK(definition);\
             CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));\
             \
@@ -90,17 +93,18 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
 
 TEST_CASE("Should handle various cases") {
     TypeStore types{};
+    RT_Scope scope{};
     CompilationState state{get_builtins(), &types};
 
-    ParserLayer1 layer1{&state};
+    ParserLayer1 layer1{&state, &scope};
 
     REQUIRE(state.ast_store_->empty());
     
     SUBCASE("(\"asd\")") {
         auto source = std::stringstream{"(\"asd\")"};
-        auto definition = layer1.eval_parse(source);
+        auto [success, definition, _1, _2, _3, _4] = layer1.run_eval(source);
     
-        CHECK(state.is_valid);
+        CHECK(success);
         CHECK(definition);
         CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
         auto expression = std::get<const Expression*>((*definition)->const_body());
@@ -110,9 +114,9 @@ TEST_CASE("Should handle various cases") {
 
     SUBCASE("\"10\" + 5") {
         auto source = std::stringstream{"\"10\" + 5"};
-        auto definition = layer1.eval_parse(source);
+        auto [success, definition, _1, _2, _3, _4] = layer1.run_eval(source);
         
-        CHECK(state.is_valid);
+        CHECK(success);
         CHECK(definition);
         CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
         auto expression = std::get<const Expression*>((*definition)->const_body());
@@ -135,9 +139,9 @@ TEST_CASE("Should handle various cases") {
 
     SUBCASE("\"10\"+5") {
         auto source = std::stringstream{"\"10\"+5"};
-        auto definition = layer1.eval_parse(source);
+        auto [success, definition, _1, _2, _3, _4] = layer1.run_eval(source);
 
-        CHECK(state.is_valid);
+        CHECK(success);
         CHECK(definition);
         CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
         auto expression = std::get<const Expression*>((*definition)->const_body());
@@ -160,9 +164,9 @@ TEST_CASE("Should handle various cases") {
 
     SUBCASE("(\"10\"+5)") {
         auto source = std::stringstream{"\"10\"+5"};
-        auto definition = layer1.eval_parse(source);
+        auto [success, definition, _1, _2, _3, _4] = layer1.run_eval(source);
 
-        CHECK(state.is_valid);
+        CHECK(success);
         CHECK(definition);
         CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
         auto expression = std::get<const Expression*>((*definition)->const_body());
@@ -186,14 +190,15 @@ TEST_CASE("Should handle various cases") {
 
 TEST_CASE("Should recognize minus as a special case") {
     auto types = TypeStore{};
+    RT_Scope scope{};
     auto state = CompilationState{get_builtins(), &types};
 
     std::stringstream source{"-5"};
 
-    ParserLayer1 layer1{&state};
+    ParserLayer1 layer1{&state, &scope};
 
-    auto definition = layer1.eval_parse(source);
-    CHECK(state.is_valid);
+    auto [success, definition, _1, _2, _3, _4] = layer1.run_eval(source);
+    CHECK(success);
     CHECK(definition);
 
     CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
@@ -209,27 +214,28 @@ TEST_CASE("Should recognize minus as a special case") {
 
 TEST_CASE("Should correctly produce empty results") {
     auto [state, _1, _2] = CompilationState::create_test_state();
-    REQUIRE(state.empty());
-    ParserLayer1 layer1{&state};
+    RT_Scope globals;
+    REQUIRE(globals.empty());
+    ParserLayer1 layer1{&state, &globals};
 
     SUBCASE("control") {
         std::stringstream source{"2"};
 
-        layer1.eval_parse(source);
-        CHECK(!state.empty());
+        layer1.run_eval(source);
+        CHECK(!globals.empty());
     }
 
     SUBCASE("empty string") {
         std::stringstream source{""};
 
-        layer1.eval_parse(source);
-        CHECK(state.empty());
+        layer1.run_eval(source);
+        CHECK(globals.empty());
     }
 
     SUBCASE("comment") {
         std::stringstream source{"//comment"};
 
-        layer1.eval_parse(source);
-        CHECK(state.empty());
+        layer1.run_eval(source);
+        CHECK(globals.empty());
     }
 }
