@@ -61,7 +61,7 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
 bool REPL::run() {    
     auto types = TypeStore{};
     auto stored_state = CompilationState{Maps::get_builtins(), &types, options_.compiler_options};
-    auto stored_scope = Maps::RT_Scope{};
+    auto stored_definitions = Maps::RT_Scope{};
 
     while (running_) {        
         optional<std::string> input = get_input();
@@ -74,18 +74,19 @@ bool REPL::run() {
             continue;
         }
 
-        auto compilation_state = stored_state;
-        auto compilation_scope = stored_scope;
-        std::stringstream input_s{*input};
+        std::stringstream source{*input};
 
-        if (!run_compilation_pipeline(compilation_state, compilation_scope, input_s)) {
+        auto state = stored_state;
+        auto definitions = stored_definitions;
+
+        if (!run_compilation_pipeline(state, definitions, source)) {
             if (options_.quit_on_error)
                 return false;
             continue;
         }
 
-        stored_state = compilation_state;
-        stored_scope = compilation_scope;
+        stored_state = state;
+        stored_definitions = definitions;
     }
 
     return true;

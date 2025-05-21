@@ -95,8 +95,8 @@ std::string REPL::eval_type(std::istream& input_stream) {
     // return type->to_string();
 }
 
-bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_scope, 
-    std::istream& source) {
+bool REPL::run_compilation_pipeline(CompilationState& state, 
+    RT_Scope& global_scope, std::istream& source) {
 
     // ---------- LAYER1 ----------
 
@@ -111,9 +111,6 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
 
     if (!layer1_success && !options_.ignore_errors)
         return false;
-
-    if (options_.stop_after == Stage::layer1)
-        return true;
     
     if (options_.print_layer1) {
         std::cout <<   "\n------- layer1 -------\n\n";
@@ -123,6 +120,9 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
             reverse_parser_ << **top_level_definition;
         std::cout << "\n----- layer1 end -----\n\n";
     }
+
+    if (options_.stop_after == Stage::layer1)
+        return true;
 
 
     // --------- NAME RESOLUTION ----------
@@ -167,7 +167,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
     // ) return true;
 
 
-    // ---------- REPL WRAPPER ----------
+    // ---------- CREATE REPL WRAPPER ----------
 
     auto repl_wrapper = create_repl_wrapper(state, *top_level_definition);
 
@@ -176,6 +176,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
         if (!options_.ignore_errors)
             return false;
     }
+
 
     // ---------- IR GEN ----------
 
@@ -198,9 +199,9 @@ bool REPL::run_compilation_pipeline(CompilationState& state, RT_Scope& global_sc
         std::array<Definition*, 2>{*top_level_definition, *repl_wrapper});
 
     if (options_.print_ir) {
-        std::cout << "---IR DUMP---:\n\n";
+        std::cout << "----- generated ir -----:\n\n";
         module_->dump();
-        std::cout << "\n---IR END---\n";
+        std::cout << "\n----- ir end -----\n";
     }
 
     if (!ir_success && !options_.ignore_errors) {
