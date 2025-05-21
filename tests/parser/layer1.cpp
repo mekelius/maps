@@ -221,21 +221,24 @@ TEST_CASE("Should correctly produce empty results") {
     SUBCASE("control") {
         std::stringstream source{"2"};
 
-        layer1.run_eval(source);
-        CHECK(!globals.empty());
+        auto result = layer1.run_eval(source);
+        CHECK(globals.empty());
+        CHECK(result.top_level_definition);
     }
 
     SUBCASE("empty string") {
         std::stringstream source{""};
 
-        layer1.run_eval(source);
+        auto result = layer1.run_eval(source);
+        CHECK(!result.top_level_definition);
         CHECK(globals.empty());
     }
 
     SUBCASE("comment") {
         std::stringstream source{"//comment"};
 
-        layer1.run_eval(source);
+        auto result = layer1.run_eval(source);
         CHECK(globals.empty());
+        CHECK(!result.top_level_definition);
     }
 }
