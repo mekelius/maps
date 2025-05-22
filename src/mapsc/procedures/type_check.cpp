@@ -44,6 +44,7 @@ bool SimpleTypeChecker::visit_definition(RT_Definition* definition) {
         [](External) { return true; },
         [](Undefined) { return true; },
         [](Expression*) { return true; },
+        [](BTD_Binding) { return true; },
         [definition](Statement* statement) {                        
             auto type = definition->get_type();
             auto declared_type = definition->get_declared_type();

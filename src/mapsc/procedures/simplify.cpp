@@ -21,7 +21,7 @@ bool attempt_simplify(RT_Definition& definition) {
         [](Error) { return false; },
         [](Undefined) { return true; },
         [](External) { return true; },
-
+        [](BTD_Binding) { return true; },
         [&definition](Statement* statement) {
             switch (statement->statement_type) {                
                 // expression statements get replaced by their expressions

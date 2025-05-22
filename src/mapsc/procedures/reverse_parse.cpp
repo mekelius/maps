@@ -267,38 +267,22 @@ ReverseParser& ReverseParser::print_definition(const Definition& definition) {
 
 // reverse-parse expression into the stream
 ReverseParser& ReverseParser::print_definition(const_DefinitionBody body) {
-    switch (body.index()) {
-        case 0:
-            return *this << "@empty definition body@";
-
-        case 1: // expression
-            return *this << *std::get<const Expression*>(body);
-
-        case 2: // statement
-            return *this << *std::get<const Statement*>(body);
-
-        default:
-            assert(false && "unhandled definition body type in reverse_parse");
-            return *this;
-    }
+    return std::visit(overloaded {
+        [this](auto body)-> ReverseParser& {
+            return *this << "@unhandled definition body@";
+        },
+        [this](const Expression* expression)-> ReverseParser& {
+            return *this << *expression;
+        },
+        [this](const Statement* statement)-> ReverseParser& {
+            return *this << *statement;
+        },
+    }, body);
 }
 
 // reverse-parse expression into the stream
 ReverseParser& ReverseParser::print_definition(DefinitionBody body) {
-    switch (body.index()) {
-        case 0:
-            return *this << "@empty definition body@";
-
-        case 1: // expression
-            return *this << *std::get<Expression*>(body);
-
-        case 2: // statement
-            return *this << *std::get<Statement*>(body);
-
-        default:
-            assert(false && "unhandled definition body type in reverse_parse");
-            return *this;
-    }
+    return *this << std::visit( [](auto body) { return const_DefinitionBody{body}; }, body );
 }
 
 ReverseParser& ReverseParser::print_type_declaration(const Expression& expression) {

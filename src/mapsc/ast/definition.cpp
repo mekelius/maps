@@ -26,7 +26,8 @@ bool Definition::is_empty() const {
         [](External) { return false; },
         [](Undefined) { return true; },
         [](const Expression*) { return false; },
-        [](const Statement* statement) { return statement->is_empty(); }
+        [](const Statement* statement) { return statement->is_empty(); },
+        [](BTD_Binding) { return false; }
     }, const_body());
 }
 
@@ -61,9 +62,9 @@ const_DefinitionBody RT_Definition::const_body() const {
 // TODO: change to std::visitor
 const Type* RT_Definition::get_type() const {
     return std::visit(overloaded {
-        [](Error error) -> const Type* { (void) error; return &Absurd;},
-        [this](Undefined undefined) -> const Type* { (void) undefined; return type_ ? *type_ : &Hole; },
-        [this](External external) -> const Type* { (void) external; return *type_; },
+        [](Error) -> const Type* { return &Absurd;},
+        [this](Undefined) -> const Type* { return type_ ? *type_ : &Hole; },
+        [this](External) -> const Type* { return *type_; },
 
         [](Expression* expression) -> const Type* { return expression->type; },
 
@@ -73,19 +74,19 @@ const Type* RT_Definition::get_type() const {
 
             return type_ ? *type_ : &Hole;
         },
+
+        [](BTD_Binding binding) { return binding.type; }
     }, body_);
 }
 
-// !!! this feels pretty sus, manipulating state with way too many layers of indirection
 void RT_Definition::set_type(const Type& type) {
     std::visit(overloaded {
-        [](Error error) { (void) error; },
-        [this](External external) { 
-            (void) external; 
+        [](Error) {},
+        [this](External) { 
             Log::compiler_error("Attempting to set the type of an external", this->location()); 
         },
 
-        [this, &type](Undefined undefined) { 
+        [this, &type](Undefined) { 
             type_ = std::make_optional<const Type*>(&type);
             Log::compiler_error("Attempting to set the type of an undefined", this->location()); 
         },
@@ -100,6 +101,8 @@ void RT_Definition::set_type(const Type& type) {
 
             type_ = std::make_optional<const Type *>(&type);
         },
+
+        [&type](BTD_Binding binding)-> void { binding.type = &type; },
     }, body_);
 }
 

@@ -33,9 +33,21 @@ struct Error {
     bool operator==(T&) const { return false; }
 };
 
-using DefinitionBody = std::variant<Undefined, Expression*, Statement*, External, Error>;
+struct BTD_Binding {
+    enum class Type {
+        parameter
+    };
+
+    Type slot_type;
+    const Maps::Type* type;
+
+    template<typename T>
+    bool operator==(T& t) const { return this == &t; }
+};
+
+using DefinitionBody = std::variant<Undefined, External, Error, Expression*, Statement*, BTD_Binding>;
 using const_DefinitionBody = 
-    std::variant<Undefined, const Expression*, const Statement*, External, Error>;
+    std::variant<Undefined, External, Error, const Expression*, const Statement*, BTD_Binding>;
 
 /**
  * Definitions represent either expressions or statements, along with extra info like
