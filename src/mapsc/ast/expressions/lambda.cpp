@@ -27,7 +27,7 @@ Expression* Expression::lambda(CompilationState& state, const LambdaExpressionVa
     for (auto parameter: parameter_list)
         parameter_types.push_back(parameter->get_type());
 
-    auto type = state.types_->get_function_type(*return_type, parameter_types, is_pure);
+    auto type = state.types_->get_function_type(return_type, parameter_types, is_pure);
     return state.ast_store_->allocate_expression(
         {ExpressionType::lambda, value, type, location});
 }

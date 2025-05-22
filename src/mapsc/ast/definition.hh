@@ -15,6 +15,7 @@ namespace Maps {
 class Type;
 struct Expression;
 struct Statement;
+class AST_Store;
 
 struct External {
     template<typename T>
@@ -83,16 +84,20 @@ public:
     // creates a new dummy definition suitable for unit testing
     static RT_Definition testing_definition(const Type* type = &Hole); 
 
-    RT_Definition(std::string_view name, External external, const Type& type)
-    :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(&type) {
-    }
+    static RT_Definition* parameter(AST_Store& store, std::string_view name, const Type* type, 
+        SourceLocation location);
+    static RT_Definition* discarded_parameter(AST_Store& store, const Type* type, 
+        SourceLocation location);
+
+    RT_Definition(std::string_view name, External external, const Type* type)
+    :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(type) {}
 
     RT_Definition(std::string_view name, DefinitionBody body, SourceLocation location);
     RT_Definition(DefinitionBody body, SourceLocation location); // create anonymous definition
 
     // anonymous definitions
-    RT_Definition(std::string_view name, DefinitionBody body, const Type& type, SourceLocation location);
-    RT_Definition(DefinitionBody body, const Type& type, SourceLocation location);
+    RT_Definition(std::string_view name, DefinitionBody body, const Type* type, SourceLocation location);
+    RT_Definition(DefinitionBody body, const Type* type, SourceLocation location);
 
     RT_Definition(const RT_Definition& other) = default;
     RT_Definition& operator=(const RT_Definition& other) = default;
@@ -111,8 +116,8 @@ public:
     virtual std::optional<const Type*> get_declared_type() const;
 
 
-    void set_type(const Type& type);
-    bool set_declared_type(const Type& type);
+    void set_type(const Type* type);
+    bool set_declared_type(const Type* type);
 
     virtual bool operator==(const Definition& other) const {
         if (this == &other)

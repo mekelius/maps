@@ -1003,8 +1003,7 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(RT_Scope* lambda_s
                 auto name = current_token().string_value();
                 auto location = current_token().location;
 
-                auto parameter = ast_store_->allocate_definition(
-                    RT_Definition{name, BTD_Binding{BTD_Binding::Type::parameter, &Hole}, Hole, location});
+                auto parameter = RT_Definition::parameter(*ast_store_, name, &Hole, location);
 
                 // check if the string is already bound, in which case we exit
                 if (!lambda_scope->create_identifier(name, parameter))
@@ -1033,10 +1032,7 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(RT_Scope* lambda_s
                 }
 
                 auto name = current_token().string_value();
-
-                auto parameter = ast_store_->allocate_definition(
-                    RT_Definition{name, 
-                        BTD_Binding{BTD_Binding::Type::parameter, &Hole}, **type, location});
+                auto parameter = RT_Definition::parameter(*ast_store_, name, *type, location);
 
                 // check if the string is already bound, in which case we exit
                 if (!lambda_scope->create_identifier(name, parameter))
@@ -1047,9 +1043,8 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(RT_Scope* lambda_s
             }
 
             case TokenType::underscore:
-                parameter_list.push_back(ast_store_->allocate_definition(
-                    RT_Definition{"", BTD_Binding{BTD_Binding::Type::discarded_parameter, &Hole}, 
-                        current_token().location}));
+                parameter_list.push_back(RT_Definition::discarded_parameter(*ast_store_, &Hole, 
+                    current_token().location));
                 get_token();
                 continue;
 

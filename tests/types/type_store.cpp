@@ -12,7 +12,7 @@ TEST_CASE("Should be able to create a non-existent function type based on signat
     TypeStore types{};
 
     SUBCASE("nullary function") {
-        auto function_type = types.get_function_type(TestingType, {}, true);
+        auto function_type = types.get_function_type(&TestingType, {}, true);
         CHECK(function_type->arity() == 0);
         CHECK(*function_type->return_type() == TestingType);
     
@@ -22,7 +22,7 @@ TEST_CASE("Should be able to create a non-existent function type based on signat
     }
 
     SUBCASE("unary function") {
-        auto function_type = types.get_function_type(TestingType, {&TestingType}, true);
+        auto function_type = types.get_function_type(&TestingType, {&TestingType}, true);
         CHECK(function_type->arity() == 1);
         CHECK(*function_type->return_type() == TestingType);
     
@@ -33,7 +33,7 @@ TEST_CASE("Should be able to create a non-existent function type based on signat
     }
 
     SUBCASE("binary function") {
-        auto function_type = types.get_function_type(TestingType, {&TestingType, &TestingType}, true);
+        auto function_type = types.get_function_type(&TestingType, {&TestingType, &TestingType}, true);
         CHECK(function_type->arity() == 2);
         CHECK(*function_type->return_type() == TestingType);
     
@@ -58,7 +58,7 @@ const std::array<const FunctionType*, 1> test_builtin_function_types = {
 TEST_CASE("Should get a compile-time functiontype without issue") {
     TypeStore types{BUILTIN_TYPES, test_builtin_function_types};
 
-    auto function_type = types.get_function_type(TestingType, {&TestingType}, true);
+    auto function_type = types.get_function_type(&TestingType, {&TestingType}, true);
 
     CHECK(*function_type == test_ct_function_type);
     CHECK(function_type == &test_ct_function_type);

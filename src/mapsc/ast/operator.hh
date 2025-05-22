@@ -53,7 +53,7 @@ public:
             location };
     }
 
-    static RT_Operator create_binary(std::string_view name, DefinitionBody body, const Type& type, 
+    static RT_Operator create_binary(std::string_view name, DefinitionBody body, const Type* type, 
         Operator::Precedence precedence, Operator::Associativity associativity, 
         SourceLocation location) {
 
@@ -62,12 +62,12 @@ public:
             location };
     }
 
-    RT_Operator(std::string_view name, const External external, const Type& type, 
+    RT_Operator(std::string_view name, const External external, const Type* type, 
         const Operator::Properties& operator_props)
     :RT_Definition(name, external, type),
      operator_props_(operator_props) {}
 
-    RT_Operator(std::string_view name, DefinitionBody body, const Type& type, 
+    RT_Operator(std::string_view name, DefinitionBody body, const Type* type, 
         Operator::Properties operator_props, SourceLocation location)
     :RT_Definition(name, body, type, location), 
      operator_props_(operator_props) {}

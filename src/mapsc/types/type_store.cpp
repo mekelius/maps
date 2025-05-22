@@ -19,7 +19,7 @@ TypeStore::TypeStore(const std::span<const Type* const> builtin_simple_types,
 
     for (auto type: builtin_function_types) {
         types_by_structure_.insert(
-            {make_function_signature(*type->return_type(), type->param_types()), type});
+            {make_function_signature(type->return_type(), type->param_types()), type});
     }
 
     // insert type constructors
@@ -44,7 +44,7 @@ optional<const Type*> TypeStore::get(const std::string& identifier) {
     return it->second;
 }
 
-const FunctionType* TypeStore::get_function_type(const Type& return_type, 
+const FunctionType* TypeStore::get_function_type(const Type* return_type, 
     const std::vector<const Type*>& arg_types, bool is_pure) {
 
     std::string signature = make_function_signature(return_type, arg_types, is_pure);
@@ -58,16 +58,16 @@ const FunctionType* TypeStore::get_function_type(const Type& return_type,
     return create_function_type(signature, return_type, arg_types, is_pure);
 }
 
-std::string TypeStore::make_function_signature(const Type& return_type, 
+std::string TypeStore::make_function_signature(const Type* return_type, 
     const std::span<const Type* const> arg_types, bool is_pure) const {
 
     // nullary pure function is just a value
     if (arg_types.size() == 0 && is_pure)
-        return std::string{return_type.name()};
+        return std::string{return_type->name()};
 
     // nullary impure function gets the special type =>return_type
     if (arg_types.size() == 0)
-        return "=>" + std::string{return_type.name()};
+        return "=>" + std::string{return_type->name()};
 
     std::string signature = "";
     bool first = true;
@@ -80,16 +80,16 @@ std::string TypeStore::make_function_signature(const Type& return_type,
 
     signature += is_pure ? "-" : "=";
 
-    return signature + std::string{return_type.name()};
+    return signature + std::string{return_type->name()};
 }
 
 // NOTE: This actually doesn't work. The type structure notation idea is extremely ambiguous...
 // we need to do this by pattern matching instead, but it is what it is
 const FunctionType* TypeStore::create_function_type(const std::string& signature,
-    const Type& return_type, const std::vector<const Type*>& arg_types, bool is_pure) {
+    const Type* return_type, const std::vector<const Type*>& arg_types, bool is_pure) {
 
     std::unique_ptr<const Type> up = 
-        make_unique<const RTFunctionType>(&return_type, arg_types, is_pure);
+        make_unique<const RTFunctionType>(return_type, arg_types, is_pure);
     types_.push_back(std::move(up));
     auto raw_ptr = types_.back().get();
 

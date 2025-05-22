@@ -34,15 +34,15 @@ public:
     std::optional<const Type*> get(const std::string& identifier);
     const Type* get_unsafe(const std::string& identifier);
 
-    const FunctionType* get_function_type(const Type& return_type,
+    const FunctionType* get_function_type(const Type* return_type,
         const std::vector<const Type*>& arg_types, bool pure);
     
-    std::string make_function_signature(const Type& return_type,
+    std::string make_function_signature(const Type* return_type,
         const std::span<const Type* const> arg_types, bool is_pure = true) const;
 
 private:
     const FunctionType* create_function_type(const std::string& signature,
-        const Type& return_type, const std::vector<const Type*>& arg_types, bool is_pure = true);
+        const Type* return_type, const std::vector<const Type*>& arg_types, bool is_pure = true);
 
     std::unordered_map<std::string, const Type*> types_by_identifier_ = {};
     std::unordered_map<std::string, const Type*> types_by_structure_ = {};

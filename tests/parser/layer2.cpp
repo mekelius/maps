@@ -14,9 +14,9 @@ using namespace std;
 inline tuple<Expression*, Definition*> create_operator_helper(CompilationState& state, 
     const string& op_string, unsigned int precedence = 500) {
 
-    const Type* type = state.types_->get_function_type(Void, {&Number, &Number}, true);
+    const Type* type = state.types_->get_function_type(&Void, {&Number, &Number}, true);
     Definition* op_definition = state.ast_store_->allocate_operator(
-        RT_Operator::create_binary(op_string, External{}, *type, precedence, 
+        RT_Operator::create_binary(op_string, External{}, type, precedence, 
             RT_Operator::Associativity::left, TSL));
 
     Expression* op_ref = Expression::operator_reference(*state.ast_store_, op_definition, {0,0});
@@ -237,9 +237,9 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     Expression* expr = Expression::termed(ast, {}, {0,0});
     
     SUBCASE("1 arg") {    
-        const Type* function_type = types->get_function_type(Void, {&String}, true);
+        const Type* function_type = types->get_function_type(&Void, {&String}, true);
 
-        RT_Definition function{"test_f", External{}, *function_type, TSL};
+        RT_Definition function{"test_f", External{}, function_type, TSL};
         globals.create_identifier(&function);
 
         Expression* id = Expression::reference(ast, &function, {0,0});
@@ -258,10 +258,10 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     }
 
     SUBCASE("4 args") {    
-        const Type* function_type = types->get_function_type(Void, 
+        const Type* function_type = types->get_function_type(&Void, 
             {&String, &String, &String, &String}, true);
         
-        RT_Definition function{"test_f", External{}, *function_type, TSL};
+        RT_Definition function{"test_f", External{}, function_type, TSL};
         Expression* id{Expression::reference(ast, &function, {0,0})};
         id->type = function_type;
     
@@ -290,9 +290,9 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
 
     SUBCASE("If the call is not partial, the call expression's type should be the return type") {
 
-        const Type* function_type = types->get_function_type(Number, {&String}, true);
+        const Type* function_type = types->get_function_type(&Number, {&String}, true);
         
-        RT_Definition function{"test_f", External{}, *function_type, TSL};
+        RT_Definition function{"test_f", External{}, function_type, TSL};
         Expression* ref = Expression::reference(ast, &function, {0,0});
 
         Expression* arg1 = Expression::string_literal(ast, "", {0,0});
@@ -344,7 +344,7 @@ TEST_CASE("Should set the type on a non-partial call expression to the return ty
     auto [state, _0, types] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
-    const FunctionType* IntString = types->get_function_type(String, {&Int}, false);
+    const FunctionType* IntString = types->get_function_type(&String, {&Int}, false);
 
     auto test_f_expr = Expression{ExpressionType::value, "qwe", IntString, TSL};
     auto test_f = RT_Definition("test_f", &test_f_expr, TSL);
@@ -366,7 +366,7 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
     auto [state, _0, types] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
-    const FunctionType* IntString = types->get_function_type(String, {&Int, &Int}, false);
+    const FunctionType* IntString = types->get_function_type(&String, {&Int, &Int}, false);
 
     auto test_op_expr = Expression{ExpressionType::value, "jii", IntString, TSL};
     auto test_op = RT_Operator::create_binary(">=?", &test_op_expr, 5, 
@@ -408,7 +408,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
 
     SUBCASE("Int \"32\" + 987") {
         auto op = RT_Operator{"+", External{}, 
-            *types->get_function_type(Int, {&Int, &Int}, true),
+            types->get_function_type(&Int, {&Int, &Int}, true),
             {Operator::Fixity::binary}, TSL};
         
         auto op_ref = Expression{ExpressionType::binary_operator_reference, &op, TSL};

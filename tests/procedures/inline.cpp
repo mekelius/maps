@@ -53,7 +53,7 @@ TEST_CASE("Should be able to inline a nullary call to a value definition as if a
 TEST_CASE("Should be able to inline a nullary call to a nullary pure function definition as if a reference") {
     TypeStore types{};
     
-    Expression value{ExpressionType::value, 1, types.get_function_type(Hole, {}, true), TSL};
+    Expression value{ExpressionType::value, 1, types.get_function_type(&Hole, {}, true), TSL};
     RT_Definition definition{&value, TSL};
     Expression ref{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
 
@@ -63,7 +63,7 @@ TEST_CASE("Should be able to inline a nullary call to a nullary pure function de
 TEST_CASE("Should not be able to inline a nullary call to a nullary pure function definition as an expression") {
     TypeStore types{};
 
-    Expression value{ExpressionType::value, 1, types.get_function_type(Hole, {}, false), TSL};
+    Expression value{ExpressionType::value, 1, types.get_function_type(&Hole, {}, false), TSL};
     RT_Definition definition{&value, TSL};
     Expression ref{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
 

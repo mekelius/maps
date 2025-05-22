@@ -96,7 +96,7 @@ optional<Expression*> Expression::call(CompilationState& state,
     }
 
     auto partial_return_type = state.types_->get_function_type(
-        *return_type, missing_arg_types, callee_f_type->is_pure());
+        return_type, missing_arg_types, callee_f_type->is_pure());
 
     assert(args.size() == param_types.size() && 
         "Something went wrong while creating placeholders for missing args");
@@ -128,7 +128,7 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
             "Expression::partial_binop_call called with a non matching lhs type");
         
         auto partial_return_type = state.types_->get_function_type(
-            *return_type, {lhs->type}, callee_f_type->is_pure());
+            return_type, {lhs->type}, callee_f_type->is_pure());
 
         return store.allocate_expression(
             {ExpressionType::partial_binop_call_left, 
@@ -143,7 +143,7 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
             "Expression::partial_binop_call called with a non matching lhs type");
 
     auto partial_return_type = state.types_->get_function_type(
-        *return_type, {rhs->type}, callee_f_type->is_pure());
+        return_type, {rhs->type}, callee_f_type->is_pure());
     return store.allocate_expression(
             {ExpressionType::partial_binop_call_right, 
                 CallExpressionValue{definition, {lhs, rhs}}, partial_return_type, 

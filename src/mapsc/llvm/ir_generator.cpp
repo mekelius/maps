@@ -215,7 +215,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
     const std::string& name, const Maps::Expression& expression) {
     
     const Maps::FunctionType* maps_type = 
-        maps_types_->get_function_type(*expression.type, {}, expression.type->is_pure());
+        maps_types_->get_function_type(expression.type, {}, expression.type->is_pure());
 
     optional<llvm::FunctionType*> llvm_type = types_.convert_function_type(
         *maps_type->return_type(), maps_type->param_types());
@@ -342,7 +342,7 @@ std::optional<llvm::Value*> IR_Generator::handle_expression_statement(
 
     optional<llvm::FunctionCallee> print = 
         function_store_->get("print", *maps_types_->get_function_type(
-            Maps::Void, {expression->type}, false));
+            &Maps::Void, {expression->type}, false));
 
     if (!print) {
         fail("no print function for top level expression");
@@ -396,7 +396,7 @@ const Maps::FunctionType* deduce_function_type(Maps::TypeStore& types,
         "handle call encountered a call with wrong number of args");
 
     return types.get_function_type(
-        *return_type, arg_types, callee_type->is_pure());
+        return_type, arg_types, callee_type->is_pure());
 }
 
 llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {

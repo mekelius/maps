@@ -5,19 +5,40 @@
 
 using namespace Maps;
 
-TEST_CASE("Should parse a lambda") {
+TEST_CASE("Should parse lambdas") {
     auto [state, types, _] = CompilationState::create_test_state();
     RT_Scope scope{};
 
-    std::stringstream source{"\\x -> x"};
+    ParserLayer1 layer1{&state, &scope};
 
-    auto result = ParserLayer1{&state, &scope}.run_eval(source);
+    REQUIRE(state.ast_store_->empty());
+    REQUIRE(scope.empty());
 
-    CHECK(result.success);
-    CHECK(result.top_level_definition);
+    SUBCASE("\\x -> x") {
+        std::stringstream source{"\\x -> x"};
 
-    auto expression = std::get<const Expression*>((*result.top_level_definition)->const_body());
-    CHECK(expression->expression_type == ExpressionType::lambda);
-    CHECK(expression->type->is_function());
-    CHECK(expression->type->arity() == 1);
+        auto result = layer1.run_eval(source);
+
+        CHECK(result.success);
+        CHECK(result.top_level_definition);
+
+        auto expression = std::get<const Expression*>((*result.top_level_definition)->const_body());
+        CHECK(expression->expression_type == ExpressionType::lambda);
+        CHECK(expression->type->is_function());
+        CHECK(expression->type->arity() == 1);
+    }
+
+    // SUBCASE("\\x y -> x + y") {
+    //     std::stringstream source{"\\x y -> x + y"};
+
+    //     auto result = layer1.run_eval(source);
+
+    //     CHECK(result.success);
+    //     CHECK(result.top_level_definition);
+
+    //     auto expression = std::get<const Expression*>((*result.top_level_definition)->const_body());
+    //     CHECK(expression->expression_type == ExpressionType::lambda);
+    //     CHECK(expression->type->is_function());
+    //     CHECK(expression->type->arity() == 1);
+    // }
 }
