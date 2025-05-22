@@ -14,19 +14,20 @@ namespace Maps {
 // clang-format off
 constexpr auto LOG_CONTEXTS_START_LINE = __LINE__;
 enum class LogContext {
-    compiler_init   = 0,
-    lexer           = 1,
-    layer1          = 2,
-    name_resolution = 3,
-    layer2          = 4,
-    layer3          = 5,
-    layer4          = 6,
-    inline_         = 7,
-    concretize      = 8,
-    ir_gen_init     = 9,
-    ir_gen          = 10,
-    REPL            = 11,
-    dsir_parser    = 12
+    compiler_init       = 0,
+    lexer               = 1,
+    layer1              = 2,
+    name_resolution     = 3,
+    layer2              = 4,
+    layer3              = 5,
+    layer4              = 6,
+    inline_             = 7,
+    concretize          = 8,
+    ir_gen_init         = 9,
+    ir_gen              = 10,
+    REPL                = 11,
+    dsir_parser         = 12,
+    identifier_creation = 13,
 };
 constexpr auto LOG_CONTEXT_COUNT = __LINE__ - LOG_CONTEXTS_START_LINE - 3;
 // clang-format on
@@ -59,6 +60,8 @@ constexpr std::string_view prefix(LogContext context) {
             return "in REPL: ";
         case LogContext::dsir_parser:
             return "in dsir parser: ";
+        case LogContext::identifier_creation:
+            return "during identifier creation";
     }
 }
 

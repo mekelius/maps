@@ -8,6 +8,7 @@
  */
 #include "parser_layer1.hh"
 
+#include <algorithm>
 #include <cassert>
 #include <initializer_list>
 #include <sstream>
@@ -149,7 +150,7 @@ void ParserLayer1::fail(const std::string& message, SourceLocation location,
     } else {
         Log::error(message, location);
     }
-
+    reset_to_top_level();
     result_.success = false;
 }
 
@@ -167,7 +168,6 @@ Definition* ParserLayer1::fail_definition(const std::string& message, SourceLoca
     bool compiler_error) {
     
     fail(message, location, compiler_error);
-    reset_to_top_level();
     return create_definition(Error{compiler_error}, location);
 }
 
@@ -175,10 +175,16 @@ Statement* ParserLayer1::fail_statement(const std::string& message, SourceLocati
     bool compiler_error) {
     
     fail(message, location, compiler_error);
-    reset_to_top_level();
     return create_statement(compiler_error ? 
         StatementType::compiler_error : StatementType::user_error, 
         location);
+}
+
+std::nullopt_t ParserLayer1::fail_optional(const std::string& message, SourceLocation location, 
+    bool compiler_error) {
+
+    fail(message, location, compiler_error);
+    return nullopt;
 }
 
 void ParserLayer1::log(const std::string& message, LogLevel loglevel) const {
@@ -380,8 +386,9 @@ Statement* ParserLayer1::parse_expression_statement() {
     Statement* statement = create_statement(StatementType::expression_statement, location);
     statement->value = expression;
 
-    assert(is_block_starter(current_token()) || is_statement_separator(current_token()) && 
-        "statement didn't end in a statement separator");
+    if(!is_block_starter(current_token()) && !is_statement_separator(current_token()))
+        return fail_statement("statement didn't end in a statement separator", 
+            current_token().location, true);
 
     if (current_token().token_type == TokenType::semicolon)
         get_token(); // eat trailing semicolon
@@ -961,16 +968,136 @@ Expression* ParserLayer1::parse_lambda_expression() {
     auto location = current_token().location;
     get_token(); // eat the '\'
 
-    Expression* btd = parse_binding_type_declaration();
+    RT_Scope* lambda_scope = ast_store_->allocate_scope(RT_Scope{/*parse_scope_*/});
+    auto parameter_list = parse_lambda_parameters(lambda_scope);
+
+    if (!parameter_list)
+        return fail_expression("parsing lambda parameter list failed", location);
 
     if (current_token().token_type != TokenType::arrow_operator)
         return fail_expression("Undexpected " + current_token().get_string() + 
             " in lambda expression, expected a \"->\" or \"=>\" ", current_token().location);
+
+    bool is_pure = current_token().string_value() == "->";
     get_token();
 
     DefinitionBody body = parse_definition_body();
 
-    return Expression::lambda(*ast_store_, btd, body, location);
+    return Expression::lambda(*compilation_state_, {*parameter_list, lambda_scope, body}, is_pure, 
+        location);
+}
+
+optional<ParameterList> ParserLayer1::parse_lambda_parameters(RT_Scope* lambda_scope) {
+    ParameterList parameter_list{};
+
+    while (true) {
+        switch (current_token().token_type) {
+            case TokenType::arrow_operator:
+                return parameter_list;
+
+            case TokenType::eof:
+                return fail_optional(
+                    "Unexpected eof in lambda parameter list", current_token().location);
+
+            case TokenType::identifier: {
+                auto name = current_token().string_value();
+                auto location = current_token().location;
+
+                auto parameter = ast_store_->allocate_definition(
+                    RT_Definition{name, BTD_Binding{BTD_Binding::Type::parameter, &Hole}, Hole, location});
+
+                // check if the string is already bound, in which case we exit
+                if (!lambda_scope->create_identifier(name, parameter))
+                    return fail_optional(
+                        "Duplicate parameter name " + name + " in lambda parameter list", location);
+
+                parameter_list.push_back(parameter);
+                get_token();
+                continue;
+            }
+
+            case TokenType::bracket_open:
+            case TokenType::type_identifier: {
+                auto location = current_token().location;
+
+                auto type = parse_parameter_type_declaration();
+                
+                if (!type)
+                    return fail_optional(
+                        "Parsing lambda parameter list failed, incorrect type declaration", location);
+
+                if (current_token().token_type != TokenType::identifier) {
+                    assert(false && "Something unexpected happened, parse_parameter_type_declaration returned without an identifier as the current token");
+                    return fail_optional(("Something unexpected happened, parse_parameter_type_declaration returned without an identifier as the current token"), 
+                        current_token().location, true);
+                }
+
+                auto name = current_token().string_value();
+
+                auto parameter = ast_store_->allocate_definition(
+                    RT_Definition{name, 
+                        BTD_Binding{BTD_Binding::Type::parameter, &Hole}, **type, location});
+
+                // check if the string is already bound, in which case we exit
+                if (!lambda_scope->create_identifier(name, parameter))
+                    return fail_optional(
+                        "Duplicate parameter name " + name + " in lambda parameter list", location);
+                get_token();
+                continue;
+            }
+
+            case TokenType::underscore:
+                parameter_list.push_back(ast_store_->allocate_definition(
+                    RT_Definition{"", BTD_Binding{BTD_Binding::Type::discarded_parameter, &Hole}, 
+                        current_token().location}));
+                get_token();
+                continue;
+
+            default:
+                return fail_optional(
+                    "Unexpected " + current_token().get_string() + " in lambda parameter list",
+                    current_token().location);
+        }
+    }
+}
+
+std::optional<const Type*> ParserLayer1::parse_parameter_type_declaration() {
+    auto location = current_token().location;
+
+    switch (current_token().token_type) {
+        case TokenType::type_identifier: {
+            switch (peek().token_type) {
+                case TokenType::identifier: {
+                    auto type = compilation_state_->types_->get(current_token().string_value());
+                    get_token();
+                    return type;
+                }
+                case TokenType::arrow_operator:
+                    assert(false && "not implemented");
+                    get_token();
+
+                case TokenType::eof:
+                    fail("Unexpected eof in parameter type declaration", current_token().location);
+                    return nullopt;
+
+                default:
+                    fail("Unexpected " + current_token().get_string() + 
+                        " in parameter type declaration, expected an identifier or an arrow", location);
+            }
+        }
+
+        case TokenType::indent_block_start:
+        case TokenType::bracket_open:
+        case TokenType::parenthesis_open:
+        case TokenType::colon:
+            assert(false && "not implemented");
+
+        default:
+            fail("Unexpected " + current_token().get_string() + 
+                " in parameter type declaration, expected a type expression", location);
+            return nullopt;
+    }
+
 }
 
 Expression* ParserLayer1::parse_binding_type_declaration() {

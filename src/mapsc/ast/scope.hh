@@ -8,12 +8,16 @@
 #include <cassert>
 
 #include "mapsc/source.hh"
+#include "mapsc/logging.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/operator.hh"
 
 namespace Maps {
+
+using Log_resolution = LogInContext<LogContext::name_resolution>;
+using Log_creation = LogInContext<LogContext::identifier_creation>;
 
 class CT_Definition;
 
@@ -49,12 +53,16 @@ public:
     }
 
     std::optional<T> create_identifier(const std::string& name, T definition) {
-        if (identifier_exists(name))
+        if (identifier_exists(name)) {
+            Log_creation::debug("Attempting to redefine identifier " + name, definition->location());
             return std::nullopt;
+        }
 
         identifiers_.insert(std::pair<std::string, T>{name, definition});
         identifiers_in_order_.push_back({name, definition});
         
+        Log_creation::debug_extra("Created identifier " + name, definition->location());
+
         return definition;
     }
 

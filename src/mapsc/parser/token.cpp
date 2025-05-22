@@ -22,7 +22,7 @@ std::string Token::get_string() const {
         case TokenType::operator_t:
             return "operator: " + string_value();
         case TokenType::arrow_operator:
-            return "type operator: " + string_value();    
+            return "arrow operator: " + string_value();    
     
         case TokenType::number:
             return "numeric literal: " + string_value();

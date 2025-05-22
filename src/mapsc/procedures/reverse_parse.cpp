@@ -238,7 +238,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
             return *this << "-";
 
         case ExpressionType::lambda:
-            return *this << "\\" << *expression.lambda_value().binding_type_declaration 
+            return *this << "\\" << expression.lambda_value().parameters 
                          << ( expression.type->is_pure() ? "->" : "=>" ) 
                          << expression.lambda_value().body;
 
@@ -291,5 +291,13 @@ ReverseParser& ReverseParser::print_type_declaration(const Expression& expressio
     
     return *this << expression.type->to_string() << " ";
 }
+
+ReverseParser& ReverseParser::print_parameter_list(const ParameterList& parameters) {
+    for (auto parameter: parameters)
+        *this << *parameter;
+
+    return *this;
+}
+
 
 } // namespace Maps

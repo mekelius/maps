@@ -4,7 +4,6 @@
 ## Design goals
 - clearly separate impure code
 - functions are mappings
-- opt-in lazy semantics even in impure functions
     - even impure functions will often have pure parts
 - opt-in monadic semantics (like short circuiting optional assignment)
 - should some data-structures behave differently as return values?

@@ -17,7 +17,7 @@
 #include "mapsc/parser/lexer.hh"
 #include "mapsc/ast/chunk.hh"
 #include "mapsc/ast/scope.hh"
-
+#include "mapsc/ast/expression.hh"
 
 namespace Maps {
 
@@ -64,6 +64,8 @@ protected:
         bool compiler_error = false);
     Statement* fail_statement(const std::string& message, SourceLocation location, 
         bool compiler_error = false);
+    std::nullopt_t fail_optional(const std::string& message, SourceLocation location, 
+        bool compiler_error = false);
     
     void log(const std::string& message, LogLevel loglevel) const;
     void log(const std::string& message, LogLevel loglevel, SourceLocation location) const;
@@ -108,6 +110,7 @@ protected:
     Expression* parse_ternary_expression();
     Expression* parse_lambda_expression();
 
+    std::optional<ParameterList> parse_lambda_parameters(RT_Scope* lambda_scope);
     Expression* parse_binding_type_declaration();
 
     // ----- TERMINALS -----
@@ -116,6 +119,8 @@ protected:
     Expression* handle_identifier();
     Expression* handle_type_identifier();
     Expression* handle_type_constructor_identifier();
+    
+    std::optional<const Type*> parse_parameter_type_declaration();
     
     std::unique_ptr<Lexer> lexer_;
     Result result_ = {};

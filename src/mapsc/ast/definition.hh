@@ -35,7 +35,8 @@ struct Error {
 
 struct BTD_Binding {
     enum class Type {
-        parameter
+        parameter,
+        discarded_parameter
     };
 
     Type slot_type;

@@ -36,6 +36,7 @@ public:
     ReverseParser& operator<<(const const_DefinitionBody body) { return print_definition(body); }
     ReverseParser& operator<<(const Expression& expression) { return print_expression(expression); }
     ReverseParser& operator<<(const Statement& statement) { return print_statement(statement); }
+    ReverseParser& operator<<(const ParameterList& parameters) { return print_parameter_list(parameters); }
     ReverseParser& operator<<(maps_Int val) { *ostream_ << val; return *this; }
     ReverseParser& operator<<(maps_Float val) { *ostream_ << val; return *this; }
 
@@ -49,6 +50,7 @@ private:
     ReverseParser& print_definition(const DefinitionBody body);
     ReverseParser& print_statement(const Statement& statement);
     ReverseParser& print_expression(const Expression& expression);
+    ReverseParser& print_parameter_list(const ParameterList& parameters);
 
     ReverseParser& print_type_declaration(const Expression& expression);
 

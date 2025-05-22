@@ -92,10 +92,12 @@ struct TermedExpressionValue {
     std::string to_string() const;
 };
 
+using ParameterList = std::vector<Definition*>;
+
 struct LambdaExpressionValue {
-    Expression* binding_type_declaration;
+    ParameterList parameters;
+    RT_Scope* scope;
     DefinitionBody body;
-    std::optional<RT_Scope> scope = std::nullopt;
 
     bool operator==(const LambdaExpressionValue& other) const {
         return this == &other;
@@ -173,8 +175,10 @@ struct Expression {
     static Expression* partially_applied_minus(AST_Store& store, 
         Expression* rhs, SourceLocation location);
 
-    static Expression* lambda(AST_Store& store, Expression* binding_type_declaration, 
-        DefinitionBody body, SourceLocation location);
+    static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
+        const Type* return_type, bool is_pure, SourceLocation location);
+    static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
+        bool is_pure, SourceLocation location);
 
     static Expression* valueless(AST_Store& store, 
         ExpressionType expression_type, SourceLocation location);
