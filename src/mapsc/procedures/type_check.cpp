@@ -15,6 +15,7 @@
 
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
+#include "mapsc/ast/ast_node.hh"
 
 #include "mapsc/procedures/concretize.hh"
 #include "mapsc/procedures/coerce_type.hh"
@@ -75,13 +76,13 @@ bool SimpleTypeChecker::run(CompilationState& state, Scopes scopes,
 
     for (auto scope: scopes) {
         for (auto [_1, definition]: scope->identifiers_in_order_) {
-            if (!state.walk_definition(*this, definition))
+            if (!walk_definition(*this, definition))
                 return false;
         }
     }
 
     for (auto definition: extra_definitions) {
-        if (!state.walk_definition(*this, definition))
+        if (!walk_definition(*this, definition))
             return false;
     }
 
