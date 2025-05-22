@@ -46,4 +46,9 @@ RT_Definition* AST_Store::allocate_operator(const RT_Operator&& op) {
     return definitions_.back().get();
 }
 
+RT_Scope* AST_Store::allocate_scope(const RT_Scope&& scope) {
+    scopes_.push_back(std::make_unique<RT_Scope>(scope));
+    return scopes_.back().get();
+}
+
 } // namespace AST

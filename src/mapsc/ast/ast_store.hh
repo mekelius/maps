@@ -28,6 +28,7 @@ public:
     Statement* allocate_statement(const Statement&& statement);
     RT_Definition* allocate_definition(const RT_Definition&& definition);
     RT_Definition* allocate_operator(const RT_Operator&& op);
+    RT_Scope* allocate_scope(const RT_Scope&& scope);
 
 private:
 
@@ -39,6 +40,7 @@ private:
     std::vector<std::unique_ptr<Statement>> statements_ = {};
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
     std::vector<std::unique_ptr<RT_Definition>> definitions_ = {};
+    std::vector<std::unique_ptr<RT_Scope>> scopes_ = {};
 };
 
 } // namespace Maps

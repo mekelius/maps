@@ -18,6 +18,8 @@ using std::optional, std::nullopt;
 
 namespace Maps {
 
+using Log = LogNoContext;
+
 bool Definition::is_empty() const {
     return std::visit(overloaded {
         [](Error) { return true; },
@@ -53,70 +55,52 @@ RT_Definition::RT_Definition(DefinitionBody body, const Type& type, SourceLocati
 
 
 const_DefinitionBody RT_Definition::const_body() const {
-    return std::visit(overloaded {
-        [](Error error) { return const_DefinitionBody{error}; },
-        [](External external) { return const_DefinitionBody{external}; },
-        [](Undefined undefined) { return const_DefinitionBody{undefined}; },
-        [](Statement* statement) { return const_DefinitionBody{statement}; },
-        [](Expression* expression) { return const_DefinitionBody{expression}; }
-    }, body_);
+    return std::visit([](auto body) { return const_DefinitionBody{body}; }, body_);
 }
 
 // TODO: change to std::visitor
 const Type* RT_Definition::get_type() const {
-    switch (body_.index()) {
-        case 0: // Undefined
-            return type_ ? *type_ : &Hole;
-        
-        case 1: // expression
-            return std::get<Expression*>(body_)->type;
+    return std::visit(overloaded {
+        [](Error error) -> const Type* { (void) error; return &Absurd;},
+        [this](Undefined undefined) -> const Type* { (void) undefined; return type_ ? *type_ : &Hole; },
+        [this](External external) -> const Type* { (void) external; return *type_; },
 
-        case 2: { // statement
-            Statement* statement = std::get<Statement*>(body_);
+        [](Expression* expression) -> const Type* { return expression->type; },
 
-            if (statement->statement_type == StatementType::expression_statement) {
+        [this](Statement* statement) -> const Type* {
+            if (statement->statement_type == StatementType::expression_statement)
                 return std::get<Expression*>(statement->value)->type;
-            } 
 
             return type_ ? *type_ : &Hole;
-        }
-        case 3: // External
-            return *type_; 
-        default: 
-            assert(false && "unhandled DefinitionBody in DefinitionBody::get_type");
-            return &Hole;
-    }
+        },
+    }, body_);
 }
 
 // !!! this feels pretty sus, manipulating state with way too many layers of indirection
 void RT_Definition::set_type(const Type& type) {
-    switch (body_.index()) {
-        case 0: // uninitialized
+    std::visit(overloaded {
+        [](Error error) { (void) error; },
+        [this](External external) { 
+            (void) external; 
+            Log::compiler_error("Attempting to set the type of an external", this->location()); 
+        },
+
+        [this, &type](Undefined undefined) { 
             type_ = std::make_optional<const Type*>(&type);
-            return;
-        
-        case 1: // expression
-            std::get<Expression*>(body_)->type = &type;
-            return;
+            Log::compiler_error("Attempting to set the type of an undefined", this->location()); 
+        },
 
-        case 2: { // statement
-            Statement* statement = std::get<Statement*>(body_);
+        [&type](Expression* expression) { expression->type = &type; },
 
+        [this, &type](Statement* statement) {
             if (statement->statement_type == StatementType::expression_statement) {
                 std::get<Expression*>(statement->value)->type = &type;
                 return;
             } 
 
             type_ = std::make_optional<const Type *>(&type);
-            return;
-        }
-        case 3: // Cannot set type of an external
-            assert(false && "tried to set_type of a builtin definition");
-            return;
-
-        default:
-            assert(false && "unhandled DefinitionBody in DefinitionBody::set_type");
-    }
+        },
+    }, body_);
 }
 
 std::optional<const Type*> RT_Definition::get_declared_type() const {
