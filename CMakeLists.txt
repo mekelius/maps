@@ -79,13 +79,11 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/parser/lexer.cpp
     src/mapsc/parser/parser_layer1.cpp
     src/mapsc/parser/parser_layer2.cpp
-
-    # src/mapsc/process_source.cpp
 )
 
 target_link_libraries(mapsc_frontend corelib)
 
-# -------------------- dsir FRONTEND --------------------
+# ------------------------- DSIR -------------------------
 
 add_library(dsir OBJECT
     src/mapsc/dsir/parse_dsir.cpp
@@ -156,7 +154,6 @@ target_compile_options(mapsci PRIVATE
 add_executable(unit_tests
     tests/tests_main.cpp
 
-    # tests/full_runs.cpp
     tests/pragmas.cpp
     tests/ast/ast.cpp
 
@@ -185,7 +182,7 @@ target_link_libraries(unit_tests mapsc_frontend)
 target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
 
 
-# ----------------------- dsir UNIT TESTS -----------------------
+# --------------------- DSIR UNIT TESTS -----------------------
 
 add_executable(dsir_unit_tests
     tests/tests_main.cpp
