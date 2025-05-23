@@ -238,7 +238,9 @@ Statement* ParserLayer1::parse_return_statement() {
 
     assert(is_statement_separator(current_token()) 
         && "return statement didn't end in statement separator");
-    get_token(); //eat statement separator
+
+    if (current_token().token_type == TokenType::semicolon)
+        get_token(); //eat statement separator
 
     log("parsed return statement", LogLevel::debug_extra);
     return statement;
