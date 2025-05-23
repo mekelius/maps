@@ -113,7 +113,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         return false;
     
     if (options_.print_layer1) {
-        std::cout <<   "\n------- layer1 -------\n\n";
+        std::cout << "\n------- layer1 -------\n";
         reverse_parser_ << global_scope;
 
         if (top_level_definition)
@@ -145,7 +145,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         return false;
 
     if (options_.print_layer2) {
-        std::cout <<   "------- layer2 -------\n\n";
+        std::cout << "\n------- layer2 -------\n";
         reverse_parser_ << global_scope;
 
         if (top_level_definition)
@@ -169,12 +169,12 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     // ) return true;
 
     if (options_.print_layer3) {
-        std::cout <<   "------- post-typecheck -------\n\n";
+        std::cout << "\n------- post-typecheck -------\n\n";
         reverse_parser_ << global_scope;
 
         if (top_level_definition)
             reverse_parser_ << **top_level_definition;
-        std::cout << "\n----- post-typecheck end -----\n\n";
+        std::cout << "----- post-typecheck end -----\n\n";
     }
 
     // ---------- CREATE REPL WRAPPER ----------
@@ -197,7 +197,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
 
     if (false) {
-        std::cout <<   "------- pre-ir gen -------\n\n";
+        std::cout << "\n------- pre-ir gen -------\n\n";
         reverse_parser_ << global_scope;
 
         if (top_level_definition)
@@ -206,7 +206,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         if (repl_wrapper)
             reverse_parser_ << **repl_wrapper;
         
-        std::cout << "\n----- pre-ir gen end -----\n\n";
+        std::cout << "----- pre-ir gen end -----\n\n";
     }
 
     insert_builtins(generator);

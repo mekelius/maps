@@ -230,7 +230,7 @@ void ParserLayer1::create_identifier(const std::string& name, SourceLocation loc
 
 void ParserLayer1::create_identifier(const std::string& name,
     DefinitionBody body, SourceLocation location) {
-    log("created identifier " + name, LogLevel::debug_extra);
+    log("Parsed identifier " + name, LogLevel::debug_extra);
     parse_scope_->create_identifier(
         ast_store_->allocate_definition(RT_Definition{name, body, location})
     );

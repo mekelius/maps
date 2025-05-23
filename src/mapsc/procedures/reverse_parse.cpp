@@ -39,20 +39,21 @@ ReverseParser& ReverseParser::reverse_parse(const RT_Scope& scope) {
     reset();
 
     for (auto [name, definition]: scope.identifiers_in_order_) {
-        *this << "let " << name << " = " << definition->const_body() << ";\n\n";
+        *this << *definition;
     }
 
     return *this;
 }
 
 ReverseParser& ReverseParser::print_statement(const Statement& statement) {
-    if (options_.debug_separators) *this << "$";
-
-    if (skipped_initial_linebreak_doubling_) {
+    if (skipped_initial_linebreak_doubling_ && statement.statement_type != StatementType::block) {
         *this << linebreak();
     } else {
         skipped_initial_linebreak_doubling_ = true;
     }
+
+    if (options_.debug_separators) 
+        *this << "$";
 
     switch (statement.statement_type) {
         case StatementType::deleted:
@@ -266,23 +267,24 @@ ReverseParser& ReverseParser::print_definition(const Definition& definition) {
 
     return std::visit(overloaded {
         [this, name](Error body) -> ReverseParser& {
+            *this << "\n";
             return print_const_definition_body(body);
         },
         [this, name](External) -> ReverseParser& {
-            return *this << "@external " << name << "@\n";
+            return *this << "\n@external " << name << "@\n";
         },
         [this, name](BTD_Binding body) -> ReverseParser& {
             auto type = body.type;
             return *this << (*type != Hole ? type->to_string() : "") << name << " ";
         },
         [this, name](Undefined)-> ReverseParser& {
-            return *this << "let " << name << "\n";
+            return *this << "\nlet " << name << "\n";
         },
         [this, name](const Expression* expression)-> ReverseParser& {
-            return *this << "let " << name << " = " << *expression << "\n";
+            return *this << "\nlet " << name << " = " << *expression << "\n";
         },
         [this, name](const Statement* statement)-> ReverseParser& {
-            return *this << "let " << name << " = " << *statement << "\n";
+            return *this << "\nlet " << name << " = " << *statement << "\n";
         },
     }, definition.const_body());
 }
