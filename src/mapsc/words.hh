@@ -21,7 +21,6 @@ constexpr std::array<std::string_view, 42> RESERVED_WORDS = {
     "from",
     "has", "in", "of",                          // has could be a builtin
     "with",
-    "not", "and", "or", "xor", "nor", "nand",   // these could be builtins
     "is", "typeof", "derives", "from",
     "extern",
     "async", "await", "maybe", "value", "fail", // might be builtins

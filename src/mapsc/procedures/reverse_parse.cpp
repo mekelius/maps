@@ -239,7 +239,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 
         case ExpressionType::lambda:
             return *this << "\\" << expression.lambda_value().parameters 
-                         << ( expression.type->is_pure() ? "->" : "=>" ) 
+                         << ( expression.type->is_pure() ? "-> " : "=> " ) 
                          << expression.lambda_value().body;
 
         case ExpressionType::ternary_expression:
@@ -262,14 +262,51 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 }
 
 ReverseParser& ReverseParser::print_definition(const Definition& definition) {
-    return *this << "let " << definition.to_string() << " = " << definition.const_body() << "\n";
+    auto name = definition.to_string();
+
+    return std::visit(overloaded {
+        [this, name](Error body) -> ReverseParser& {
+            return print_const_definition_body(body);
+        },
+        [this, name](External) -> ReverseParser& {
+            return *this << "@external " << name << "@\n";
+        },
+        [this, name](BTD_Binding body) -> ReverseParser& {
+            auto type = body.type;
+            return *this << (*type != Hole ? type->to_string() : "") << name << " ";
+        },
+        [this, name](Undefined)-> ReverseParser& {
+            return *this << "let " << name << "\n";
+        },
+        [this, name](const Expression* expression)-> ReverseParser& {
+            return *this << "let " << name << " = " << *expression << "\n";
+        },
+        [this, name](const Statement* statement)-> ReverseParser& {
+            return *this << "let " << name << " = " << *statement << "\n";
+        },
+    }, definition.const_body());
 }
 
 // reverse-parse expression into the stream
-ReverseParser& ReverseParser::print_definition(const_DefinitionBody body) {
+ReverseParser& ReverseParser::print_definition_body(DefinitionBody body) {
+    return *this << std::visit( [](auto body) { return const_DefinitionBody{body}; }, body );
+}
+
+// reverse-parse expression into the stream
+ReverseParser& ReverseParser::print_const_definition_body(const_DefinitionBody body) {
     return std::visit(overloaded {
-        [this](auto body)-> ReverseParser& {
-            return *this << "@unhandled definition body@";
+        [this](Error) -> ReverseParser& {
+            return *this << "@error@";
+        },
+        [this](External) -> ReverseParser& {
+            return *this << "@external@";
+        },
+        [this](BTD_Binding body) -> ReverseParser& {
+            auto type = body.type;
+            return *this << (*type != Hole ? type->to_string() : "") << "@binding@";
+        },
+        [this](Undefined)-> ReverseParser& {
+            return *this << "@undefined@";
         },
         [this](const Expression* expression)-> ReverseParser& {
             return *this << *expression;
@@ -278,11 +315,6 @@ ReverseParser& ReverseParser::print_definition(const_DefinitionBody body) {
             return *this << *statement;
         },
     }, body);
-}
-
-// reverse-parse expression into the stream
-ReverseParser& ReverseParser::print_definition(DefinitionBody body) {
-    return *this << std::visit( [](auto body) { return const_DefinitionBody{body}; }, body );
 }
 
 ReverseParser& ReverseParser::print_type_declaration(const Expression& expression) {

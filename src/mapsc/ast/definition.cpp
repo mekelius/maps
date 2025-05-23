@@ -39,7 +39,7 @@ RT_Definition* RT_Definition::discarded_parameter(AST_Store& store, const Type* 
     SourceLocation location) {
 
     return store.allocate_definition(RT_Definition{
-        "", BTD_Binding{BTD_Binding::Type::discarded_parameter, type}, type, location});
+        "_", BTD_Binding{BTD_Binding::Type::discarded_parameter, type}, type, location});
 }
 
 

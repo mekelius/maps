@@ -88,11 +88,15 @@ protected:
 
     Chunk parse_top_level_chunk();
     
-    Definition* parse_let_definition();
+    Definition* parse_top_level_let_definition();
+
     Definition* parse_operator_definition();
     DefinitionBody parse_definition_body();
     
     Statement* parse_statement();
+
+    Statement* parse_initial_reserved_word_statement();
+    Statement* parse_inner_let_definition();
 
     Statement* parse_expression_statement();
     Statement* parse_assignment_statement();

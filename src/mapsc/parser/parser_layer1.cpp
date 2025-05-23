@@ -302,7 +302,7 @@ Chunk ParserLayer1::parse_top_level_chunk() {
         case TokenType::reserved_word:
             if (current_token().string_value() == "let") {
                 log("Scoping not yet implemented", LogLevel::warning);
-                return parse_let_definition();
+                return parse_top_level_let_definition();
             }
 
             if (current_token().string_value() == "operator")
@@ -372,11 +372,47 @@ Statement* ParserLayer1::parse_statement() {
         case TokenType::indent_error_fatal:
             return fail_statement("indent error", location);
 
+        case TokenType::reserved_word:
+            return parse_initial_reserved_word_statement();
+            
         // ---- errors -----
         default:
             return fail_statement(
                 "Unexpected "+ current_token().get_string() + ", expected a statement", location);
     }
+}
+
+Statement* ParserLayer1::parse_initial_reserved_word_statement() {
+    auto reserved_word = current_token().string_value();
+
+    if (reserved_word == "let") {
+        return parse_inner_let_definition();
+
+    } else if (reserved_word == "return") {
+        return parse_return_statement();
+
+    } else if (reserved_word == "if") {
+        assert(false && "not implemented");
+    } else if (reserved_word == "else") {
+        assert(false && "not implemented");
+    } else if (reserved_word == "for") {
+        assert(false && "not implemented");
+    } else if (reserved_word == "while") {
+        assert(false && "not implemented");
+    } else if (reserved_word == "do") {
+        assert(false && "not implemented");
+    } else if (reserved_word == "switch") {
+        assert(false && "not implemented");
+    } else if (reserved_word == "match") {
+        assert(false && "not implemented");
+    }
+
+    return fail_statement("Unexpected reserved word " + reserved_word + " expected a statement", 
+        current_token().location);
+}
+
+Statement* ParserLayer1::parse_inner_let_definition() {
+    assert(false && "not implemented");
 }
 
 Statement* ParserLayer1::parse_expression_statement() {
@@ -397,7 +433,7 @@ Statement* ParserLayer1::parse_expression_statement() {
     return statement;
 }
 
-Definition* ParserLayer1::parse_let_definition() {
+Definition* ParserLayer1::parse_top_level_let_definition() {
     auto location = current_token().location;
     
     switch (get_token().token_type) {
