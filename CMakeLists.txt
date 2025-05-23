@@ -79,6 +79,13 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/parser/lexer.cpp
     src/mapsc/parser/parser_layer1.cpp
     src/mapsc/parser/parser_layer2.cpp
+
+    src/mapsc/parser/layer1/definition.cpp
+    src/mapsc/parser/layer1/expression.cpp
+    src/mapsc/parser/layer1/pragma.cpp
+    src/mapsc/parser/layer1/statement.cpp
+    src/mapsc/parser/layer1/termed_expression.cpp
+    src/mapsc/parser/layer1/terminal.cpp
 )
 
 target_link_libraries(mapsc_frontend corelib)
@@ -165,6 +172,7 @@ add_executable(unit_tests
 
     tests/parser/layer1/lambda.cpp
     tests/parser/layer1/ternary.cpp
+    tests/parser/layer1/block.cpp
     
     tests/types/type_casts.cpp
     tests/types/type_store.cpp

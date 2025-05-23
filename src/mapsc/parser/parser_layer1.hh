@@ -84,30 +84,30 @@ protected:
     // creates an expression using ast_, marking the location as the expression_location_stack_
     Statement* create_statement(StatementType statement_type, SourceLocation location);
 
+    // #################################### layer1/pragma.cpp #####################################
+
     void handle_pragma();
 
-    Chunk parse_top_level_chunk();
-    
-    Definition* parse_top_level_let_definition();
+    // ################################## layer1/definition.cpp ###################################
 
+    Chunk parse_top_level_chunk();
+    Definition* parse_top_level_let_definition();
     Definition* parse_operator_definition();
     DefinitionBody parse_definition_body();
-    
-    Statement* parse_statement();
-
-    Statement* parse_initial_reserved_word_statement();
     Statement* parse_inner_let_definition();
+    
+    // ################################## layer1/statement.cpp ####################################
 
+    Statement* parse_statement();
+    Statement* parse_initial_reserved_word_statement();
     Statement* parse_expression_statement();
     Statement* parse_assignment_statement();
     Statement* parse_return_statement();
     Statement* parse_block_statement();
 
+    // ################################# layer1/expression.cpp ####################################
+
     Expression* parse_expression();
-
-    Expression* parse_termed_expression(bool is_tied = false);
-    Expression* parse_term(bool is_tied = false);
-
     Expression* parse_parenthesized_expression();
     Expression* parse_mapping_literal();
     Expression* parse_access_expression();
@@ -117,15 +117,23 @@ protected:
     std::optional<ParameterList> parse_lambda_parameters(RT_Scope* lambda_scope);
     Expression* parse_binding_type_declaration();
 
-    // ----- TERMINALS -----
+    std::optional<const Type*> parse_parameter_type_declaration();
+
+    // ############################## layer1/termed_expression.cpp ################################
+
+    Expression* parse_termed_expression(bool is_tied = false);
+    Expression* parse_term(bool is_tied = false);
+
+    // ################################## layer1/terminal.cpp #####################################
+    
     Expression* handle_string_literal();
     Expression* handle_numeric_literal();
     Expression* handle_identifier();
     Expression* handle_type_identifier();
     Expression* handle_type_constructor_identifier();
-    
-    std::optional<const Type*> parse_parameter_type_declaration();
-    
+        
+    // ------------------------------------ PRIVATE FIELDS ----------------------------------------
+
     std::unique_ptr<Lexer> lexer_;
     Result result_ = {};
 
