@@ -1,5 +1,5 @@
-#ifndef __PARSER_LAYER_2_HH
-#define __PARSER_LAYER_2_HH
+#ifndef __PARSER_LAYER_2_IMPLEMENTATION_HH
+#define __PARSER_LAYER_2_IMPLEMENTATION_HH
 
 #include <optional>
 #include <string>
@@ -25,7 +25,7 @@ class TermedExpressionParser {
 public:
     TermedExpressionParser(CompilationState* compilation_state, Expression* expression);
     // parses the expression in-place
-    void run();
+    bool run();
 
 private:  
     // advances the input stream without putting the term on the parse stack
@@ -51,7 +51,7 @@ private:
     bool at_expression_end() const;
     bool parse_stack_reduced() const;
     
-    Expression* parse_termed_expression();
+    std::optional<Expression*> parse_termed_expression();
 
     Expression* handle_termed_sub_expression(Expression* expression);
     
@@ -131,20 +131,6 @@ private:
     std::vector<Operator::Precedence> precedence_stack_ = {Operator::MIN_PRECEDENCE};
 
     bool success_ = true;
-};
-
-// basically a small wrapper that creates TermedExpressionParser for each unparsed termed 
-// expression in the ast and runs them
-class ParserLayer2 {
-public:
-    ParserLayer2(CompilationState* compilation_state);
-    void run(std::vector<Expression*> unparsed_termed_expressions);
-
-private:
-
-    // Selects a termed expression to parse. That expressions terms become the tokenstream
-    void select_expression(Expression* expression);
-    CompilationState* compilation_state_;
 };
 
 } // namespace Maps

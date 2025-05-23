@@ -4,7 +4,7 @@
 #include "mapsc/compilation_state.hh"
 #include "mapsc/builtins.hh"
 
-#include "mapsc/parser/parser_layer2.hh"
+#include "mapsc/parser/layer2.hh"
 
 using namespace std;
 using namespace Maps;

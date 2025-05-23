@@ -3,7 +3,7 @@
 #include "mapsc/ast/expression.hh"
 #include "mapsc/compilation_state.hh"
 
-#include "mapsc/parser/parser_layer2.hh"
+#include "mapsc/parser/layer2.hh"
 
 using namespace std;
 using namespace Maps;
@@ -18,7 +18,7 @@ TEST_CASE("prefix purely unary operator") {
     auto expr = Expression{ExpressionType::termed_expression, 
         TermedExpressionValue{{&op_ref, &value}}, TSL};
 
-    TermedExpressionParser{&state, &expr}.run();
+    run_layer2(state, &expr);
 
     CHECK(expr.expression_type == ExpressionType::call);
     
@@ -39,7 +39,7 @@ TEST_CASE("postfix purely unary operator") {
     auto expr = Expression{ExpressionType::termed_expression, 
         TermedExpressionValue{{&value, &op_ref}}, TSL};
 
-    TermedExpressionParser{&state, &expr}.run();
+    run_layer2(state, &expr);
 
     CHECK(expr.expression_type == ExpressionType::call);
     
@@ -66,7 +66,7 @@ TEST_CASE("Chained unary prefixes") {
     auto expr = Expression{ExpressionType::termed_expression, 
         TermedExpressionValue{{&op_ref3, &op_ref2, &op_ref1, &value}}, TSL};
 
-    TermedExpressionParser{&state, &expr}.run();
+    run_layer2(state, &expr);
 
     CHECK(expr.expression_type == ExpressionType::call);
     

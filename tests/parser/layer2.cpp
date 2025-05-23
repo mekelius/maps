@@ -4,7 +4,7 @@
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
-#include "mapsc/parser/parser_layer2.hh"
+#include "mapsc/parser/layer2.hh"
 
 using namespace Maps;
 using namespace std;
@@ -82,7 +82,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
     SUBCASE("String value") {
         Expression* value = Expression::string_literal(*state.ast_store_, "TEST_STRING:oasrpkorsapok", {0,0});
         expr->terms().push_back(value);
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
 
         CHECK(expr->expression_type == ExpressionType::string_literal);
         CHECK(expr->string_value() == value->string_value());
@@ -91,7 +91,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
     SUBCASE("Number value") {
         Expression* value = Expression::numeric_literal(*state.ast_store_, "234.52", {0,0});
         expr->terms().push_back(value);
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
 
         CHECK(expr->expression_type == ExpressionType::numeric_literal);
         CHECK(expr->string_value() == value->string_value());
@@ -115,7 +115,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
     REQUIRE(expr->terms().size() == 3);
 
     SUBCASE("Simple expression") {
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
 
         CHECK(expr->expression_type == ExpressionType::call);
         // NOTE: the operator_ref should be unwrapped
@@ -134,7 +134,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         Expression* val3 = Expression::numeric_literal(*ast, "235", {0,0});
         expr->terms().push_back(val3);
 
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
 
         CHECK(expr->expression_type == ExpressionType::call);
         auto [outer_op, outer_args] = expr->call_value();
@@ -166,7 +166,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
 
         expr->terms().push_back(val3);
 
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
 
         CHECK(expr->expression_type == ExpressionType::call);
         auto [outer_op, args] = expr->call_value();
@@ -208,7 +208,7 @@ TEST_CASE ("should handle more complex expressions") {
         
         prime_terms(expr, input, op1_ref, op2_ref, op3_ref, val);
 
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
         
         stringstream output;
         traverse_pre_order(expr, output);
@@ -221,7 +221,7 @@ TEST_CASE ("should handle more complex expressions") {
         
         prime_terms(expr, input, op1_ref, op2_ref, op3_ref, val);
 
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
         
         stringstream output;
         traverse_pre_order(expr, output);
@@ -248,7 +248,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
 
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
         
         CHECK(expr->expression_type == ExpressionType::call);
         auto [callee, args] = expr->call_value();
@@ -276,7 +276,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         expr->terms().push_back(arg3);
         expr->terms().push_back(arg4);
 
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
         
         CHECK(expr->expression_type == ExpressionType::call);
         auto [callee, args] = expr->call_value();
@@ -300,7 +300,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         expr->terms().push_back(ref);
         expr->terms().push_back(arg1);
 
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
         
         CHECK(expr->type == &Number);
     }
@@ -316,7 +316,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     SUBCASE("left") {
         Expression* expr = Expression::termed(ast, {op_ref, val}, {0,0});
         
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
         
         CHECK(expr->expression_type == ExpressionType::partial_binop_call_left);
         auto [callee, args] = expr->call_value();
@@ -329,7 +329,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     SUBCASE("right") {
         Expression* expr = Expression::termed(ast, {val, op_ref}, {0,0});
         
-        TermedExpressionParser{&state, expr}.run();
+        run_layer2(state, expr);
         
         CHECK(expr->expression_type == ExpressionType::partial_binop_call_right);
         auto [callee, args] = expr->call_value();
@@ -354,7 +354,7 @@ TEST_CASE("Should set the type on a non-partial call expression to the return ty
 
     auto expr = Expression::termed(ast, {reference, &arg}, TSL);
 
-    TermedExpressionParser{&state, expr}.run();
+    run_layer2(state, expr);
 
     CHECK(expr->expression_type == ExpressionType::call);
     CHECK(*expr->type == String);
@@ -379,7 +379,7 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
 
     auto expr = Expression::termed(ast, {&lhs, reference, &rhs}, TSL);
 
-    TermedExpressionParser{&state, expr}.run();
+    run_layer2(state, expr);
 
     CHECK(expr->expression_type == ExpressionType::call);
     CHECK(expr->call_value() == CallExpressionValue{&test_op, {&lhs, &rhs}});
@@ -396,7 +396,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
         auto expr = Expression{ExpressionType::termed_expression, 
             TermedExpressionValue{{&type_specifier, &value}, db_false}, TSL};
 
-        TermedExpressionParser{&state, &expr}.run();
+        run_layer2(state, &expr);
 
         CHECK(*expr.type == Int);
         CHECK(expr.expression_type == ExpressionType::value);
@@ -416,7 +416,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
         auto expr = Expression{ExpressionType::termed_expression, 
             TermedExpressionValue{{&type_specifier, &value, &op_ref, &rhs}, db_false}, TSL};
 
-        TermedExpressionParser{&state, &expr}.run();
+        run_layer2(state, &expr);
 
         CHECK(*expr.type == Int);
         CHECK(expr.expression_type == ExpressionType::call);
@@ -442,7 +442,7 @@ TEST_CASE("Unary minus by itself should result in a partially applied minus") {
     auto expr = Expression{ExpressionType::termed_expression, 
             TermedExpressionValue{{minus, value}, db_false}, TSL};    
 
-    TermedExpressionParser{&state, &expr}.run();
+    run_layer2(state, &expr);
 
     CHECK(expr.expression_type == ExpressionType::partially_applied_minus);
     CHECK(std::get<Expression*>(expr.value) == value);

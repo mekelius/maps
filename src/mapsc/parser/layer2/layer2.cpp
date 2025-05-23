@@ -1,4 +1,4 @@
-#include "parser_layer2.hh"
+#include "implementation.hh"
 
 #include <cassert>
 #include <compare>
@@ -18,6 +18,8 @@
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/ast_store.hh"
 
+
+using std::optional, std::nullopt;
 
 namespace Maps {
 
@@ -54,19 +56,6 @@ using Log = LogInContext<LogContext::layer2>;
 #define GUARANTEED_NON_OPERATOR_FUNCTION ExpressionType::lambda:\
                        case ExpressionType::partial_call
 
-ParserLayer2::ParserLayer2(CompilationState* compilation_state)
-:compilation_state_(compilation_state) {
-}
-
-void ParserLayer2::run(std::vector<Expression*> unparsed_termed_expressions) {
-    for (Expression* expression: unparsed_termed_expressions) {
-        // some expressions might be parsed early as sub-expressions
-        if (expression->expression_type != ExpressionType::termed_expression)
-            continue;
-        
-        TermedExpressionParser{compilation_state_, expression}.run();
-    }
-}
 
 TermedExpressionParser::TermedExpressionParser(
     CompilationState* compilation_state, Expression* expression)
@@ -77,13 +66,25 @@ TermedExpressionParser::TermedExpressionParser(
     next_term_it_ = expression_terms_->begin();    
 }
 
-void TermedExpressionParser::run() {
-    Expression* result = parse_termed_expression();
+bool TermedExpressionParser::run() {
+    // some expressions might be parsed early as sub-expressions
+    if (expression_->expression_type != ExpressionType::termed_expression) {
+        Log::debug_extra("TermedExpressionPareser::run called on a non-termed expression, skipping", 
+            expression_->location);
+        return true;
+    }
+    
+    auto result = parse_termed_expression();
+
+    if (!result) {
+        Log::error("Parsing termed expression failed", expression_->location);
+        return false;
+    }
 
     // overwrite the expression in-place
-    *expression_ = *result;
-
-    Log::debug_extra("parsed a termed expression", result->location);
+    *expression_ = **result;
+    Log::debug_extra("parsed a termed expression", (*result)->location);
+    return true;
 }
 
 Expression* TermedExpressionParser::get_term() {
@@ -152,7 +153,7 @@ bool is_value_literal(Expression* expression) {
     }
 }
 
-Expression* TermedExpressionParser::parse_termed_expression() {
+optional<Expression*> TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
         fail("layer2 tried to parse an empty expression", expression_->location);
         return Expression::valueless(*ast_store_, ExpressionType::user_error, expression_->location);
