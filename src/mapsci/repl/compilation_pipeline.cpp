@@ -1,4 +1,4 @@
-#include "repl.hh"
+#include "implementation.hh"
 
 #include <cerrno>
 #include <sstream>
@@ -111,17 +111,18 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 
     if (!layer1_success && !options_.ignore_errors)
         return false;
-    
-    if (options_.print_layer1) {
-        std::cout << "\n------- layer1 -------\n";
-        reverse_parser_ << global_scope;
 
-        if (top_level_definition)
-            reverse_parser_ << **top_level_definition;
-        std::cout << "\n----- layer1 end -----\n\n";
-    }
+    debug_print(REPL_Stage::layer1, global_scope, *top_level_definition);
+    // if (options_.print_layer1) {
+    //     std::cout << "\n------- layer1 -------\n";
+    //     reverse_parser_ << global_scope;
 
-    if (options_.stop_after == Stage::layer1)
+    //     if (top_level_definition)
+    //         reverse_parser_ << **top_level_definition;
+    //     std::cout << "\n----- layer1 end -----\n\n";
+    // }
+
+    if (options_.stop_after == REPL_Stage::layer1)
         return true;
 
 
@@ -144,17 +145,19 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (!run_layer2(state, unparsed_termed_expressions) && !options_.ignore_errors)
         return false;
 
-    if (options_.print_layer2) {
-        std::cout << "\n------- layer2 -------\n";
-        reverse_parser_ << global_scope;
+    debug_print(REPL_Stage::layer2, global_scope, *top_level_definition);
 
-        if (top_level_definition)
-            reverse_parser_ << **top_level_definition;
+    // if (options_.print_layer2) {
+    //     std::cout << "\n------- layer2 -------\n";
+    //     reverse_parser_ << global_scope;
+
+    //     if (top_level_definition)
+    //         reverse_parser_ << **top_level_definition;
         
-        std::cout << "\n----- layer2 end -----\n\n";
-    }
+    //     std::cout << "\n----- layer2 end -----\n\n";
+    // }
 
-    if (options_.stop_after == Stage::layer2)
+    if (options_.stop_after == REPL_Stage::layer2)
         return true;
 
     if (!top_level_definition || (*top_level_definition)->get_type()->is_voidish())
@@ -168,14 +171,16 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         // !has_something_to_evaluate(state)
     // ) return true;
 
-    if (options_.print_layer3) {
-        std::cout << "\n------- post-typecheck -------\n\n";
-        reverse_parser_ << global_scope;
+    debug_print(REPL_Stage::transform_stage, global_scope, *top_level_definition);
 
-        if (top_level_definition)
-            reverse_parser_ << **top_level_definition;
-        std::cout << "----- post-typecheck end -----\n\n";
-    }
+    // if (options_.print_layer3) {
+    //     std::cout << "\n------- post-typecheck -------\n\n";
+    //     reverse_parser_ << global_scope;
+
+    //     if (top_level_definition)
+    //         reverse_parser_ << **top_level_definition;
+    //     std::cout << "----- post-typecheck end -----\n\n";
+    // }
 
     // ---------- CREATE REPL WRAPPER ----------
 
@@ -196,35 +201,39 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
     IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
 
-    if (false) {
-        std::cout << "\n------- pre-ir gen -------\n\n";
-        reverse_parser_ << global_scope;
+    debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
 
-        if (top_level_definition)
-            reverse_parser_ << **top_level_definition;
+    // if (false) {
+    //     std::cout << "\n------- pre-ir gen -------\n\n";
+    //     reverse_parser_ << global_scope;
 
-        if (repl_wrapper)
-            reverse_parser_ << **repl_wrapper;
+    //     if (top_level_definition)
+    //         reverse_parser_ << **top_level_definition;
+
+    //     if (repl_wrapper)
+    //         reverse_parser_ << **repl_wrapper;
         
-        std::cout << "----- pre-ir gen end -----\n\n";
-    }
+    //     std::cout << "----- pre-ir gen end -----\n\n";
+    // }
 
     insert_builtins(generator);
     bool ir_success = generator.run({std::array<RT_Scope* const, 1>{&global_scope}}, 
         std::array<Definition*, 2>{*top_level_definition, *repl_wrapper});
 
-    if (options_.print_ir) {
-        std::cout << "----- generated ir -----:\n\n";
-        module_->dump();
-        std::cout << "\n----- ir end -----\n";
-    }
+    debug_print(REPL_Stage::ir, *module_);
+
+    // if (options_.get_debug_print(REPL_Stage::ir)) {
+    //     std::cout << "----- generated ir -----:\n\n";
+    //     module_->dump();
+    //     std::cout << "\n----- ir end -----\n";
+    // }
 
     if (!ir_success && !options_.ignore_errors) {
         std::cout << "IR gen failed\n";
         return false;
     }
 
-    if (options_.stop_after == Stage::ir || !options_.eval)
+    if (options_.stop_after == REPL_Stage::ir || !options_.eval)
         return true;
 
 

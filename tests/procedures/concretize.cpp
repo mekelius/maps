@@ -136,6 +136,22 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
         CHECK(std::get<maps_Int>(arg1.value) == 12);
         CHECK(std::get<maps_Int>(arg2.value) == 14);
     }
+
+    SUBCASE("Number -> Int -> Int into Int -> Int -> Int") {
+        Expression arg1{ExpressionType::value, "12", &Number, TSL};
+        Expression arg2{ExpressionType::value, 14, &Int, TSL};
+
+        Expression call{ExpressionType::call,
+            CallExpressionValue{&dummy_definition, {&arg1, &arg2}}, &Int, TSL};
+
+        CHECK(concretize(call));
+
+        CHECK(*call.type == Int);
+        CHECK(*arg1.type == Int);
+        CHECK(*arg2.type == Int);
+        CHECK(std::get<maps_Int>(arg1.value) == 12);
+        CHECK(std::get<maps_Int>(arg2.value) == 14);
+    }
 }
 
 TEST_CASE("Concretizer should be able to cast arguments up if needed") {

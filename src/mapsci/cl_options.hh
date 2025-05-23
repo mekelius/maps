@@ -13,7 +13,7 @@ constexpr bool SHOULD_EXIT = true;
 constexpr bool SHOULD_RUN = false;
 
 // return values are: should exit, exitcode
-std::pair<bool, int> process_cl_options(int argc, char* argv[], REPL::Options& repl_options, 
+std::tuple<bool, int, REPL_Options> process_cl_options(int argc, char* argv[], 
     Maps::LogOptions& log_options);
 
 #endif

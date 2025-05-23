@@ -134,9 +134,12 @@ add_executable(mapsci
     src/mapsci/init_llvm.cpp
     src/mapsci/jit_manager.cpp
     src/mapsci/cl_options.cpp
-    src/mapsci/repl_commands.cpp
-    src/mapsci/repl_compilation_pipeline.cpp
+
     src/mapsci/repl.cpp
+    src/mapsci/repl/repl.cpp
+    src/mapsci/repl/commands.cpp
+    src/mapsci/repl/compilation_pipeline.cpp
+    
     src/mapsci_main.cpp
 )
 

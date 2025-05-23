@@ -64,11 +64,13 @@ std::optional<std::filesystem::path> get_default_history_file_path() {
     return *data_directory /= HISTORY_FILENAME;
 }
 
-std::pair<bool, int> process_cl_options(int argc, char* argv[], REPL::Options& repl_options, 
+std::tuple<bool, int, REPL_Options> process_cl_options(int argc, char* argv[], 
     Maps::LogOptions& log_options) {
 
     std::vector<std::string> args = {argv + 1, argc + argv};
     std::vector<std::string> source_filenames{};
+
+    REPL_Options repl_options;
 
     for (std::string arg: args) {
         // split the arg on '='
@@ -92,16 +94,22 @@ std::pair<bool, int> process_cl_options(int argc, char* argv[], REPL::Options& r
             log_options.set_loglevel(LogLevel::debug_extra);
 
         } else if (key == "--ir" || key == "--print-ir" || key == "--dump-ir") {
-            repl_options.print_ir = true;
+            repl_options.set_debug_print(REPL_Stage::ir);
             
         } else if (key == "--no-ir" || key == "--no-codegen") {
-            repl_options.stop_after = std::min(REPL::Stage::layer3, repl_options.stop_after);
+            repl_options.stop_after = std::min(REPL_Stage::pre_ir, repl_options.stop_after);
 
         } else if (key == "--no-eval") {
             repl_options.eval = false;
 
-        } else if (key == "--layer3" || key == "--print-layer3" || key == "--pre-ir" || key == "--print-pre-ir" || key == "--reverse-parse") {
-            repl_options.print_layer3 = true;
+        } else if (key == "--all-debug-prints") {
+            for (size_t i = 0; auto _: repl_options.debug_prints) {
+                repl_options.debug_prints.at(i) = true;
+                i++;
+            }
+
+        } else if (key == "--transform-stage") {
+            repl_options.set_debug_print(REPL_Stage::transform_stage);
 
         } else if (key == "--quit-on-error" || key == "--exit-on-error" || key == "--quit-on-fail" || key == "--exit-on-fail") {
             repl_options.quit_on_error = true;
@@ -115,23 +123,23 @@ std::pair<bool, int> process_cl_options(int argc, char* argv[], REPL::Options& r
             log_options.set_loglevel(LogLevel::error);
 
         } else if (key == "--layer1") {
-            repl_options.print_layer1 = true;
+            repl_options.set_debug_print(REPL_Stage::layer1);
 
         } else if (key == "--layer2") {
-            repl_options.print_layer2 = true;
+            repl_options.set_debug_print(REPL_Stage::layer2);
 
         } else if (key == "--stop-after") {
             if (value == "layer1") {
-                repl_options.stop_after = REPL::Stage::layer1;
+                repl_options.stop_after = REPL_Stage::layer1;
 
             } else if (value == "layer2") {
-                repl_options.stop_after = REPL::Stage::layer2;
+                repl_options.stop_after = REPL_Stage::layer2;
 
             } else if (value == "layer3") {
-                repl_options.stop_after = REPL::Stage::layer3;
+                repl_options.stop_after = REPL_Stage::transform_stage;
 
             } else if(value == "ir") {
-                repl_options.stop_after = REPL::Stage::ir;
+                repl_options.stop_after = REPL_Stage::ir;
             }
         } else if (key == "--ignore-errors" || key == "--ignore-error") {
             repl_options.ignore_errors = false;
@@ -147,15 +155,15 @@ std::pair<bool, int> process_cl_options(int argc, char* argv[], REPL::Options& r
 
         } else if (key == "-h" || key == "--help" || key == "--usage") {
             std::cout << USAGE << std::endl;
-            return {SHOULD_EXIT, EXIT_SUCCESS};
+            return {SHOULD_EXIT, EXIT_SUCCESS, repl_options};
 
         } else if (key.at(0) == '-') {
             std::cout << "ERROR: unknown option: " << key << std::endl;
-            return {SHOULD_EXIT, EXIT_FAILURE};
+            return {SHOULD_EXIT, EXIT_FAILURE, repl_options};
 
         } else {
             std::cerr << "ERROR: interpreting source files not implemented, exiting" << std::endl;
-            return {SHOULD_EXIT, EXIT_FAILURE};
+            return {SHOULD_EXIT, EXIT_FAILURE, repl_options};
             source_filenames.push_back(key);
         }
     }
@@ -170,5 +178,5 @@ std::pair<bool, int> process_cl_options(int argc, char* argv[], REPL::Options& r
         }
     }
 
-    return {SHOULD_RUN, EXIT_SUCCESS};
+    return {SHOULD_RUN, EXIT_SUCCESS, repl_options};
 }

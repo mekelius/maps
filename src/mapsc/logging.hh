@@ -11,7 +11,6 @@
 
 namespace Maps {
 
-// clang-format off
 constexpr auto LOG_CONTEXTS_START_LINE = __LINE__;
 enum class LogContext {
     compiler_init       = 0,
@@ -30,7 +29,6 @@ enum class LogContext {
     identifier_creation = 13,
 };
 constexpr auto LOG_CONTEXT_COUNT = __LINE__ - LOG_CONTEXTS_START_LINE - 3;
-// clang-format on
 
 constexpr std::string_view prefix(LogContext context) {
     switch (context) {

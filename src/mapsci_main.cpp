@@ -15,6 +15,7 @@
 
 #include "mapsc/logging.hh"
 #include "mapsc/logging_options.hh"
+#include "mapsc/compilation_state.hh"
 
 #include "mapsci/cl_options.hh"
 #include "mapsci/init_llvm.hh"
@@ -30,11 +31,7 @@ int main(int argc, char* argv[]) {
     llvm::raw_os_ostream error_stream{std::cerr};
 
     auto log_options_lock = LogOptions::Lock::global();
-
-    REPL::Options repl_options;
-
-    auto [action, exit_code] = process_cl_options(argc, argv, repl_options, 
-        *log_options_lock.options_);
+    auto [action, exit_code, repl_options] = process_cl_options(argc, argv, *log_options_lock.options_);
 
     if (action == SHOULD_EXIT)
         return exit_code;
@@ -53,7 +50,7 @@ int main(int argc, char* argv[]) {
     }
 
     // REPL logs its own failures
-    if (!REPL{&jit, ts_context->getContext(), &error_stream, repl_options}.run()) 
+    if (!run_repl(jit, *ts_context->getContext(), error_stream, repl_options)) 
         return EXIT_FAILURE;
     
     return EXIT_SUCCESS;

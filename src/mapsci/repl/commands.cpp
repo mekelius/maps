@@ -1,6 +1,5 @@
-#include "repl.hh"
+#include "implementation.hh"
 
-    
 void REPL::run_command(Maps::CompilationState& state, const std::string& input) {
     std::stringstream input_stream{input};
     std::string command;
@@ -35,22 +34,22 @@ void REPL::run_command(Maps::CompilationState& state, const std::string& input) 
         std::getline(input_stream, next_arg, ' ');
 
         if (next_arg == "layer1") {
-            options_.stop_after = Stage::layer1;
+            options_.stop_after = REPL_Stage::layer1;
             return;
         }
 
         if (next_arg == "layer2") {
-            options_.stop_after = Stage::layer2;
+            options_.stop_after = REPL_Stage::layer2;
             return;
         } 
         
         if (next_arg == "ir") {
-            options_.stop_after = Stage::ir;
+            options_.stop_after = REPL_Stage::ir;
             return;
         }
         
         if (next_arg == "done" || next_arg == "eval") {
-            options_.stop_after = Stage::done;
+            options_.stop_after = REPL_Stage::done;
             return;
         }
 
@@ -65,31 +64,6 @@ void REPL::run_command(Maps::CompilationState& state, const std::string& input) 
         if (next_arg == "eval") {
             options_.eval = !options_.eval;
             std::cout << "eval " << (options_.eval ? "on" : "off") << std::endl;
-            return;
-        }
-
-        if (next_arg == "print" || next_arg == "show") { 
-            std::string next_arg;
-            std::getline(input_stream, next_arg, ' ');
-
-            if (next_arg == "layer1") {
-                options_.print_layer1 = !options_.print_layer1;
-                std::cout << "print layer1 " << (options_.eval ? "on" : "off") << std::endl;
-                return;
-            }
-
-            if (next_arg == "layer2") {
-                options_.print_layer2 = !options_.print_layer2;
-                std::cout << "print layer2 " << (options_.eval ? "on" : "off") << std::endl;
-                return;
-            }
-            
-            if (next_arg == "ir") {
-                options_.print_ir = !options_.print_ir;
-                std::cout << "print ir " << (options_.eval ? "on" : "off") << std::endl;
-                return;
-            }
-
             return;
         }
 
