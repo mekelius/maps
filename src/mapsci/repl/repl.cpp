@@ -108,7 +108,7 @@ void REPL::debug_print(REPL_Stage stage, const Maps::RT_Scope& scope,
             reverse_parser_ << *definition;
         }
 
-        reverse_parser_ << '\n' << std::string{end_separator} << '\n';
+        reverse_parser_ << '\n' << std::string{end_separator} << "\n\n";
 }
 
 void REPL::debug_print(REPL_Stage stage, const Maps::RT_Scope& scope, const Maps::Definition* definition) {
@@ -127,7 +127,7 @@ void REPL::debug_print(REPL_Stage stage, const llvm::Module& module) {
     
     reverse_parser_ << '\n' << std::string{start_separator} << "\n\n";
     module.dump();
-    reverse_parser_ << '\n' << std::string{end_separator} << '\n';
+    reverse_parser_ << '\n' << std::string{end_separator} << "\n\n";
 }
 
 // ----- PRIVATE METHODS -----

@@ -21,8 +21,8 @@ static constexpr std::string_view REPL_DEFAULT_REPL_WRAPPER_NAME = "mapsci_repl_
 constexpr static auto REPL_STAGES_START_LINE = __LINE__;
 enum class REPL_Stage {
     layer1                  = 0,
-    name_resolution         = 1,
-    type_name_resolution    = 2,
+    type_name_resolution    = 1,
+    name_resolution         = 2,
     layer2                  = 3,
     transform_stage         = 4,
     pre_ir                  = 5,

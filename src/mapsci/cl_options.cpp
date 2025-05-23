@@ -100,7 +100,52 @@ std::tuple<bool, int, REPL_Options> process_cl_options(int argc, char* argv[],
             repl_options.stop_after = std::min(REPL_Stage::pre_ir, repl_options.stop_after);
 
         } else if (key == "--no-eval") {
-            repl_options.eval = false;
+            repl_options.stop_after = std::min(REPL_Stage::ir, repl_options.stop_after);
+
+        } else if (key == "--printouts" || key == "--prints") {
+            std::stringstream prints{value};
+            std::string stage;
+
+            while (!prints.eof()) {
+                std::getline(prints, stage, ',');
+
+                if (stage == "layer1") {
+                    repl_options.set_debug_print(REPL_Stage::layer1);
+
+                } else if (stage == "layer2") {
+                    repl_options.set_debug_print(REPL_Stage::layer2);
+
+                } else if (stage == "name_resolution" || stage == "name-resolution") {
+                    repl_options.set_debug_print(REPL_Stage::name_resolution);
+
+                } else if (stage == "ir") {
+                    repl_options.set_debug_print(REPL_Stage::ir);
+
+                } else if (stage == "transform" || stage == "transform-stage" || stage == "transform_stage" || stage == "transforms") {
+                    repl_options.set_debug_print(REPL_Stage::transform_stage);
+
+                } else if (stage == "type-name-resolution" || stage == "type-resolution" || stage == "type_resolution" || stage == "type_name_resolution") {
+                    repl_options.set_debug_print(REPL_Stage::type_name_resolution);
+
+                } else if (stage == "pre-ir" || stage == "pre_ir" || stage == "repl-wrapper" || stage == "repl_wrapper" || stage == "add-repl-wrapper" || stage == "add_repl_wrapper") {
+                    repl_options.set_debug_print(REPL_Stage::pre_ir);
+
+                } else if (stage == "major") {
+                    repl_options.set_debug_print(REPL_Stage::layer1);
+                    repl_options.set_debug_print(REPL_Stage::layer2);
+                    repl_options.set_debug_print(REPL_Stage::transform_stage);
+                    repl_options.set_debug_print(REPL_Stage::ir);
+
+                } else if (stage == "all" || stage == "everything" || stage == "every" || stage == "each") {
+                    for (size_t i = 0; auto _: repl_options.debug_prints) {
+                        repl_options.debug_prints.at(i) = true;
+                        i++;
+                    }
+                } else {
+                    std::cout << "malformed --prints argument, expected: \"STAGE1,STAGE2,STAGE3...\"\n";
+                    return {SHOULD_EXIT, EXIT_FAILURE, repl_options};
+                }
+            }
 
         } else if (key == "--all-debug-prints") {
             for (size_t i = 0; auto _: repl_options.debug_prints) {

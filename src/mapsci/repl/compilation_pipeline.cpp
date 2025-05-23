@@ -113,18 +113,9 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         return false;
 
     debug_print(REPL_Stage::layer1, global_scope, *top_level_definition);
-    // if (options_.print_layer1) {
-    //     std::cout << "\n------- layer1 -------\n";
-    //     reverse_parser_ << global_scope;
-
-    //     if (top_level_definition)
-    //         reverse_parser_ << **top_level_definition;
-    //     std::cout << "\n----- layer1 end -----\n\n";
-    // }
 
     if (options_.stop_after == REPL_Stage::layer1)
         return true;
-
 
     // --------- NAME RESOLUTION ----------
 
@@ -132,13 +123,16 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
             !options_.ignore_errors)
         return false;
 
-    // if (!layer1_5(possible_binding_type_declarations) && !options_.ignore_errors)
+    debug_print(REPL_Stage::type_name_resolution, global_scope, *top_level_definition);
+
+    // if (!la(possible_binding_type_declarations) && !options_.ignore_errors)
     //     return false;
 
     if (!resolve_identifiers(state, global_scope, unresolved_identifiers) && 
             !options_.ignore_errors)
         return false;
 
+    debug_print(REPL_Stage::name_resolution, global_scope, *top_level_definition);
 
     // ---------- LAYER2 ----------
 
@@ -146,16 +140,6 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         return false;
 
     debug_print(REPL_Stage::layer2, global_scope, *top_level_definition);
-
-    // if (options_.print_layer2) {
-    //     std::cout << "\n------- layer2 -------\n";
-    //     reverse_parser_ << global_scope;
-
-    //     if (top_level_definition)
-    //         reverse_parser_ << **top_level_definition;
-        
-    //     std::cout << "\n----- layer2 end -----\n\n";
-    // }
 
     if (options_.stop_after == REPL_Stage::layer2)
         return true;
@@ -168,19 +152,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (!run_type_checks_and_concretize(state, global_scope, top_level_definition))
         return false;
 
-        // !has_something_to_evaluate(state)
-    // ) return true;
-
     debug_print(REPL_Stage::transform_stage, global_scope, *top_level_definition);
-
-    // if (options_.print_layer3) {
-    //     std::cout << "\n------- post-typecheck -------\n\n";
-    //     reverse_parser_ << global_scope;
-
-    //     if (top_level_definition)
-    //         reverse_parser_ << **top_level_definition;
-    //     std::cout << "----- post-typecheck end -----\n\n";
-    // }
 
     // ---------- CREATE REPL WRAPPER ----------
 
@@ -195,7 +167,6 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
             return false;
     }
 
-
     // ---------- IR GEN ----------
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
@@ -203,30 +174,11 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 
     debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
 
-    // if (false) {
-    //     std::cout << "\n------- pre-ir gen -------\n\n";
-    //     reverse_parser_ << global_scope;
-
-    //     if (top_level_definition)
-    //         reverse_parser_ << **top_level_definition;
-
-    //     if (repl_wrapper)
-    //         reverse_parser_ << **repl_wrapper;
-        
-    //     std::cout << "----- pre-ir gen end -----\n\n";
-    // }
-
     insert_builtins(generator);
     bool ir_success = generator.run({std::array<RT_Scope* const, 1>{&global_scope}}, 
         std::array<Definition*, 2>{*top_level_definition, *repl_wrapper});
 
     debug_print(REPL_Stage::ir, *module_);
-
-    // if (options_.get_debug_print(REPL_Stage::ir)) {
-    //     std::cout << "----- generated ir -----:\n\n";
-    //     module_->dump();
-    //     std::cout << "\n----- ir end -----\n";
-    // }
 
     if (!ir_success && !options_.ignore_errors) {
         std::cout << "IR gen failed\n";
@@ -235,7 +187,6 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 
     if (options_.stop_after == REPL_Stage::ir || !options_.eval)
         return true;
-
 
     // ---------- COMPILE AND RUN ----------
 
