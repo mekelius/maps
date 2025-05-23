@@ -59,7 +59,7 @@ TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
 
 TEST_CASE("Concretizer should run variable substitution with a concrete type") {
     Expression value{ExpressionType::value, 1, &Int, TSL};
-    RT_Definition definition{&value, TSL};
+    RT_Definition definition{&value, true, TSL};
     Expression ref{ExpressionType::reference, &definition, TSL};
     ref.type = &Int;
 
@@ -69,7 +69,7 @@ TEST_CASE("Concretizer should run variable substitution with a concrete type") {
 
 TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
     Expression value{ExpressionType::value, 1, &Int, TSL};
-    RT_Definition definition{&value, TSL};
+    RT_Definition definition{&value, true, TSL};
     Expression call{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
     call.type = &Int;
 
@@ -83,7 +83,7 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the de
     
     auto IntInt = types.get_function_type(&Int, {&Int}, false);
     Expression value{ExpressionType::value, 1, IntInt, TSL};
-    RT_Definition const_Int{"const_Int", &value, TSL};
+    RT_Definition const_Int{"const_Int", &value, true, TSL};
 
     Expression arg{ExpressionType::value, "5", &Number, TSL};
     Expression call{ExpressionType::call, CallExpressionValue{&const_Int, {&arg}}, TSL};

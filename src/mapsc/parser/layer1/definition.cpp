@@ -86,7 +86,7 @@ Definition* ParserLayer1::parse_top_level_let_definition() {
                     get_token(); // eat the semicolon
 
                     // create an unitialized identifier
-                    create_identifier(name, Undefined{}, location);
+                    create_identifier(name, Undefined{}, true, location);
 
                     return nullptr; //!!!
                 }
@@ -96,7 +96,7 @@ Definition* ParserLayer1::parse_top_level_let_definition() {
 
                     DefinitionBody body = parse_definition_body();
 
-                    create_identifier(name, body, location);
+                    create_identifier(name, body, true, location);
                     log("parsed let definition", LogLevel::debug_extra);
                     return nullptr; //!!!
                 }
@@ -169,7 +169,7 @@ Definition* ParserLayer1::parse_operator_definition() {
                 }
 
                 auto definition = ast_store_->allocate_definition(
-                    RT_Operator{op_string, body, {fixity}, location});
+                    RT_Operator{op_string, body, {fixity}, true, location});
                 parse_scope_->create_identifier(definition);
                 log("parsed let statement", LogLevel::debug_extra);
                 return definition;
@@ -197,7 +197,7 @@ Definition* ParserLayer1::parse_operator_definition() {
 
             auto definition = ast_store_->allocate_definition(
                 RT_Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
-                        location});
+                        true, location});
             parse_scope_->create_identifier(definition);
             log("parsed let statement", LogLevel::debug_extra);
             return definition;

@@ -13,6 +13,8 @@ class Definition;
 [[nodiscard]] bool substitute_value_reference(Expression& reference, Definition& definition);
 [[nodiscard]] bool substitute_value_reference(Expression& reference);
 
+bool inline_and_substitute(Definition& definition);
+
 } // namespace Maps
 
 #endif

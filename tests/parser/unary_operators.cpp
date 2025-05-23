@@ -12,7 +12,7 @@ TEST_CASE("prefix purely unary operator") {
     auto [state, _0, types] = CompilationState::create_test_state();
 
     auto op = RT_Operator{"!", External{}, types->get_function_type(&Boolean, {&Boolean}, true), 
-        {Operator::Fixity::unary_prefix}, TSL};
+        {Operator::Fixity::unary_prefix}, true, TSL};
     auto op_ref = Expression{ExpressionType::prefix_operator_reference, &op, TSL};
     auto value = Expression{ExpressionType::value, true, &Boolean, TSL};
     auto expr = Expression{ExpressionType::termed_expression, 
@@ -33,7 +33,7 @@ TEST_CASE("postfix purely unary operator") {
     auto [state, _0, types] = CompilationState::create_test_state();
 
     auto op = RT_Operator{"!", External{}, types->get_function_type(&Boolean, {&Boolean}, true), 
-        {Operator::Fixity::unary_postfix}, TSL};
+        {Operator::Fixity::unary_postfix}, true, TSL};
     auto op_ref = Expression{ExpressionType::postfix_operator_reference, &op, op.get_type(), TSL};
     auto value = Expression{ExpressionType::value, true, &Boolean, TSL};
     auto expr = Expression{ExpressionType::termed_expression, 
@@ -54,9 +54,9 @@ TEST_CASE("Chained unary prefixes") {
     auto [state, _0, types] = CompilationState::create_test_state();
 
     auto op1 = RT_Operator{"!", External{}, types->get_function_type(&Boolean, {&Boolean}, true), 
-        {Operator::Fixity::unary_prefix}, TSL};
+        {Operator::Fixity::unary_prefix}, true, TSL};
     auto op2 = RT_Operator{"-", External{}, types->get_function_type(&Boolean, {&Boolean}, true), 
-        {Operator::Fixity::unary_prefix}, TSL};
+        {Operator::Fixity::unary_prefix}, true, TSL};
 
     auto op_ref1 = Expression{ExpressionType::prefix_operator_reference, &op1, op1.get_type(), TSL};
     auto op_ref2 = Expression{ExpressionType::prefix_operator_reference, &op2, op2.get_type(), TSL};

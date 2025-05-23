@@ -17,7 +17,7 @@ inline tuple<Expression*, Definition*> create_operator_helper(CompilationState& 
     const Type* type = state.types_->get_function_type(&Void, {&Number, &Number}, true);
     Definition* op_definition = state.ast_store_->allocate_operator(
         RT_Operator::create_binary(op_string, External{}, type, precedence, 
-            RT_Operator::Associativity::left, TSL));
+            RT_Operator::Associativity::left, true, TSL));
 
     Expression* op_ref = Expression::operator_reference(*state.ast_store_, op_definition, {0,0});
 
@@ -239,7 +239,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     SUBCASE("1 arg") {    
         const Type* function_type = types->get_function_type(&Void, {&String}, true);
 
-        RT_Definition function{"test_f", External{}, function_type, TSL};
+        RT_Definition function{"test_f", External{}, function_type, true, TSL};
         globals.create_identifier(&function);
 
         Expression* id = Expression::reference(ast, &function, {0,0});
@@ -261,7 +261,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Type* function_type = types->get_function_type(&Void, 
             {&String, &String, &String, &String}, true);
         
-        RT_Definition function{"test_f", External{}, function_type, TSL};
+        RT_Definition function{"test_f", External{}, function_type, true, TSL};
         Expression* id{Expression::reference(ast, &function, {0,0})};
         id->type = function_type;
     
@@ -292,7 +292,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
 
         const Type* function_type = types->get_function_type(&Number, {&String}, true);
         
-        RT_Definition function{"test_f", External{}, function_type, TSL};
+        RT_Definition function{"test_f", External{}, function_type, true, TSL};
         Expression* ref = Expression::reference(ast, &function, {0,0});
 
         Expression* arg1 = Expression::string_literal(ast, "", {0,0});
@@ -347,7 +347,7 @@ TEST_CASE("Should set the type on a non-partial call expression to the return ty
     const FunctionType* IntString = types->get_function_type(&String, {&Int}, false);
 
     auto test_f_expr = Expression{ExpressionType::value, "qwe", IntString, TSL};
-    auto test_f = RT_Definition("test_f", &test_f_expr, TSL);
+    auto test_f = RT_Definition("test_f", &test_f_expr, true, TSL);
 
     auto arg = Expression{ExpressionType::numeric_literal, "3", &NumberLiteral, TSL};
     auto reference = Expression::reference(ast, &test_f, TSL);
@@ -370,7 +370,7 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
 
     auto test_op_expr = Expression{ExpressionType::value, "jii", IntString, TSL};
     auto test_op = RT_Operator::create_binary(">=?", &test_op_expr, 5, 
-        Operator::Associativity::left, TSL);
+        Operator::Associativity::left, true, TSL);
 
     auto lhs = Expression{ExpressionType::numeric_literal, "3", &NumberLiteral, TSL};
     auto rhs = Expression{ExpressionType::numeric_literal, "7", &NumberLiteral, TSL};
@@ -409,7 +409,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
     SUBCASE("Int \"32\" + 987") {
         auto op = RT_Operator{"+", External{}, 
             types->get_function_type(&Int, {&Int, &Int}, true),
-            {Operator::Fixity::binary}, TSL};
+            {Operator::Fixity::binary}, true, TSL};
         
         auto op_ref = Expression{ExpressionType::binary_operator_reference, &op, TSL};
         auto rhs = Expression{ExpressionType::numeric_literal, "987", TSL};

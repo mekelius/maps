@@ -237,7 +237,7 @@ public:
         }
 
         result_.top_level_definition = ast_store_->allocate_definition(
-            {"root", top_level_expression, NO_SOURCE_LOCATION});
+            {"root", top_level_expression, true, NO_SOURCE_LOCATION});
         }
 
         return result_; 
@@ -321,7 +321,7 @@ private:
         get_token(); // eat the =
 
         auto body = parse_expression();
-        auto definition = ast_store_->allocate_definition({name, body, location});
+        auto definition = ast_store_->allocate_definition({name, body, true, location});
         if (!result_.definitions.create_identifier(definition)) {
             fail("Couldn't create identifier \"" + name + "\"");
             return nullopt;

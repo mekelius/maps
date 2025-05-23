@@ -25,25 +25,34 @@ namespace Maps {
 
 using Log = LogInContext<LogContext::concretize>;
 
+bool concretize(RT_Definition& definition) {
+    assert(false && "not implemented");
+}
+
 bool concretize_call(Expression& call) {
     auto [callee, args] = call.call_value();
 
     // attempt inline first
+    Log::debug_extra("Attempting to inline " + call.log_message_string(), call.location);
     if (inline_call(call, *callee))
         return concretize(call);
 
-    // TODO: definition should probably return a function type?
+    Log::debug_extra("Could not inline, attempting to cast arguments", call.location);
+
     auto callee_type = dynamic_cast<const FunctionType*>(callee->get_type());
 
     // if it's not a function, it should have been inlinable?
     if (!callee_type) {
-        Log::warning("Concretizing a call failed", call.location);
+        Log::warning("Concretizing " + call.log_message_string() + 
+            " failed, was not a function and could not inline", call.location);
         return false;
     }
 
     if (call.declared_type) {
+        Log::debug_extra("Call has a declared type", call.location);
+
         if (**call.declared_type != *callee_type) {
-            assert(false && "mismathing declared type not implemented in concretize call");
+            assert(false && "mismatching declared type not implemented in concretize call");
         }
 
         if (!callee->get_type()->is_function()) {
@@ -64,9 +73,15 @@ bool concretize_call(Expression& call) {
         if (*arg->type == *param_type)
             continue;
 
-        if (arg->is_constant_value() && !arg->type->cast_to(param_type, *arg))
-            return false;
-
+        if (arg->is_constant_value()) { 
+            Log::debug_extra("Substituting constant argument: \"" + arg->log_message_string() + 
+                "\". Attempting to cast from " + arg->type->to_string() + " into " + param_type->to_string(), call.location);
+            
+            if (!arg->type->cast_to(param_type, *arg)) {
+                Log::error("No", arg->location);
+                return false;
+            }
+        }
         if (!concretize(*arg))
             return false;
 

@@ -26,6 +26,12 @@ namespace Maps {
 
 using Log = LogInContext<LogContext::layer4>;
 
+
+bool type_check(Definition& definition) {
+    assert(false && "not implemented");
+}
+
+
 bool SimpleTypeChecker::visit_expression(Expression* expression) {
     if (expression->declared_type && **expression->declared_type != *expression->type)
         return handle_declared_type(*expression, *expression->declared_type);
@@ -33,7 +39,7 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
     if (concretize(*expression))
         return true;
 
-    Log::error("Found a non-reduced type: " + static_cast<std::string>(expression->type->name()), 
+    Log::error("Concretizing " + expression->log_message_string() + " failed", 
         expression->location);
 
     return false;

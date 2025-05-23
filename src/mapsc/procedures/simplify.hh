@@ -5,7 +5,7 @@ namespace Maps {
 
 class RT_Definition;
 
-bool attempt_simplify(RT_Definition& definition);
+bool simplify(RT_Definition& definition);
 
 } // namespace Maps
 

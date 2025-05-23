@@ -45,21 +45,21 @@ public:
 class RT_Operator: public RT_Definition, public Operator {
 public:
     static RT_Operator create_binary(std::string_view name, DefinitionBody body, 
-        Operator::Precedence precedence, Operator::Associativity associativity, 
+        Operator::Precedence precedence, Operator::Associativity associativity, bool is_top_level, 
         SourceLocation location) {
 
         return RT_Operator{ name, body, 
             { Operator::Fixity::binary, precedence, associativity }, 
-            location };
+            is_top_level, location };
     }
 
     static RT_Operator create_binary(std::string_view name, DefinitionBody body, const Type* type, 
         Operator::Precedence precedence, Operator::Associativity associativity, 
-        SourceLocation location) {
+        bool is_top_level, SourceLocation location) {
 
         return RT_Operator{ name, body, type, 
             { Operator::Fixity::binary, precedence, associativity }, 
-            location };
+                is_top_level, location };
     }
 
     RT_Operator(std::string_view name, const External external, const Type* type, 
@@ -68,13 +68,13 @@ public:
      operator_props_(operator_props) {}
 
     RT_Operator(std::string_view name, DefinitionBody body, const Type* type, 
-        Operator::Properties operator_props, SourceLocation location)
-    :RT_Definition(name, body, type, location), 
+        Operator::Properties operator_props, bool is_top_level, SourceLocation location)
+    :RT_Definition(name, body, type, is_top_level, location), 
      operator_props_(operator_props) {}
 
     RT_Operator(std::string_view name, DefinitionBody body, 
-        Operator::Properties operator_props, SourceLocation location)
-    :RT_Definition(name, body, location), 
+        Operator::Properties operator_props, bool is_top_level, SourceLocation location)
+    :RT_Definition(name, body, is_top_level, location), 
      operator_props_(operator_props) {}
 
     RT_Operator(const RT_Operator& other) = default;

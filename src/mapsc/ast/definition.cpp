@@ -24,30 +24,30 @@ using Log = LogNoContext;
 
 // ------------------------------------- FACTORY FUNTIONS -----------------------------------------
 
-RT_Definition RT_Definition::testing_definition(const Type* type) {
-    return RT_Definition{"DUMMY_DEFINITION", External{}, type, TEST_SOURCE_LOCATION};
+RT_Definition RT_Definition::testing_definition(const Type* type, bool is_top_level) {
+    return RT_Definition{"DUMMY_DEFINITION", External{}, type, is_top_level, TEST_SOURCE_LOCATION};
 }
 
 RT_Definition* RT_Definition::parameter(AST_Store& store, std::string_view name, const Type* type, 
     SourceLocation location) {
 
     return store.allocate_definition(RT_Definition{
-        name, BTD_Binding{BTD_Binding::Type::parameter, type}, type, location});
+        name, BTD_Binding{BTD_Binding::Type::parameter, type}, type, false, location});
 }
 
 RT_Definition* RT_Definition::discarded_parameter(AST_Store& store, const Type* type, 
     SourceLocation location) {
 
     return store.allocate_definition(RT_Definition{
-        "_", BTD_Binding{BTD_Binding::Type::discarded_parameter, type}, type, location});
+        "_", BTD_Binding{BTD_Binding::Type::discarded_parameter, type}, type, false, location});
 }
 
 
 // --------------------------------------- CONSTRUCTORS -------------------------------------------
 
 RT_Definition::RT_Definition(std::string_view name, DefinitionBody body, const Type* type, 
-    SourceLocation location)
-: name_(name), body_(body), location_(location), type_(type) {
+    bool is_top_level, SourceLocation location)
+: name_(name), body_(body), location_(location), type_(type), is_top_level_(is_top_level) {
     assert((!std::holds_alternative<Expression*>(body)  || 
             *type == Hole                                ||
             *type == *std::get<Expression*>(body)->type) &&
@@ -55,14 +55,14 @@ RT_Definition::RT_Definition(std::string_view name, DefinitionBody body, const T
 type should be set on the expression");
 }
 
-RT_Definition::RT_Definition(std::string_view name, DefinitionBody body, SourceLocation location)
-:RT_Definition(name, body, &Hole, location) {}
+RT_Definition::RT_Definition(std::string_view name, DefinitionBody body, bool is_top_level, SourceLocation location)
+:RT_Definition(name, body, &Hole, is_top_level, location) {}
 
-RT_Definition::RT_Definition(DefinitionBody body, SourceLocation location)
-:name_("anonymous definition"), body_(body), location_(location) {}
+RT_Definition::RT_Definition(DefinitionBody body, bool is_top_level, SourceLocation location)
+:name_("anonymous definition"), body_(body), location_(location), is_top_level_(is_top_level) {}
 
-RT_Definition::RT_Definition(DefinitionBody body, const Type* type, SourceLocation location)
-:name_("anonymous definition"), body_(body), location_(location), type_(type) {}
+RT_Definition::RT_Definition(DefinitionBody body, const Type* type, bool is_top_level, SourceLocation location)
+:name_("anonymous definition"), body_(body), location_(location), type_(type), is_top_level_(is_top_level) {}
 
 
 // ----------------------------------- SETTERS AND GETTERS ---------------------------------------

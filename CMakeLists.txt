@@ -89,6 +89,8 @@ add_library(mapsc_frontend OBJECT
 
     src/mapsc/parser/layer2.cpp
     src/mapsc/parser/layer2/layer2.cpp
+
+    src/mapsc/transform_stage.cpp
 )
 
 target_link_libraries(mapsc_frontend corelib)

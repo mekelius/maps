@@ -82,7 +82,7 @@ public:
 class RT_Definition: public Definition {
 public:
     // creates a new dummy definition suitable for unit testing
-    static RT_Definition testing_definition(const Type* type = &Hole); 
+    static RT_Definition testing_definition(const Type* type = &Hole, bool is_top_level = true); 
 
     static RT_Definition* parameter(AST_Store& store, std::string_view name, const Type* type, 
         SourceLocation location);
@@ -90,14 +90,15 @@ public:
         SourceLocation location);
 
     RT_Definition(std::string_view name, External external, const Type* type)
-    :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(type) {}
+    :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(type), 
+     is_top_level_(true) {}
 
-    RT_Definition(std::string_view name, DefinitionBody body, SourceLocation location);
-    RT_Definition(DefinitionBody body, SourceLocation location); // create anonymous definition
+    RT_Definition(std::string_view name, DefinitionBody body, bool is_top_level, SourceLocation location);
+    RT_Definition(DefinitionBody body, bool is_top_level, SourceLocation location); // create anonymous definition
 
     // anonymous definitions
-    RT_Definition(std::string_view name, DefinitionBody body, const Type* type, SourceLocation location);
-    RT_Definition(DefinitionBody body, const Type* type, SourceLocation location);
+    RT_Definition(std::string_view name, DefinitionBody body, const Type* type, bool is_top_level, SourceLocation location);
+    RT_Definition(DefinitionBody body, const Type* type, bool is_top_level, SourceLocation location);
 
     RT_Definition(const RT_Definition& other) = default;
     RT_Definition& operator=(const RT_Definition& other) = default;
@@ -115,9 +116,13 @@ public:
     virtual const Type* get_type() const;
     virtual std::optional<const Type*> get_declared_type() const;
 
-
     void set_type(const Type* type);
     bool set_declared_type(const Type* type);
+
+    bool is_deleted() const { return is_deleted_; }
+    void mark_deleted() { is_deleted_ = true; }
+
+    bool is_top_level_definition() const { return is_top_level_; }
 
     virtual bool operator==(const Definition& other) const {
         if (this == &other)
@@ -135,6 +140,8 @@ private:
     SourceLocation location_;
     std::optional<const Type*> type_;
     std::optional<const Type*> declared_type_;
+    bool is_top_level_;
+    bool is_deleted_ = false;
 };
 
 } // namespace Maps

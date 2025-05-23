@@ -10,6 +10,8 @@ struct Statement;
 class RT_Definition;
 class CompilationState;
 
+bool type_check(Definition& definition);
+
 class SimpleTypeChecker {
 public:
     bool visit_expression(Expression*);

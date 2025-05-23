@@ -64,7 +64,7 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
     }
 
     auto definition = state.ast_store_->allocate_definition(
-        RT_Definition{options_.repl_wrapper_name, *eval_and_print, location});
+        RT_Definition{options_.repl_wrapper_name, *eval_and_print, true, location});
 
     // SimpleTypeChecker{}.run(state, {}, std::array<RT_Definition* const, 1>{definition});
 
@@ -161,18 +161,21 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 
     auto repl_wrapper = create_repl_wrapper(state, *top_level_definition);
 
+    debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
+
     if (!repl_wrapper) {
         std::cout << "ERROR: creating repl wrapper failed";
         if (!options_.ignore_errors)
             return false;
     }
 
+    if (options_.stop_after == REPL_Stage::pre_ir || !options_.eval)
+        return true;
+
     // ---------- IR GEN ----------
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
     IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
-
-    debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
 
     insert_builtins(generator);
     bool ir_success = generator.run({std::array<RT_Scope* const, 1>{&global_scope}}, 

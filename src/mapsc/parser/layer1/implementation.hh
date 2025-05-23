@@ -65,14 +65,14 @@ protected:
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& name) const;
 
-    void create_identifier(const std::string& name, DefinitionBody body, SourceLocation location);
-    void create_identifier(const std::string& name, SourceLocation location);
+    void create_identifier(const std::string& name, DefinitionBody body, bool is_top_level, SourceLocation location);
+    void create_identifier(const std::string& name, bool is_top_level, SourceLocation location);
     std::optional<Definition*> lookup_identifier(const std::string& name);
 
     // attempts to collapse a single statement block
     bool simplify_single_statement_block(Statement* outer);
 
-    Definition* create_definition(DefinitionBody body, SourceLocation location);
+    Definition* create_definition(DefinitionBody body, bool is_top_level, SourceLocation location);
     // creates an expression using ast_, marking the location as the expression_location_stack_
     Statement* create_statement(StatementType statement_type, SourceLocation location);
 

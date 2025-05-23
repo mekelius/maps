@@ -16,7 +16,7 @@
 namespace Maps {
 
 // TODO: delete the simplified nodes properly
-bool attempt_simplify(RT_Definition& definition) {
+bool simplify(RT_Definition& definition) {
     return std::visit(overloaded {
         [](Error) { return false; },
         [](Undefined) { return true; },
@@ -29,7 +29,7 @@ bool attempt_simplify(RT_Definition& definition) {
                     // TODO: check type
                     definition.body() = std::get<Expression*>(statement->value);
                     statement->statement_type = StatementType::deleted;
-                    return attempt_simplify(definition);
+                    return simplify(definition);
                     
                 case StatementType::block: {
                     // TODO: check type
@@ -45,7 +45,7 @@ bool attempt_simplify(RT_Definition& definition) {
                         *statement = *block->back();
                         // definition SEGFAULTS! ???:
                         // block->back()->statement_type = StatementType::deleted;
-                        return attempt_simplify(definition);
+                        return simplify(definition);
                     }
 
                     return false;
@@ -57,13 +57,13 @@ bool attempt_simplify(RT_Definition& definition) {
                     if (!type->is_function()) {
                         statement->statement_type = StatementType::deleted;
                         definition.body() = std::get<Expression*>(statement->value);
-                        return attempt_simplify(definition);
+                        return simplify(definition);
                     }
 
                     if (type->is_pure() && type->arity() == 0) {
                         definition.body() = std::get<Expression*>(statement->value);
                         statement->statement_type = StatementType::deleted;
-                        return attempt_simplify(definition);
+                        return simplify(definition);
                     }
 
                     return false;

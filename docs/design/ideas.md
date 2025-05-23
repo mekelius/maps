@@ -41,6 +41,11 @@ Enum mapping types should be iterable, how to do that?
 - comment and logstring macros
     - current function name etc.
 
+- Number -> Number -> Number -> Number
+    - sort of syntactic sugar for: ```Number a, Number b, Number c => a -> b -> c -> ???```
+        - but how to deduce the return type, and how to write it desugared
+    - sort of syntactic sugar for: ```Number a, Number b, Number c, Number d => a -> b -> c -> Derived d```
+
 ## inpurity and purity, strictness, laziness
 - {}-access denotes lazy access
 - ()-access denotes impure function call

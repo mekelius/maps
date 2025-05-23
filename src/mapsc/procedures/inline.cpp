@@ -21,6 +21,11 @@ namespace Maps {
 
 using Log = LogInContext<LogContext::inline_>;
 
+bool inline_and_substitute(Definition& definition) {
+    assert(false && "not implemented");
+}
+
+
 bool inline_call(Expression& expression) {
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
@@ -115,9 +120,9 @@ bool substitute_value_reference(Expression& expression, Definition& callee) {
 
     if (*callee_type != *expression.type) {
         // try to cast
-        Log::error(
-            "incompatible types: " + callee_type->to_string() + " and " + expression.type->to_string(), 
-            expression.location);
+        Log::debug_extra("Cannot inline " + expression.log_message_string() + 
+            " due to incompatible types: " + callee_type->to_string() + " and " + 
+            expression.type->to_string(), expression.location);
         return false;
     }
 
