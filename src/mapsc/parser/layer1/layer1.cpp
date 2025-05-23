@@ -1,12 +1,4 @@
-/**
- * Recursive descent parser for maps programming language
- * 
- * The convention here (unlike in the lexer) is that every production rule must move the buffer
- * beyond the tokens it consumed.
- * 
- * Same if a token is rejected. 
- */
-#include "parser_layer1.hh"
+#include "implementation.hh"
 
 #include <algorithm>
 #include <cassert>
@@ -45,12 +37,12 @@ ParserLayer1::ParserLayer1(CompilationState* const state, RT_Scope* scope)
  ast_store_(state->ast_store_.get()),
  pragma_store_(&state->pragmas_) {}
 
-ParserLayer1::Result ParserLayer1::run(std::istream& source_is) {    
+Layer1Result ParserLayer1::run(std::istream& source_is) {    
     run_parse(source_is);
     return result_;
 }
 
-ParserLayer1::Result ParserLayer1::run_eval(std::istream& source_is) {    
+Layer1Result ParserLayer1::run_eval(std::istream& source_is) {    
     force_top_level_eval_ = true;
     run_parse(source_is);
     force_top_level_eval_ = false;

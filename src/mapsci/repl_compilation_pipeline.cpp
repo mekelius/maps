@@ -21,7 +21,7 @@
 #include "mapsc/procedures/reverse_parse.hh"
 #include "mapsc/types/type_store.hh"
 #include "mapsc/types/type.hh"
-#include "mapsc/parser/parser_layer1.hh"
+#include "mapsc/parser/layer1.hh"
 #include "mapsc/parser/parser_layer2.hh"
 #include "mapsc/procedures/type_check.hh"
 #include "mapsc/procedures/name_resolution.hh"
@@ -29,7 +29,8 @@
 #include "mapsc/llvm/ir_generator.hh"
 
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple, std::optional, std::nullopt;
-using Maps::CompilationState, Maps::ParserLayer1, Maps::ParserLayer2, Maps::SimpleTypeChecker, 
+using Maps::CompilationState, Maps::Layer1Result, Maps::run_layer1_eval, Maps::ParserLayer2, 
+    Maps::SimpleTypeChecker, 
     Maps::Definition, Maps::RT_Definition, Maps::CT_Definition, Maps::Expression,
     Maps::CT_Scope, Maps::RT_Scope, Maps::Scopes, Maps::ReverseParser,
     Maps::resolve_identifiers;
@@ -235,13 +236,8 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 }
 
 
-ParserLayer1::Result REPL::run_layer1(CompilationState& state, RT_Scope& global_scope, 
-    std::istream& source) {
-    
-    ParserLayer1::Result result = 
-        ParserLayer1{&state, &global_scope}.run_eval(source);
-
-    return result;
+Layer1Result REPL::run_layer1(CompilationState& state, RT_Scope& global_scope, std::istream& source) {
+    return run_layer1_eval(state, global_scope, source);
 }
 
 bool REPL::run_layer2(CompilationState& state, std::vector<Expression*> unparsed_termed_expressions) {

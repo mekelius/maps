@@ -1,12 +1,4 @@
-/**
- * Recursive descent parser for maps programming language
- * 
- * The convention here (unlike in the lexer) is that every production rule must move the buffer
- * beyond the tokens it consumed.
- * 
- * Same if a token is rejected. 
- */
-#include "../parser_layer1.hh"
+#include "implementation.hh"
 
 #include <algorithm>
 #include <cassert>

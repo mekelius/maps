@@ -1,5 +1,7 @@
-#ifndef __PARSER_LAYER_1_HH
-#define __PARSER_LAYER_1_HH
+#ifndef __LAYER1_IMPLEMENTATION_HH
+#define __LAYER1_IMPLEMENTATION_HH
+
+#include "../layer1.hh"
 
 #include <array>
 #include <istream>
@@ -9,7 +11,6 @@
 #include <vector>
 
 #include "mapsc/source.hh"
-
 #include "mapsc/logging.hh"
 
 #include "mapsc/ast/definition.hh"
@@ -30,19 +31,10 @@ struct Statement;
 
 class ParserLayer1 {
 public:
-    struct Result {
-        bool success = true;
-        std::optional<RT_Definition*> top_level_definition;
-        std::vector<Expression*> unresolved_identifiers;
-        std::vector<Expression*> unresolved_type_identifiers;
-        std::vector<Expression*> unparsed_termed_expressions;
-        std::vector<Expression*> possible_binding_type_declarations;
-    };
-
     ParserLayer1(CompilationState* const state, RT_Scope* scope);
 
-    Result run(std::istream& source_is);
-    Result run_eval(std::istream& source_is);
+    Layer1Result run(std::istream& source_is);
+    Layer1Result run_eval(std::istream& source_is);
 
 // protected for unit tests
 protected:
@@ -135,7 +127,7 @@ protected:
     // ------------------------------------ PRIVATE FIELDS ----------------------------------------
 
     std::unique_ptr<Lexer> lexer_;
-    Result result_ = {};
+    Layer1Result result_ = {};
 
     CompilationState* const compilation_state_;
     RT_Scope* parse_scope_;

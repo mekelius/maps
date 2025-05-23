@@ -77,9 +77,10 @@ add_library(mapsc_frontend OBJECT
 
     src/mapsc/parser/token.cpp
     src/mapsc/parser/lexer.cpp
-    src/mapsc/parser/parser_layer1.cpp
+    src/mapsc/parser/layer1.cpp
     src/mapsc/parser/parser_layer2.cpp
 
+    src/mapsc/parser/layer1/layer1.cpp
     src/mapsc/parser/layer1/definition.cpp
     src/mapsc/parser/layer1/expression.cpp
     src/mapsc/parser/layer1/pragma.cpp

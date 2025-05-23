@@ -11,7 +11,7 @@
 #include "mapsc/compilation_state.hh"
 
 #include "mapsci/jit_manager.hh"
-#include "mapsc/parser/parser_layer1.hh"
+#include "mapsc/parser/layer1.hh"
 
 class REPL {
 public:
@@ -70,7 +70,7 @@ private:
         std::istream& istream);
     std::string eval_type(std::istream& input_stream);
     
-    Maps::ParserLayer1::Result run_layer1(Maps::CompilationState& state, 
+    Maps::Layer1Result run_layer1(Maps::CompilationState& state, 
         Maps::RT_Scope& global_scope, std::istream& source);
     bool run_layer2(Maps::CompilationState& state, 
         std::vector<Maps::Expression*> unparsed_termed_expressions);
