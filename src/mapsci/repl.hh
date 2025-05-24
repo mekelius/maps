@@ -7,7 +7,6 @@
 #include <string>
 #include <istream>
 
-#include "mapsc/process_source.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/ast/scope.hh"
 

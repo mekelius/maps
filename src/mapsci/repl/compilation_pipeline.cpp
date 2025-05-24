@@ -17,7 +17,6 @@
 #include "mapsc/ast/definition.hh"
 #include "mapsc/compilation_state.hh"
 
-#include "mapsc/process_source.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 #include "mapsc/types/type_store.hh"
 #include "mapsc/types/type.hh"

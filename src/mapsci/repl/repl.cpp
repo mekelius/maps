@@ -18,7 +18,6 @@
 #include "mapsc/ast/definition.hh"
 #include "mapsc/compilation_state.hh"
 
-#include "mapsc/process_source.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 #include "mapsc/types/type_store.hh"
 #include "mapsc/types/type.hh"
@@ -28,7 +27,7 @@
 
 using std::optional, std::nullopt;
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple;
-using Maps::ProcessSourceOptions, Maps::ReverseParser, Maps::CompilationLayer;
+using Maps::ReverseParser;
 using Maps::TypeStore, Maps::CompilationState;
 
 // ----- PUBLIC METHODS -----
