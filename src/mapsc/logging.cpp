@@ -37,6 +37,7 @@ void LogOptions::set_loglevel(LogLevel loglevel) {
         if (!per_context_loglevels_overridden_.at(index))
             per_context_loglevels.at(index) = loglevel;
     }    
+    loglevel_ = loglevel;
 }
 
 void LogOptions::set_loglevel(LogContext context, LogLevel loglevel) {
