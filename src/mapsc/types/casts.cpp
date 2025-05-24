@@ -4,10 +4,11 @@
 #include <optional>
 #include <string>
 #include <variant>
+#include <cstring>
 
 extern "C" {
 
-#include "corelib.h"
+#include "libmaps.h"
 
 }
 
@@ -22,6 +23,8 @@ using std::nullopt;
 
 
 namespace Maps {
+
+using Log = LogInContext<LogContext::type_casts>;
 
 namespace {
 
@@ -110,7 +113,19 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
         return true;
     }
 
-    assert(false && "not implemented");
+    if (*target_type == Mut_String) {
+        auto old_value = expression.string_value();
+
+        auto new_str = malloc(old_value.size());
+        maps_Mut_String value{static_cast<char*>(new_str), old_value.size()};
+
+        std::memcpy(new_str, old_value.c_str(), old_value.size());
+
+        cast_value<maps_Mut_String>(expression, &Mut_String, value);
+        return true;
+    }
+
+    Log::error("Cannot convert string to " + target_type->name_string(), expression.location);
     return false;
 }
 
@@ -154,6 +169,21 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
         
     }
 
+    return false;
+}
+
+bool cast_from_Mut_String(const Type* target_type, Expression& expression) {
+    if (*target_type == String) {
+        auto [data, size] = std::get<maps_Mut_String>(expression.value);
+
+        cast_value<std::string>(expression, &String, std::string{data, size});
+
+        free(data);
+
+        return true;   
+    }
+
+    Log::compiler_error("Mut string casts not implemented", expression.location);
     return false;
 }
 

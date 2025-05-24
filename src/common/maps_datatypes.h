@@ -10,11 +10,13 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 // ----- INTEGER TYPES -----
 
 typedef int32_t maps_Int;
 typedef bool maps_Boolean;
+typedef size_t maps_MemNat;
 
 // typedef char maps_Char_INTERN;
 
@@ -37,5 +39,14 @@ typedef double maps_Float;
 
 // null terminated constant strings
 typedef const char* maps_String;
+
+struct maps_Mut_String {
+    char* data;
+    maps_MemNat length; // no uint yet
+
+    #ifdef __cplusplus
+    // ~maps_Mut_String() { free(data); }
+    #endif
+};
 
 #endif

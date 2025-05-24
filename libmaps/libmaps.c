@@ -1,4 +1,4 @@
-#include "corelib.h"
+#include "libmaps.h"
 
 #include <stdio.h>
 
@@ -60,7 +60,7 @@ maps_String __to_String_Boolean(maps_Boolean b) {
     return b ? "true" : "false";
 }
 
-// maps_String* __Int_to_String(maps_Int i) {
+// maps_String* __Int_to_Mut_String(maps_Int i) {
 //     return 
 // }
 

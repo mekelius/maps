@@ -25,18 +25,18 @@ endif()
 
 include_directories(
     src 
-    corelib
+    libmaps
 )
 
-# --------------------- MAPSC CORELIB -------------------
+# --------------------- LIBMAPS -------------------
 
-add_library(corelib SHARED
-    corelib/maps_datatypes.h
-    corelib/corelib.h
-    corelib/corelib.c
+add_library(libmaps SHARED
+    libmaps/maps_datatypes.h
+    libmaps/libmaps.h
+    libmaps/libmaps.c
 )
 
-set_property(TARGET corelib PROPERTY OUTPUT_NAME maps_core)
+set_property(TARGET libmaps PROPERTY OUTPUT_NAME maps)
 
 # -------------------- MAPSC FRONTEND --------------------
 
@@ -94,7 +94,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/transform_stage.cpp
 )
 
-target_link_libraries(mapsc_frontend corelib)
+target_link_libraries(mapsc_frontend libmaps)
 
 # ------------------------- DSIR -------------------------
 
@@ -123,7 +123,7 @@ target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
 #     src/mapsc_main.cpp
 # )
 
-# target_link_libraries(mapsc mapsc_frontend ir_gen corelib -lLLVM-19)
+# target_link_libraries(mapsc mapsc_frontend ir_gen libmaps -lLLVM-19)
 # target_include_directories(mapsc SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 # target_compile_options(mapsc PRIVATE 
@@ -146,7 +146,7 @@ add_executable(mapsci
     src/mapsci_main.cpp
 )
 
-target_link_libraries(mapsci mapsc_frontend ir_gen corelib -lLLVM-19 -ledit -lncurses)
+target_link_libraries(mapsci mapsc_frontend ir_gen libmaps -lLLVM-19 -ledit -lncurses)
 target_include_directories(mapsci SYSTEM PUBLIC 
     /usr/lib/llvm-19/include
     /usr/include/editline

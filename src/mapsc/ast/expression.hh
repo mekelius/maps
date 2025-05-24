@@ -111,12 +111,13 @@ struct TernaryExpressionValue {
     bool operator==(const TernaryExpressionValue&) const = default;
 };
 
-using KnownValue = std::variant<maps_Int, maps_Float, bool, std::string>;
+using KnownValue = std::variant<maps_Int, maps_Float, bool, std::string, maps_Mut_String>;
 
 using ExpressionValue = std::variant<
     std::monostate,
     maps_Int,
     maps_Float,
+    maps_Mut_String,
     bool,
     std::string,
     Expression*,
@@ -234,6 +235,7 @@ struct Expression {
 
     CallExpressionValue& call_value();
     Definition* reference_value() const;
+    const Type* type_reference_value() const;
     Definition* operator_reference_value() const;
 
     LambdaExpressionValue& lambda_value();

@@ -116,6 +116,7 @@ Operator::Precedence TermedExpressionParser::peek_precedence() const {
 
 void TermedExpressionParser::shift() {
     parse_stack_.push_back(get_term());
+    Log::debug_extra("Shift in term " + current_term()->log_message_string(), current_term()->location);
 }
 
 std::optional<Expression*> TermedExpressionParser::pop_term() {

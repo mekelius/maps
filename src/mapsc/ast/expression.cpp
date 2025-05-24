@@ -51,6 +51,7 @@ using Log = LogNoContext;
 std::string Expression::value_to_string(const KnownValue& value) {
     return std::visit(overloaded{
         [](const std::string& value)->std::string { return value; },
+        [](const maps_Mut_String& value)->std::string { return std::string{value.data, value.length}; },
         [](auto value)->std::string { return std::to_string(value); },
     }, value);
 }
@@ -63,10 +64,11 @@ std::string known_value_to_string(const KnownValue& value) {
 std::string Expression::value_to_string(const ExpressionValue& value) {
     return std::visit(overloaded{
         [](std::monostate)->std::string { return "@Undefined expression value@"; },
-        [](Expression*)->std::string { return "@reference@"; },
+        [](Expression* expression) { return "@reference to@ " + expression->log_message_string(); },
         [](Definition* target)->std::string { return "@reference to " + target->name_string() + "@"; },                       
         [](const Type* type)->std::string { return "@type: " + type->name_string() + "@"; },
-        [](TermedExpressionValue)->std::string { return "@unparsed termed expression@"; },
+        [](TermedExpressionValue value) { 
+            return "@unparsed termed expression of length " + to_string(value.terms.size()) + "@"; },
         [](CallExpressionValue)->std::string { return "@call@"; },
         [](LambdaExpressionValue)->std::string { return "@lambda@"; },
         [](TernaryExpressionValue)->std::string { return "@ternary expression value@"; },
@@ -203,7 +205,7 @@ std::string Expression::log_message_string() const {
         case ExpressionType::known_value_reference:
             return "reference to " + reference_value()->name_string();
         case ExpressionType::type_reference:
-            return "reference to type " + reference_value()->name_string();
+            return "reference to type " + type_reference_value()->name_string();
         case ExpressionType::binary_operator_reference:
         case ExpressionType::prefix_operator_reference:
         case ExpressionType::postfix_operator_reference:
@@ -212,19 +214,16 @@ std::string Expression::log_message_string() const {
             return "type operator " + reference_value()->name_string();
         case ExpressionType::type_constructor_reference:
             return "reference to type constructor " + reference_value()->name_string();
-   
         case ExpressionType::type_field_name:
             return "named field" + string_value();
 
         case ExpressionType::user_error:
             return "broken expession (syntax error)";
-        
         case ExpressionType::compiler_error:
             return "broken expression (compiler error)";
 
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");
-
         case ExpressionType::partial_binop_call_left:
         case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_call:

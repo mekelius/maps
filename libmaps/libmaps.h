@@ -1,5 +1,5 @@
-#ifndef __MAPS_BUILTINS_H
-#define __MAPS_BUILTINS_H
+#ifndef __LIBMAPS_HH
+#define __LIBMAPS_HH
 
 #include "maps_datatypes.h"
 

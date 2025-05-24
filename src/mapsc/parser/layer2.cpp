@@ -1,11 +1,15 @@
 #include "layer2.hh"
 #include "layer2/implementation.hh"
 
+#include "mapsc/logging.hh"
 #include "mapsc/ast/expression.hh"
 
 namespace Maps {
 
+using Log = LogInContext<LogContext::layer2>;
+
 bool run_layer2(CompilationState& state, Expression* expression) {    
+    Log::debug_extra("Running layer2 on " + expression->log_message_string(), expression->location);
     return TermedExpressionParser{&state, expression}.run();
 }
 

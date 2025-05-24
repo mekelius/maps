@@ -61,7 +61,7 @@ bool resolve_identifier(CompilationState& state, const_Scopes scopes,
     auto definition = lookup_identifier(state, scopes, expression->string_value());
 
     if (!definition) {
-        Log::error("unknown identifier: " + expression->string_value(), expression->location);
+        Log::error("Unknown identifier: " + expression->string_value(), expression->location);
         return false;
     }
 
@@ -75,7 +75,7 @@ bool resolve_operator(CompilationState& state, const_Scopes scopes,
     auto definition = lookup_identifier(state, scopes, expression->string_value());
 
     if (!definition) {
-        Log::error("unknown operator: " + expression->string_value(), expression->location);
+        Log::error("Unknown operator: " + expression->string_value(), expression->location);
         return false;
     }
 
@@ -84,14 +84,16 @@ bool resolve_operator(CompilationState& state, const_Scopes scopes,
 }
 
 bool resolve_type_identifier(CompilationState& state, Expression* expression) {
+    Log::debug_extra("Attempting to resolve " + expression->log_message_string(), expression->location);
     
     // check builtins
     std::optional<const Type*> type = state.types_->get(expression->string_value());
     if (!type) {
-        Log::error("unkown type identifier: " + expression->string_value(), 
+        Log::error("Unkown type identifier: " + expression->string_value(), 
             expression->location);
         return false;
     }
+    Log::debug_extra("Found type " + (*type)->name_string(), expression->location);
     
     expression->expression_type = ExpressionType::type_reference;
     expression->value = *type;
@@ -104,6 +106,9 @@ bool resolve_type_identifier(CompilationState& state, Expression* expression) {
 // Replaces all identifiers and operators with references to the correct definitions
 bool resolve_identifiers(CompilationState& state, const_Scopes scopes, 
     std::vector<Expression*>& unresolved_identifiers) {
+
+    Log::debug_extra("Resolving identifiers", NO_SOURCE_LOCATION);
+
     for (Expression* expression: unresolved_identifiers) {
         switch (expression->expression_type) {
             case ExpressionType::identifier:

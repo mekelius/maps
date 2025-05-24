@@ -23,7 +23,15 @@ bool Expression::is_reference() const {
 
 
 Definition* Expression::reference_value() const {
+    assert(std::holds_alternative<Definition*>(value) && 
+        "Expression::reference_value called with not a reference to definition");
     return std::get<Definition*>(value);
+}
+
+const Type* Expression::type_reference_value() const {
+    assert(std::holds_alternative<const Type*>(value) && 
+        "Expression::reference_value called with not a reference to definition");
+    return std::get<const Type*>(value);
 }
 
 Definition* Expression::operator_reference_value() const {

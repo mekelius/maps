@@ -8,12 +8,15 @@ struct Expression;
 
 // take a value expression and tries to cast it in place into target type
 bool not_castable(const Type*, Expression&);
+
 bool cast_from_Int(const Type* target_type, Expression& expression);
 bool cast_from_Float(const Type* target_type, Expression& expression);
 bool cast_from_Number(const Type* target_type, Expression& expression);
 bool cast_from_String(const Type* target_type, Expression& expression);
 bool cast_from_Boolean(const Type* target_type, Expression& expression);
 bool cast_from_NumberLiteral(const Type* target_type, Expression& expression);
+
+bool cast_from_Mut_String(const Type* target_type, Expression& expression);
 
 bool is_concrete(Expression& expression);
 bool not_concretizable(Expression& expression);

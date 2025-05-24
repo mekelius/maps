@@ -144,11 +144,18 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
                 *this << "/*operator-ref:*/ ";
             return *this << expression.reference_value()->name_string();
         
+        case ExpressionType::type_operator_reference:
+            return *this << "@type operator reference"; 
+        case ExpressionType::type_constructor_reference:
+            return *this << "@type constructor reference@"; 
+
+        case ExpressionType::type_reference:
+            if (options_.include_debug_info)
+                *this << "/*type reference to:*/ ";            
+            return *this << std::get<const Type*>(expression.value)->name_string();
+
         case ExpressionType::reference:
         case ExpressionType::known_value_reference:
-        case ExpressionType::type_reference:
-        case ExpressionType::type_operator_reference:
-        case ExpressionType::type_constructor_reference:
             if (options_.include_debug_info)
                 *this << "/*reference to:*/ ";
             return *this << expression.reference_value()->name_string();
