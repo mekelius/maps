@@ -18,7 +18,7 @@ const LambdaExpressionValue& Expression::lambda_value() const {
 }
 
 Expression* Expression::lambda(CompilationState& state, const LambdaExpressionValue& value, 
-    const Type* return_type, bool is_pure, SourceLocation location) {
+    const Type* return_type, bool is_pure, const SourceLocation& location) {
 
     auto [parameter_list, scope, body] = value;
 
@@ -33,7 +33,7 @@ Expression* Expression::lambda(CompilationState& state, const LambdaExpressionVa
 }
 
 Expression* Expression::lambda(CompilationState& state, const LambdaExpressionValue& value, 
-    bool is_pure, SourceLocation location) {
+    bool is_pure, const SourceLocation& location) {
 
     return lambda(state, value, &Hole, is_pure, location);
 }

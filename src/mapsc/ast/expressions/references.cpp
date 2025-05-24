@@ -31,14 +31,14 @@ Definition* Expression::operator_reference_value() const {
 }
 
 Expression* Expression::reference(AST_Store& store, Definition* definition, 
-    SourceLocation location) {
+    const SourceLocation& location) {
     
     return store.allocate_expression(
         {ExpressionType::reference, definition, definition->get_type(), location});
 }
 
 std::optional<Expression*> Expression::reference(AST_Store& store, const Scope& scope, 
-    const std::string& name, SourceLocation location) {
+    const std::string& name, const SourceLocation& location) {
     
     if (auto definition = scope.get_identifier(name))
         return reference(store, *definition, location);
@@ -47,12 +47,12 @@ std::optional<Expression*> Expression::reference(AST_Store& store, const Scope& 
 }
 
 Expression* Expression::type_reference(AST_Store& store, const Type* type, 
-    SourceLocation location) {
+    const SourceLocation& location) {
     
     return store.allocate_expression({ExpressionType::type_reference, type, &Void, location});
 }
 
-Expression Expression::operator_reference(Definition* definition, SourceLocation location) {
+Expression Expression::operator_reference(Definition* definition, const SourceLocation& location) {
     assert(definition->is_operator() && "AST::create_operator_ref called with not an operator");
 
     ExpressionType expression_type;
@@ -73,7 +73,7 @@ Expression Expression::operator_reference(Definition* definition, SourceLocation
 }
 
 Expression* Expression::operator_reference(AST_Store& store, Definition* definition, 
-    SourceLocation location) {
+    const SourceLocation& location) {
     
     return store.allocate_expression(operator_reference(definition, location));
 }

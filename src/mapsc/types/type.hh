@@ -28,7 +28,7 @@ public:
     virtual std::string_view name() const = 0;
     virtual bool is_voidish() const = 0;
     
-    std::string to_string() const { return std::string{name()}; }
+    std::string name_string() const { return std::string{name()}; }
     bool is_impure() const { return !is_pure(); }
     bool is_pure_function() const { return is_pure() && is_function(); }
     bool is_impure_function() const { return !is_pure() && is_function(); }

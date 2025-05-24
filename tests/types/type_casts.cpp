@@ -11,7 +11,7 @@ using namespace Maps;
 
 TEST_CASE("Should be able to cast a string into Float") {
     Expression expr{
-        ExpressionType::value,
+        ExpressionType::known_value,
         "324.63",
         &String,
         TEST_SOURCE_LOCATION,
@@ -25,7 +25,7 @@ TEST_CASE("Should be able to cast a string into Float") {
 
 TEST_CASE("Should be able to cast a Boolean into String") {
     Expression expr{
-        ExpressionType::value,
+        ExpressionType::known_value,
         true,
         &Boolean,
         TEST_SOURCE_LOCATION,
@@ -39,7 +39,7 @@ TEST_CASE("Should be able to cast a Boolean into String") {
 
 TEST_CASE("Should be able to cast an Int into Float") {
     Expression expr{
-        ExpressionType::value,
+        ExpressionType::known_value,
         324,
         &Int,
         TEST_SOURCE_LOCATION,
@@ -53,7 +53,7 @@ TEST_CASE("Should be able to cast an Int into Float") {
 
 TEST_CASE("Should be able to cast a Float into String") {
     Expression expr{
-        ExpressionType::value,
+        ExpressionType::known_value,
         544.963,
         &Float,
         TEST_SOURCE_LOCATION,
@@ -67,7 +67,7 @@ TEST_CASE("Should be able to cast a Float into String") {
 
 TEST_CASE("Should be able to cast a Number with an int value into Float") {
     Expression expr{
-        ExpressionType::value,
+        ExpressionType::known_value,
         "999",
         &Number,
         TEST_SOURCE_LOCATION,

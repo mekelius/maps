@@ -28,6 +28,7 @@ enum class LogContext {
     dsir_parser         = 12,
     identifier_creation = 13,
     transform_stage     = 14,
+    type_checks         = 15,
 };
 constexpr auto LOG_CONTEXT_COUNT = __LINE__ - LOG_CONTEXTS_START_LINE - 3;
 
@@ -63,6 +64,8 @@ constexpr std::string_view prefix(LogContext context) {
             return "during identifier creation";
         case LogContext::transform_stage:
             return "in transform stage";
+        case LogContext::type_checks:
+            return "in type checks";
     }
 }
 

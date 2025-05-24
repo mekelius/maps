@@ -26,7 +26,9 @@ namespace Maps {
 using Log = LogInContext<LogContext::concretize>;
 
 bool concretize(RT_Definition& definition) {
-    assert(false && "not implemented");
+    return std::visit(overloaded{
+        [](auto) { return true; }
+    }, definition.body());
 }
 
 bool concretize_call(Expression& call) {
@@ -75,7 +77,7 @@ bool concretize_call(Expression& call) {
 
         if (arg->is_constant_value()) { 
             Log::debug_extra("Substituting constant argument: \"" + arg->log_message_string() + 
-                "\". Attempting to cast from " + arg->type->to_string() + " into " + param_type->to_string(), call.location);
+                "\". Attempting to cast from " + arg->type->name_string() + " into " + param_type->name_string(), call.location);
             
             if (!arg->type->cast_to(param_type, *arg)) {
                 Log::error("No", arg->location);
@@ -87,7 +89,7 @@ bool concretize_call(Expression& call) {
 
         if (*arg->type != *param_type) {
             Log::error(arg->log_message_string() + 
-                " does not match parameter type: " + param_type->to_string(),
+                " does not match parameter type: " + param_type->name_string(),
                 arg->location);
             return false;
         }
@@ -128,7 +130,7 @@ bool concretize(Expression& expression) {
             return true;
 
         case ExpressionType::numeric_literal:
-        case ExpressionType::value:
+        case ExpressionType::known_value:
             return concretize_value(expression);
 
         case ExpressionType::reference:

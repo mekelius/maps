@@ -37,7 +37,7 @@ DeferredBool Expression::is_type_declaration() {
 }
 
 Expression* Expression::termed(AST_Store& store, std::vector<Expression*>&& terms, 
-    SourceLocation location) {
+    const SourceLocation& location) {
     
     return store.allocate_expression({ExpressionType::termed_expression, 
         TermedExpressionValue{terms}, &Hole, location});

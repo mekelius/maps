@@ -25,6 +25,7 @@
 #include "mapsc/parser/layer2.hh"
 #include "mapsc/procedures/type_check.hh"
 #include "mapsc/procedures/name_resolution.hh"
+#include "mapsc/transform_stage.hh"
 
 #include "mapsc/llvm/ir_generator.hh"
 
@@ -98,7 +99,7 @@ std::string REPL::eval_type(std::istream& input_stream) {
 bool REPL::run_compilation_pipeline(CompilationState& state, 
     RT_Scope& global_scope, std::istream& source) {
 
-    // ---------- LAYER1 ----------
+    // ---------------------------------- LAYER1 ----------------------------------------
 
     auto [ 
         layer1_success,
@@ -117,7 +118,8 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (options_.stop_after == REPL_Stage::layer1)
         return true;
 
-    // --------- NAME RESOLUTION ----------
+
+    // ------------------------------ NAME RESOLUTION -----------------------------------
 
     if (!resolve_identifiers(state, global_scope, unresolved_type_identifiers) && 
             !options_.ignore_errors)
@@ -134,7 +136,8 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 
     debug_print(REPL_Stage::name_resolution, global_scope, *top_level_definition);
 
-    // ---------- LAYER2 ----------
+
+    // ----------------------------------- LAYER2 ----------------------------------------
 
     if (!run_layer2(state, unparsed_termed_expressions) && !options_.ignore_errors)
         return false;
@@ -147,14 +150,16 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (!top_level_definition || (*top_level_definition)->get_type()->is_voidish())
         return true;
 
-    // ---------- TYPE CHECKS ----------
 
-    if (!run_type_checks_and_concretize(state, global_scope, top_level_definition))
+    // --------------------------------- TYPE CHECKS --------------------------------------
+
+    if (!run_transforms(state, global_scope, top_level_definition))
         return false;
 
     debug_print(REPL_Stage::transform_stage, global_scope, *top_level_definition);
 
-    // ---------- CREATE REPL WRAPPER ----------
+
+    // ----------------------------- CREATE REPL WRAPPER ---------------------------------
 
     if (!top_level_definition || (*top_level_definition)->get_type()->is_voidish())
         return true;
@@ -172,7 +177,8 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (options_.stop_after == REPL_Stage::pre_ir || !options_.eval)
         return true;
 
-    // ---------- IR GEN ----------
+
+    // ------------------------------------ IR GEN ---------------------------------------
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
     IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
@@ -191,7 +197,8 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (options_.stop_after == REPL_Stage::ir || !options_.eval)
         return true;
 
-    // ---------- COMPILE AND RUN ----------
+
+    // -------------------------------- COMPILE AND RUN ---------------------------------
 
     std::cout << '\n';
     return compile_and_run(std::move(module_), options_.repl_wrapper_name);
@@ -206,18 +213,20 @@ bool REPL::run_layer2(CompilationState& state, std::vector<Expression*> unparsed
     return Maps::run_layer2(state, unparsed_termed_expressions);
 }
 
-bool REPL::run_type_checks_and_concretize(CompilationState& state, 
+bool REPL::run_transforms(CompilationState& state, 
     RT_Scope& scope, optional<RT_Definition* const> top_level_definition) {
-    
-    // ----- type checks -----
+
+    Maps::run_transforms(state, scope, scope.identifiers_in_order_);
+        
 
     if (top_level_definition) {
-        if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, 
-                std::array<RT_Definition* const, 1>{*top_level_definition}))
-            return false;
+        Maps::run_transforms(state, scope, std::array<RT_Definition* const, 1>{*top_level_definition});
+        // if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, 
+        //         std::array<RT_Definition* const, 1>{*top_level_definition}))
+        //     return false;
     } else {
-        if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, {}))
-            return false;
+        // if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, {}))
+        //     return false;
     }
 
     return true;

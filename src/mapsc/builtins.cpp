@@ -79,7 +79,7 @@ constinit CT_Operator mult_Int{"*", External{}, IntInt_to_Int,
 
 bool init_builtin(CT_Scope& scope, CT_Definition& definition) {
     if (!scope.create_identifier(&definition)) {
-        Log::compiler_error("Creating builtin " + definition.to_string() + " failed",
+        Log::compiler_error("Creating builtin " + definition.name_string() + " failed",
             COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }

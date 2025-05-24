@@ -28,7 +28,7 @@ namespace {
 template<typename T>
 void cast_value(Expression& expression, const Type* type, T value) {
     expression.value = value;
-    expression.expression_type = ExpressionType::value;
+    expression.expression_type = ExpressionType::known_value;
     expression.type = type;
 }
 

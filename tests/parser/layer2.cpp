@@ -346,7 +346,7 @@ TEST_CASE("Should set the type on a non-partial call expression to the return ty
 
     const FunctionType* IntString = types->get_function_type(&String, {&Int}, false);
 
-    auto test_f_expr = Expression{ExpressionType::value, "qwe", IntString, TSL};
+    auto test_f_expr = Expression{ExpressionType::known_value, "qwe", IntString, TSL};
     auto test_f = RT_Definition("test_f", &test_f_expr, true, TSL);
 
     auto arg = Expression{ExpressionType::numeric_literal, "3", &NumberLiteral, TSL};
@@ -368,7 +368,7 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
 
     const FunctionType* IntString = types->get_function_type(&String, {&Int, &Int}, false);
 
-    auto test_op_expr = Expression{ExpressionType::value, "jii", IntString, TSL};
+    auto test_op_expr = Expression{ExpressionType::known_value, "jii", IntString, TSL};
     auto test_op = RT_Operator::create_binary(">=?", &test_op_expr, 5, 
         Operator::Associativity::left, true, TSL);
 
@@ -399,7 +399,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
         run_layer2(state, &expr);
 
         CHECK(*expr.type == Int);
-        CHECK(expr.expression_type == ExpressionType::value);
+        CHECK(expr.expression_type == ExpressionType::known_value);
 
         CHECK(*value.type == Int);
         CHECK(holds_alternative<maps_Int>(value.value));

@@ -55,16 +55,16 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
 }
 
 bool TypeMap::contains(const Maps::Type& maps_type) const {
-    auto signature = maps_type.to_string();
+    auto signature = maps_type.name_string();
     return type_map_.contains(signature);
 }
 
 bool TypeMap::insert(const Maps::Type* maps_type, llvm::Type* llvm_type) {
-    auto signature = maps_type->to_string();
+    auto signature = maps_type->name_string();
     
     if (contains(*maps_type)) {
         Log::compiler_error(
-            "Attempting to store duplicate of \"" + maps_type->to_string() + "\" in TypeMap",
+            "Attempting to store duplicate of \"" + maps_type->name_string() + "\" in TypeMap",
             COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
@@ -75,7 +75,7 @@ bool TypeMap::insert(const Maps::Type* maps_type, llvm::Type* llvm_type) {
 
 // TODO: Would be faster to use type id:s since only primitives have to be covered here
 std::optional<llvm::Type*> TypeMap::convert_type(const Maps::Type& type) const {
-    auto it = type_map_.find(type.to_string());
+    auto it = type_map_.find(type.name_string());
     if (it == type_map_.end())
         return std::nullopt;
 

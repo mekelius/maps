@@ -1,7 +1,9 @@
 #include "../expression.hh"
 
+#include "mapsc/source.hh"
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
+#include "mapsc/procedures/create_call.hh"
 
 using std::optional, std::nullopt, std::to_string;
 
@@ -39,51 +41,44 @@ CallExpressionValue& Expression::call_value() {
 }
 
 Expression* Expression::missing_argument(AST_Store& store, const Type* type, 
-    SourceLocation location) {
+    const SourceLocation& location) {
     
     return store.allocate_expression({ExpressionType::missing_arg, std::monostate{}, type, 
         location});
 }
 
 optional<Expression*> Expression::call(CompilationState& state, 
-    Definition* definition, std::vector<Expression*>&& args, SourceLocation location) {
+    Definition* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
 
     auto& store = *state.ast_store_;
-    auto callee_type = definition->get_type();
+    auto callee_type = callee->get_type();
     
     if (!callee_type->is_function() && args.size() > 0) {
-        Log::error(definition->to_string() + 
+        Log::error(callee->name_string() + 
             " cannot take arguments, tried giving " + to_string(args.size()), 
-            definition->location());
+            callee->location());
         return nullopt;
     }
 
-    // TODO: move this to like typecheck file
-
-    if (!callee_type->is_function())
+    if (!callee_type->is_function() && args.empty())
         return store.allocate_expression(
-            {ExpressionType::call, CallExpressionValue{definition, args}, callee_type, location});
+            {ExpressionType::call, CallExpressionValue{callee, args}, callee_type, location});
 
     auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
     auto param_types = callee_f_type->param_types();
     auto return_type = callee_f_type->return_type();
 
-    if (args.size() > param_types.size()) {
-        Log::error(definition->to_string() + " takes a maximum of " + 
-            to_string(param_types.size()) + " arguments, tried giving " + to_string(args.size()), 
-            location);
+    auto [types_ok, is_partial] = check_and_coerce_args(*state.ast_store_, callee, args, location);
+
+    if (!types_ok) {
+        Log::error("Creating function call to " + callee->name_string() + 
+            " failed due to illegal arguments", location);
         return nullopt;
     }
 
-    bool missing_args = false;
-    for (auto arg: args) {
-        if (arg->expression_type == ExpressionType::missing_arg)
-            missing_args = true;
-    }
-
-    if (args.size() == param_types.size() && !missing_args)
+    if (!is_partial)
         return store.allocate_expression(
-            {ExpressionType::call, CallExpressionValue{definition, args}, return_type, location});
+            {ExpressionType::call, CallExpressionValue{callee, args}, return_type, location});
 
     // TODO: deal with declared types
 
@@ -102,12 +97,12 @@ optional<Expression*> Expression::call(CompilationState& state,
         "Something went wrong while creating placeholders for missing args");
 
     return store.allocate_expression(
-        {ExpressionType::partial_call, CallExpressionValue{definition, args}, 
+        {ExpressionType::partial_call, CallExpressionValue{callee, args}, 
         partial_return_type, location});
 }
 
 optional<Expression*> Expression::partial_binop_call(CompilationState& state, 
-    Definition* definition, Expression* lhs, Expression* rhs, SourceLocation location) {
+    Definition* definition, Expression* lhs, Expression* rhs, const SourceLocation& location) {
 
     auto& store = *state.ast_store_;
     auto callee_type = definition->get_type();
@@ -151,7 +146,7 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
 }
 
 static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
-    Definition* lhs, Expression* lambda, Definition* rhs, SourceLocation location) {
+    Definition* lhs, Expression* lambda, Definition* rhs, const SourceLocation& location) {
 
     assert(false && "not implemented");
 }
@@ -203,7 +198,7 @@ void Expression::convert_to_partial_call() {
 }
 
 Expression* Expression::partially_applied_minus(AST_Store& store, Expression* rhs, 
-    SourceLocation location) {
+    const SourceLocation& location) {
 
     return store.allocate_expression(
         {ExpressionType::partially_applied_minus, rhs, &Int, location});

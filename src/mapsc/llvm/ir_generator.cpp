@@ -114,7 +114,7 @@ bool IR_Generator::run(Maps::Scopes scopes, std::span<Maps::Definition* const> a
 
     for (auto definition: additional_definitions) {
         if (!handle_global_definition(*definition)) {
-            fail("Couldn't generate ir for " + definition->to_string());
+            fail("Couldn't generate ir for " + definition->name_string());
             return false;
         }
     }
@@ -139,7 +139,7 @@ optional<llvm::Function*> IR_Generator::function_definition(const std::string& n
 
     if (!ast_type.is_function()) {
         Log::compiler_error("IR::Generator::function_definition called with a non-function type: " + 
-            ast_type.to_string(), NO_SOURCE_LOCATION);
+            ast_type.name_string(), NO_SOURCE_LOCATION);
         assert(false && "IR_Generator::function_definition called with non-function ast type");
         return nullopt;
     }
@@ -187,7 +187,7 @@ bool IR_Generator::verify_module() {
 }
 
 bool IR_Generator::handle_global_functions(const Maps::RT_Scope& scope) {
-    for (auto [_1, definition]: scope) {
+    for (auto definition: scope) {
         if (!handle_global_definition(*definition))
             return false;
     }
@@ -205,7 +205,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
 
     if (const Expression* const* expression = 
             std::get_if<const Maps::Expression*>(&definition_body))
-        return wrap_value_in_function(definition.to_string(), **expression);
+        return wrap_value_in_function(definition.name_string(), **expression);
 
     fail("In IR_Generator::handle_global_definition: definition didn't have a function type but wasn't an expression");
     return nullopt;
@@ -221,7 +221,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
         *maps_type->return_type(), maps_type->param_types());
 
     if (!llvm_type) {
-        fail("Converting \"Void => " + maps_type->to_string() + "\" into an llvm type failed");
+        fail("Converting \"Void => " + maps_type->name_string() + "\" into an llvm type failed");
         return nullopt;
     }
     
@@ -254,11 +254,11 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::De
 
     if (!signature) {
         Log::error("unable to convert type signature for " + 
-            definition.to_string(), definition.location());
+            definition.name_string(), definition.location());
         return nullopt;
     }
 
-    optional<llvm::Function*> function = function_definition(definition.to_string(), 
+    optional<llvm::Function*> function = function_definition(definition.name_string(), 
         *dynamic_cast<const Maps::FunctionType*>(definition.get_type()), *signature);
 
     if (!function)
@@ -361,7 +361,7 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
         case ExpressionType::call:
             return handle_call(expression);
 
-        case ExpressionType::value:
+        case ExpressionType::known_value:
             return handle_value(expression);
 
         case ExpressionType::string_literal:
@@ -403,10 +403,10 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
 
     std::optional<llvm::FunctionCallee> function = function_store_->get(
-        callee->to_string(), *deduce_function_type(*compilation_state_->types_, call));
+        callee->name_string(), *deduce_function_type(*compilation_state_->types_, call));
 
     if (!function) {
-        fail("attempt to call unknown function: \"" + callee->to_string() + "\"");
+        fail("attempt to call unknown function: \"" + callee->name_string() + "\"");
         return nullptr;
     }
 
@@ -478,7 +478,7 @@ optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression)
                 llvm::APInt(8, std::get<bool>(expression.value)));
 
         default:
-            fail("Unable to create a value from type " + expression.type->to_string());
+            fail("Unable to create a value from type " + expression.type->name_string());
             return nullopt;
     }
 }
@@ -492,7 +492,7 @@ optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& exp
     if (expression.is_literal())
         return convert_literal(expression);
 
-    if (expression.expression_type == ExpressionType::value) {
+    if (expression.expression_type == ExpressionType::known_value) {
         return convert_value(expression);
     }
 

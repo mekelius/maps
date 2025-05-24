@@ -74,6 +74,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/procedures/type_check.cpp
     src/mapsc/procedures/name_resolution.cpp
     src/mapsc/procedures/reverse_parse.cpp
+    src/mapsc/procedures/create_call.cpp
 
     src/mapsc/parser/token.cpp
     src/mapsc/parser/lexer.cpp
@@ -189,6 +190,7 @@ add_executable(unit_tests
     
     tests/procedures/inline.cpp
     tests/procedures/concretize.cpp
+    tests/procedures/create_call.cpp
 )
 
 set_property(TARGET unit_tests 

@@ -68,7 +68,7 @@ public:
     // std::string_view name_ = "IO";
     
     static IO_WrappedType apply(const Type& type_arg) {
-        return IO_WrappedType{"IO " + type_arg.to_string(), type_arg};
+        return IO_WrappedType{"IO " + type_arg.name_string(), type_arg};
     }
 
     static constexpr CT_IO_WrappedType ct_apply(std::string_view name, const Type& type_arg) {

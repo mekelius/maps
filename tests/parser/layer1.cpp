@@ -92,10 +92,10 @@ TEST_CASE("Should handle various cases") {
         auto op = terms.at(1);
         auto rhs = terms.at(2);
 
-        CHECK((lhs->expression_type == ExpressionType::value || 
+        CHECK((lhs->expression_type == ExpressionType::known_value || 
             lhs->expression_type == ExpressionType::string_literal));
         CHECK(op->expression_type == ExpressionType::operator_identifier);
-        CHECK((rhs->expression_type == ExpressionType::value || 
+        CHECK((rhs->expression_type == ExpressionType::known_value || 
             rhs->expression_type == ExpressionType::numeric_literal));
     }
 
@@ -117,10 +117,10 @@ TEST_CASE("Should handle various cases") {
         auto op = terms.at(1);
         auto rhs = terms.at(2);
 
-        CHECK((lhs->expression_type == ExpressionType::value || 
+        CHECK((lhs->expression_type == ExpressionType::known_value || 
             lhs->expression_type == ExpressionType::string_literal));
         CHECK(op->expression_type == ExpressionType::operator_identifier);
-        CHECK((rhs->expression_type == ExpressionType::value || 
+        CHECK((rhs->expression_type == ExpressionType::known_value || 
             rhs->expression_type == ExpressionType::numeric_literal));
     }
 
@@ -142,10 +142,10 @@ TEST_CASE("Should handle various cases") {
         auto op = terms.at(1);
         auto rhs = terms.at(2);
 
-        CHECK((lhs->expression_type == ExpressionType::value || 
+        CHECK((lhs->expression_type == ExpressionType::known_value || 
             lhs->expression_type == ExpressionType::string_literal));
         CHECK(op->expression_type == ExpressionType::operator_identifier);
-        CHECK((rhs->expression_type == ExpressionType::value || 
+        CHECK((rhs->expression_type == ExpressionType::known_value || 
             rhs->expression_type == ExpressionType::numeric_literal));
     }
 }

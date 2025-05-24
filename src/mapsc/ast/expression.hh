@@ -32,7 +32,7 @@ enum class ExpressionType {
     string_literal = 0,        // value: string
     numeric_literal,
 
-    value,
+    known_value,
     
     identifier,                // value: string
     operator_identifier,
@@ -44,6 +44,7 @@ enum class ExpressionType {
 
     minus_sign,                // minus sign is special, value: std::monostate
     reference,                 // value: Callable*
+    known_value_reference,
     binary_operator_reference,
     prefix_operator_reference,
     postfix_operator_reference,
@@ -112,6 +113,8 @@ struct TernaryExpressionValue {
     bool operator==(const TernaryExpressionValue&) const = default;
 };
 
+using KnownValue = std::variant<maps_Int, maps_Float, bool, std::string>;
+
 using ExpressionValue = std::variant<
     std::monostate,
     maps_Int,
@@ -120,7 +123,7 @@ using ExpressionValue = std::variant<
     std::string,
     Expression*,
     Definition*,                       // for references to operators and functions
-    const Type*,                     // for type expressions
+    const Type*,                       // for type expressions
     TermedExpressionValue,
     CallExpressionValue,
     LambdaExpressionValue,
@@ -132,80 +135,87 @@ using ExpressionValue = std::variant<
 struct Expression {
     // ----- STATIC METHODS -----
     static Expression* string_literal(AST_Store& store, 
-        const std::string& value, SourceLocation location);
+        const std::string& value, const SourceLocation& location);
     static Expression* numeric_literal(AST_Store& store, 
-        const std::string& value, SourceLocation location);
+        const std::string& value, const SourceLocation& location);
+    static Expression* known_value(AST_Store& store, KnownValue value,
+        const SourceLocation& location);
+    static std::optional<Expression*> known_value(AST_Store& store, KnownValue value, const Type* type,
+        const SourceLocation& location);
 
     static Expression* identifier(AST_Store& store, RT_Scope* scope, 
-        const std::string& value, SourceLocation location);
+        const std::string& value, const SourceLocation& location);
     static Expression* operator_identifier(AST_Store& store, RT_Scope* scope, 
-        const std::string& value, SourceLocation location);
+        const std::string& value, const SourceLocation& location);
     static Expression* type_identifier(AST_Store& store, 
-        const std::string& value, SourceLocation location);
+        const std::string& value, const SourceLocation& location);
     static Expression* type_operator_identifier(AST_Store& store, 
-        const std::string& value, SourceLocation location);
+        const std::string& value, const SourceLocation& location);
 
     static Expression* termed(AST_Store& store, 
-        std::vector<Expression*>&& terms, SourceLocation location);
+        std::vector<Expression*>&& terms, const SourceLocation& location);
 
     static Expression* reference(AST_Store& store, 
-        Definition* callee, SourceLocation location);
+        Definition* callee, const SourceLocation& location);
     static Expression* type_reference(AST_Store& store, 
-        const Type* type, SourceLocation location);
+        const Type* type, const SourceLocation& location);
     static Expression operator_reference(
-        Definition* callee, SourceLocation location);
+        Definition* callee, const SourceLocation& location);
     static Expression* operator_reference(AST_Store& store, 
-        Definition* callee, SourceLocation location);
+        Definition* callee, const SourceLocation& location);
 
     static std::optional<Expression*> reference(AST_Store& store, const Scope& scope, 
-        const std::string& name, SourceLocation location);
+        const std::string& name, const SourceLocation& location);
     static std::optional<Expression*> type_operator_reference(AST_Store& store, 
-        const std::string& name, const Type* type, SourceLocation location);
+        const std::string& name, const Type* type, const SourceLocation& location);
 
     static std::optional<Expression*> call(CompilationState& state, 
-        Definition* callee, std::vector<Expression*>&& args, SourceLocation location);
+        Definition* callee, std::vector<Expression*>&& args, const SourceLocation& location);
 
     static std::optional<Expression*> partial_binop_call(CompilationState& state, 
-        Definition* callee, Expression* lhs, Expression* rhs, SourceLocation location);
+        Definition* callee, Expression* lhs, Expression* rhs, const SourceLocation& location);
 
     // not implemented
     static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
-        Definition* lhs, Expression* lambda, Definition* rhs, SourceLocation location);
+        Definition* lhs, Expression* lambda, Definition* rhs, const SourceLocation& location);
     
     static Expression* partially_applied_minus(AST_Store& store, 
-        Expression* rhs, SourceLocation location);
+        Expression* rhs, const SourceLocation& location);
 
     static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
-        const Type* return_type, bool is_pure, SourceLocation location);
+        const Type* return_type, bool is_pure, const SourceLocation& location);
     static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
-        bool is_pure, SourceLocation location);
+        bool is_pure, const SourceLocation& location);
 
     static Expression* valueless(AST_Store& store, 
-        ExpressionType expression_type, SourceLocation location);
+        ExpressionType expression_type, const SourceLocation& location);
     static Expression* missing_argument(AST_Store& store, 
-        const Type* type, SourceLocation location);
-    static Expression* minus_sign(AST_Store& store, SourceLocation location);
+        const Type* type, const SourceLocation& location);
+    static Expression* minus_sign(AST_Store& store, const SourceLocation& location);
 
-    static Expression* user_error(AST_Store& store, SourceLocation location);
-    static Expression* compiler_error(AST_Store& store, SourceLocation location);
+    static Expression* user_error(AST_Store& store, const SourceLocation& location);
+    static Expression* compiler_error(AST_Store& store, const SourceLocation& location);
 
     static Expression builtin(const ExpressionValue& value, const Type& type) {
-        return Expression{ExpressionType::value, value, &type, BUILTIN_SOURCE_LOCATION};
+        return Expression{ExpressionType::known_value, value, &type, BUILTIN_SOURCE_LOCATION};
     }
 
+    static std::string value_to_string(const ExpressionValue& value);
+    static std::string value_to_string(const KnownValue& value);
+
     // ----- CONSTRUCTORS -----
-    Expression(ExpressionType expression_type, SourceLocation location)
+    Expression(ExpressionType expression_type, const SourceLocation& location)
     :expression_type(expression_type), value(std::monostate{}), location(location) {}
 
-    Expression(ExpressionType expression_type, ExpressionValue value, SourceLocation location)
+    Expression(ExpressionType expression_type, ExpressionValue value, const SourceLocation& location)
     :expression_type(expression_type), value(value), location(location) {}
 
     Expression(ExpressionType expression_type, ExpressionValue value, const Type* type, 
-        SourceLocation location)
+        const SourceLocation& location)
     :expression_type(expression_type), value(value), type(type), location(location) {}
 
     Expression(ExpressionType expression_type, ExpressionValue value, const Type* type, 
-        const Type* declared_type, SourceLocation location)
+        const Type* declared_type, const SourceLocation& location)
     :expression_type(expression_type), value(value), type(type), declared_type(declared_type), 
      location(location) {}
 

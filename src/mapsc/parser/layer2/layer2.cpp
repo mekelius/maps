@@ -46,7 +46,8 @@ using Log = LogInContext<LogContext::layer2>;
 // Expression types guaranteed to be simple values
 #define GUARANTEED_VALUE ExpressionType::string_literal:\
                     case ExpressionType::numeric_literal:\
-                    case ExpressionType::value
+                    case ExpressionType::known_value_reference:\
+                    case ExpressionType::known_value
 
 #define POTENTIAL_FUNCTION ExpressionType::call:\
                       case ExpressionType::reference:\
@@ -542,7 +543,7 @@ void TermedExpressionParser::initial_minus_sign_state() {
             return parse_stack_.push_back(binary_minus_ref(current_term()->location));
 
         return fail(
-            "Type " + (*declared_type)->to_string() + " is not allowed with \"-\"", 
+            "Type " + (*declared_type)->name_string() + " is not allowed with \"-\"", 
             current_term()->location);
     }
 
@@ -1089,7 +1090,7 @@ on the stack");
             term->type->cast_to(type_value, *term);
             term->declared_type = type_value;
             term->location = type_term->location;
-            term->expression_type = ExpressionType::value;
+            term->expression_type = ExpressionType::known_value;
             return initial_value_state();
         }
 
@@ -1168,7 +1169,7 @@ void TermedExpressionParser::add_to_partial_call_and_push(Expression* partial_ca
         location);
 
     if (!expression)
-        return fail("Creating partial call to " + callee->to_string() + " failed", location);
+        return fail("Creating partial call to " + callee->name_string() + " failed", location);
 
     return parse_stack_.push_back(*expression);
 }

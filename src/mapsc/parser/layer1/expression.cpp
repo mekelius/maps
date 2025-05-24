@@ -169,7 +169,7 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(RT_Scope* lambda_s
                 auto parameter = RT_Definition::parameter(*ast_store_, name, &Hole, location);
 
                 // check if the string is already bound, in which case we exit
-                if (!lambda_scope->create_identifier(name, parameter))
+                if (!lambda_scope->create_identifier(parameter))
                     return fail_optional(
                         "Duplicate parameter name " + name + " in lambda parameter list", location);
 
@@ -198,7 +198,7 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(RT_Scope* lambda_s
                 auto parameter = RT_Definition::parameter(*ast_store_, name, *type, location);
 
                 // check if the string is already bound, in which case we exit
-                if (!lambda_scope->create_identifier(name, parameter))
+                if (!lambda_scope->create_identifier(parameter))
                     return fail_optional(
                         "Duplicate parameter name " + name + " in lambda parameter list", location);
                 get_token();

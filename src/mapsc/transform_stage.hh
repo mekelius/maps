@@ -10,10 +10,7 @@
 namespace Maps {
 
 bool run_transforms(CompilationState& state, RT_Scope& scope, RT_Definition& definition);
-
-bool run_transforms(CompilationState& state, RT_Scope& scope, 
-    std::span<RT_Definition* const> definitions);
-
+bool run_transforms(CompilationState& state, RT_Scope& scope, std::span<RT_Definition* const> definitions);
 
 }
 

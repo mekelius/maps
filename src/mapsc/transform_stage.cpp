@@ -47,7 +47,7 @@ bool run_transforms(CompilationState& state, RT_Scope& scope,
 
 bool run_transforms(CompilationState& state, RT_Scope& scope, RT_Definition& definition) {
     if (definition.is_deleted()) {
-        Log::debug_extra("Skipping transforms on deleted definition " + definition.to_string(), 
+        Log::debug_extra("Skipping transforms on deleted definition " + definition.name_string(), 
             definition.location());
         return true;
     }
@@ -59,47 +59,47 @@ bool run_transforms(CompilationState& state, RT_Scope& scope, RT_Definition& def
         return false;
     }
 
-    Log::debug_extra("Running transforms on definition " + definition.to_string() + "...", 
+    Log::debug_extra("Running transforms on definition " + definition.name_string() + "...", 
         definition.location());
 
-    Log::debug_extra("Simplify " + definition.to_string() + "...", 
-        definition.location());
-    if (!simplify(definition)) {
-        Log::error("Simplifying " + definition.to_string() + " failed", definition.location());
-        return false;
-    }
-    Log::debug_extra("Simplify ok", 
-        definition.location());
+    // Log::debug_extra("Simplify " + definition.to_string() + "...", 
+    //     definition.location());
+    // if (!simplify(definition)) {
+    //     Log::error("Simplifying " + definition.to_string() + " failed", definition.location());
+    //     return false;
+    // }
+    // Log::debug_extra("Simplify ok", 
+    //     definition.location());
 
     
-    Log::debug_extra("Inlines & substitutions on " + definition.to_string() + "...", 
-        definition.location());
-    if (!inline_and_substitute(definition)) {
-        Log::error("Inlines & substitutions on " + definition.to_string() + " failed", definition.location());
-        return false;
-    }
-    Log::debug_extra("Inlines & substitutions ok", 
-        definition.location());
+    // Log::debug_extra("Inlines & substitutions on " + definition.to_string() + "...", 
+    //     definition.location());
+    // if (!inline_and_substitute(definition)) {
+    //     Log::error("Inlines & substitutions on " + definition.to_string() + " failed", definition.location());
+    //     return false;
+    // }
+    // Log::debug_extra("Inlines & substitutions ok", 
+    //     definition.location());
 
 
-    Log::debug_extra("Concretize " + definition.to_string() + "...", 
+    Log::debug_extra("Concretize " + definition.name_string() + "...", 
         definition.location());
     if (!concretize(definition)) {
-        Log::error("Concretizing " + definition.to_string() + " failed", definition.location());
+        Log::error("Concretizing " + definition.name_string() + " failed", definition.location());
         return false;
     }
     Log::debug_extra("Concretize ok", 
         definition.location());
 
     
-    Log::debug_extra("Type checking " + definition.to_string() + "...", 
-        definition.location());
-    if (!type_check(definition)) {
-        Log::error("Type check on " + definition.to_string() + " failed", definition.location());
-        return false;
-    }
-    Log::debug_extra("Type check ok", 
-        definition.location());
+    // Log::debug_extra("Type checking " + definition.to_string() + "...", 
+    //     definition.location());
+    // if (!type_check(definition)) {
+    //     Log::error("Type check on " + definition.to_string() + " failed", definition.location());
+    //     return false;
+    // }
+    // Log::debug_extra("Type check ok", 
+    //     definition.location());
 
     return true;
 }

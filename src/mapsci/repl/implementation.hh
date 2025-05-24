@@ -82,7 +82,7 @@ private:
     bool run_layer2(Maps::CompilationState& state, 
         std::vector<Maps::Expression*> unparsed_termed_expressions);
 
-    bool run_type_checks_and_concretize(Maps::CompilationState& state, 
+    bool run_transforms(Maps::CompilationState& state, 
         Maps::RT_Scope& scopes, std::optional<Maps::RT_Definition* const> definition);
 
     std::unique_ptr<llvm::Module> run_ir_gen(Maps::CompilationState& state, 

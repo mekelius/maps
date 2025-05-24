@@ -61,7 +61,7 @@ using const_DefinitionBody =
 class Definition {
 public:
     virtual std::string_view name() const = 0;
-    virtual std::string to_string() const { return std::string{name()}; };
+    virtual std::string name_string() const { return std::string{name()}; };
     virtual const_DefinitionBody const_body() const = 0;
     virtual const SourceLocation& location() const = 0;
     virtual const Type* get_type() const = 0;
@@ -84,21 +84,27 @@ public:
     // creates a new dummy definition suitable for unit testing
     static RT_Definition testing_definition(const Type* type = &Hole, bool is_top_level = true); 
 
+    static RT_Definition* external(AST_Store& store, std::string_view name, const Type* type, 
+        const SourceLocation& location);
     static RT_Definition* parameter(AST_Store& store, std::string_view name, const Type* type, 
-        SourceLocation location);
+        const SourceLocation& location);
     static RT_Definition* discarded_parameter(AST_Store& store, const Type* type, 
-        SourceLocation location);
+        const SourceLocation& location);
 
     RT_Definition(std::string_view name, External external, const Type* type)
     :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(type), 
      is_top_level_(true) {}
 
-    RT_Definition(std::string_view name, DefinitionBody body, bool is_top_level, SourceLocation location);
-    RT_Definition(DefinitionBody body, bool is_top_level, SourceLocation location); // create anonymous definition
+    RT_Definition(std::string_view name, DefinitionBody body, bool is_top_level, 
+        const SourceLocation& location);
+    RT_Definition(DefinitionBody body, bool is_top_level, 
+        const SourceLocation& location); // create anonymous definition
 
     // anonymous definitions
-    RT_Definition(std::string_view name, DefinitionBody body, const Type* type, bool is_top_level, SourceLocation location);
-    RT_Definition(DefinitionBody body, const Type* type, bool is_top_level, SourceLocation location);
+    RT_Definition(std::string_view name, DefinitionBody body, const Type* type, bool is_top_level, 
+        const SourceLocation& location);
+    RT_Definition(DefinitionBody body, const Type* type, bool is_top_level, 
+        const SourceLocation& location);
 
     RT_Definition(const RT_Definition& other) = default;
     RT_Definition& operator=(const RT_Definition& other) = default;
@@ -106,7 +112,7 @@ public:
 
     // ----- OVERRIDES ------
     virtual std::string_view name() const { return name_; }
-    virtual std::string to_string() const { return name_; }
+    virtual std::string name_string() const { return name_; }
     virtual const_DefinitionBody const_body() const;
     virtual DefinitionBody& body() { return body_; }
     virtual const SourceLocation& location() const { return location_; }

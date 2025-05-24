@@ -19,7 +19,7 @@ bool Expression::is_identifier() const {
 }
 
 Expression* Expression::identifier(AST_Store& store, RT_Scope* scope, const std::string& value, 
-    SourceLocation location) {
+    const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
         {ExpressionType::identifier, value, &Hole, location});
@@ -27,7 +27,7 @@ Expression* Expression::identifier(AST_Store& store, RT_Scope* scope, const std:
 }
 
 Expression* Expression::operator_identifier(AST_Store& store, RT_Scope* scope, 
-    const std::string& value, SourceLocation location) {
+    const std::string& value, const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
         {ExpressionType::operator_identifier, value, &Hole, location});
@@ -35,7 +35,7 @@ Expression* Expression::operator_identifier(AST_Store& store, RT_Scope* scope,
 }
 
 Expression* Expression::type_identifier(AST_Store& store, const std::string& value, 
-    SourceLocation location) {
+    const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
         {ExpressionType::type_identifier, value, &Hole, location});
@@ -43,7 +43,7 @@ Expression* Expression::type_identifier(AST_Store& store, const std::string& val
 }
 
 Expression* Expression::type_operator_identifier(AST_Store& store, const std::string& value, 
-    SourceLocation location) {
+    const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression({
         ExpressionType::type_operator_identifier, value, &Void, location});

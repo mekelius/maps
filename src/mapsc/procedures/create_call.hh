@@ -1,0 +1,23 @@
+#ifndef __CREATE_CALL_HH
+#define __CREATE_CALL_HH
+
+#include <span>
+#include <utility>
+#include <vector>
+
+#include "mapsc/source.hh"
+
+namespace Maps {
+
+class AST_Store;
+struct Expression;
+class Type;
+class Definition;
+
+// return values are: <bool success, bool partial>
+std::pair<bool, bool> check_and_coerce_args(AST_Store& store, const Definition* callee, 
+    std::vector<Expression*>& args, const SourceLocation& location);
+
+} // namespace Maps
+
+#endif

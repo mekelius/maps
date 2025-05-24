@@ -79,22 +79,23 @@ bool simplify(RT_Definition& definition) {
             }
         },
 
-        [&definition](Expression* expression) {
-            switch (expression->expression_type) {
-                case ExpressionType::call: {
-                    auto type = expression->type;
-                    if (!type->is_function())
-                        return inline_call(*expression, definition);
+        [](Expression*) {
+            return true;
+            // switch (expression->expression_type) {
+            //     case ExpressionType::call: {
+            //         auto type = expression->type;
+            //         if (!type->is_function())
+            //             return inline_call(*expression, definition);
 
-                    if (type->is_pure() && type->arity() == 0)
-                        return inline_call(*expression, definition);
+            //         if (type->is_pure() && type->arity() == 0)
+            //             return inline_call(*expression, definition);
 
-                    return false;
-                }
+            //         return false;
+            //     }
 
-                default:
-                    return false;
-            }
+            //     default:
+            //         return false;
+            // }
         },
     }, definition.body());
 }

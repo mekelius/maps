@@ -1,7 +1,7 @@
 #ifndef __SCOPE_HH
 #define __SCOPE_HH
 
-#include <unordered_map>
+#include <map>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -28,7 +28,7 @@ class CT_Definition;
 template <typename T>
 class Scope_T {
 public:
-    using const_iterator = std::vector<std::pair<std::string, T>>::const_iterator;
+    using const_iterator = std::vector<T>::const_iterator;
 
     const_iterator begin() const { return identifiers_in_order_.begin(); }
     const_iterator end() const { return identifiers_in_order_.end(); }
@@ -52,28 +52,25 @@ public:
         return it->second;
     }
 
-    std::optional<T> create_identifier(const std::string& name, T definition) {
+    std::optional<T> create_identifier(T definition) {
+        auto name = definition->name_string();
         if (identifier_exists(name)) {
             Log_creation::debug("Attempting to redefine identifier " + name, definition->location());
             return std::nullopt;
         }
 
         identifiers_.insert(std::pair<std::string, T>{name, definition});
-        identifiers_in_order_.push_back({name, definition});
+        identifiers_in_order_.push_back(definition);
         
         Log_creation::debug_extra("Created identifier " + name, definition->location());
 
         return definition;
     }
 
-    std::optional<T> create_identifier(T definition) {
-        return create_identifier(definition->to_string(), definition);
-    }
-
-    std::vector<std::pair<std::string, T>> identifiers_in_order_ = {};
+    std::vector<T> identifiers_in_order_ = {};
 
 private:
-    std::unordered_map<std::string, T> identifiers_;
+    std::map<std::string, T> identifiers_;
 };
 
 using Scope = Scope_T<Definition*>;

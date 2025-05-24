@@ -4,7 +4,10 @@
 #include <span>
 #include <cassert>
 #include <sstream>
+#include <variant>
+#include <string>
 
+#include "common/std_visit_helper.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/compilation_state.hh"
 
@@ -20,13 +23,45 @@ namespace Maps {
 
 using Log = LogNoContext;
 
+// ----- STATIC METHODS -----
+
+std::string Expression::value_to_string(const KnownValue& value) {
+    return std::visit(overloaded{
+        [](const std::string& value)->std::string { return value; },
+        [](auto value)->std::string { return std::to_string(value); },
+    }, value);
+}
+
+// workaround to deal with ambiguity
+std::string known_value_to_string(const KnownValue& value) {
+    return Expression::value_to_string(value);
+}
+
+std::string Expression::value_to_string(const ExpressionValue& value) {
+    return std::visit(overloaded{
+        [](std::monostate)->std::string { return "@Undefined expression value@"; },
+        [](Expression*)->std::string { return "@reference@"; },
+        [](Definition* target)->std::string { return "@reference to " + target->name_string() + "@"; },                       
+        [](const Type* type)->std::string { return "@type: " + type->name_string() + "@"; },
+        [](TermedExpressionValue)->std::string { return "@unparsed termed expression@"; },
+        [](CallExpressionValue)->std::string { return "@call@"; },
+        [](LambdaExpressionValue)->std::string { return "@lambda@"; },
+        [](TernaryExpressionValue)->std::string { return "@ternary expression value@"; },
+        [](TypeArgument)->std::string { return "@type argument@"; },
+        [](TypeConstruct)->std::string { return "@type construct@"; },
+
+        [](auto value)->std::string { return known_value_to_string(value); }
+    }, value);
+}
+
+
 // ----- EXPRESSION -----
 
 bool Expression::is_reduced_value() const {
     switch (expression_type) {
         case ExpressionType::string_literal:
         case ExpressionType::numeric_literal:
-        case ExpressionType::value:
+        case ExpressionType::known_value:
         return true;
         
         case ExpressionType::reference:
@@ -39,7 +74,7 @@ bool Expression::is_reduced_value() const {
 std::string Expression::string_value() const {
     if (std::holds_alternative<Definition*>(value)) {
         // !!! this will cause crashes when lambdas come in
-        return std::get<Definition*>(value)->to_string();
+        return std::get<Definition*>(value)->name_string();
     }
     return std::get<std::string>(value);
 }
@@ -122,8 +157,8 @@ std::string Expression::log_message_string() const {
         case ExpressionType::numeric_literal:
             return "numeric literal +" + string_value();
     
-        case ExpressionType::value:
-            return "value expression of type " + type->to_string();
+        case ExpressionType::known_value:
+            return "value expression of type " + type->name_string();
         
         case ExpressionType::identifier:
             return "identifier " + string_value();
@@ -136,17 +171,18 @@ std::string Expression::log_message_string() const {
             return "type identifier " + string_value();
 
         case ExpressionType::reference:
-            return "reference to " + reference_value()->to_string();
+        case ExpressionType::known_value_reference:
+            return "reference to " + reference_value()->name_string();
         case ExpressionType::type_reference:
-            return "reference to type " + reference_value()->to_string();
+            return "reference to type " + reference_value()->name_string();
         case ExpressionType::binary_operator_reference:
         case ExpressionType::prefix_operator_reference:
         case ExpressionType::postfix_operator_reference:
-            return "operator " + reference_value()->to_string();
+            return "operator " + reference_value()->name_string();
         case ExpressionType::type_operator_reference:
-            return "type operator " + reference_value()->to_string();
+            return "type operator " + reference_value()->name_string();
         case ExpressionType::type_constructor_reference:
-            return "reference to type constructor " + reference_value()->to_string();
+            return "reference to type constructor " + reference_value()->name_string();
    
         case ExpressionType::type_field_name:
             return "named field" + string_value();
@@ -176,7 +212,7 @@ std::string Expression::log_message_string() const {
             return "ternary expression";
 
         case ExpressionType::missing_arg:
-            return "incomplete partial application missing argument of type " + type->to_string();
+            return "incomplete partial application missing argument of type " + type->name_string();
 
         case ExpressionType::deleted:
             return "deleted expession";

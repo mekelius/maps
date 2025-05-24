@@ -24,13 +24,13 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
         return nullopt;
 
     auto inner_map = outer_it->second.get();
-    auto inner_it = inner_map->find(function_type.to_string());
+    auto inner_it = inner_map->find(function_type.name_string());
 
     if (inner_it == inner_map->end()) {
         if (log_error_on_fail)
             LogInContext<LogContext::ir_gen>::compiler_error(
                 "function \"" + name + "\" has not been specialized for type \"" + 
-                function_type.to_string() + "\"", NO_SOURCE_LOCATION);
+                function_type.name_string() + "\"", NO_SOURCE_LOCATION);
         return nullopt;
     }
 
@@ -40,7 +40,7 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
 bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& maps_type, 
     llvm::FunctionCallee function_callee) {    
     
-    auto signature = maps_type.to_string();
+    auto signature = maps_type.name_string();
 
     auto outer_it = functions_.find(name);
 

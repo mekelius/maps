@@ -21,10 +21,11 @@ namespace Maps {
 
 using Log = LogInContext<LogContext::inline_>;
 
-bool inline_and_substitute(Definition& definition) {
-    assert(false && "not implemented");
+bool inline_and_substitute(RT_Definition& definition) {
+    return std::visit(overloaded{
+        [](auto) { return true; }
+    }, definition.body());
 }
-
 
 bool inline_call(Expression& expression) {
     assert(expression.expression_type == ExpressionType::call && 
@@ -80,7 +81,7 @@ bool substitute_value_reference(Expression& expression, Definition& callee) {
         "substitute_value_reference called with not a reference");
 
     if (callee.is_undefined()) {
-        Log::error("\"" + callee.to_string() + "\" is undefined", expression.location);
+        Log::error("\"" + callee.name_string() + "\" is undefined", expression.location);
         return false;
     }
 
@@ -91,8 +92,8 @@ bool substitute_value_reference(Expression& expression, Definition& callee) {
     if (callee_declared_type && expression.declared_type) {
         if (**callee_declared_type != **expression.declared_type) {
             Log::warning("Attempting substitution, declared types don't match: " + 
-                (*expression.declared_type)->to_string() + " != " + 
-                (*callee_declared_type)->to_string(), 
+                (*expression.declared_type)->name_string() + " != " + 
+                (*callee_declared_type)->name_string(), 
                 expression.location);
             return false;
         }
@@ -121,8 +122,8 @@ bool substitute_value_reference(Expression& expression, Definition& callee) {
     if (*callee_type != *expression.type) {
         // try to cast
         Log::debug_extra("Cannot inline " + expression.log_message_string() + 
-            " due to incompatible types: " + callee_type->to_string() + " and " + 
-            expression.type->to_string(), expression.location);
+            " due to incompatible types: " + callee_type->name_string() + " and " + 
+            expression.type->name_string(), expression.location);
         return false;
     }
 

@@ -14,7 +14,7 @@ TEST_CASE("prefix purely unary operator") {
     auto op = RT_Operator{"!", External{}, types->get_function_type(&Boolean, {&Boolean}, true), 
         {Operator::Fixity::unary_prefix}, true, TSL};
     auto op_ref = Expression{ExpressionType::prefix_operator_reference, &op, TSL};
-    auto value = Expression{ExpressionType::value, true, &Boolean, TSL};
+    auto value = Expression{ExpressionType::known_value, true, &Boolean, TSL};
     auto expr = Expression{ExpressionType::termed_expression, 
         TermedExpressionValue{{&op_ref, &value}}, TSL};
 
@@ -35,7 +35,7 @@ TEST_CASE("postfix purely unary operator") {
     auto op = RT_Operator{"!", External{}, types->get_function_type(&Boolean, {&Boolean}, true), 
         {Operator::Fixity::unary_postfix}, true, TSL};
     auto op_ref = Expression{ExpressionType::postfix_operator_reference, &op, op.get_type(), TSL};
-    auto value = Expression{ExpressionType::value, true, &Boolean, TSL};
+    auto value = Expression{ExpressionType::known_value, true, &Boolean, TSL};
     auto expr = Expression{ExpressionType::termed_expression, 
         TermedExpressionValue{{&value, &op_ref}}, TSL};
 
@@ -62,7 +62,7 @@ TEST_CASE("Chained unary prefixes") {
     auto op_ref2 = Expression{ExpressionType::prefix_operator_reference, &op2, op2.get_type(), TSL};
     auto op_ref3 = Expression{ExpressionType::prefix_operator_reference, &op1, op1.get_type(), TSL};
 
-    auto value = Expression{ExpressionType::value, true, &Boolean, TSL};
+    auto value = Expression{ExpressionType::known_value, true, &Boolean, TSL};
     auto expr = Expression{ExpressionType::termed_expression, 
         TermedExpressionValue{{&op_ref3, &op_ref2, &op_ref1, &value}}, TSL};
 
@@ -86,6 +86,6 @@ TEST_CASE("Chained unary prefixes") {
     CHECK(*callee3 == op1);
     CHECK(args3.size() == 1);
     auto arg3 = *args3.begin();
-    CHECK(arg3->expression_type == ExpressionType::value);
+    CHECK(arg3->expression_type == ExpressionType::known_value);
     CHECK(*arg3 == value);
 }

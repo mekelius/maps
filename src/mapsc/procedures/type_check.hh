@@ -10,7 +10,7 @@ struct Statement;
 class RT_Definition;
 class CompilationState;
 
-bool type_check(Definition& definition);
+bool type_check(RT_Definition& definition);
 
 class SimpleTypeChecker {
 public:

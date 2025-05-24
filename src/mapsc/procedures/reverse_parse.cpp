@@ -38,7 +38,7 @@ std::string ReverseParser::linebreak() {
 ReverseParser& ReverseParser::reverse_parse(const RT_Scope& scope) {
     reset();
 
-    for (auto [name, definition]: scope.identifiers_in_order_) {
+    for (auto definition: scope.identifiers_in_order_) {
         *this << *definition;
     }
 
@@ -142,22 +142,23 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
         case ExpressionType::binary_operator_reference:
             if (options_.include_debug_info)
                 *this << "/*operator-ref:*/ ";
-            return *this << expression.reference_value()->to_string();
+            return *this << expression.reference_value()->name_string();
         
         case ExpressionType::reference:
+        case ExpressionType::known_value_reference:
         case ExpressionType::type_reference:
         case ExpressionType::type_operator_reference:
         case ExpressionType::type_constructor_reference:
             if (options_.include_debug_info)
                 *this << "/*reference to:*/ ";
-            return *this << expression.reference_value()->to_string();
+            return *this << expression.reference_value()->name_string();
 
         case ExpressionType::identifier:
             if (options_.include_debug_info)
                 *this << "/*unresolved identifier:*/ ";
             return *this << std::get<std::string>(expression.value);
             
-        case ExpressionType::value:
+        case ExpressionType::known_value:
             if (*expression.type == Int)
                 return *this << std::get<maps_Int>(expression.value);
             
@@ -170,8 +171,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
             if (*expression.type == String)
                 return *this << '"' << std::get<std::string>(expression.value) << '"';
 
-            assert(false && "valuetype not implemented in reverse parser");
-            return *this;
+            return *this << "@known value of unhandled type \"" << expression.type->name_string() << "\"@"; 
 
         case ExpressionType::type_field_name:
             if (options_.include_debug_info)
@@ -208,20 +208,20 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
                         return *this << "( " 
                                     << *args.at(0) 
                                     << " " 
-                                    << callee->to_string()
+                                    << callee->name_string()
                                     << " " 
                                     << *args.at(1) 
                                     << " )";
 
                     case 1:
-                        return *this << "( " << callee->to_string() << *args.at(0) << " )";
+                        return *this << "( " << callee->name_string() << *args.at(0) << " )";
                    
                     case 0:
-                        return *this << "(" << callee->to_string() << ")";
+                        return *this << "(" << callee->name_string() << ")";
                 }
             }
 
-            *this << callee->to_string() << '(';
+            *this << callee->name_string() << '(';
             
             bool first_arg = true;
             for (Expression* arg_expression: args) {
@@ -263,7 +263,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 }
 
 ReverseParser& ReverseParser::print_definition(const Definition& definition) {
-    auto name = definition.to_string();
+    auto name = definition.name_string();
 
     return std::visit(overloaded {
         [this, name](Error body) -> ReverseParser& {
@@ -275,7 +275,7 @@ ReverseParser& ReverseParser::print_definition(const Definition& definition) {
         },
         [this, name](BTD_Binding body) -> ReverseParser& {
             auto type = body.type;
-            return *this << (*type != Hole ? type->to_string() : "") << name << " ";
+            return *this << (*type != Hole ? type->name_string() : "") << name << " ";
         },
         [this, name](Undefined)-> ReverseParser& {
             return *this << "\nlet " << name << "\n";
@@ -305,7 +305,7 @@ ReverseParser& ReverseParser::print_const_definition_body(const_DefinitionBody b
         },
         [this](BTD_Binding body) -> ReverseParser& {
             auto type = body.type;
-            return *this << (*type != Hole ? type->to_string() : "") << "@binding@";
+            return *this << (*type != Hole ? type->name_string() : "") << "@binding@";
         },
         [this](Undefined)-> ReverseParser& {
             return *this << "@undefined@";
@@ -323,7 +323,7 @@ ReverseParser& ReverseParser::print_type_declaration(const Expression& expressio
     if (*expression.type == Absurd)
         return *this;
     
-    return *this << expression.type->to_string() << " ";
+    return *this << expression.type->name_string() << " ";
 }
 
 ReverseParser& ReverseParser::print_parameter_list(const ParameterList& parameters) {
