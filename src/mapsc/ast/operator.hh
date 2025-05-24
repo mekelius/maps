@@ -36,7 +36,7 @@ public:
     bool is_unary() const { return operator_props().fixity != Operator::Fixity::binary; }
     bool is_prefix() const { return operator_props().fixity == Operator::Fixity::unary_prefix; }
 
-    Precedence precedence() { return operator_props().precedence; }
+    Precedence precedence() const { return operator_props().precedence; }
     Fixity fixity() const { return operator_props().fixity; }
 
     virtual Properties operator_props() const = 0;
