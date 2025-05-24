@@ -14,7 +14,7 @@ TEST_CASE("Type concretizer should handle an Int Number") {
         ExpressionType::known_value,
         "34",
         &Number,
-        TEST_SOURCE_LOCATION
+        TSL,
     };
     
     bool success = concretize(expr);
@@ -30,7 +30,7 @@ TEST_CASE("Type concretizer should handle a Float Number") {
         ExpressionType::known_value,
         "3.4",
         &Number,
-        TEST_SOURCE_LOCATION,
+        TSL,
     };
     
     bool success = concretize(expr);
@@ -46,7 +46,7 @@ TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
         ExpressionType::known_value,
         "3.4",
         &NumberLiteral,
-        TEST_SOURCE_LOCATION,
+        TSL,
     };
     
     bool success = concretize(expr);

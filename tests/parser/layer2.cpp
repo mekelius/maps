@@ -5,6 +5,7 @@
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
+#include "mapsc/logging_options.hh"
 
 using namespace Maps;
 using namespace std;
@@ -14,7 +15,7 @@ using namespace std;
 inline tuple<Expression*, Definition*> create_operator_helper(CompilationState& state, 
     const string& op_string, unsigned int precedence = 500) {
 
-    const Type* type = state.types_->get_function_type(&Void, {&Number, &Number}, true);
+    const Type* type = state.types_->get_function_type(&Number, {&Number, &Number}, true);
     Definition* op_definition = state.ast_store_->allocate_operator(
         RT_Operator::create_binary(op_string, External{}, type, precedence, 
             RT_Operator::Associativity::left, true, TSL));
@@ -104,8 +105,8 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
 
     Expression* expr = Expression::termed(*ast, {}, {0,0});
 
-    Expression* val1 = Expression::numeric_literal(*ast, "23", {0,0});
-    Expression* val2 = Expression::numeric_literal(*ast, "12", {0,0});
+    Expression* val1 = Expression::numeric_literal(*ast, "23", TSL);
+    Expression* val2 = Expression::numeric_literal(*ast, "12", TSL);
 
     // create the operator
     auto [op1_ref, op1] = create_operator_helper(state, "+");
@@ -289,7 +290,6 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     }
 
     SUBCASE("If the call is not partial, the call expression's type should be the return type") {
-
         const Type* function_type = types->get_function_type(&Number, {&String}, true);
         
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
@@ -411,10 +411,10 @@ TEST_CASE("Layer2 should handle type specifiers") {
             types->get_function_type(&Int, {&Int, &Int}, true),
             {Operator::Fixity::binary}, true, TSL};
         
-        auto op_ref = Expression{ExpressionType::binary_operator_reference, &op, TSL};
-        auto rhs = Expression{ExpressionType::numeric_literal, "987", TSL};
+        auto op_ref = Expression::operator_reference(*state.ast_store_, &op, TSL);
+        auto rhs = Expression::numeric_literal(*state.ast_store_, "987", TSL);
         auto expr = Expression{ExpressionType::termed_expression, 
-            TermedExpressionValue{{&type_specifier, &value, &op_ref, &rhs}, db_false}, TSL};
+            TermedExpressionValue{{&type_specifier, &value, op_ref, rhs}, db_false}, TSL};
 
         run_layer2(state, &expr);
 

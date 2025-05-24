@@ -16,6 +16,7 @@ LogOptions::Lock LogOptions::Lock::global() {
 }
 
 LogOptions::Lock::~Lock() {
+    global_options.set_loglevel(DEFAULT_LOGLEVEL);
     global_lock_ = false;
 }
 

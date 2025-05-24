@@ -25,7 +25,7 @@ using Log = LogNoContext;
 // ------------------------------------- FACTORY FUNTIONS -----------------------------------------
 
 RT_Definition RT_Definition::testing_definition(const Type* type, bool is_top_level) {
-    return RT_Definition{"DUMMY_DEFINITION", External{}, type, is_top_level, TEST_SOURCE_LOCATION};
+    return RT_Definition{"DUMMY_DEFINITION", External{}, type, is_top_level, TSL};
 }
 
 

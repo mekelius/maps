@@ -64,11 +64,11 @@ optional<Expression*> Expression::call(CompilationState& state,
         return store.allocate_expression(
             {ExpressionType::call, CallExpressionValue{callee, args}, callee_type, location});
 
-    auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
-    auto param_types = callee_f_type->param_types();
-    auto return_type = callee_f_type->return_type();
+    auto [types_ok, is_partial, work_to_be_done, return_type] = 
+        check_and_coerce_args(state, callee, args, location);
 
-    auto [types_ok, is_partial] = check_and_coerce_args(*state.ast_store_, callee, args, location);
+    assert(args.size() == callee_type->arity() && 
+        "Something went wrong while creating placeholders for missing args");
 
     if (!types_ok) {
         Log::error("Creating function call to " + callee->name_string() + 
@@ -82,23 +82,9 @@ optional<Expression*> Expression::call(CompilationState& state,
 
     // TODO: deal with declared types
 
-    std::vector<const Type*> missing_arg_types{};
-
-    for (size_t i = args.size(); i < param_types.size(); i++) {
-        auto param_type = *callee_f_type->param_type(i);
-        missing_arg_types.push_back(param_type);
-        args.push_back(Expression::missing_argument(store, param_type, location));
-    }
-
-    auto partial_return_type = state.types_->get_function_type(
-        return_type, missing_arg_types, callee_f_type->is_pure());
-
-    assert(args.size() == param_types.size() && 
-        "Something went wrong while creating placeholders for missing args");
-
     return store.allocate_expression(
         {ExpressionType::partial_call, CallExpressionValue{callee, args}, 
-        partial_return_type, location});
+            return_type, location});
 }
 
 optional<Expression*> Expression::partial_binop_call(CompilationState& state, 

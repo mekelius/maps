@@ -53,6 +53,8 @@ public:
     CompilationState& operator=(const CompilationState&) = default;
     ~CompilationState() = default;
 
+    std::optional<Definition*> find_runtime_cast(const Type* source_type, const Type* target_type);
+
     Options compiler_options_{};
     std::shared_ptr<AST_Store> ast_store_ = std::make_shared<AST_Store>();
     PragmaStore pragmas_ = {};

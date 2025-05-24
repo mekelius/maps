@@ -12,6 +12,8 @@ namespace Maps {
 
 class LogOptions {
 public:
+    static constexpr LogLevel DEFAULT_LOGLEVEL = LogLevel::info;
+
     class Lock {
     public:
         static Lock global();
@@ -30,7 +32,7 @@ public:
     void set_loglevel(LogLevel loglevel);
     void set_loglevel(LogContext context, LogLevel loglevel);
 
-    LogLevels per_context_loglevels = set_all(LogLevel::info);
+    LogLevels per_context_loglevels = set_all(DEFAULT_LOGLEVEL);
     std::ostream* ostream = &std::cout;
     uint LINE_COL_FORMAT_PADDING = 8;
     bool print_context_prefixes = false;

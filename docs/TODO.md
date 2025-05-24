@@ -4,7 +4,8 @@
 
 #### Short term
 
-- clean up the mapsci output
+- layer2 should take into account if the type has been set
+    - may be set by coerse args if gets an unparsed termed expression as argument
 - clear pure expression statements in blocks etc
 - split declarations/definitions off from statements
 - finish dsir
@@ -24,6 +25,8 @@
         - runtime casts in our design require both mutable strings and optionals
             - optionals require conditionals
             - optionals require some form of contexts to unwrap
+- make compiler know whether we are currently in a generic or not
+    - encountering abstract types in generics is always ok, but in concrete functions it depends on stage?
 
 #### Current long term goal
 

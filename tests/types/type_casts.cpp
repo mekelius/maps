@@ -14,7 +14,7 @@ TEST_CASE("Should be able to cast a string into Float") {
         ExpressionType::known_value,
         "324.63",
         &String,
-        TEST_SOURCE_LOCATION,
+        TSL,
     };
 
     CHECK(String.cast_to(&Float, expr));
@@ -28,7 +28,7 @@ TEST_CASE("Should be able to cast a Boolean into String") {
         ExpressionType::known_value,
         true,
         &Boolean,
-        TEST_SOURCE_LOCATION,
+        TSL,
     };
 
     CHECK(Boolean.cast_to(&String, expr));
@@ -42,7 +42,7 @@ TEST_CASE("Should be able to cast an Int into Float") {
         ExpressionType::known_value,
         324,
         &Int,
-        TEST_SOURCE_LOCATION,
+        TSL,
     };
 
     CHECK(Int.cast_to(&Float, expr));
@@ -56,7 +56,7 @@ TEST_CASE("Should be able to cast a Float into String") {
         ExpressionType::known_value,
         544.963,
         &Float,
-        TEST_SOURCE_LOCATION,
+        TSL,
     };
 
     CHECK(Float.cast_to(&String, expr));
@@ -70,7 +70,7 @@ TEST_CASE("Should be able to cast a Number with an int value into Float") {
         ExpressionType::known_value,
         "999",
         &Number,
-        TEST_SOURCE_LOCATION,
+        TSL,
     };
 
     CHECK(Number.cast_to(&Float, expr));

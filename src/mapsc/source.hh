@@ -29,18 +29,17 @@ struct SourceLocation {
     };
 };
 
+#define TSL SourceLocation{__LINE__, 0, NULL_SOURCE_FILE}
+
 constexpr SourceLocation NO_SOURCE_LOCATION{
     SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, NULL_SOURCE_FILE};
 
 constexpr SourceLocation COMPILER_INIT_SOURCE_LOCATION{
     SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, COMPILER_INIT_SOURCE_FILE};
-
-constexpr SourceLocation TEST_SOURCE_LOCATION{0, 0, NULL_SOURCE_FILE};    
-constexpr auto TSL = TEST_SOURCE_LOCATION;
-
+    
 constexpr SourceLocation BUILTIN_SOURCE_LOCATION{
     SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, BUILTIN_SOURCE_FILE};
-
+        
 constexpr SourceLocation EXTERNAL_SOURCE_LOCATION{
     SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, EXTERNAL_SOURCE_FILE};
 

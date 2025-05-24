@@ -16,6 +16,28 @@
 #include "mapsc/types/function_type.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 
+#define OPERATOR_EXPRESSION ExpressionType::operator_identifier:\
+                       case ExpressionType::binary_operator_reference:\
+                       case ExpressionType::prefix_operator_reference:\
+                       case ExpressionType::postfix_operator_reference
+
+#define TYPE_EXPRESSION ExpressionType::type_identifier:\
+                   case ExpressionType::type_reference:\
+                   case ExpressionType::type_operator_identifier:\
+                   case ExpressionType::type_operator_reference:\
+                   case ExpressionType::type_constructor_reference:\
+                   case ExpressionType::type_field_name:\
+                   case ExpressionType::type_construct:\
+                   case ExpressionType::type_argument
+
+#define ILLEGAL_EXPRESSION ExpressionType::deleted:\
+                      case ExpressionType::compiler_error:\
+                      case ExpressionType::user_error
+
+#define NON_CASTABLE_EXPRESSION ExpressionType::minus_sign:\
+                           case OPERATOR_EXPRESSION:\
+                           case TYPE_EXPRESSION:\
+                           case ILLEGAL_EXPRESSION
 
 using std::optional, std::nullopt, std::to_string;
 
@@ -109,7 +131,13 @@ bool Expression::is_ok_in_codegen() const {
 }
 
 bool Expression::is_castable_expression() const {
-    return true;
+    switch (expression_type) {
+        case NON_CASTABLE_EXPRESSION:
+            return false;
+
+        default:
+            return true;
+    }
 }
 
 bool Expression::is_allowed_in_type_declaration() const {
@@ -149,7 +177,7 @@ std::string Expression::log_message_string() const {
             // return type_argument_value().to_string();
 
         case ExpressionType::termed_expression:
-            return std::get<TermedExpressionValue>(value).to_string();
+            return Expression::value_to_string(value);
 
         case ExpressionType::string_literal:
             return "string literal \"" + string_value() + "\"";
@@ -158,7 +186,7 @@ std::string Expression::log_message_string() const {
             return "numeric literal +" + string_value();
     
         case ExpressionType::known_value:
-            return "value expression of type " + type->name_string();
+            return "value expression " + Expression::value_to_string(value);
         
         case ExpressionType::identifier:
             return "identifier " + string_value();
@@ -225,10 +253,81 @@ std::string Expression::log_message_string() const {
     }
 }
 
-std::string TermedExpressionValue::to_string() const {
-    std::stringstream output{"expression "};
-    output << this;
-    return output.str();
+optional<Expression*> Expression::cast_to(CompilationState& state, const Type* target_type, 
+    const SourceLocation& type_declaration_location) {
+    
+    using Log = LogInContext<LogContext::type_checks>;
+
+    switch (expression_type) {
+        case NON_CASTABLE_EXPRESSION:
+            Log::debug("Expression " + log_message_string() + " in not castable", type_declaration_location);
+            return nullopt;
+
+        case ExpressionType::string_literal:
+        case ExpressionType::numeric_literal:
+        case ExpressionType::known_value:
+            if (type->cast_to(target_type, *this)) {
+                Log::debug_extra("Casted expression " + log_message_string() + " to " + 
+                    target_type->name_string(), type_declaration_location);
+                return this;
+            }
+                
+            Log::debug("Could not cast " + log_message_string() + " to " + target_type->name_string(), 
+                type_declaration_location);
+            return nullopt;
+
+        case ExpressionType::missing_arg:
+            type = target_type;
+            return this;
+
+        case ExpressionType::known_value_reference:
+            // copy and cast
+
+        case ExpressionType::reference:
+        case ExpressionType::identifier:
+        case ExpressionType::termed_expression:
+        
+        case ExpressionType::partially_applied_minus:
+        case ExpressionType::call:
+        case ExpressionType::partial_call:
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
+        case ExpressionType::partial_binop_call_both:
+            return wrap_in_runtime_cast(state, target_type, type_declaration_location);
+
+        case ExpressionType::lambda:
+        case ExpressionType::ternary_expression:
+            assert(false && "not implemented");
+    }
+}
+
+
+optional<Expression*> Expression::cast_to(CompilationState& state, const Type* target_type) {
+    return this->cast_to(state, target_type, this->location);
+}
+
+optional<Expression*> Expression::wrap_in_runtime_cast(CompilationState& state, const Type* target_type, 
+    const SourceLocation& type_declaration_location) {
+    
+    assert(is_castable_expression() && "wrap_in_runtime_cast called on not a castable expression");
+
+    auto runtime_cast = state.find_runtime_cast(type, target_type);
+
+    if (!runtime_cast) {
+        Log::debug("Could not cast " + log_message_string() + " to " + target_type->name_string(), 
+            type_declaration_location);
+        return nullopt;
+    }
+
+    optional<Expression*> wrapper = Expression::call(state, *runtime_cast, {this},type_declaration_location);
+
+    if (!wrapper) {
+        Log::debug("Could not create cast wrapper for " + log_message_string() + " to type " + 
+            target_type->name_string(), type_declaration_location);
+        return nullopt;
+    }
+
+    return wrapper;
 }
 
 } // namespace Maps

@@ -89,8 +89,6 @@ struct TermedExpressionValue {
     DeferredBool is_type_declaration = DeferredBool::maybe_;
 
     bool operator==(const TermedExpressionValue&) const = default;
-
-    std::string to_string() const;
 };
 
 using ParameterList = std::vector<Definition*>;
@@ -253,6 +251,12 @@ struct Expression {
     std::string string_value() const;
     std::string log_message_string() const;
     
+    std::optional<Expression*> cast_to(CompilationState& state, const Type* type, 
+        const SourceLocation& type_declaration_location);
+    std::optional<Expression*> cast_to(CompilationState& state, const Type* type);
+    std::optional<Expression*> wrap_in_runtime_cast(CompilationState& state, const Type* type, 
+        const SourceLocation& type_declaration_location);
+
     bool is_literal() const;
     bool is_illegal() const;
     bool is_reference() const;

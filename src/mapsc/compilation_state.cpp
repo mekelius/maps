@@ -23,4 +23,15 @@ CompilationState::CompilationState(const CT_Scope* builtins, TypeStore* types,
  builtins_(builtins), 
  special_definitions_(special_definitions) {}
 
+std::optional<Definition*> CompilationState::find_runtime_cast(const Type* source_type, 
+    const Type* target_type) {
+    
+    using Log = LogNoContext;
+    
+    Log::debug_extra("Trying to find runtime cast from " + source_type->name_string() + " to " + 
+        target_type->name_string(), NO_SOURCE_LOCATION);
+        
+    assert(false && "not implemented");
+}
+
 } // namespace Maps

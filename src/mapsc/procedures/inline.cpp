@@ -35,7 +35,7 @@ bool inline_call(Expression& expression) {
     return inline_call(expression, *callee);
 }
 
-bool inline_call(Expression& expression, Definition& definition) {
+bool inline_call(Expression& expression, const Definition& definition) {
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
 
@@ -56,7 +56,7 @@ bool inline_call(Expression& expression, Definition& definition) {
 namespace {
 
 // this should be ran after all the checks are cleared
-[[nodiscard]] bool perform_substitution(Expression& expression, Definition& callee) {
+[[nodiscard]] bool perform_substitution(Expression& expression, const Definition& callee) {
     auto callee_body = callee.const_body();
     if (auto inner_expression = std::get_if<const Expression*>(&callee_body)) {
         expression = **inner_expression;
@@ -76,7 +76,7 @@ bool substitute_value_reference(Expression& expression) {
     return substitute_value_reference(expression, *callee);
 }
 
-bool substitute_value_reference(Expression& expression, Definition& callee) {
+bool substitute_value_reference(Expression& expression, const Definition& callee) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
 
