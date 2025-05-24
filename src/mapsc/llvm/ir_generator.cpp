@@ -371,7 +371,7 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
             return convert_numeric_literal(expression);
 
         default:
-            *errs_ << "error during codegen: encountered unhandled expression type\n";
+            *errs_ << "error during codegen: unhandled: " + expression.log_message_string() + "\n";
             errs_->flush();
 
             has_failed_ = true;

@@ -27,7 +27,16 @@ using Log = LogInContext<LogContext::concretize>;
 
 bool concretize(RT_Definition& definition) {
     return std::visit(overloaded{
-        [](auto) { return true; }
+        [definition](Expression* expression) {
+            Log::debug_extra("Concretizing definition body of " + definition.name_string(), 
+                definition.location());
+            return concretize(*expression);
+        },
+        [definition](auto) { 
+            Log::info("Not concretizing " + definition.name_string() + 
+                ", unhandled definition body type", definition.location());
+            return true; 
+        }
     }, definition.body());
 }
 

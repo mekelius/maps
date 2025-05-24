@@ -103,9 +103,9 @@ bool init_builtins(CT_Scope& scope) {
         init_builtin(scope, plus_Int                    ) &&
         init_builtin(scope, mult_Int                    ) &&
         init_builtin(scope, to_String_Boolean           ) &&
-        init_builtin(scope, to_String_Int               ) &&
-        init_builtin(scope, to_String_Float             ) &&
         init_builtin(scope, to_Float_Int                )
+        // init_builtin(scope, to_String_Int               ) &&
+        // init_builtin(scope, to_String_Float             ) &&
     );
 }
 

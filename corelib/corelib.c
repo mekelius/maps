@@ -52,11 +52,11 @@ bool __CT_to_Float_String(maps_String str, maps_Float* out) {
 }
 
 // runtime casts aren't allowed to fail
-maps_Float __cast_to_Float_Int(maps_Int i) {
+maps_Float __to_Float_Int(maps_Int i) {
     return (maps_Float) i;
 }
 
-maps_String __cast_to_String_Boolean(maps_Boolean b) {
+maps_String __to_String_Boolean(maps_Boolean b) {
     return b ? "true" : "false";
 }
 
