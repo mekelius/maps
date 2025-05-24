@@ -28,6 +28,7 @@
 #include "mapsc/transform_stage.hh"
 
 #include "mapsc/llvm/ir_generator.hh"
+#include "mapsc/llvm/ir_builtins.hh"
 
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple, std::optional, std::nullopt;
 using Maps::CompilationState, Maps::Layer1Result, Maps::run_layer1_eval, Maps::SimpleTypeChecker, 
@@ -169,7 +170,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
 
     if (!repl_wrapper) {
-        std::cout << "ERROR: creating repl wrapper failed";
+        std::cout << "ERROR: creating repl wrapper failed" << std::endl;
         if (!options_.ignore_errors)
             return false;
     }
@@ -183,7 +184,11 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
     IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
 
-    insert_builtins(generator);
+    if (!IR::insert_builtins(generator)) {
+        std::cout << "Inserting IR builtins failed\n";
+        return false;
+    }
+
     bool ir_success = generator.run({std::array<RT_Scope* const, 1>{&global_scope}}, 
         std::array<Definition*, 2>{*top_level_definition, *repl_wrapper});
 

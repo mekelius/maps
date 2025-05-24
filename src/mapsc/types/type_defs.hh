@@ -44,15 +44,26 @@ constexpr std::array<const Type*, 15> BUILTIN_TYPES {
     &TestingType
 };
 
+constexpr auto BUILTIN_FUNCTION_TYPES_START_LINE = __LINE__;
 constexpr CTFunctionType<1> String_to_IO_Void{ "String => IO Void", &IO_Void, {&String}, false };
 constexpr CTFunctionType<1> Int_to_Int{ "Int -> Int", &Int, {&Int}, true };
 constexpr CTFunctionType<2> IntInt_to_Int{ "Int -> Int -> Int", &Int, {&Int, &Int}, true };
 constexpr CTFunctionType<2> FloatFloat_to_Float{ "Float -> Float -> Float", &Float, {&Float, &Float}, true };
-constexpr std::array<const FunctionType*, 4> BUILTIN_FUNCTION_TYPES {
+constexpr CTFunctionType<1> Boolean_to_String{ "Boolean -> String", &String, {&Boolean}, true};
+constexpr CTFunctionType<1> Int_to_String{ "Int -> String", &String, {&Int}, true};
+constexpr CTFunctionType<1> Float_to_String{ "Float -> String", &String, {&Float}, true};
+constexpr CTFunctionType<1> Int_to_Float{ "Int -> Float", &Float, {&Int}, true};
+constexpr auto BUILTIN_FUNCTION_TYPES_COUNT = __LINE__ - BUILTIN_FUNCTION_TYPES_START_LINE - 1;
+
+constexpr std::array<const FunctionType*, BUILTIN_FUNCTION_TYPES_COUNT> BUILTIN_FUNCTION_TYPES {
     &String_to_IO_Void,
     &Int_to_Int,
     &IntInt_to_Int,
-    &FloatFloat_to_Float
+    &FloatFloat_to_Float,
+    &Boolean_to_String,
+    &Int_to_String,
+    &Float_to_String,
+    &Int_to_Float
 };
 
 } // namespace Maps

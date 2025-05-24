@@ -33,9 +33,38 @@ namespace Maps { class FunctionType; }
 
 namespace IR {
 
+bool forward_declare_libmaps(IR::IR_Generator& denerator);
+bool insert_arithmetic_functions(IR::IR_Generator& denerator);
+
 // TODO: parse header file
 // TODO: memoize this somehow
 bool insert_builtins(IR::IR_Generator& generator) {
+    
+    forward_declare_libmaps(generator);
+    insert_arithmetic_functions(generator);
+
+    // optional<llvm::Function*> cast_Boolean_to_String = generator.function_definition("to_String", 
+    //     *generator.maps_types_->get_function_type(&Maps::String, {&Maps::Boolean}, true), 
+    //     llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.boolean_t}, 
+    //         false));
+    
+    // if (!cast_Boolean_to_String) {
+    //     Log::compiler_error("Creating builtin cast from Boolean to const String failed", 
+    //         COMPILER_INIT_SOURCE_LOCATION);
+    //     return false;
+    // }
+
+    // generator.builder_->CreateRet(generator.builder_->CreateSelect(
+    //     generator.builder_->getInt1((*cast_Boolean_to_String)->getArg(0)),
+    //         generator.builder_->CreateGlobalString("true"),
+    //         generator.builder_->CreateGlobalString("false")
+    // ));
+
+    return true;
+}
+
+bool forward_declare_libmaps(IR::IR_Generator& generator) {
+    // ----- declare print types -----
     const std::array<std::pair<const Maps::Type*, llvm::Type*>, 4> PRINTABLE_TYPES{
        std::pair{&Maps::String, generator.types_.char_array_ptr_t}, 
                 {&Maps::Int, generator.types_.int_t}, 
@@ -43,18 +72,41 @@ bool insert_builtins(IR::IR_Generator& generator) {
                 {&Maps::Boolean, generator.types_.boolean_t}
     };
 
-    // create print types
     for (auto [maps_type, llvm_type]: PRINTABLE_TYPES) {
         if (!generator.forward_declaration("print", *generator.maps_types_->get_function_type(
                 &Maps::IO_Void, {maps_type}, false),
                 llvm::FunctionType::get(generator.types_.void_t, {llvm_type}, false))) {
 
-            Log::compiler_error("Creating builtin print functions failed", 
+            Log::compiler_error("Declaring builtin print functions failed", 
                 COMPILER_INIT_SOURCE_LOCATION);
             return false;
         }
     }
 
+    // ----- declare runtime casts -----
+    if (!generator.forward_declaration("__to_Float", Maps::Int_to_Float, 
+        llvm::FunctionType::get(generator.types_.double_t, {generator.types_.int_t}, false))) {
+
+        Log::compiler_error("Declaring runtime cast __cast_Int_to_Float failed", 
+            COMPILER_INIT_SOURCE_LOCATION);
+        return false;
+    }
+
+    if (!generator.forward_declaration("__to_String", Maps::Boolean_to_String,
+        llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.boolean_t}, false))) {
+
+        Log::compiler_error("Declaring runtime cast __cast_Boolean_to_String failed", 
+            COMPILER_INIT_SOURCE_LOCATION);
+        return false;
+    }
+
+    // maps_String* __Int_to_String(maps_Int i);
+    // maps_String* __Float_to_String(maps_Float f);
+
+    return true;
+}
+
+bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     // arithmetic function types
     const Maps::FunctionType* IntInt = generator.maps_types_->get_function_type(
         &Maps::Int, {&Maps::Int}, true);
@@ -73,22 +125,6 @@ bool insert_builtins(IR::IR_Generator& generator) {
 
     llvm::Value* zero = llvm::ConstantInt::get(*generator.context_, llvm::APInt(32, 0, true));
     
-    optional<llvm::Function*> cast_Boolean_to_String = generator.function_definition("to_String", 
-        *generator.maps_types_->get_function_type(&Maps::String, {&Maps::Boolean}, true), 
-        llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.boolean_t}, 
-            false));
-    
-    if (!cast_Boolean_to_String) {
-        Log::compiler_error("Creating builtin cast from Boolean to const String failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
-        return false;
-    }
-
-    generator.builder_->CreateRet(generator.builder_->CreateSelect(
-        generator.builder_->getInt1((*cast_Boolean_to_String)->getArg(0)),
-            generator.builder_->CreateGlobalString("true"),
-            generator.builder_->CreateGlobalString("false")
-    ));
 
     // ##########  -Int  ##########
     optional<llvm::Function*> negate_int = generator.function_definition("-", *IntInt, llvm_IntInt);

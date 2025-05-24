@@ -10,6 +10,7 @@
 #include "common/std_visit_helper.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/compilation_state.hh"
+#include "mapsc/builtins.hh"
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/definition.hh"
@@ -311,7 +312,7 @@ optional<Expression*> Expression::wrap_in_runtime_cast(CompilationState& state, 
     
     assert(is_castable_expression() && "wrap_in_runtime_cast called on not a castable expression");
 
-    auto runtime_cast = state.find_runtime_cast(type, target_type);
+    auto runtime_cast = find_external_runtime_cast(*state.builtins_, type, target_type);
 
     if (!runtime_cast) {
         Log::debug("Could not cast " + log_message_string() + " to " + target_type->name_string(), 

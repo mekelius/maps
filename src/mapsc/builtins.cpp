@@ -20,6 +20,7 @@
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/statement.hh"
 
+using std::optional, std::nullopt;
 using std::monostate;
 
 
@@ -77,6 +78,11 @@ constinit CT_Operator binary_minus_Int{"-", External{}, IntInt_to_Int,
 constinit CT_Operator mult_Int{"*", External{}, IntInt_to_Int,
     {Operator::Fixity::binary,520}};
 
+constinit CT_Definition to_String_Boolean{"__to_String_Boolean", External{}, Boolean_to_String};
+constinit CT_Definition to_String_Int{"__to_String_Int", External{}, Int_to_String};
+constinit CT_Definition to_String_Float{"__to_String_Float", External{}, Float_to_String};
+constinit CT_Definition to_Float_Int{"__to_Float_Int", External{}, Int_to_Float};
+
 bool init_builtin(CT_Scope& scope, CT_Definition& definition) {
     if (!scope.create_identifier(&definition)) {
         Log::compiler_error("Creating builtin " + definition.name_string() + " failed",
@@ -91,44 +97,16 @@ bool init_builtins(CT_Scope& scope) {
     builtins_initialized = true;
 
     return (
-        init_builtin(scope, true_           ) &&
-        init_builtin(scope, false_          ) &&
-        init_builtin(scope, print_String    ) &&
-        init_builtin(scope, plus_Int        ) &&
-        init_builtin(scope, mult_Int        )
+        init_builtin(scope, true_                       ) &&
+        init_builtin(scope, false_                      ) &&
+        init_builtin(scope, print_String                ) &&
+        init_builtin(scope, plus_Int                    ) &&
+        init_builtin(scope, mult_Int                    ) &&
+        init_builtin(scope, to_String_Boolean           ) &&
+        init_builtin(scope, to_String_Int               ) &&
+        init_builtin(scope, to_String_Float             ) &&
+        init_builtin(scope, to_Float_Int                )
     );
-
-    // if (!ast.create_builtin_binary_operator("+", *ast.types_->get_function_type(Int, 
-    //     {&Int, &Int}), 1, Associativity::left /* Associativity::both*/))
-    //         return false;
-
-    // if (!ast.create_builtin_binary_operator("-", *ast.types_->get_function_type(Int, 
-    //     {&Int, &Int}), 1, Associativity::left))
-    //         return false;
-
-    // if (!ast.create_builtin_binary_operator("*", *ast.types_->get_function_type(Int, 
-    //     {&Int, &Int}), 2, Associativity::left /* Associativity::both*/))
-    //         return false;
-
-    // // TODO: subset types here
-    // if (!ast.create_builtin_binary_operator("/", *ast.types_->get_function_type(Int, 
-    //     {&Int, &Int}), 3, Associativity::left))
-    //         return false;
-
-    // return true;
-
-    // if (!ast.create_builtin("print",
-    //     *ast.types_->get_function_type(Void, {&String})))
-    //         return false;
-
-    // ast.create_builtin("print",
-    //     *ast.types_->get_function_type(Void, {&Int}));
-
-    // ast.create_builtin("print",
-    //     *ast.types_->get_function_type(Void, {&Float}));
-
-    // ast.create_builtin("print",
-    //     *ast.types_->get_function_type(Void, {&Boolean}));
 }
 
 const CT_Scope* get_builtins() {
@@ -138,6 +116,20 @@ const CT_Scope* get_builtins() {
     }
 
     return &builtins;
+}
+
+optional<Definition*> find_external_runtime_cast(const CT_Scope& scope, const Type* source_type, 
+    const Type* target_type) {
+    
+    std::string cast_name = "__to_" + target_type->name_string() + "_" + source_type->name_string();
+    
+    Log::debug_extra("Trying to find runtime cast " + cast_name, NO_SOURCE_LOCATION);
+
+    auto cast = scope.get_identifier(cast_name);
+    if (!cast)
+        LogNoContext::debug("Could not find runtime cast " + cast_name, NO_SOURCE_LOCATION);
+
+    return cast;
 }
 
 } // namespace Maps

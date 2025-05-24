@@ -94,7 +94,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
 
     if (*target_type == Int) {
         maps_Int result;
-        if (!const_String_to_Int(expression.string_value().c_str(), &result))
+        if (!__CT_to_Int_String(expression.string_value().c_str(), &result))
             return false;
 
         cast_value<int>(expression, &Int, result);
@@ -103,7 +103,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
 
     if (*target_type == Float) {
         maps_Float result;
-        if (!const_String_to_Float(expression.string_value().c_str(), &result))
+        if (!__CT_to_Float_String(expression.string_value().c_str(), &result))
             return false;
 
         cast_value<maps_Float>(expression, &Float, result);
@@ -141,7 +141,7 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
             return false;
 
         maps_Int result;
-        if (!const_String_to_Int(expression.string_value().c_str(), &result))
+        if (!__CT_to_Int_String(expression.string_value().c_str(), &result))
             return false;
 
         cast_value<maps_Int>(expression, &Int, result);

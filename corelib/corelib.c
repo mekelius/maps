@@ -21,7 +21,7 @@ void print_Float(maps_Float d) {
     printf("%f", d);
 }
 
-bool const_String_to_Int(maps_String str, maps_Int* out) {
+bool __CT_to_Int_String(maps_String str, maps_Int* out) {
     errno = 0;
     char* end = NULL;
     maps_Int result = strtol(str, &end, 10);
@@ -36,7 +36,7 @@ bool const_String_to_Int(maps_String str, maps_Int* out) {
     return true;
 }
 
-bool const_String_to_Float(maps_String str, maps_Float* out) {
+bool __CT_to_Float_String(maps_String str, maps_Float* out) {
     errno = 0;
     char* end = NULL;
     maps_Float result = strtod(str, &end);
@@ -50,3 +50,20 @@ bool const_String_to_Float(maps_String str, maps_Float* out) {
     *out = result;
     return true;
 }
+
+// runtime casts aren't allowed to fail
+maps_Float __cast_to_Float_Int(maps_Int i) {
+    return (maps_Float) i;
+}
+
+maps_String __cast_to_String_Boolean(maps_Boolean b) {
+    return b ? "true" : "false";
+}
+
+// maps_String* __Int_to_String(maps_Int i) {
+//     return 
+// }
+
+// maps_String* __Float_to_String(maps_Float f) {
+
+// }

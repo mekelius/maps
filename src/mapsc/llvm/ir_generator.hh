@@ -77,7 +77,7 @@ public:
 
     TypeMap types_;
 
-private:
+// private:
     void fail(const std::string& message);
 
     std::optional<llvm::Function*> function_definition(const std::string& name, 
@@ -136,7 +136,7 @@ private:
     bool has_failed_ = false;
 
     // ----- FRIEND FUNCTION -----
-    friend bool insert_builtins(IR::IR_Generator& generator);
+    // friend bool insert_builtins(IR::IR_Generator& generator);
 };
 
 } // namespace IR

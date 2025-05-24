@@ -102,6 +102,9 @@ private:
     Operator::Properties operator_props_;
 };
 
+std::optional<Definition*> find_external_runtime_cast(const CT_Scope& scope, const Type* source_type, 
+    const Type* target_type);
+
 extern constinit CT_Operator unary_minus_Int;
 extern constinit CT_Operator plus_Int;
 extern constinit CT_Operator binary_minus_Int;
