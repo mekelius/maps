@@ -17,11 +17,20 @@ namespace IR {
 
 std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, 
     const Maps::FunctionType& function_type, bool log_error_on_fail) const {
+
+    using Log = LogInContext<LogContext::ir_gen>;
+
+    Log::debug_extra("Looking up a function with name \"" + name + "\" and type \"" + 
+        function_type.name_string() + "\"...", NO_SOURCE_LOCATION);
     
     auto outer_it = functions_.find(name);
 
-    if (outer_it == functions_.end())
+    if (outer_it == functions_.end()) {
+        Log::error("No function named \"" + name + "\" in function store", NO_SOURCE_LOCATION);
         return nullopt;
+    }
+
+    Log::debug_extra("Found name, looking up type..." , NO_SOURCE_LOCATION);
 
     auto inner_map = outer_it->second.get();
     auto inner_it = inner_map->find(function_type.name_string());
@@ -29,10 +38,12 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
     if (inner_it == inner_map->end()) {
         if (log_error_on_fail)
             LogInContext<LogContext::ir_gen>::compiler_error(
-                "function \"" + name + "\" has not been specialized for type \"" + 
+                "Function \"" + name + "\" has not been specialized for type \"" + 
                 function_type.name_string() + "\"", NO_SOURCE_LOCATION);
         return nullopt;
     }
+
+    Log::debug_extra("Found function" , NO_SOURCE_LOCATION);
 
     return inner_it->second;
 }

@@ -29,9 +29,16 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
     char_array_ptr_t = 
         llvm::PointerType::getUnqual(llvm::PointerType::getUnqual(char_t));
     int_t = llvm::Type::getInt32Ty(context);
+    uint_t = llvm::Type::getInt32Ty(context); // llvm doesn't distinguish based on signedness
     double_t = llvm::Type::getDoubleTy(context);
     void_t = llvm::Type::getVoidTy(context);
     boolean_t = llvm::Type::getInt8Ty(context);
+
+    static_assert(sizeof(size_t) == sizeof(int64_t) && "MemUInt needs to be adjusted");
+    memuint_t = llvm::Type::getInt64Ty(context);
+
+    mutstring_t = llvm::StructType::create(context, {
+        char_array_ptr_t, uint_t, memuint_t}, "maps_MutString");
 
     repl_wrapper_signature = llvm::FunctionType::get(void_t, false);
 
@@ -46,7 +53,8 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
         !insert(&Maps::IO_Boolean, boolean_t       ) ||
         !insert(&Maps::IO_Int,     int_t           ) ||
         !insert(&Maps::IO_Float,   double_t        ) ||
-        !insert(&Maps::IO_String,  char_array_ptr_t)
+        !insert(&Maps::IO_String,  char_array_ptr_t) ||
+        !insert(&Maps::MutString,  mutstring_t     )
     ) {
         Log::compiler_error("Inserting primitive types into TypeMap failed", 
             COMPILER_INIT_SOURCE_LOCATION);

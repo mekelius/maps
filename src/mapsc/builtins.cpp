@@ -78,10 +78,13 @@ constinit CT_Operator binary_minus_Int{"-", External{}, IntInt_to_Int,
 constinit CT_Operator mult_Int{"*", External{}, IntInt_to_Int,
     {Operator::Fixity::binary,520}};
 
-constinit CT_Definition to_String_Boolean{"__to_String_Boolean", External{}, Boolean_to_String};
-constinit CT_Definition to_String_Int{"__to_String_Int", External{}, Int_to_String};
-constinit CT_Definition to_String_Float{"__to_String_Float", External{}, Float_to_String};
-constinit CT_Definition to_Float_Int{"__to_Float_Int", External{}, Int_to_Float};
+constinit CT_Definition to_String_Boolean{"to_String_Boolean", External{}, Boolean_to_String};
+constinit CT_Definition to_String_Int{"to_String_Int", External{}, Int_to_String};
+constinit CT_Definition to_String_Float{"to_String_Float", External{}, Float_to_String};
+constinit CT_Definition to_Float_Int{"to_Float_Int", External{}, Int_to_Float};
+constinit CT_Definition to_String_MutString{"to_String_MutString", External{}, MutString_to_String};
+
+constinit CT_Definition concat{"concat", External{}, MutString_MutString_to_MutString};
 
 bool init_builtin(CT_Scope& scope, CT_Definition& definition) {
     if (!scope.create_identifier(&definition)) {
@@ -102,8 +105,10 @@ bool init_builtins(CT_Scope& scope) {
         init_builtin(scope, print_String                ) &&
         init_builtin(scope, plus_Int                    ) &&
         init_builtin(scope, mult_Int                    ) &&
+        init_builtin(scope, concat                      ) &&
         init_builtin(scope, to_String_Boolean           ) &&
-        init_builtin(scope, to_Float_Int                )
+        init_builtin(scope, to_Float_Int                ) &&
+        init_builtin(scope, to_String_MutString        )
         // init_builtin(scope, to_String_Int               ) &&
         // init_builtin(scope, to_String_Float             ) &&
     );
@@ -121,7 +126,7 @@ const CT_Scope* get_builtins() {
 optional<Definition*> find_external_runtime_cast(const CT_Scope& scope, const Type* source_type, 
     const Type* target_type) {
     
-    std::string cast_name = "__to_" + target_type->name_string() + "_" + source_type->name_string();
+    std::string cast_name = "to_" + target_type->name_string() + "_" + source_type->name_string();
     
     Log::debug_extra("Trying to find runtime cast " + cast_name, NO_SOURCE_LOCATION);
 

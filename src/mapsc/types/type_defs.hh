@@ -16,7 +16,7 @@ constexpr uint Int_ID       = 1;
 constexpr uint Boolean_ID   = 2;
 constexpr uint Float_ID     = 3;
 constexpr uint String_ID    = 4;
-constexpr uint Mut_String_ID    = 4;
+constexpr uint MutString_ID    = 4;
 
 constexpr auto CT_TYPES_START_LINE = __LINE__;
 constexpr ConcreteType Void { Void_ID, "Void", &not_castable, true };
@@ -34,7 +34,7 @@ constexpr auto IO_Boolean = IO_TypeConstructor::ct_apply("IO Boolean", Boolean);
 constexpr auto IO_Float = IO_TypeConstructor::ct_apply("IO Float", Float);
 constexpr auto IO_String = IO_TypeConstructor::ct_apply("IO String", String);
 constexpr auto IO_Void = IO_TypeConstructor::ct_apply("IO Void", Void);
-constexpr ConcreteType Mut_String = { Mut_String_ID, "String'", &cast_from_Mut_String };
+constexpr ConcreteType MutString = { MutString_ID, "MutString", &cast_from_MutString };
 constexpr auto CT_TYPES_COUNT = __LINE__ - CT_TYPES_START_LINE - 1;
 
 constexpr std::array<const Type*, CT_TYPES_COUNT> BUILTIN_TYPES {
@@ -42,7 +42,7 @@ constexpr std::array<const Type*, CT_TYPES_COUNT> BUILTIN_TYPES {
     &Absurd, &Hole, &Number, &NumberLiteral, &TestingType,
     &IO_Int, &IO_Boolean, &IO_Float, &IO_String, &IO_Void,
 
-    &Mut_String
+    &MutString
 };
 
 constexpr auto CT_FUNCTION_TYPES_START_LINE = __LINE__;
@@ -54,6 +54,8 @@ constexpr CTFunctionType<1> Boolean_to_String{ "Boolean -> String", &String, {&B
 constexpr CTFunctionType<1> Int_to_String{ "Int -> String", &String, {&Int}, true};
 constexpr CTFunctionType<1> Float_to_String{ "Float -> String", &String, {&Float}, true};
 constexpr CTFunctionType<1> Int_to_Float{ "Int -> Float", &Float, {&Int}, true};
+constexpr CTFunctionType<1> MutString_to_String{ "MutString -> String", &String, {&MutString}, true};
+constexpr CTFunctionType<2> MutString_MutString_to_MutString{ "MutString -> MutString -> MutString", &MutString, {&MutString, &MutString}, true};
 constexpr auto CT_FUNCTION_TYPES_COUNT = __LINE__ - CT_FUNCTION_TYPES_START_LINE - 1;
 
 constexpr std::array<const FunctionType*, CT_FUNCTION_TYPES_COUNT> BUILTIN_FUNCTION_TYPES {
@@ -64,7 +66,9 @@ constexpr std::array<const FunctionType*, CT_FUNCTION_TYPES_COUNT> BUILTIN_FUNCT
     &Boolean_to_String,
     &Int_to_String,
     &Float_to_String,
-    &Int_to_Float
+    &Int_to_Float,
+    &MutString_to_String,
+    &MutString_MutString_to_MutString
 };
 
 } // namespace Maps

@@ -15,9 +15,9 @@
 // ----- INTEGER TYPES -----
 
 typedef int32_t maps_Int;
-typedef uint32_t maps_Nat;
+typedef uint32_t maps_UInt;
 typedef bool maps_Boolean;
-typedef size_t maps_MemNat;
+typedef size_t maps_MemUInt;
 
 // typedef char maps_Char_INTERN;
 
@@ -41,14 +41,14 @@ typedef double maps_Float;
 // null terminated constant strings
 typedef const char* maps_String;
 
-struct maps_Mut_String {
+struct maps_MutString {
     char* data;
-    maps_Nat length;
-    maps_MemNat mem_size;
+    maps_UInt length;
+    maps_MemUInt mem_size;
 };
 
 #ifdef __cplusplus
-inline bool operator==(const maps_Mut_String& lhs, const maps_Mut_String& rhs) {
+inline bool operator==(const maps_MutString& lhs, const maps_MutString& rhs) {
     if (lhs.mem_size != rhs.mem_size)
         return false;
 
@@ -60,7 +60,7 @@ inline bool operator==(const maps_Mut_String& lhs, const maps_Mut_String& rhs) {
     return true;
 }
 
-inline bool operator!=(const maps_Mut_String& lhs, const maps_Mut_String& rhs) {
+inline bool operator!=(const maps_MutString& lhs, const maps_MutString& rhs) {
     return !(lhs == rhs);
 }
 #endif

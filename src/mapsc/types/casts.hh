@@ -16,7 +16,7 @@ bool cast_from_String(const Type* target_type, Expression& expression);
 bool cast_from_Boolean(const Type* target_type, Expression& expression);
 bool cast_from_NumberLiteral(const Type* target_type, Expression& expression);
 
-bool cast_from_Mut_String(const Type* target_type, Expression& expression);
+bool cast_from_MutString(const Type* target_type, Expression& expression);
 
 bool is_concrete(Expression& expression);
 bool not_concretizable(Expression& expression);

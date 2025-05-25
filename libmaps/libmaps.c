@@ -25,7 +25,7 @@ void print_Float(maps_Float d) {
     printf("%f", d);
 }
 
-bool __CT_to_Int_String(maps_String str, maps_Int* out) {
+bool CT_to_Int_String(maps_String str, maps_Int* out) {
     errno = 0;
     char* end = NULL;
     maps_Int result = strtol(str, &end, 10);
@@ -40,7 +40,7 @@ bool __CT_to_Int_String(maps_String str, maps_Int* out) {
     return true;
 }
 
-bool __CT_to_Float_String(maps_String str, maps_Float* out) {
+bool CT_to_Float_String(maps_String str, maps_Float* out) {
     errno = 0;
     char* end = NULL;
     maps_Float result = strtod(str, &end);
@@ -56,16 +56,20 @@ bool __CT_to_Float_String(maps_String str, maps_Float* out) {
 }
 
 // runtime casts aren't allowed to fail
-maps_Float __to_Float_Int(maps_Int i) {
+maps_Float to_Float_Int(maps_Int i) {
     return (maps_Float) i;
 }
 
-maps_String __to_String_Boolean(maps_Boolean b) {
+maps_String to_String_Boolean(maps_Boolean b) {
     return b ? "true" : "false";
 }
 
-struct maps_Mut_String __to_Mut_String_Int(maps_Int i) {
-    struct maps_Mut_String str;
+maps_String to_String_MutString(struct maps_MutString str) {
+    return str.data;
+}
+
+struct maps_MutString to_MutString_Int(maps_Int i) {
+    struct maps_MutString str;
     str.data = malloc(MAX_INT_LENGTH);
     str.mem_size = snprintf(str.data, MAX_INT_LENGTH, "%i", i);
     str.length = str.mem_size - 1;
@@ -73,19 +77,19 @@ struct maps_Mut_String __to_Mut_String_Int(maps_Int i) {
     return str;
 }
 
-struct maps_Mut_String __to_Mut_String_Float(maps_Float f) {
+struct maps_MutString to_MutString_Float(maps_Float f) {
     assert(false && "not implemented");
 }
 
-void free_Mut_String(struct maps_Mut_String* str) {
+void free_MutString(struct maps_MutString* str) {
     str->mem_size = 0;
     free(str->data);
 }
 
-struct maps_Mut_String concat_Mut_String_Mut_String(
-    struct maps_Mut_String lhs, struct maps_Mut_String rhs) {
+struct maps_MutString concat_MutString_MutString(
+    struct maps_MutString lhs, struct maps_MutString rhs) {
 
-    struct maps_Mut_String out;
+    struct maps_MutString out;
     out.mem_size = lhs.mem_size + rhs.mem_size - 1;
     out.length = lhs.length + rhs.length;
     out.data = malloc(out.mem_size);

@@ -174,7 +174,6 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
             return false;
     }
 
-
     if (!insert_global_cleanup(state, 
         global_scope, **top_level_definition)) {
 
@@ -183,7 +182,8 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
             return false;
     }
 
-    debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
+    debug_print(REPL_Stage::pre_ir, global_scope, 
+        std::array<const Definition*, 2>{*top_level_definition, *repl_wrapper});
 
     if (options_.stop_after == REPL_Stage::pre_ir || !options_.eval)
         return true;

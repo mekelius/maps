@@ -59,9 +59,9 @@ bool cast_from_Int(const Type* target_type, Expression& expression) {
         return true;
     }
 
-    if (*target_type == Mut_String) {
-        maps_Mut_String mut_string_value = __to_Mut_String_Int(int_value);
-        cast_value<maps_Mut_String>(expression, &Mut_String, mut_string_value);
+    if (*target_type == MutString) {
+        maps_MutString mut_string_value = to_MutString_Int(int_value);
+        cast_value<maps_MutString>(expression, &MutString, mut_string_value);
     }
 
     return false;
@@ -102,7 +102,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
 
     if (*target_type == Int) {
         maps_Int result;
-        if (!__CT_to_Int_String(expression.string_value().c_str(), &result))
+        if (!CT_to_Int_String(expression.string_value().c_str(), &result))
             return false;
 
         cast_value<int>(expression, &Int, result);
@@ -111,28 +111,28 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
 
     if (*target_type == Float) {
         maps_Float result;
-        if (!__CT_to_Float_String(expression.string_value().c_str(), &result))
+        if (!CT_to_Float_String(expression.string_value().c_str(), &result))
             return false;
 
         cast_value<maps_Float>(expression, &Float, result);
         return true;
     }
 
-    if (*target_type == Mut_String) {
+    if (*target_type == MutString) {
         auto old_value = expression.string_value();
 
         // include the null terminator
         auto new_str = malloc(old_value.size() + 1);
-        maps_Mut_String value{static_cast<char*>(new_str), 
-            static_cast<maps_Nat>(old_value.size()), old_value.size() + 1};
+        maps_MutString value{static_cast<char*>(new_str), 
+            static_cast<maps_UInt>(old_value.size()), old_value.size() + 1};
 
         std::memcpy(new_str, old_value.c_str(), old_value.size() + 1);
 
-        cast_value<maps_Mut_String>(expression, &Mut_String, value);
+        cast_value<maps_MutString>(expression, &MutString, value);
         return true;
     }
 
-    Log::error("Cannot convert string to " + target_type->name_string(), expression.location);
+    Log::error("Cannot convert String to " + target_type->name_string(), expression.location);
     return false;
 }
 
@@ -163,29 +163,29 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
             return false;
 
         maps_Int result;
-        if (!__CT_to_Int_String(expression.string_value().c_str(), &result))
+        if (!CT_to_Int_String(expression.string_value().c_str(), &result))
             return false;
 
         cast_value<maps_Int>(expression, &Int, result);
         return true;
     }
 
-    if (*target_type == Mut_String) {
+    if (*target_type == MutString) {
         maps_Int int_result;
-        if (__CT_to_Int_String(expression.string_value().c_str(), &int_result)) {
+        if (CT_to_Int_String(expression.string_value().c_str(), &int_result)) {
             cast_value<maps_Int>(expression, &Int, int_result);
-            return cast_from_Int(&Mut_String, expression);
+            return cast_from_Int(&MutString, expression);
         }
 
         Log::warning(
-            "Casts from NumberLiteral to Mut_String only implemented for integral values", 
+            "Casts from NumberLiteral to MutString only implemented for integral values", 
             NO_SOURCE_LOCATION);
         return false;
     }
 
     if (*target_type == Float) {
         maps_Float result;
-        if (!__CT_to_Float_String(expression.string_value().c_str(), &result))
+        if (!CT_to_Float_String(expression.string_value().c_str(), &result))
             return false;
 
         cast_value<maps_Float>(expression, &Float, result);
@@ -195,9 +195,9 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
     return false;
 }
 
-bool cast_from_Mut_String(const Type* target_type, Expression& expression) {
+bool cast_from_MutString(const Type* target_type, Expression& expression) {
     if (*target_type == String) {
-        auto [data, length, mem_size] = std::get<maps_Mut_String>(expression.value);
+        auto [data, length, mem_size] = std::get<maps_MutString>(expression.value);
 
         cast_value<std::string>(expression, &String, std::string{data, mem_size - 1});
 

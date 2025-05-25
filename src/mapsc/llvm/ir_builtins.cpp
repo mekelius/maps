@@ -39,7 +39,6 @@ bool insert_arithmetic_functions(IR::IR_Generator& denerator);
 // TODO: parse header file
 // TODO: memoize this somehow
 bool insert_builtins(IR::IR_Generator& generator) {
-    
     forward_declare_libmaps(generator);
     insert_arithmetic_functions(generator);
 
@@ -84,24 +83,41 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
     }
 
     // ----- declare runtime casts -----
-    if (!generator.forward_declaration("__to_Float", Maps::Int_to_Float, 
+    if (!generator.forward_declaration("to_Float", Maps::Int_to_Float, 
         llvm::FunctionType::get(generator.types_.double_t, {generator.types_.int_t}, false))) {
 
-        Log::compiler_error("Declaring runtime cast __cast_Int_to_Float failed", 
+        Log::compiler_error("Declaring runtime cast to_Float_Int failed", 
             COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
-    if (!generator.forward_declaration("__to_String", Maps::Boolean_to_String,
+    if (!generator.forward_declaration("to_String_Boolean", Maps::Boolean_to_String,
         llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.boolean_t}, false))) {
 
-        Log::compiler_error("Declaring runtime cast __cast_Boolean_to_String failed", 
+        Log::compiler_error("Declaring runtime cast to_String_Boolean failed", 
+            COMPILER_INIT_SOURCE_LOCATION);
+        return false;
+    }
+
+    if (!generator.forward_declaration("to_String_MutString", Maps::MutString_to_String,
+        llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.mutstring_t}, false))) {
+
+        Log::compiler_error("Declaring runtime cast to_String_MutString failed", 
             COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
 
     // maps_String* __Int_to_String(maps_Int i);
     // maps_String* __Float_to_String(maps_Float f);
+
+    // ----- declare string functions -----
+    if (!generator.forward_declaration("concat", Maps::MutString_MutString_to_MutString,
+        llvm::FunctionType::get(generator.types_.mutstring_t, {generator.types_.mutstring_t, generator.types_.mutstring_t}, false))) {
+
+        Log::compiler_error("Declaring concat failed", 
+            COMPILER_INIT_SOURCE_LOCATION);
+        return false;
+    }
 
     return true;
 }

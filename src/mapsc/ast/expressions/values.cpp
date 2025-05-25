@@ -61,8 +61,8 @@ Expression* Expression::known_value(AST_Store& store, KnownValue value,
             { return {value, &Boolean}; },
         [](std::string value)->std::pair<ExpressionValue, const Type*> 
             { return {value, &String}; },
-        [](maps_Mut_String value)->std::pair<ExpressionValue, const Type*> 
-            { return {value, &Mut_String}; },
+        [](maps_MutString value)->std::pair<ExpressionValue, const Type*> 
+            { return {value, &MutString}; },
     }, value);
 
     return store.allocate_expression({ExpressionType::known_value, unwrapped_value, type, location});
@@ -82,8 +82,8 @@ optional<Expression*> Expression::known_value(AST_Store& store, KnownValue value
             { return {value, &Boolean}; },
         [](std::string value)->std::pair<ExpressionValue, const Type*> 
             { return {value, &String}; },
-        [](maps_Mut_String value)->std::pair<ExpressionValue, const Type*> 
-            { return {value, &Mut_String}; },
+        [](maps_MutString value)->std::pair<ExpressionValue, const Type*> 
+            { return {value, &MutString}; },
     }, value);
 
     auto expression = store.allocate_expression(

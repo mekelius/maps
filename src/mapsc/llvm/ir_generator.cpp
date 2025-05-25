@@ -402,11 +402,16 @@ const Maps::FunctionType* deduce_function_type(Maps::TypeStore& types,
 llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
 
+    Log::debug_extra("Creating call to " + callee->name_string(), call.location);
+
+    auto deduced_type = deduce_function_type(*compilation_state_->types_, call);
+    Log::debug_extra("Deduced function type to be " + deduced_type->name_string(), call.location);
+
     std::optional<llvm::FunctionCallee> function = function_store_->get(
-        callee->name_string(), *deduce_function_type(*compilation_state_->types_, call));
+        callee->name_string(), *dynamic_cast<const Maps::FunctionType*>(callee->get_type()), true);
 
     if (!function) {
-        fail("attempt to call unknown function: \"" + callee->name_string() + "\"");
+        fail("Attempt to call unknown function: \"" + callee->name_string() + "\"");
         return nullptr;
     }
 
@@ -425,6 +430,8 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
 // ----- VALUE HANDLERS -----
 
 llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
+    using llvm::ConstantInt, llvm::APInt;
+
     // TODO: make typeids known at compile time so this can be a switch
     if (*expression.type == Maps::Int) {
         assert(std::holds_alternative<maps_Int>(expression.value) && 
@@ -442,6 +449,16 @@ llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
                 
     } else if (*expression.type == Maps::String) {
         return builder_->CreateGlobalString(std::get<std::string>(expression.value)); 
+
+    } else if (*expression.type == Maps::MutString) {
+        maps_MutString maps_str = std::get<maps_MutString>(expression.value);
+        llvm::Constant* data = builder_->CreateGlobalString(maps_str.data);
+
+        return llvm::ConstantStruct::get(types_.mutstring_t, {
+            data,
+            ConstantInt::get(*context_, APInt(8*sizeof(maps_UInt), maps_str.length, false)), 
+            ConstantInt::get(*context_, APInt(8*sizeof(maps_MemUInt), maps_str.mem_size, false))
+        });
 
     } else {
         assert(false && "type not implemented in IR_Generator::handle_value");
