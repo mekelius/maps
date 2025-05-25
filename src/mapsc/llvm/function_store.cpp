@@ -16,6 +16,37 @@ using Maps::LogInContext, Maps::LogContext;
 namespace IR {
 
 std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name, 
+    bool log_error_on_fail) const {
+
+    using Log = LogInContext<LogContext::ir_gen>;
+
+    Log::debug_extra("Looking up a function with name \"" + name + "\"", NO_SOURCE_LOCATION);
+    
+    auto it = functions_.find(name);
+
+    if (it == functions_.end()) {
+        Log::error("No function named \"" + name + "\" in function store", NO_SOURCE_LOCATION);
+        return nullopt;
+    }
+    Log::debug_extra("Found function" , NO_SOURCE_LOCATION);
+
+    return it->second;
+}
+
+bool FunctionStore::insert(const std::string& name, llvm::FunctionCallee function_callee) {    
+    auto it = functions_.find(name);
+
+    if (it != functions_.end()) {
+        LogInContext<LogContext::ir_gen_init>::compiler_error(
+            "tried to insert a function overload that already exists", 
+            COMPILER_INIT_SOURCE_LOCATION);
+    }
+    
+    functions_.insert({name, function_callee});
+    return true;
+}
+
+std::optional<llvm::FunctionCallee> PolymorphicFunctionStore::get(const std::string& name, 
     const Maps::FunctionType& function_type, bool log_error_on_fail) const {
 
     using Log = LogInContext<LogContext::ir_gen>;
@@ -48,7 +79,7 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const std::string& name,
     return inner_it->second;
 }
 
-bool FunctionStore::insert(const std::string& name, const Maps::FunctionType& maps_type, 
+bool PolymorphicFunctionStore::insert(const std::string& name, const Maps::FunctionType& maps_type, 
     llvm::FunctionCallee function_callee) {    
     
     auto signature = maps_type.name_string();

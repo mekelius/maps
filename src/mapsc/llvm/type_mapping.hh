@@ -25,14 +25,14 @@ public:
     llvm::Type* int_t;
     llvm::Type* uint_t;
     llvm::Type* memuint_t;
-    llvm::Type* char_array_13_t;
-    llvm::Type* char_array_ptr_t;
+    llvm::PointerType* char_array_ptr_t;
     llvm::Type* double_t;
     llvm::Type* void_t;
     llvm::Type* boolean_t;
     llvm::FunctionType* repl_wrapper_signature;
     llvm::FunctionType* cmain_signature;
     llvm::StructType* mutstring_t;
+    llvm::PointerType* mutstring_ptr_t;
 
     // size_t size() const;
     // bool empty() const;

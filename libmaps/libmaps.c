@@ -64,8 +64,8 @@ maps_String to_String_Boolean(maps_Boolean b) {
     return b ? "true" : "false";
 }
 
-maps_String to_String_MutString(struct maps_MutString str) {
-    return str.data;
+maps_String to_String_MutString(struct maps_MutString* str) {
+    return str->data;
 }
 
 struct maps_MutString to_MutString_Int(maps_Int i) {
@@ -86,16 +86,17 @@ void free_MutString(struct maps_MutString* str) {
     free(str->data);
 }
 
-struct maps_MutString concat_MutString_MutString(
-    struct maps_MutString lhs, struct maps_MutString rhs) {
+struct maps_MutString* concat_MutString_MutString(
+    struct maps_MutString* lhs, struct maps_MutString* rhs) {
 
-    struct maps_MutString out;
-    out.mem_size = lhs.mem_size + rhs.mem_size - 1;
-    out.length = lhs.length + rhs.length;
-    out.data = malloc(out.mem_size);
+    struct maps_MutString* out = malloc(sizeof(struct maps_MutString));
 
-    memcpy(out.data, lhs.data, lhs.mem_size - 1);
-    memcpy(out.data + lhs.mem_size - 1, rhs.data, rhs.mem_size);
+    out->mem_size = lhs->mem_size + rhs->mem_size - 1;
+    out->length = lhs->length + rhs->length;
+    out->data = malloc(out->mem_size);
+
+    memcpy(out->data, lhs->data, lhs->mem_size - 1);
+    memcpy(out->data + lhs->mem_size - 1, rhs->data, rhs->mem_size);
 
     return out;
 }

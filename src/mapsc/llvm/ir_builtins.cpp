@@ -72,7 +72,9 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
     };
 
     for (auto [maps_type, llvm_type]: PRINTABLE_TYPES) {
-        if (!generator.forward_declaration("print", *generator.maps_types_->get_function_type(
+        std::string suffixed_name = "print_" + maps_type->name_string();
+
+        if (!generator.forward_declaration(suffixed_name, *generator.maps_types_->get_function_type(
                 &Maps::IO_Void, {maps_type}, false),
                 llvm::FunctionType::get(generator.types_.void_t, {llvm_type}, false))) {
 
@@ -100,7 +102,7 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
     }
 
     if (!generator.forward_declaration("to_String_MutString", Maps::MutString_to_String,
-        llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.mutstring_t}, false))) {
+        llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.mutstring_ptr_t}, false))) {
 
         Log::compiler_error("Declaring runtime cast to_String_MutString failed", 
             COMPILER_INIT_SOURCE_LOCATION);
@@ -111,13 +113,18 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
     // maps_String* __Float_to_String(maps_Float f);
 
     // ----- declare string functions -----
-    if (!generator.forward_declaration("concat", Maps::MutString_MutString_to_MutString,
-        llvm::FunctionType::get(generator.types_.mutstring_t, {generator.types_.mutstring_t, generator.types_.mutstring_t}, false))) {
 
+    auto concat = generator.forward_declaration("concat_MutString_MutString", Maps::MutString_MutString_to_MutString,
+        llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {generator.types_.mutstring_ptr_t, generator.types_.mutstring_ptr_t}, false));
+
+    if (!concat) {
         Log::compiler_error("Declaring concat failed", 
             COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
+
+    // (*concat)->addParamAttr(0, llvm::Attribute::ByVal);
+    // (*concat)->addParamAttr(1, llvm::Attribute::ByVal);
 
     return true;
 }

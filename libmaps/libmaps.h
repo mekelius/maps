@@ -18,10 +18,10 @@ maps_String to_String_Boolean(maps_Boolean b);
 
 struct maps_MutString to_MutString_Int(maps_Int i);
 struct maps_MutString to_MutString_Float(maps_Float f);
-maps_String to_String_MutString(struct maps_MutString);
+maps_String to_String_MutString(struct maps_MutString*);
 
 void free_MutString(struct maps_MutString* str);
 
-struct maps_MutString concat_MutString_MutString(struct maps_MutString, struct maps_MutString);
+struct maps_MutString* concat_MutString_MutString(struct maps_MutString*, struct maps_MutString*);
 
 #endif

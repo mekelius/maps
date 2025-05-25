@@ -25,7 +25,6 @@ namespace IR {
 TypeMap::TypeMap(llvm::LLVMContext& context) {
     // get some types
     char_t = llvm::Type::getInt8Ty(context);
-    char_array_13_t = llvm::ArrayType::get(char_t, 13);
     char_array_ptr_t = 
         llvm::PointerType::getUnqual(llvm::PointerType::getUnqual(char_t));
     int_t = llvm::Type::getInt32Ty(context);
@@ -33,12 +32,14 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
     double_t = llvm::Type::getDoubleTy(context);
     void_t = llvm::Type::getVoidTy(context);
     boolean_t = llvm::Type::getInt8Ty(context);
-
+    
     static_assert(sizeof(size_t) == sizeof(int64_t) && "MemUInt needs to be adjusted");
     memuint_t = llvm::Type::getInt64Ty(context);
-
+    
     mutstring_t = llvm::StructType::create(context, {
         char_array_ptr_t, uint_t, memuint_t}, "maps_MutString");
+        
+    mutstring_ptr_t = llvm::PointerType::getUnqual(mutstring_t);
 
     repl_wrapper_signature = llvm::FunctionType::get(void_t, false);
 
@@ -97,6 +98,9 @@ std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Ty
     
     if(!llvm_return_type)
         return nullopt;
+
+    if (*llvm_return_type == mutstring_t)
+        llvm_return_type = mutstring_ptr_t;
     
     vector<llvm::Type*> llvm_arg_types{};
 

@@ -65,13 +65,13 @@ namespace IR {
 namespace {
 
 // creates the internal name for a function based on arg types
-std::string create_internal_name(const std::string& name, const Maps::FunctionType& ast_type) {
+std::string create_internal_name(const std::string& name, const Maps::FunctionType& maps_type) {
     std::string internal_name = name;
 
-    // prepend arg names
-    for (const Maps::Type* arg_type: ast_type.param_types()) {
-        internal_name += "_" + static_cast<std::string>(arg_type->name());
-    }
+    // append arg names
+    // for (const Maps::Type* arg_type: maps_type.param_types()) {
+    //     internal_name += "_" + static_cast<std::string>(arg_type->name());
+    // }
 
     return internal_name;
 }
@@ -134,19 +134,19 @@ void IR_Generator::fail(const std::string& message) {
 }
 
 optional<llvm::Function*> IR_Generator::function_definition(const std::string& name, 
-    const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
+    const Maps::FunctionType& maps_type, llvm::FunctionType* llvm_type, 
     llvm::Function::LinkageTypes linkage) {
 
-    if (!ast_type.is_function()) {
+    if (!maps_type.is_function()) {
         Log::compiler_error("IR::Generator::function_definition called with a non-function type: " + 
-            ast_type.name_string(), NO_SOURCE_LOCATION);
+            maps_type.name_string(), NO_SOURCE_LOCATION);
         assert(false && "IR_Generator::function_definition called with non-function ast type");
         return nullopt;
     }
 
     llvm::Function* function = llvm::Function::Create(llvm_type, linkage, 
-        create_internal_name(name, ast_type), module_);
-    function_store_->insert(name, ast_type, {llvm_type, function});
+        create_internal_name(name, maps_type), module_);
+    function_store_->insert(name, {llvm_type, function});
     llvm::BasicBlock* body = llvm::BasicBlock::Create(*context_, "", function);
     builder_->SetInsertPoint(body);
     return function;
@@ -170,12 +170,12 @@ bool IR_Generator::close_function_definition(const llvm::Function& function,
 }
 
 optional<llvm::Function*> IR_Generator::forward_declaration(const std::string& name, 
-    const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type,
+    const Maps::FunctionType& maps_type, llvm::FunctionType* llvm_type,
     llvm::Function::LinkageTypes linkage) {
     
     llvm::Function* function = llvm::Function::Create(llvm_type, linkage, 
-        create_internal_name(name, ast_type), module_);
-    function_store_->insert(name, ast_type, function);
+        create_internal_name(name, maps_type), module_);
+    function_store_->insert(name, function);
     return function;
 }
 
@@ -341,8 +341,7 @@ std::optional<llvm::Value*> IR_Generator::handle_expression_statement(
         return value;
 
     optional<llvm::FunctionCallee> print = 
-        function_store_->get("print", *maps_types_->get_function_type(
-            &Maps::Void, {expression->type}, false));
+        function_store_->get("print_" + expression->type->name_string(), false);
 
     if (!print) {
         fail("no print function for top level expression");
@@ -400,15 +399,16 @@ const Maps::FunctionType* deduce_function_type(Maps::TypeStore& types,
 }
 
 llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
+    using llvm::ConstantInt, llvm::APInt;
     auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
 
     Log::debug_extra("Creating call to " + callee->name_string(), call.location);
 
-    auto deduced_type = deduce_function_type(*compilation_state_->types_, call);
-    Log::debug_extra("Deduced function type to be " + deduced_type->name_string(), call.location);
+    // auto deduced_type = deduce_function_type(*compilation_state_->types_, call);
+    // Log::debug_extra("Deduced function type to be " + deduced_type->name_string(), call.location);
 
     std::optional<llvm::FunctionCallee> function = function_store_->get(
-        callee->name_string(), *dynamic_cast<const Maps::FunctionType*>(callee->get_type()), true);
+        callee->name_string(), true);
 
     if (!function) {
         fail("Attempt to call unknown function: \"" + callee->name_string() + "\"");
@@ -419,12 +419,38 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     std::vector<llvm::Value*> arg_values = {};
 
     for (Expression* arg_expr : args) {
-        optional<llvm::Value*> value = handle_expression(*arg_expr);
-        if (value)
-            arg_values.push_back(*value);
+        if (arg_expr->expression_type == ExpressionType::known_value && *arg_expr->type == Maps::MutString) {
+
+            maps_MutString maps_str = std::get<maps_MutString>(arg_expr->value);
+            llvm::Constant* data = builder_->CreateGlobalString(maps_str.data);
+            
+            auto mut_str = llvm::ConstantStruct::get(types_.mutstring_t, {
+                    data,
+                    ConstantInt::get(*context_, APInt(8*sizeof(maps_UInt), maps_str.length, false)), 
+                    ConstantInt::get(*context_, APInt(8*sizeof(maps_MemUInt), maps_str.mem_size, false))
+            });
+
+            auto alloca = builder_->CreateAlloca(types_.mutstring_t, 0, "test");
+            builder_->CreateStore(mut_str, alloca);
+
+            arg_values.push_back(alloca);
+
+        } else {
+            optional<llvm::Value*> value = handle_expression(*arg_expr);
+            if (value) {
+                arg_values.push_back(*value);
+            }
+        }
     }
 
-    return builder_->CreateCall(*function, arg_values);
+    auto llvm_call = builder_->CreateCall(*function, arg_values);
+
+    // if (callee->name_string() == "concat_MutString_MutString") {
+    //     llvm_call->addParamAttr(0, llvm::Attribute::ByVal);
+    //     llvm_call->addParamAttr(1, llvm::Attribute::ByVal);
+    // }
+
+    return llvm_call;
 }
 
 // ----- VALUE HANDLERS -----

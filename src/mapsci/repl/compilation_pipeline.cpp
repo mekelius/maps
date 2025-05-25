@@ -39,10 +39,13 @@ using Maps::CompilationState, Maps::Layer1Result, Maps::run_layer1_eval, Maps::S
 optional<Definition*> REPL::create_repl_wrapper(CompilationState& state, 
     RT_Definition* top_level_definition) {
     
+    std::cout << "Creating REPL wrapper...\n";
+
     std::optional<Expression*> eval_and_print;
     auto location = NO_SOURCE_LOCATION;
+    auto top_level_type = top_level_definition->get_type();
 
-    if (top_level_definition->get_type()->is_function()) {
+    if (top_level_type->is_function()) {
         auto run_eval = Expression::call(state, top_level_definition, {}, location);
 
         if (!run_eval) {
@@ -52,7 +55,7 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
         }
 
         eval_and_print = Expression::call(state, state.special_definitions_.print_String, 
-            {*run_eval}, top_level_definition->location());
+            {*run_eval}, location);
 
     } else {
         eval_and_print = Expression::call(state, state.special_definitions_.print_String,
@@ -60,9 +63,16 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
             location);
     }
 
-    if (!eval_and_print) {
+    if (!eval_and_print && top_level_type->is_pure()) {
         std::cout << "creating REPL wrapper failed" << std::endl;
         return nullopt;
+    }
+
+    if (!eval_and_print && top_level_type->is_impure()) {
+        auto eval = Expression::call(state, top_level_definition, {}, location);
+
+        return state.ast_store_->allocate_definition(
+            RT_Definition{options_.repl_wrapper_name, *eval, true, location});
     }
 
     auto definition = state.ast_store_->allocate_definition(
@@ -148,22 +158,28 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (options_.stop_after == REPL_Stage::layer2)
         return true;
 
-    if (!top_level_definition || (*top_level_definition)->get_type()->is_voidish())
+    if (!top_level_definition || ((*top_level_definition)->get_type()->is_pure() && (*top_level_definition)->get_type()->is_voidish())) {
+        std::cout << "Top level definition doesn't produce a value or doesn't exist" << std::endl;
         return true;
+    }
 
 
     // --------------------------------- TYPE CHECKS --------------------------------------
 
-    if (!run_transforms(state, global_scope, top_level_definition))
+    if (!run_transforms(state, global_scope, top_level_definition) && !options_.ignore_errors) {
+        std::cout << "Transform stage failed" << std::endl;
         return false;
+    }
 
     debug_print(REPL_Stage::transform_stage, global_scope, *top_level_definition);
 
 
     // ----------------------------- CREATE REPL WRAPPER ---------------------------------
 
-    if (!top_level_definition || (*top_level_definition)->get_type()->is_voidish())
+    if (!top_level_definition || ((*top_level_definition)->get_type()->is_pure() && (*top_level_definition)->get_type()->is_voidish())) {
+        std::cout << "Top level definition doesn't produce a value or doesn't exist" << std::endl;
         return true;
+    }
 
     auto repl_wrapper = create_repl_wrapper(state, *top_level_definition);
 
