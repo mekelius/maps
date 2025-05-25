@@ -115,6 +115,7 @@ protected:
 
     Expression* parse_termed_expression(bool is_tied = false);
     Expression* parse_term(bool is_tied = false);
+    Expression* close_termed_expression(Expression* expression);
 
     // ################################## layer1/terminal.cpp #####################################
     

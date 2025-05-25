@@ -42,11 +42,25 @@ typedef const char* maps_String;
 
 struct maps_Mut_String {
     char* data;
-    maps_MemNat length; // no uint yet
-
-    #ifdef __cplusplus
-    // ~maps_Mut_String() { free(data); }
-    #endif
+    maps_MemNat length;
 };
+
+#ifdef __cplusplus
+inline bool operator==(const maps_Mut_String& lhs, const maps_Mut_String& rhs) {
+    if (lhs.length != rhs.length)
+        return false;
+
+    for (size_t i = 0; i < lhs.length; i++) {
+        if (lhs.data[i] != rhs.data[i])
+            return false;
+    }
+
+    return true;
+}
+
+inline bool operator!=(const maps_Mut_String& lhs, const maps_Mut_String& rhs) {
+    return !(lhs == rhs);
+}
+#endif
 
 #endif

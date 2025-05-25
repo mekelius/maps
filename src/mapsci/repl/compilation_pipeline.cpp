@@ -25,6 +25,7 @@
 #include "mapsc/procedures/type_check.hh"
 #include "mapsc/procedures/name_resolution.hh"
 #include "mapsc/transform_stage.hh"
+#include "mapsc/procedures/cleanup.hh"
 
 #include "mapsc/llvm/ir_generator.hh"
 #include "mapsc/llvm/ir_builtins.hh"
@@ -166,13 +167,23 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 
     auto repl_wrapper = create_repl_wrapper(state, *top_level_definition);
 
-    debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
-
     if (!repl_wrapper) {
+        debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
         std::cout << "ERROR: creating repl wrapper failed" << std::endl;
         if (!options_.ignore_errors)
             return false;
     }
+
+
+    if (!insert_global_cleanup(state, 
+        global_scope, **top_level_definition)) {
+
+        std::cout << "ERROR: creating repl wrapper failed" << std::endl;
+        if (!options_.ignore_errors)
+            return false;
+    }
+
+    debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
 
     if (options_.stop_after == REPL_Stage::pre_ir || !options_.eval)
         return true;
@@ -234,4 +245,10 @@ bool REPL::run_transforms(CompilationState& state,
     }
 
     return true;
+}
+
+bool REPL::insert_global_cleanup(Maps::CompilationState& state, 
+    Maps::RT_Scope& scope, Maps::RT_Definition& entry_point) {
+
+    return Maps::insert_cleanup(state, scope, entry_point);
 }

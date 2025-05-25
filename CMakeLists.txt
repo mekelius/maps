@@ -75,6 +75,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/procedures/name_resolution.cpp
     src/mapsc/procedures/reverse_parse.cpp
     src/mapsc/procedures/create_call.cpp
+    src/mapsc/procedures/cleanup.cpp
 
     src/mapsc/parser/token.cpp
     src/mapsc/parser/lexer.cpp
@@ -182,6 +183,7 @@ add_executable(unit_tests
     tests/parser/layer1/lambda.cpp
     tests/parser/layer1/ternary.cpp
     tests/parser/layer1/block.cpp
+    tests/parser/layer1/termed.cpp
     
     tests/types/types.cpp
     tests/types/type_casts.cpp

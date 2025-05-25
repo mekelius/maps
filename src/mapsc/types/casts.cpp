@@ -59,6 +59,11 @@ bool cast_from_Int(const Type* target_type, Expression& expression) {
         return true;
     }
 
+    if (*target_type == Mut_String) {
+        maps_Mut_String mut_string_value = __to_Mut_String_Int(int_value);
+        cast_value<maps_Mut_String>(expression, &Mut_String, mut_string_value);
+    }
+
     return false;
 }
 
@@ -116,10 +121,11 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
     if (*target_type == Mut_String) {
         auto old_value = expression.string_value();
 
-        auto new_str = malloc(old_value.size());
+        // include the null terminator
+        auto new_str = malloc(old_value.size() + 1);
         maps_Mut_String value{static_cast<char*>(new_str), old_value.size()};
 
-        std::memcpy(new_str, old_value.c_str(), old_value.size());
+        std::memcpy(new_str, old_value.c_str(), old_value.size() + 1);
 
         cast_value<maps_Mut_String>(expression, &Mut_String, value);
         return true;
@@ -178,9 +184,7 @@ bool cast_from_Mut_String(const Type* target_type, Expression& expression) {
 
         cast_value<std::string>(expression, &String, std::string{data, size});
 
-        free(data);
-
-        return true;   
+        return true;
     }
 
     Log::compiler_error("Mut string casts not implemented", expression.location);

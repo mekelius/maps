@@ -82,7 +82,10 @@ private:
         std::vector<Maps::Expression*> unparsed_termed_expressions);
 
     bool run_transforms(Maps::CompilationState& state, 
-        Maps::RT_Scope& scopes, std::optional<Maps::RT_Definition* const> definition);
+        Maps::RT_Scope& scope, std::optional<Maps::RT_Definition* const> definition);
+
+    bool insert_global_cleanup(Maps::CompilationState& state, 
+        Maps::RT_Scope& scope, Maps::RT_Definition& entry_point);
 
     std::unique_ptr<llvm::Module> run_ir_gen(Maps::CompilationState& state, 
         Maps::Definition* definition);

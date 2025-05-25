@@ -49,7 +49,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
         // in tied expressions, every term must be followed by a tie
         // if not, we are done
         if(in_tied_expression) {
-            if (current_token().token_type != TokenType::tie) {
+            if (current_token().token_type != TokenType::tie || current_token().token_type == TokenType::eof) {
                 done = true;
                 break;
             } else {
@@ -80,7 +80,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
                 if (expression->terms().size() > 1) {
                     Expression* lhs = Expression::termed(*ast_store_, {}, expression->location);
                     *lhs = *expression;
-                    expression->terms() = {lhs};
+                    expression->terms() = {close_termed_expression(lhs)};
                     std::get<TermedExpressionValue>(expression->value).is_type_declaration = 
                         DeferredBool::maybe_;
                 }
@@ -92,6 +92,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
                 if (!expression->terms().back()->is_allowed_in_type_declaration())
                     expression->mark_not_type_declaration();
+                break;
             }
 
             case TokenType::lambda:
@@ -117,10 +118,19 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
             default:
                 return fail_expression(
-                    "unexpected: " + current_token().get_string() + ", in termed expression",
+                    "Unexpected: " + current_token().get_string() + ", in termed expression",
                     current_token().location);
         }
     }
+
+    log("Finished parsing termed expression from " + expression->location.to_string(), 
+        LogLevel::debug_extra);
+    return close_termed_expression(expression);
+}
+
+Expression* ParserLayer1::close_termed_expression(Expression* expression) {
+    assert(expression->expression_type == ExpressionType::termed_expression &&
+        "close_termed_expression called with not a termed expression");
 
     // unwrap redundant parentheses
     if (expression->terms().size() == 1) {
@@ -143,9 +153,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     }
 
     result_.unparsed_termed_expressions.push_back(expression);
-    
-    log("finished parsing termed expression from " + expression->location.to_string(), 
-        LogLevel::debug_extra);
+
     return expression;
 }
 
@@ -212,9 +220,8 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return parse_lambda_expression();
 
         default:
-            assert(false && "unhandled token type in parse_term");
-            return fail_expression("unhandled token type: " + current_token().get_string() + 
-                ", reached ParserLayer1::parse_term", current_token().location, true);
+            return fail_expression("In parse_term: unhandled token type: " + current_token().get_string(), 
+                current_token().location, true);
     }
 }
 

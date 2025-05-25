@@ -50,22 +50,10 @@ Expression* ParserLayer1::parse_expression() {
             if (is_access_operator(next_token))
                 return parse_termed_expression();
 
-            switch (next_token.token_type) {
-                case TokenType::identifier:
-                case TokenType::operator_t:
-                case TokenType::number:
-                case TokenType::string_literal:
-                case TokenType::tie:
-                    return parse_termed_expression();    
+            if (is_term_token(next_token))
+                return parse_termed_expression();
 
-                case TokenType::eof:
-                case TokenType::semicolon:
-                case TokenType::indent_block_end:
-                    return handle_identifier();
-
-                default:
-                    return handle_identifier();
-            }
+            return handle_identifier();
         }
 
         case TokenType::lambda:

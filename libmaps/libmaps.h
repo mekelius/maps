@@ -16,8 +16,9 @@ bool __CT_to_Float_String(maps_String str, maps_Float* out);
 maps_Float __to_Float_Int(maps_Int i);
 maps_String __to_String_Boolean(maps_Boolean b);
 
-// These need mutable strings
-// maps_String* __Int_to_String(maps_Int i);
-// maps_String* __Float_to_String(maps_Float f);
+struct maps_Mut_String __to_Mut_String_Int(maps_Int i);
+struct maps_Mut_String __to_Mut_String_Float(maps_Float f);
+
+void free_Mut_String(struct maps_Mut_String* str);
 
 #endif

@@ -175,10 +175,6 @@ Token Lexer::get_token_() {
             return collapsed_semicolon_token();
 
         case ':':
-            if (tie_possible_) {
-                tie_possible_ = false;
-                return create_token(TokenType::tie);
-            }
             read_char();
 
             if (current_char_ == ':') {

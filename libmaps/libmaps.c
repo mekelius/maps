@@ -1,9 +1,12 @@
 #include "libmaps.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 #include <errno.h>
 #include <stdlib.h>
+
+const size_t MAX_INT_LENGTH = 12;
 
 void print_Boolean(maps_Boolean b) {
     printf("%s", b ? "true" : "false");
@@ -60,10 +63,19 @@ maps_String __to_String_Boolean(maps_Boolean b) {
     return b ? "true" : "false";
 }
 
-// maps_String* __Int_to_Mut_String(maps_Int i) {
-//     return 
-// }
+struct maps_Mut_String __to_Mut_String_Int(maps_Int i) {
+    struct maps_Mut_String str;
+    str.data = malloc(MAX_INT_LENGTH);
+    str.length = snprintf(str.data, MAX_INT_LENGTH, "%i", i);
 
-// maps_String* __Float_to_String(maps_Float f) {
+    return str;
+}
 
-// }
+struct maps_Mut_String __to_Mut_String_Float(maps_Float f) {
+    assert(false && "not implemented");
+}
+
+void free_Mut_String(struct maps_Mut_String* str) {
+    str->length = 0;
+    free(str->data);
+}
