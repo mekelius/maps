@@ -35,6 +35,7 @@ public:
         CT_Operator* unary_minus;
         CT_Operator* binary_minus;
         CT_Definition* print_String;
+        CT_Definition* print_MutString;
     };
 
     static std::tuple<CompilationState, std::unique_ptr<const CT_Scope>, std::unique_ptr<TypeStore>> 
@@ -44,11 +45,11 @@ public:
         create_test_state_with_builtins();
 
     CompilationState(const CT_Scope* builtins, TypeStore* types, 
-        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String});
+        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String, &print_MutString});
 
     CompilationState(const CT_Scope* builtins, TypeStore* types, 
         Options compiler_options,
-        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String});
+        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String, &print_MutString});
 
     // copy constructor
     CompilationState(const CompilationState&) = default;
@@ -63,7 +64,7 @@ public:
     TypeStore* types_;
     const CT_Scope* builtins_;
     SpecialDefinitions special_definitions_ = 
-        SpecialDefinitions{&unary_minus_Int, &binary_minus_Int, &print_String};
+        SpecialDefinitions{&unary_minus_Int, &binary_minus_Int, &print_String, &print_MutString};
 };
 
 } // namespace Maps

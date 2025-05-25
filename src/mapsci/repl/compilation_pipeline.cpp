@@ -54,13 +54,24 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
             return nullopt;
         }
 
+        // try string first
         eval_and_print = Expression::call(state, state.special_definitions_.print_String, 
             {*run_eval}, location);
+
+        if (!eval_and_print)
+            eval_and_print = Expression::call(state, state.special_definitions_.print_MutString, 
+                {*run_eval}, location);
+
 
     } else {
         eval_and_print = Expression::call(state, state.special_definitions_.print_String,
             {std::get<Expression*>(top_level_definition->body())}, 
             location);
+
+        if (!eval_and_print)
+            eval_and_print = Expression::call(state, state.special_definitions_.print_MutString,
+                {std::get<Expression*>(top_level_definition->body())}, 
+                location);
     }
 
     if (!eval_and_print && top_level_type->is_pure()) {

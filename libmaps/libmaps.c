@@ -21,6 +21,11 @@ void print_String(maps_String str) {
     printf("%s", str);
 }
 
+void print_MutString(struct maps_MutString* str) {
+    print_String(to_String_MutString(str));
+}
+
+
 void print_Float(maps_Float d) {
     printf("%f", d);
 }
@@ -68,16 +73,17 @@ maps_String to_String_MutString(struct maps_MutString* str) {
     return str->data;
 }
 
-struct maps_MutString to_MutString_Int(maps_Int i) {
-    struct maps_MutString str;
-    str.data = malloc(MAX_INT_LENGTH);
-    str.mem_size = snprintf(str.data, MAX_INT_LENGTH, "%i", i);
-    str.length = str.mem_size - 1;
+struct maps_MutString* to_MutString_Int(maps_Int i) {
+    struct maps_MutString* out = malloc(sizeof(struct maps_MutString));
 
-    return str;
+    out->data = malloc(MAX_INT_LENGTH);
+    out->mem_size = snprintf(out->data, MAX_INT_LENGTH, "%i", i);
+    out->length = out->mem_size - 1;
+
+    return out;
 }
 
-struct maps_MutString to_MutString_Float(maps_Float f) {
+struct maps_MutString* to_MutString_Float(maps_Float f) {
     assert(false && "not implemented");
 }
 

@@ -47,6 +47,7 @@ constexpr std::array<const Type*, CT_TYPES_COUNT> BUILTIN_TYPES {
 
 constexpr auto CT_FUNCTION_TYPES_START_LINE = __LINE__;
 constexpr CTFunctionType<1> String_to_IO_Void{ "String => IO Void", &IO_Void, {&String}, false };
+constexpr CTFunctionType<1> MutString_to_IO_Void{ "MutString => IO Void", &IO_Void, {&MutString}, false };
 constexpr CTFunctionType<1> Int_to_Int{ "Int -> Int", &Int, {&Int}, true };
 constexpr CTFunctionType<2> IntInt_to_Int{ "Int -> Int -> Int", &Int, {&Int, &Int}, true };
 constexpr CTFunctionType<2> FloatFloat_to_Float{ "Float -> Float -> Float", &Float, {&Float, &Float}, true };
@@ -54,20 +55,25 @@ constexpr CTFunctionType<1> Boolean_to_String{ "Boolean -> String", &String, {&B
 constexpr CTFunctionType<1> Int_to_String{ "Int -> String", &String, {&Int}, true};
 constexpr CTFunctionType<1> Float_to_String{ "Float -> String", &String, {&Float}, true};
 constexpr CTFunctionType<1> Int_to_Float{ "Int -> Float", &Float, {&Int}, true};
+constexpr CTFunctionType<1> Int_to_MutString{ "Int -> MutString", &MutString, {&Int}, true};
+constexpr CTFunctionType<1> Float_to_MutString{ "Float -> MutString", &MutString, {&Float}, true};
 constexpr CTFunctionType<1> MutString_to_String{ "MutString -> String", &String, {&MutString}, true};
 constexpr CTFunctionType<2> MutString_MutString_to_MutString{ "MutString -> MutString -> MutString", &MutString, {&MutString, &MutString}, true};
 constexpr auto CT_FUNCTION_TYPES_COUNT = __LINE__ - CT_FUNCTION_TYPES_START_LINE - 1;
 
 constexpr std::array<const FunctionType*, CT_FUNCTION_TYPES_COUNT> BUILTIN_FUNCTION_TYPES {
-    &String_to_IO_Void,
     &Int_to_Int,
+    &Int_to_String,
+    &Int_to_MutString,
+    &Int_to_Float,
+    &Float_to_String,
+    &Float_to_MutString,
+    &Boolean_to_String,
+    &MutString_to_String,
+    &String_to_IO_Void,
+    &MutString_to_IO_Void,
     &IntInt_to_Int,
     &FloatFloat_to_Float,
-    &Boolean_to_String,
-    &Int_to_String,
-    &Float_to_String,
-    &Int_to_Float,
-    &MutString_to_String,
     &MutString_MutString_to_MutString
 };
 

@@ -60,8 +60,8 @@ bool cast_from_Int(const Type* target_type, Expression& expression) {
     }
 
     if (*target_type == MutString) {
-        maps_MutString mut_string_value = to_MutString_Int(int_value);
-        cast_value<maps_MutString>(expression, &MutString, mut_string_value);
+        maps_MutString* mut_string_value = to_MutString_Int(int_value);
+        cast_value<maps_MutString>(expression, &MutString, *mut_string_value);
     }
 
     return false;

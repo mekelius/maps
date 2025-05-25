@@ -62,6 +62,7 @@ CT_Operator::CT_Operator(std::string_view name, const Expression&& expression,
 CT_Definition true_{"true", Expression::builtin(true, Boolean)};
 CT_Definition false_{"false", Expression::builtin(false, Boolean)};
 constinit CT_Definition print_String{"print_String", External{}, String_to_IO_Void};
+constinit CT_Definition print_MutString{"print_MutString", External{}, MutString_to_IO_Void};
 
 // ----- BUILTINS SCOPE -----
 
@@ -83,6 +84,8 @@ constinit CT_Definition to_String_Int{"to_String_Int", External{}, Int_to_String
 constinit CT_Definition to_String_Float{"to_String_Float", External{}, Float_to_String};
 constinit CT_Definition to_Float_Int{"to_Float_Int", External{}, Int_to_Float};
 constinit CT_Definition to_String_MutString{"to_String_MutString", External{}, MutString_to_String};
+constinit CT_Definition to_MutString_Int{"to_MutString_Int", External{}, Int_to_MutString};
+constinit CT_Definition to_MutString_Float{"to_MutString_Float", External{}, Float_to_MutString};
 
 constinit CT_Definition concat{"concat_MutString_MutString", External{}, MutString_MutString_to_MutString};
 
@@ -103,12 +106,15 @@ bool init_builtins(CT_Scope& scope) {
         init_builtin(scope, true_                       ) &&
         init_builtin(scope, false_                      ) &&
         init_builtin(scope, print_String                ) &&
+        init_builtin(scope, print_MutString             ) &&
         init_builtin(scope, plus_Int                    ) &&
         init_builtin(scope, mult_Int                    ) &&
         init_builtin(scope, concat                      ) &&
         init_builtin(scope, to_String_Boolean           ) &&
         init_builtin(scope, to_Float_Int                ) &&
-        init_builtin(scope, to_String_MutString        )
+        init_builtin(scope, to_String_MutString         ) &&
+        init_builtin(scope, to_MutString_Int            ) &&
+        init_builtin(scope, to_MutString_Float          )
         // init_builtin(scope, to_String_Int               ) &&
         // init_builtin(scope, to_String_Float             ) &&
     );

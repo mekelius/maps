@@ -64,11 +64,12 @@ bool insert_builtins(IR::IR_Generator& generator) {
 
 bool forward_declare_libmaps(IR::IR_Generator& generator) {
     // ----- declare print types -----
-    const std::array<std::pair<const Maps::Type*, llvm::Type*>, 4> PRINTABLE_TYPES{
+    const std::array<std::pair<const Maps::Type*, llvm::Type*>, 5> PRINTABLE_TYPES{
        std::pair{&Maps::String, generator.types_.char_array_ptr_t}, 
                 {&Maps::Int, generator.types_.int_t}, 
                 {&Maps::Float, generator.types_.double_t}, 
-                {&Maps::Boolean, generator.types_.boolean_t}
+                {&Maps::Boolean, generator.types_.boolean_t},
+                {&Maps::MutString, generator.types_.mutstring_ptr_t}
     };
 
     for (auto [maps_type, llvm_type]: PRINTABLE_TYPES) {
@@ -103,6 +104,22 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
 
     if (!generator.forward_declaration("to_String_MutString", Maps::MutString_to_String,
         llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.mutstring_ptr_t}, false))) {
+
+        Log::compiler_error("Declaring runtime cast to_String_MutString failed", 
+            COMPILER_INIT_SOURCE_LOCATION);
+        return false;
+    }
+
+    if (!generator.forward_declaration("to_MutString_Int", Maps::Int_to_MutString,
+        llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {generator.types_.int_t}, false))) {
+
+        Log::compiler_error("Declaring runtime cast to_MutString_Int failed", 
+            COMPILER_INIT_SOURCE_LOCATION);
+        return false;
+    }
+
+    if (!generator.forward_declaration("to_MutString_Float", Maps::Float_to_MutString,
+        llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {generator.types_.double_t}, false))) {
 
         Log::compiler_error("Declaring runtime cast to_String_MutString failed", 
             COMPILER_INIT_SOURCE_LOCATION);
