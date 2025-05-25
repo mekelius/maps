@@ -21,4 +21,6 @@ struct maps_Mut_String __to_Mut_String_Float(maps_Float f);
 
 void free_Mut_String(struct maps_Mut_String* str);
 
+struct maps_Mut_String concat_Mut_String_Mut_String(struct maps_Mut_String, struct maps_Mut_String);
+
 #endif

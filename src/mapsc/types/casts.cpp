@@ -123,7 +123,8 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
 
         // include the null terminator
         auto new_str = malloc(old_value.size() + 1);
-        maps_Mut_String value{static_cast<char*>(new_str), old_value.size()};
+        maps_Mut_String value{static_cast<char*>(new_str), 
+            static_cast<maps_Nat>(old_value.size()), old_value.size() + 1};
 
         std::memcpy(new_str, old_value.c_str(), old_value.size() + 1);
 
@@ -169,10 +170,26 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
         return true;
     }
 
-    assert(false && "not implemented");
+    if (*target_type == Mut_String) {
+        maps_Int int_result;
+        if (__CT_to_Int_String(expression.string_value().c_str(), &int_result)) {
+            cast_value<maps_Int>(expression, &Int, int_result);
+            return cast_from_Int(&Mut_String, expression);
+        }
+
+        Log::warning(
+            "Casts from NumberLiteral to Mut_String only implemented for integral values", 
+            NO_SOURCE_LOCATION);
+        return false;
+    }
 
     if (*target_type == Float) {
-        
+        maps_Float result;
+        if (!__CT_to_Float_String(expression.string_value().c_str(), &result))
+            return false;
+
+        cast_value<maps_Float>(expression, &Float, result);
+        return true;
     }
 
     return false;
@@ -180,9 +197,9 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
 
 bool cast_from_Mut_String(const Type* target_type, Expression& expression) {
     if (*target_type == String) {
-        auto [data, size] = std::get<maps_Mut_String>(expression.value);
+        auto [data, length, mem_size] = std::get<maps_Mut_String>(expression.value);
 
-        cast_value<std::string>(expression, &String, std::string{data, size});
+        cast_value<std::string>(expression, &String, std::string{data, mem_size - 1});
 
         return true;
     }

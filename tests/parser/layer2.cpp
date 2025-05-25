@@ -448,3 +448,66 @@ TEST_CASE("Unary minus by itself should result in a partially applied minus") {
     CHECK(std::get<Expression*>(expr.value) == value);
     CHECK(*expr.type == Int);
 }
+
+TEST_CASE("Should report failure correctly") {
+    auto [state, _0, types] = CompilationState::create_test_state();
+    auto& ast_store = *state.ast_store_;
+
+    auto value = Expression::numeric_literal(ast_store, "23", TSL);
+
+    auto outer = Expression::termed(ast_store, {value, value, value}, TSL);
+
+    auto success = run_layer2(state, outer);
+
+    CHECK(!success);
+}
+
+
+TEST_CASE("Should apply a type declaration") {
+    auto [state, _0, types] = CompilationState::create_test_state();
+    auto& ast_store = *state.ast_store_;
+
+    auto value = Expression::numeric_literal(ast_store, "23", TSL);
+    auto type = Expression::type_reference(ast_store, &Float, TSL);
+
+    auto outer = Expression::termed(ast_store, {type, value}, TSL);
+
+    auto success = run_layer2(state, outer);
+
+    CHECK(success);
+    CHECK(*outer->type == Float);
+}
+
+
+TEST_CASE("Unary minus and type declaration") {
+    auto [state, _0, types] = CompilationState::create_test_state();
+    auto& ast_store = *state.ast_store_;
+
+    auto value = Expression::numeric_literal(ast_store, "23", TSL);
+    auto minus_sign = Expression::minus_sign(ast_store, TSL);
+    auto type = Expression::type_reference(ast_store, &Float, TSL);
+
+    auto outer = Expression::termed(ast_store, {type, minus_sign, value}, TSL);
+
+    auto success = run_layer2(state, outer);
+
+    CHECK(success);
+    CHECK(*outer->type == Float);
+}
+
+TEST_CASE("Unary minus and type declaration") {
+    auto [state, _0, types] = CompilationState::create_test_state();
+    auto& ast_store = *state.ast_store_;
+
+    auto value = Expression::numeric_literal(ast_store, "23", TSL);
+    auto minus_sign = Expression::minus_sign(ast_store, TSL);
+    auto type = Expression::type_reference(ast_store, &Float, TSL);
+
+    auto inner = Expression::termed(ast_store, {minus_sign, value}, TSL);
+    auto outer = Expression::termed(ast_store, {type, inner}, TSL);
+
+    auto success = run_layer2(state, outer);
+
+    CHECK(success);
+    CHECK(*outer->type == Float);
+}

@@ -77,7 +77,7 @@ bool TermedExpressionParser::run() {
     
     auto result = parse_termed_expression();
 
-    if (!result) {
+    if (!result || !success_) {
         Log::error("Parsing termed expression failed", expression_->location);
         return false;
     }
@@ -113,7 +113,6 @@ Operator::Precedence TermedExpressionParser::peek_precedence() const {
     return get_operator_precedence(*peek());
 }
 
-
 void TermedExpressionParser::shift() {
     parse_stack_.push_back(get_term());
     Log::debug_extra("Shift in term " + current_term()->log_message_string(), current_term()->location);
@@ -130,6 +129,8 @@ std::optional<Expression*> TermedExpressionParser::pop_term() {
 
 void TermedExpressionParser::fail(const std::string& message, SourceLocation location) {
     Log::error(message, location);
+    parse_stack_ = {Expression::user_error(*ast_store_, location)};
+    next_term_it_ = expression_terms_->end();
     success_ = false;
 }
 
@@ -322,6 +323,9 @@ void TermedExpressionParser::reduce_partially_applied_minus() {
 }
 
 void TermedExpressionParser::initial_goto() {
+    if (at_expression_end())
+        return;
+
     switch (current_term()->expression_type) {
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(current_term());
@@ -387,9 +391,9 @@ void TermedExpressionParser::initial_goto() {
         case ExpressionType::type_constructor_reference:
         case NOT_ALLOWED_IN_LAYER2:
             // TODO: make expressions print out nice
-            Log::error("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), 
+            fail("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), 
                 expression_->location);
-            assert(false && "bad term in TermedExpressionParser::parse_termed_expression");
+            return;
     }
 }
 
@@ -1077,6 +1081,10 @@ on the stack");
     }
 
     switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_termed_sub_expression(peek());
+            return initial_type_reference_state();
+
         case GUARANTEED_VALUE:
         case ExpressionType::call: {
             auto type_term = *pop_term();
@@ -1094,7 +1102,6 @@ on the stack");
             term->expression_type = ExpressionType::known_value;
             return initial_value_state();
         }
-
         case ExpressionType::reference: {
             auto type_term = *pop_term();
             auto type_value = type_term->value;
@@ -1106,21 +1113,23 @@ on the stack");
             current_term()->location = type_term->location;
             return initial_reference_state(); 
         }
-
-        case ExpressionType::binary_operator_reference:{
+        case ExpressionType::binary_operator_reference: {
             shift();
             initial_binary_operator_state();
             auto value = pop_term();
             return apply_type_declaration(*pop_term(), *value);
         }
-        case ExpressionType::termed_expression:
-            // parse and come back
-            // 
+        case ExpressionType::partially_applied_minus: {
+            shift();
+            initial_partially_applied_minus_state();
+            auto value = pop_term();
+            return apply_type_declaration(*pop_term(), *value);
+        }
         case ExpressionType::type_reference:
-            // fail
-
         default:
-            assert(false && "not implemented");
+            fail("Unexpected " + peek()->log_message_string() + 
+                " after a type reference, expected an expression", peek()->location);
+            return;
 
         case NOT_ALLOWED_IN_LAYER2:
             fail("bad term encountered in TermedExpressoinParser", current_term()->location);
@@ -1192,7 +1201,19 @@ void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, 
 }
 
 void TermedExpressionParser::apply_type_declaration(Expression* type_declaration, Expression* value) {
-    assert(false && "not implemented");
+    Log::debug_extra("Applying type declaration " + type_declaration->log_message_string() + " to " + 
+        value->log_message_string(), type_declaration->location);
+
+    auto new_expression = value->cast_to(*compilation_state_, type_declaration->type_reference_value());
+
+    if (!new_expression) {
+        parse_stack_.push_back(Expression::user_error(*ast_store_, type_declaration->location));
+        return fail("Applying type declaration failed", type_declaration->location);
+    }
+
+    assert(*(*new_expression)->type == *type_declaration->type_reference_value() &&
+        "Applying type declaration didn't change the type");
+    parse_stack_.push_back(*new_expression);
 }
 
 bool TermedExpressionParser::is_acceptable_next_arg(Definition* callee, 

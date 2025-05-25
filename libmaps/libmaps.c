@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include <errno.h>
 #include <stdlib.h>
@@ -66,7 +67,8 @@ maps_String __to_String_Boolean(maps_Boolean b) {
 struct maps_Mut_String __to_Mut_String_Int(maps_Int i) {
     struct maps_Mut_String str;
     str.data = malloc(MAX_INT_LENGTH);
-    str.length = snprintf(str.data, MAX_INT_LENGTH, "%i", i);
+    str.mem_size = snprintf(str.data, MAX_INT_LENGTH, "%i", i);
+    str.length = str.mem_size - 1;
 
     return str;
 }
@@ -76,6 +78,20 @@ struct maps_Mut_String __to_Mut_String_Float(maps_Float f) {
 }
 
 void free_Mut_String(struct maps_Mut_String* str) {
-    str->length = 0;
+    str->mem_size = 0;
     free(str->data);
+}
+
+struct maps_Mut_String concat_Mut_String_Mut_String(
+    struct maps_Mut_String lhs, struct maps_Mut_String rhs) {
+
+    struct maps_Mut_String out;
+    out.mem_size = lhs.mem_size + rhs.mem_size - 1;
+    out.length = lhs.length + rhs.length;
+    out.data = malloc(out.mem_size);
+
+    memcpy(out.data, lhs.data, lhs.mem_size - 1);
+    memcpy(out.data + lhs.mem_size - 1, rhs.data, rhs.mem_size);
+
+    return out;
 }

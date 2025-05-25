@@ -51,7 +51,7 @@ using Log = LogNoContext;
 std::string Expression::value_to_string(const KnownValue& value) {
     return std::visit(overloaded{
         [](const std::string& value)->std::string { return value; },
-        [](const maps_Mut_String& value)->std::string { return std::string{value.data, value.length}; },
+        [](const maps_Mut_String& value)->std::string { return std::string{value.data, value.mem_size}; },
         [](auto value)->std::string { return std::to_string(value); },
     }, value);
 }
