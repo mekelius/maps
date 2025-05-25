@@ -281,6 +281,8 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
             return this;
 
         case ExpressionType::known_value_reference:
+            Log::compiler_error("Casts on known value references not implemented", location);
+            assert(false && "not implemented");
             // copy and cast
 
         case ExpressionType::reference:
@@ -297,6 +299,7 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
 
         case ExpressionType::lambda:
         case ExpressionType::ternary_expression:
+            Log::compiler_error("Casts on lambdas and ternary expressions not implemented", location);
             assert(false && "not implemented");
     }
 }

@@ -478,9 +478,24 @@ TEST_CASE("Should apply a type declaration") {
     CHECK(*outer->type == Float);
 }
 
+TEST_CASE("Partially applied minus and type declaration") {
+    auto [state, types] = CompilationState::create_test_state_with_builtins();
+    auto& ast_store = *state.ast_store_;
+
+    auto value = Expression::numeric_literal(ast_store, "23", TSL);
+    auto part_app_minus = Expression::partially_applied_minus(ast_store, value, TSL);
+    auto type = Expression::type_reference(ast_store, &Float, TSL);
+
+    auto outer = Expression::termed(ast_store, {type, part_app_minus}, TSL);
+
+    auto success = run_layer2(state, outer);
+
+    CHECK(success);
+    CHECK(*outer->type == Float);
+}
 
 TEST_CASE("Unary minus and type declaration") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state_with_builtins();
     auto& ast_store = *state.ast_store_;
 
     auto value = Expression::numeric_literal(ast_store, "23", TSL);
@@ -495,8 +510,8 @@ TEST_CASE("Unary minus and type declaration") {
     CHECK(*outer->type == Float);
 }
 
-TEST_CASE("Unary minus and type declaration") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+TEST_CASE("Unary minus in parentheses and a type declaration") {
+    auto [state, types] = CompilationState::create_test_state_with_builtins();
     auto& ast_store = *state.ast_store_;
 
     auto value = Expression::numeric_literal(ast_store, "23", TSL);

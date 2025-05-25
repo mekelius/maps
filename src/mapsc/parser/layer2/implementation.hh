@@ -74,6 +74,13 @@ private:
     void value_state();
     void prefix_operator_state();
 
+    void binary_operator_state();
+    void minus_sign_state();
+    void partially_applied_minus_state();
+    void partial_binop_call_left_state();
+    void partial_binop_call_right_state();
+    void partial_binop_call_both_state();
+
     void partial_binop_call_standoff_state();
     void post_binary_operator_state();
     void compare_precedence_state();
@@ -104,6 +111,8 @@ private:
     void apply_type_declaration(Expression* type_declaration, Expression* value);
     
     void initial_type_reference_state();
+    void type_reference_state();
+
     void initial_type_constructor_state();
 
     // calls/access operations

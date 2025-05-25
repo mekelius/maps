@@ -398,117 +398,8 @@ void TermedExpressionParser::initial_goto() {
 }
 
 void TermedExpressionParser::initial_binary_operator_state() {
-    if (at_expression_end())
-        return;        
-
-    switch (peek()->expression_type) {
-        case ExpressionType::termed_expression:
-            handle_termed_sub_expression(peek());
-            return initial_binary_operator_state();
-
-        case ExpressionType::lambda:
-        case ExpressionType::ternary_expression:
-        case ExpressionType::partial_binop_call_both:
-            assert(false && "not implemented");
-
-        case GUARANTEED_VALUE:
-            precedence_stack_.push_back(
-                dynamic_cast<Operator*>(current_term()->operator_reference_value())
-                    ->precedence());
-            shift();
-            initial_value_state();
-
-            // TODO: look at the precedence stack
-
-            switch (current_term()->expression_type) {
-                case GUARANTEED_VALUE:
-                case POTENTIAL_FUNCTION:
-                    reduce_to_partial_binop_call_left();
-                    return initial_partial_binop_call_left_state();
-
-                case ExpressionType::partial_binop_call_right:
-                    reduce_to_partial_binop_call_both();
-                    return initial_partial_binop_call_both_state();
-
-                default:
-                    return fail("Unexpected " + current_term()->log_message_string() + 
-                        ", expected a value", current_term()->location);
-            }
-
-        case ExpressionType::minus_sign:{
-            auto location = get_term()->location;
-            switch (peek()->expression_type) {
-                case GUARANTEED_VALUE:
-                    push_unary_operator_call(unary_minus_ref(location), get_term());
-                    assert(false && "not implemented");
-
-                default:
-                    assert(false && "not implemented");
-            }
-            assert(false && "not implemented");
-        }
-
-        case ExpressionType::partially_applied_minus:
-        case ExpressionType::partial_binop_call_left:
-        case ExpressionType::partial_binop_call_right:
-        case ExpressionType::partial_call:
-        case ExpressionType::binary_operator_reference:
-            assert(false && "not implemented");
-
-        case ExpressionType::prefix_operator_reference:{
-            shift();
-            initial_prefix_operator_state();
-            auto location = current_term()->location;
-            if (auto value = pop_term()) {
-                auto missing_arg_type = 
-                    dynamic_cast<const FunctionType*>(
-                        current_term()->operator_reference_value()->get_type())
-                            ->param_type(1);
-                return push_partial_call(*pop_term(), 
-                    {Expression::missing_argument(*ast_store_, *missing_arg_type, location), *value});
-            }
-            return fail("unary operator failed to produce a value", location);
-        }
-
-        case ExpressionType::postfix_operator_reference:
-            return fail("Postfix unary operator " + peek()->log_message_string() + 
-                " not allowed to operate on " + current_term()->log_message_string(), 
-                peek()->location);
-
-        case ExpressionType::reference:
-            shift();
-            initial_reference_state();
-            switch (current_term()->expression_type) {
-                case GUARANTEED_VALUE:
-                case ExpressionType::reference:
-                case ExpressionType::call:
-                    return reduce_to_partial_binop_call_left();
-                
-                default:
-                    fail("Unexpected " + current_term()->log_message_string() + 
-                        " as right side of binary operator, expected a value", current_term()->location);
-            }
-
-        case ExpressionType::call:
-            shift();
-            initial_call_state();
-            switch (current_term()->expression_type) {
-                case GUARANTEED_VALUE:
-                case ExpressionType::reference:
-                case ExpressionType::call:
-                    return reduce_to_partial_binop_call_left();
-
-                default:
-                    fail("Unexpected " + current_term()->log_message_string() + 
-                        " as right side of binary operator, expected a value", current_term()->location);
-            }
-
-        case TYPE_DECLARATION_TERM:
-            assert(false && "not implemented");
-
-        case NOT_ALLOWED_IN_LAYER2:
-            assert(false && "bad term encountered in TermedExpressoinParser");
-    }
+    binary_operator_state();
+    initial_goto();
 }
 
 void TermedExpressionParser::initial_prefix_operator_state() {
@@ -534,87 +425,8 @@ void TermedExpressionParser::initial_postfix_operator_state() {
 }
 
 void TermedExpressionParser::initial_minus_sign_state() {
-    if (at_expression_end()) {
-        auto declared_type = current_term()->declared_type;
-
-        if (!declared_type)
-            return fail("minus sign without arguments or declared type is ambiguous", 
-                current_term()->location);
-
-        if (declared_type == &Int_to_Int)
-            return reduce_to_unary_minus_ref();
-
-        if (declared_type == &IntInt_to_Int)
-            return parse_stack_.push_back(binary_minus_ref(current_term()->location));
-
-        return fail(
-            "Type " + (*declared_type)->name_string() + " is not allowed with \"-\"", 
-            current_term()->location);
-    }
-
-    switch (peek()->expression_type) {
-        case ExpressionType::termed_expression:
-            handle_termed_sub_expression(peek());
-            return initial_minus_sign_state();
-
-        case GUARANTEED_VALUE: {
-            shift();
-
-            if (at_expression_end())
-                return reduce_partially_applied_minus();
-
-            switch (peek()->expression_type) {
-                case ExpressionType::binary_operator_reference:
-                    reduce_minus_sign_to_unary_minus_call();
-                    shift();
-                    return post_binary_operator_state();
-
-                case ExpressionType::partial_binop_call_left: {
-                    reduce_minus_sign_to_unary_minus_call();
-                    auto location = current_term()->location;
-                    add_to_partial_call_and_push(get_term(), {*pop_term()}, location);
-                    return initial_call_state();
-                }
-
-                case ExpressionType::minus_sign:
-                    reduce_minus_sign_to_unary_minus_call();
-                    parse_stack_.push_back(binary_minus_ref(get_term()->location));
-                    return post_binary_operator_state();
-
-                case TYPE_DECLARATION_TERM:
-                    assert(false && "Type declaration after a minus term not implemented");
-
-                default:
-                    return fail("Unexpected " + peek()->log_message_string() + 
-                    " after a value, expected an operator", peek()->location);
-            }
-
-            return initial_value_state();
-        }
-
-        case ExpressionType::minus_sign:
-            shift();
-            initial_minus_sign_state();
-            reduce_partially_applied_minus();
-            return initial_goto();
-
-        case ExpressionType::partially_applied_minus:
-            shift();
-            current_term()->convert_to_unary_minus_call();
-            reduce_partially_applied_minus();
-            return initial_goto();
-
-        case ExpressionType::reference:
-        case ExpressionType::call:
-            shift();
-            reduce_partially_applied_minus();
-            return initial_partially_applied_minus_state();
-
-        case TYPE_DECLARATION_TERM:
-        default:
-            return fail("Initial minus sign not allowed with " + peek()->log_message_string(), 
-                current_term()->location);
-    }
+    minus_sign_state();
+    return initial_goto();
 }
 
 void TermedExpressionParser::initial_partially_applied_minus_state() {
@@ -627,57 +439,8 @@ void TermedExpressionParser::initial_partially_applied_minus_state() {
 
 // Basically we just unwrap it
 void TermedExpressionParser::initial_partial_binop_call_right_state() {
-    if (at_expression_end())
-        return;
-
-    auto location = current_term()->location;
-    auto [callee, args] = current_term()->call_value();
-    assert(callee->is_operator() 
-        && "initial_partial_binop_call_right_state called with not an operator call");
-    assert(dynamic_cast<Operator*>(callee)->is_binary() && 
-        "initial_partial_binop_call_right_state called with not a binary operator call");
-
-    assert(((args.size() == 2 && args.at(1)->expression_type == ExpressionType::missing_arg) || 
-            args.size()) == 1 && 
-                "initial_partial_binop_call_right_state called with invalid args");
-
-    // auto precedence = dynamic_cast<Operator*>(callee)->precedence();
-
-    switch (peek()->expression_type) {
-        case ExpressionType::binary_operator_reference:
-            current_term()->convert_to_partial_call(); // treat it as a value
-            shift();
-            return post_binary_operator_state();
-
-        case ExpressionType::postfix_operator_reference:
-            current_term()->convert_to_partial_call();
-            shift();
-            reduce_postfix_operator(); // It could be an operator that can act on this partial call
-            return initial_goto();
-
-        case ExpressionType::partial_binop_call_left:
-            return partial_binop_call_standoff_state();
-
-        case GUARANTEED_VALUE:
-        case ExpressionType::call:
-        case ExpressionType::reference:
-        case ExpressionType::partially_applied_minus:
-        case ExpressionType::prefix_operator_reference:
-        case ExpressionType::minus_sign:
-            break;
-
-        case TYPE_DECLARATION_TERM:
-            assert(false && "type declarations not implemented here");
-        case NOT_ALLOWED_IN_LAYER2:
-        default:
-            return fail("Unexpected " + peek()->log_message_string() + ", expected a value",
-            peek()->location);
-    }
-
-    pop_term();
-    parse_stack_.push_back(args.at(0));
-    parse_stack_.push_back(Expression::operator_reference(*ast_store_, callee, location));
-    return post_binary_operator_state();
+    partial_binop_call_right_state();
+    return initial_goto();
 }
 
 void TermedExpressionParser::initial_partial_binop_call_left_state() {
@@ -842,6 +605,279 @@ void TermedExpressionParser::prefix_operator_state() {
     }
     return fail("Unexpected " + current_term()->log_message_string() + 
     " after an unary operator", current_term()->location);
+}
+
+void TermedExpressionParser::binary_operator_state() {
+    if (at_expression_end())
+        return;        
+
+    switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_termed_sub_expression(peek());
+            return binary_operator_state();
+
+        case ExpressionType::lambda:
+        case ExpressionType::ternary_expression:
+        case ExpressionType::partial_binop_call_both:
+            assert(false && "not implemented");
+
+        case GUARANTEED_VALUE:
+            precedence_stack_.push_back(
+                dynamic_cast<Operator*>(current_term()->operator_reference_value())
+                    ->precedence());
+            shift();
+            value_state();
+
+            // TODO: look at the precedence stack
+
+            switch (current_term()->expression_type) {
+                case GUARANTEED_VALUE:
+                case POTENTIAL_FUNCTION:
+                    reduce_to_partial_binop_call_left();
+                    return partial_binop_call_left_state();
+
+                case ExpressionType::partial_binop_call_right:
+                    reduce_to_partial_binop_call_both();
+                    return partial_binop_call_both_state();
+
+                default:
+                    return fail("Unexpected " + current_term()->log_message_string() + 
+                        ", expected a value", current_term()->location);
+            }
+
+        case ExpressionType::minus_sign:{
+            auto location = get_term()->location;
+            switch (peek()->expression_type) {
+                case GUARANTEED_VALUE:
+                    push_unary_operator_call(unary_minus_ref(location), get_term());
+                    assert(false && "not implemented");
+
+                default:
+                    assert(false && "not implemented");
+            }
+            assert(false && "not implemented");
+        }
+
+        case ExpressionType::partially_applied_minus:
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
+        case ExpressionType::partial_call:
+        case ExpressionType::binary_operator_reference:
+            assert(false && "not implemented");
+
+        case ExpressionType::prefix_operator_reference:{
+            shift();
+            prefix_operator_state();
+            auto location = current_term()->location;
+            if (auto value = pop_term()) {
+                auto missing_arg_type = 
+                    dynamic_cast<const FunctionType*>(
+                        current_term()->operator_reference_value()->get_type())
+                            ->param_type(1);
+                return push_partial_call(*pop_term(), 
+                    {Expression::missing_argument(*ast_store_, *missing_arg_type, location), *value});
+            }
+            return fail("unary operator failed to produce a value", location);
+        }
+
+        case ExpressionType::postfix_operator_reference:
+            return fail("Postfix unary operator " + peek()->log_message_string() + 
+                " not allowed to operate on " + current_term()->log_message_string(), 
+                peek()->location);
+
+        case ExpressionType::reference:
+            shift();
+            reference_state();
+            switch (current_term()->expression_type) {
+                case GUARANTEED_VALUE:
+                case ExpressionType::reference:
+                case ExpressionType::call:
+                    return reduce_to_partial_binop_call_left();
+                
+                default:
+                    fail("Unexpected " + current_term()->log_message_string() + 
+                        " as right side of binary operator, expected a value", current_term()->location);
+            }
+
+        case ExpressionType::call:
+            shift();
+            call_state();
+            switch (current_term()->expression_type) {
+                case GUARANTEED_VALUE:
+                case ExpressionType::reference:
+                case ExpressionType::call:
+                    return reduce_to_partial_binop_call_left();
+
+                default:
+                    fail("Unexpected " + current_term()->log_message_string() + 
+                        " as right side of binary operator, expected a value", current_term()->location);
+            }
+
+        case TYPE_DECLARATION_TERM:
+            assert(false && "not implemented");
+
+        case NOT_ALLOWED_IN_LAYER2:
+            assert(false && "bad term encountered in TermedExpressoinParser");
+    }
+}
+
+void TermedExpressionParser::minus_sign_state() {
+    if (at_expression_end()) {
+        auto declared_type = current_term()->declared_type;
+
+        if (!declared_type)
+            return fail("minus sign without arguments or declared type is ambiguous", 
+                current_term()->location);
+
+        if (declared_type == &Int_to_Int)
+            return reduce_to_unary_minus_ref();
+
+        if (declared_type == &IntInt_to_Int)
+            return parse_stack_.push_back(binary_minus_ref(current_term()->location));
+
+        return fail(
+            "Type " + (*declared_type)->name_string() + " is not allowed with \"-\"", 
+            current_term()->location);
+    }
+
+    switch (peek()->expression_type) {
+        case ExpressionType::termed_expression:
+            handle_termed_sub_expression(peek());
+            return minus_sign_state();
+
+        case GUARANTEED_VALUE: {
+            shift();
+
+            if (at_expression_end())
+                return reduce_partially_applied_minus();
+
+            switch (peek()->expression_type) {
+                case ExpressionType::binary_operator_reference:
+                    reduce_minus_sign_to_unary_minus_call();
+                    shift();
+                    return post_binary_operator_state();
+
+                case ExpressionType::partial_binop_call_left: {
+                    reduce_minus_sign_to_unary_minus_call();
+                    auto location = current_term()->location;
+                    add_to_partial_call_and_push(get_term(), {*pop_term()}, location);
+                    return call_state();
+                }
+
+                case ExpressionType::minus_sign:
+                    reduce_minus_sign_to_unary_minus_call();
+                    parse_stack_.push_back(binary_minus_ref(get_term()->location));
+                    return post_binary_operator_state();
+
+                case TYPE_DECLARATION_TERM:
+                    assert(false && "Type declaration after a minus term not implemented");
+
+                default:
+                    return fail("Unexpected " + peek()->log_message_string() + 
+                    " after a value, expected an operator", peek()->location);
+            }
+
+            return value_state();
+        }
+
+        case ExpressionType::minus_sign:
+            shift();
+            minus_sign_state();
+            return reduce_partially_applied_minus();
+
+        case ExpressionType::partially_applied_minus:
+            shift();
+            current_term()->convert_to_unary_minus_call();
+            return reduce_partially_applied_minus();
+
+        case ExpressionType::reference:
+        case ExpressionType::call:
+            shift();
+            reduce_partially_applied_minus();
+            return partially_applied_minus_state();
+
+        case TYPE_DECLARATION_TERM:
+        default:
+            return fail("Initial minus sign not allowed with " + peek()->log_message_string(), 
+                current_term()->location);
+    }
+}
+
+void TermedExpressionParser::partially_applied_minus_state() {
+    if (at_expression_end())
+        return;
+
+    current_term()->convert_to_unary_minus_call();
+    return call_state();
+}
+
+
+// Basically we just unwrap it
+void TermedExpressionParser::partial_binop_call_right_state() {
+    if (at_expression_end())
+        return;
+
+    auto location = current_term()->location;
+    auto [callee, args] = current_term()->call_value();
+    assert(callee->is_operator() 
+        && "initial_partial_binop_call_right_state called with not an operator call");
+    assert(dynamic_cast<Operator*>(callee)->is_binary() && 
+        "initial_partial_binop_call_right_state called with not a binary operator call");
+
+    assert(((args.size() == 2 && args.at(1)->expression_type == ExpressionType::missing_arg) || 
+            args.size()) == 1 && 
+                "initial_partial_binop_call_right_state called with invalid args");
+
+    // auto precedence = dynamic_cast<Operator*>(callee)->precedence();
+
+    switch (peek()->expression_type) {
+        case ExpressionType::binary_operator_reference:
+            current_term()->convert_to_partial_call(); // treat it as a value
+            shift();
+            return post_binary_operator_state();
+
+        case ExpressionType::postfix_operator_reference:
+            current_term()->convert_to_partial_call();
+            shift();
+            return reduce_postfix_operator(); // It could be an operator that can act on this partial call
+
+        case ExpressionType::partial_binop_call_left:
+            return partial_binop_call_standoff_state();
+
+        case GUARANTEED_VALUE:
+        case ExpressionType::call:
+        case ExpressionType::reference:
+        case ExpressionType::partially_applied_minus:
+        case ExpressionType::prefix_operator_reference:
+        case ExpressionType::minus_sign:
+            break;
+
+        case TYPE_DECLARATION_TERM:
+            assert(false && "type declarations not implemented here");
+        case NOT_ALLOWED_IN_LAYER2:
+        default:
+            return fail("Unexpected " + peek()->log_message_string() + ", expected a value",
+            peek()->location);
+    }
+
+    pop_term();
+    parse_stack_.push_back(args.at(0));
+    parse_stack_.push_back(Expression::operator_reference(*ast_store_, callee, location));
+    return post_binary_operator_state();
+}
+
+void TermedExpressionParser::partial_binop_call_left_state() {
+    if (at_expression_end())
+        return;
+
+    assert(false && "not implemented");
+}
+
+void TermedExpressionParser::partial_binop_call_both_state() {
+    if (at_expression_end())
+        return;
+
+    assert(false && "not implemented");
 }
 
 void TermedExpressionParser::call_state() {
@@ -1073,6 +1109,11 @@ void TermedExpressionParser::initial_type_reference_state() {
         "TermedExpressionParser::type_specifier_state entered with not a type_specifier/type_reference \
 on the stack");
 
+    type_reference_state();
+    initial_goto();
+}
+
+void TermedExpressionParser::type_reference_state() {
     if (at_expression_end()) {
         if (!possibly_type_expression_) {
             fail("Unexpected type expression at expression end", current_term()->location);
@@ -1083,7 +1124,7 @@ on the stack");
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(peek());
-            return initial_type_reference_state();
+            return type_reference_state();
 
         case GUARANTEED_VALUE:
         case ExpressionType::call: {
@@ -1100,7 +1141,7 @@ on the stack");
             term->declared_type = type_value;
             term->location = type_term->location;
             term->expression_type = ExpressionType::known_value;
-            return initial_value_state();
+            return value_state();
         }
         case ExpressionType::reference: {
             auto type_term = *pop_term();
@@ -1111,20 +1152,24 @@ on the stack");
             shift();
             current_term()->declared_type = get<const Type*>(type_value);
             current_term()->location = type_term->location;
-            return initial_reference_state(); 
+            return reference_state(); 
         }
         case ExpressionType::binary_operator_reference: {
             shift();
-            initial_binary_operator_state();
+            binary_operator_state();
             auto value = pop_term();
             return apply_type_declaration(*pop_term(), *value);
         }
-        case ExpressionType::partially_applied_minus: {
+
+        case ExpressionType::minus_sign: {
             shift();
-            initial_partially_applied_minus_state();
+            minus_sign_state();
             auto value = pop_term();
             return apply_type_declaration(*pop_term(), *value);
         }
+        case ExpressionType::partially_applied_minus:
+            return apply_type_declaration(*pop_term(), get_term());
+
         case ExpressionType::type_reference:
         default:
             fail("Unexpected " + peek()->log_message_string() + 

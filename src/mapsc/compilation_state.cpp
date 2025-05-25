@@ -12,6 +12,12 @@ tuple<CompilationState, unique_ptr<const CT_Scope>, unique_ptr<TypeStore>> Compi
     return tuple{CompilationState{builtins.get(), types.get()}, std::move(builtins), std::move(types)};
 }
 
+tuple<CompilationState, unique_ptr<TypeStore>> CompilationState::create_test_state_with_builtins() {
+    auto types = make_unique<TypeStore>();
+    
+    return tuple{CompilationState{get_builtins(), types.get()}, std::move(types)};
+}
+
 CompilationState::CompilationState(const CT_Scope* builtins, TypeStore* types, 
     SpecialDefinitions special_definitions)
 :CompilationState(builtins, types, {}, special_definitions) {}

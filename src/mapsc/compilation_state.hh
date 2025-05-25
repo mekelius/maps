@@ -40,6 +40,9 @@ public:
     static std::tuple<CompilationState, std::unique_ptr<const CT_Scope>, std::unique_ptr<TypeStore>> 
         create_test_state();
 
+    static std::tuple<CompilationState, std::unique_ptr<TypeStore>> 
+        create_test_state_with_builtins();
+
     CompilationState(const CT_Scope* builtins, TypeStore* types, 
         SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String});
 
