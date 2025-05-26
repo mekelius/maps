@@ -102,7 +102,9 @@ bool IR_Generator::run(Maps::Scopes scopes) {
     return run(scopes, {});
 }
 
-bool IR_Generator::run(Maps::Scopes scopes, std::span<Maps::Definition* const> additional_definitions) {
+bool IR_Generator::run(Maps::Scopes scopes, 
+    std::span<Maps::Definition* const> additional_definitions) {
+    
     // Not allowed to run if we have already failed
     if (has_failed_)
         return false;
@@ -242,7 +244,9 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
     return wrapper;
 }
 
-std::optional<llvm::FunctionCallee> IR_Generator::handle_function(const Maps::Definition& definition) {
+std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
+    const Maps::Definition& definition) {
+    
     assert(definition.get_type()->is_function() && 
         "IR_Generator::handle function called with a non-function definition");
 
@@ -370,7 +374,8 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
             return convert_numeric_literal(expression);
 
         default:
-            *errs_ << "error during codegen: unhandled: " + expression.log_message_string() + "\n";
+            *errs_ << "error during codegen: unhandled: " 
+                   << expression.log_message_string() << "\n";
             errs_->flush();
 
             has_failed_ = true;
@@ -419,15 +424,18 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     std::vector<llvm::Value*> arg_values = {};
 
     for (Expression* arg_expr : args) {
-        if (arg_expr->expression_type == ExpressionType::known_value && *arg_expr->type == Maps::MutString) {
+        if (arg_expr->expression_type == 
+            ExpressionType::known_value && *arg_expr->type == Maps::MutString) {
 
             maps_MutString maps_str = std::get<maps_MutString>(arg_expr->value);
             llvm::Constant* data = builder_->CreateGlobalString(maps_str.data);
             
             auto mut_str = llvm::ConstantStruct::get(types_.mutstring_t, {
                     data,
-                    ConstantInt::get(*context_, APInt(8*sizeof(maps_UInt), maps_str.length, false)), 
-                    ConstantInt::get(*context_, APInt(8*sizeof(maps_MemUInt), maps_str.mem_size, false))
+                    ConstantInt::get(*context_, 
+                        APInt(8*sizeof(maps_UInt), maps_str.length, false)), 
+                    ConstantInt::get(*context_, 
+                        APInt(8*sizeof(maps_MemUInt), maps_str.mem_size, false))
             });
 
             auto alloca = builder_->CreateAlloca(types_.mutstring_t, 0, "test");

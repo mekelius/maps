@@ -76,9 +76,12 @@ maps_String to_String_MutString(struct maps_MutString* str) {
 struct maps_MutString* to_MutString_Int(maps_Int i) {
     struct maps_MutString* out = malloc(sizeof(struct maps_MutString));
 
-    out->data = malloc(MAX_INT_LENGTH);
-    out->mem_size = snprintf(out->data, MAX_INT_LENGTH, "%i", i);
+    // Leave space for the null terminator
+    out->data = malloc(MAX_INT_LENGTH + 1);
+    out->mem_size = snprintf(out->data, MAX_INT_LENGTH, "%i", i) + 1;
     out->length = out->mem_size - 1;
+
+    assert(out->mem_size >= 0 && "to_MutString_Int failed");
 
     return out;
 }
