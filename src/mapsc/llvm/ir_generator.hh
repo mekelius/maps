@@ -81,14 +81,22 @@ public:
     void fail(const std::string& message);
 
     std::optional<llvm::Function*> function_definition(const std::string& name, 
-        const Maps::FunctionType& ast_type, llvm::FunctionType* llvm_type, 
+        llvm::FunctionType* llvm_type, 
+        llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
+
+    std::optional<llvm::Function*> overloaded_function_definition(const std::string& name, 
+        const Maps::FunctionType& maps_type, llvm::FunctionType* llvm_type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
     
     bool close_function_definition(const llvm::Function& function, 
         llvm::Value* return_value = nullptr);
 
     std::optional<llvm::Function*> forward_declaration(const std::string& name, 
-        const Maps::FunctionType& ast_type, llvm::FunctionType* type, 
+        llvm::FunctionType* type, 
+        llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
+
+    std::optional<llvm::Function*> overloaded_forward_declaration(const std::string& name, 
+        const Maps::FunctionType& maps_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
     // Runs llvm::verify_module (flips the result so that true means passed)
@@ -108,9 +116,8 @@ public:
     bool handle_statement(const Maps::Statement& statement);
     // if repl_top_level is true, wraps every expression-statement in the block into a print call
     // for the appropriate print function
-    bool handle_block(const Maps::Statement& statement, bool repl_top_level = false);
-    std::optional<llvm::Value*> handle_expression_statement(const Maps::Statement& statement, 
-        bool repl_top_level = false);
+    bool handle_block(const Maps::Statement& statement);
+    std::optional<llvm::Value*> handle_expression_statement(const Maps::Statement& statement);
     
     // ----- EXPRESSION HANDLERS -----
     std::optional<llvm::Value*> handle_expression(const Maps::Expression& expression);

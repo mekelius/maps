@@ -34,14 +34,4 @@ bool Type::cast_to(const Type* target_type, Expression& expression) const {
     return false;
 }
 
-// bool SimpleType::concretize(Expression& expression) const {
-//     if (*expression.type != *this) {
-//         log_error("Type::concretize called with an expression of another type", expression.location);
-//         assert(false && "Type::concretize called with an expression of another type");
-//         return false;
-//     }
-
-//     return concretize_(expression);
-// }
-
 } // namespace Maps

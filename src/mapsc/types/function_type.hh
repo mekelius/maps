@@ -67,6 +67,7 @@ public:
 
     virtual bool is_pure() const { return is_pure_; }
     std::string_view name() const { return name_; }
+    virtual std::string_view function_signature() const { return "fptr"; }
     virtual const Type* return_type() const { return return_type_; }
     virtual std::span<const Type* const> param_types() const { return param_types_; }
     virtual std::optional<const Type* const> param_type(uint param_index) const {
@@ -94,6 +95,7 @@ public:
 
     virtual bool is_pure() const { return is_pure_; }
     std::string_view name() const { return name_; }
+    virtual std::string_view function_signature() const { return "fptr"; }
     virtual const Type* return_type() const { return return_type_; }
     virtual std::span<const Type* const> param_types() const { return param_types_; }
     virtual std::optional<const Type* const> param_type(uint param_index) const {

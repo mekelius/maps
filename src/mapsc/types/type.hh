@@ -26,8 +26,10 @@ public:
     virtual uint arity() const { return 0; }
     
     virtual std::string_view name() const = 0;
+    virtual std::string_view function_signature() const = 0;
     virtual bool is_voidish() const = 0;
     
+    virtual std::string function_signature_string() const { return std::string{function_signature()}; };
     std::string name_string() const { return std::string{name()}; }
     bool is_impure() const { return !is_pure(); }
     bool is_pure_function() const { return is_pure() && is_function(); }
@@ -52,6 +54,7 @@ public:
      is_voidish_(is_voidish) {}
 
     virtual std::string_view name() const { return name_; }
+    virtual std::string_view function_signature() const { return name_; }
     virtual bool is_voidish() const { return is_voidish_; };
 
     virtual bool cast_to_(const Type* type, Expression& expression) const {
@@ -82,6 +85,7 @@ public:
      is_voidish_(is_voidish) {}
 
     virtual std::string_view name() const { return name_; }
+    virtual std::string_view function_signature() const { return name_; }
     virtual bool is_voidish() const { return is_voidish_; }
 
     virtual bool cast_to_(const Type* type, Expression& expression) const {
@@ -113,6 +117,7 @@ public:
 
     virtual bool is_concrete() const { return true; }
     virtual std::string_view name() const { return name_; }
+    virtual std::string_view function_signature() const { return name_; }
     virtual bool is_voidish() const { return is_voidish_; }
 
     virtual bool cast_to_(const Type* type, Expression& expression) const {

@@ -64,29 +64,50 @@ bool insert_builtins(IR::IR_Generator& generator) {
 
 bool forward_declare_libmaps(IR::IR_Generator& generator) {
     // ----- declare print types -----
-    const std::array<std::pair<const Maps::Type*, llvm::Type*>, 5> PRINTABLE_TYPES{
-       std::pair{&Maps::String, generator.types_.char_array_ptr_t}, 
-                {&Maps::Int, generator.types_.int_t}, 
-                {&Maps::Float, generator.types_.double_t}, 
-                {&Maps::Boolean, generator.types_.boolean_t},
-                {&Maps::MutString, generator.types_.mutstring_ptr_t}
-    };
+    // const std::array<std::pair<const Maps::Type*, llvm::Type*>, 5> PRINTABLE_TYPES{
+    //    std::pair{&Maps::String, generator.types_.char_array_ptr_t}, 
+    //             {&Maps::Int, generator.types_.int_t}, 
+    //             {&Maps::Float, generator.types_.double_t}, 
+    //             {&Maps::Boolean, generator.types_.boolean_t},
+    //             {&Maps::MutString, generator.types_.mutstring_ptr_t}
+    // };
 
-    for (auto [maps_type, llvm_type]: PRINTABLE_TYPES) {
-        std::string suffixed_name = "print_" + maps_type->name_string();
+    // for (auto [maps_type, llvm_type]: PRINTABLE_TYPES) {
+    //     if (!generator.overloaded_forward_declaration("print", 
+    //             *generator.maps_types_->get_function_type(
+    //                 &Maps::IO_Void, {maps_type}, false),
+    //                 llvm::FunctionType::get(generator.types_.void_t, {llvm_type}, false))) {
 
-        if (!generator.forward_declaration(suffixed_name, *generator.maps_types_->get_function_type(
-                &Maps::IO_Void, {maps_type}, false),
-                llvm::FunctionType::get(generator.types_.void_t, {llvm_type}, false))) {
+    //         Log::compiler_error("Declaring builtin print functions failed", 
+    //             COMPILER_INIT_SOURCE_LOCATION);
+    //         return false;
+    //     }
+    // }
 
-            Log::compiler_error("Declaring builtin print functions failed", 
-                COMPILER_INIT_SOURCE_LOCATION);
-            return false;
-        }
+    if (!generator.overloaded_forward_declaration("prints", 
+            *generator.maps_types_->get_function_type(
+                &Maps::IO_Void, {&Maps::String}, false),
+                llvm::FunctionType::get(generator.types_.void_t, 
+                    {generator.types_.char_array_ptr_t}, false))) {
+
+        Log::compiler_error("Declaring builtin prints function failed", 
+            COMPILER_INIT_SOURCE_LOCATION);
+        return false;
+    }
+
+    if (!generator.overloaded_forward_declaration("printms", 
+            *generator.maps_types_->get_function_type(
+                &Maps::IO_Void, {&Maps::MutString}, false),
+                llvm::FunctionType::get(generator.types_.void_t, 
+                    {generator.types_.mutstring_ptr_t}, false))) {
+
+        Log::compiler_error("Declaring builtin prints function failed", 
+            COMPILER_INIT_SOURCE_LOCATION);
+        return false;
     }
 
     // ----- declare runtime casts -----
-    if (!generator.forward_declaration("to_Float", Maps::Int_to_Float, 
+    if (!generator.overloaded_forward_declaration("to", Maps::Int_to_Float, 
         llvm::FunctionType::get(generator.types_.double_t, {generator.types_.int_t}, false))) {
 
         Log::compiler_error("Declaring runtime cast to_Float_Int failed", 
@@ -94,7 +115,7 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
         return false;
     }
 
-    if (!generator.forward_declaration("to_String_Boolean", Maps::Boolean_to_String,
+    if (!generator.overloaded_forward_declaration("to", Maps::Boolean_to_String,
         llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.boolean_t}, false))) {
 
         Log::compiler_error("Declaring runtime cast to_String_Boolean failed", 
@@ -102,7 +123,7 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
         return false;
     }
 
-    if (!generator.forward_declaration("to_String_MutString", Maps::MutString_to_String,
+    if (!generator.overloaded_forward_declaration("to", Maps::MutString_to_String,
         llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.mutstring_ptr_t}, false))) {
 
         Log::compiler_error("Declaring runtime cast to_String_MutString failed", 
@@ -110,7 +131,7 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
         return false;
     }
 
-    if (!generator.forward_declaration("to_MutString_Int", Maps::Int_to_MutString,
+    if (!generator.overloaded_forward_declaration("to", Maps::Int_to_MutString,
         llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {generator.types_.int_t}, false))) {
 
         Log::compiler_error("Declaring runtime cast to_MutString_Int failed", 
@@ -118,7 +139,7 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
         return false;
     }
 
-    if (!generator.forward_declaration("to_MutString_Float", Maps::Float_to_MutString,
+    if (!generator.overloaded_forward_declaration("to", Maps::Float_to_MutString,
         llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {generator.types_.double_t}, false))) {
 
         Log::compiler_error("Declaring runtime cast to_String_MutString failed", 
@@ -131,8 +152,9 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
 
     // ----- declare string functions -----
 
-    auto concat = generator.forward_declaration("concat_MutString_MutString", Maps::MutString_MutString_to_MutString,
-        llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {generator.types_.mutstring_ptr_t, generator.types_.mutstring_ptr_t}, false));
+    auto concat = generator.forward_declaration("concat",
+        llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {
+            generator.types_.mutstring_ptr_t, generator.types_.mutstring_ptr_t}, false));
 
     if (!concat) {
         Log::compiler_error("Declaring concat failed", 
@@ -167,7 +189,8 @@ bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     
 
     // ##########  -Int  ##########
-    optional<llvm::Function*> negate_int = generator.function_definition("-", *IntInt, llvm_IntInt);
+    optional<llvm::Function*> negate_int = generator.overloaded_function_definition(
+        "-", *IntInt, llvm_IntInt);
 
     if (!negate_int) {
         Log::compiler_error("creating builtin unary - failed", COMPILER_INIT_SOURCE_LOCATION);
@@ -179,7 +202,8 @@ bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     );
 
     // ##########  Int + Int  ##########
-    optional<llvm::Function*> int_add = generator.function_definition("+", *IntIntInt, llvm_IntIntInt);
+    optional<llvm::Function*> int_add = generator.overloaded_function_definition(
+        "+", *IntIntInt, llvm_IntIntInt);
 
     if (!int_add) {
         Log::compiler_error("creating builtin + failed", COMPILER_INIT_SOURCE_LOCATION);
@@ -193,7 +217,8 @@ bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     );
 
     // ##########  Int * Int  ##########
-    optional<llvm::Function*> int_mul = generator.function_definition("*", *IntIntInt, llvm_IntIntInt);
+    optional<llvm::Function*> int_mul = generator.overloaded_function_definition(
+        "*", *IntIntInt, llvm_IntIntInt);
 
     if (!int_mul) {
         Log::error("creating builtin * failed", COMPILER_INIT_SOURCE_LOCATION);
@@ -207,7 +232,8 @@ bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     );
 
     // ##########  Int - Int  ##########
-    optional<llvm::Function*> int_sub = generator.function_definition("-", *IntIntInt, llvm_IntIntInt);
+    optional<llvm::Function*> int_sub = generator.overloaded_function_definition(
+        "-", *IntIntInt, llvm_IntIntInt);
 
     if (!int_sub) {
         Log::error("creating builtin - failed", COMPILER_INIT_SOURCE_LOCATION);
@@ -221,7 +247,7 @@ bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     );
 
     // ##########  Float + Float  ##########
-    optional<llvm::Function*> float_add = generator.function_definition(
+    optional<llvm::Function*> float_add = generator.overloaded_function_definition(
         "+", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_add) {
@@ -236,7 +262,7 @@ bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     );
 
     // ##########  Float * Float  ##########
-    optional<llvm::Function*> float_mul = generator.function_definition(
+    optional<llvm::Function*> float_mul = generator.overloaded_function_definition(
         "*", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_mul) {
@@ -251,7 +277,7 @@ bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     );
 
     // ##########  Float - Float  ##########
-    optional<llvm::Function*> float_sub = generator.function_definition(
+    optional<llvm::Function*> float_sub = generator.overloaded_function_definition(
         "-", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_sub) {
@@ -266,7 +292,7 @@ bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     );
 
     // ##########  Float / Float  ##########
-    optional<llvm::Function*> float_div = generator.function_definition(
+    optional<llvm::Function*> float_div = generator.overloaded_function_definition(
         "/", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_div) {

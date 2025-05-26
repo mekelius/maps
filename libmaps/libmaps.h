@@ -3,11 +3,11 @@
 
 #include "maps_datatypes.h"
 
-void print_Boolean(maps_Boolean b);
-void print_Int(maps_Int i);
-void print_String(maps_String str);
-void print_MutString(struct maps_MutString* str);
-void print_Float(maps_Float d);
+void print_i_Void_Boolean(maps_Boolean b);
+void print_i_Void_Int(maps_Int i);
+void prints_i_Void_String(maps_String str);
+void printms_i_Void_MutString(struct maps_MutString* str);
+void print_i_Void_Float(maps_Float d);
 
 // compile time casts signal failure with return value
 bool CT_to_Int_String(maps_String str, maps_Int* out);
@@ -23,6 +23,6 @@ maps_String to_String_MutString(struct maps_MutString*);
 
 void free_MutString(struct maps_MutString* str);
 
-struct maps_MutString* concat_MutString_MutString(struct maps_MutString*, struct maps_MutString*);
+struct maps_MutString* concat(struct maps_MutString*, struct maps_MutString*);
 
 #endif

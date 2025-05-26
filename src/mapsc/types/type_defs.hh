@@ -29,11 +29,11 @@ constexpr CT_Type Hole{ "Hole", &not_castable, &not_concretizable };
 constexpr CT_Type Number{ "Number", &cast_from_Number, &concretize_Number };
 constexpr CT_Type NumberLiteral{ "NumberLiteral", &cast_from_NumberLiteral, &concretize_NumberLiteral };
 constexpr CT_Type TestingType{ "TestingType", &not_castable, &not_concretizable };
-constexpr auto IO_Int = IO_TypeConstructor::ct_apply("IO Int", Int);
-constexpr auto IO_Boolean = IO_TypeConstructor::ct_apply("IO Boolean", Boolean);
-constexpr auto IO_Float = IO_TypeConstructor::ct_apply("IO Float", Float);
-constexpr auto IO_String = IO_TypeConstructor::ct_apply("IO String", String);
-constexpr auto IO_Void = IO_TypeConstructor::ct_apply("IO Void", Void);
+constexpr auto IO_Int = IO_TypeConstructor::ct_apply("IO_Int", Int);
+constexpr auto IO_Boolean = IO_TypeConstructor::ct_apply("IO_Boolean", Boolean);
+constexpr auto IO_Float = IO_TypeConstructor::ct_apply("IO_Float", Float);
+constexpr auto IO_String = IO_TypeConstructor::ct_apply("IO_String", String);
+constexpr auto IO_Void = IO_TypeConstructor::ct_apply("IO_Void", Void);
 constexpr ConcreteType MutString = { MutString_ID, "MutString", &cast_from_MutString };
 constexpr auto CT_TYPES_COUNT = __LINE__ - CT_TYPES_START_LINE - 1;
 
@@ -46,8 +46,8 @@ constexpr std::array<const Type*, CT_TYPES_COUNT> BUILTIN_TYPES {
 };
 
 constexpr auto CT_FUNCTION_TYPES_START_LINE = __LINE__;
-constexpr CTFunctionType<1> String_to_IO_Void{ "String => IO Void", &IO_Void, {&String}, false };
-constexpr CTFunctionType<1> MutString_to_IO_Void{ "MutString => IO Void", &IO_Void, {&MutString}, false };
+constexpr CTFunctionType<1> String_to_IO_Void{ "String => IO_Void", &IO_Void, {&String}, false };
+constexpr CTFunctionType<1> MutString_to_IO_Void{ "MutString => IO_Void", &IO_Void, {&MutString}, false };
 constexpr CTFunctionType<1> Int_to_Int{ "Int -> Int", &Int, {&Int}, true };
 constexpr CTFunctionType<2> IntInt_to_Int{ "Int -> Int -> Int", &Int, {&Int, &Int}, true };
 constexpr CTFunctionType<2> FloatFloat_to_Float{ "Float -> Float -> Float", &Float, {&Float, &Float}, true };

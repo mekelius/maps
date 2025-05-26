@@ -9,24 +9,23 @@
 
 const size_t MAX_INT_LENGTH = 12;
 
-void print_Boolean(maps_Boolean b) {
+void print_i_Void_Boolean(maps_Boolean b) {
     printf("%s", b ? "true" : "false");
 }
 
-void print_Int(maps_Int i) {
+void print_i_Void_Int(maps_Int i) {
     printf("%i", i);
 }
 
-void print_String(maps_String str) {
+void prints_i_Void_String(maps_String str) {
     printf("%s", str);
 }
 
-void print_MutString(struct maps_MutString* str) {
-    print_String(to_String_MutString(str));
+void printms_i_Void_MutString(struct maps_MutString* str) {
+    prints_i_Void_String(to_String_MutString(str));
 }
 
-
-void print_Float(maps_Float d) {
+void print_i_Void_Float(maps_Float d) {
     printf("%f", d);
 }
 
@@ -95,8 +94,7 @@ void free_MutString(struct maps_MutString* str) {
     free(str->data);
 }
 
-struct maps_MutString* concat_MutString_MutString(
-    struct maps_MutString* lhs, struct maps_MutString* rhs) {
+struct maps_MutString* concat(struct maps_MutString* lhs, struct maps_MutString* rhs) {
 
     struct maps_MutString* out = malloc(sizeof(struct maps_MutString));
 

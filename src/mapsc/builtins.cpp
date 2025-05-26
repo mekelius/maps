@@ -61,8 +61,8 @@ CT_Operator::CT_Operator(std::string_view name, const Expression&& expression,
 
 CT_Definition true_{"true", Expression::builtin(true, Boolean)};
 CT_Definition false_{"false", Expression::builtin(false, Boolean)};
-constinit CT_Definition print_String{"print_String", External{}, String_to_IO_Void};
-constinit CT_Definition print_MutString{"print_MutString", External{}, MutString_to_IO_Void};
+constinit CT_Definition print_String{"prints", External{}, String_to_IO_Void};
+constinit CT_Definition print_MutString{"printms", External{}, MutString_to_IO_Void};
 
 // ----- BUILTINS SCOPE -----
 
@@ -87,7 +87,7 @@ constinit CT_Definition to_String_MutString{"to_String_MutString", External{}, M
 constinit CT_Definition to_MutString_Int{"to_MutString_Int", External{}, Int_to_MutString};
 constinit CT_Definition to_MutString_Float{"to_MutString_Float", External{}, Float_to_MutString};
 
-constinit CT_Definition concat{"concat_MutString_MutString", External{}, MutString_MutString_to_MutString};
+constinit CT_Definition concat{"concat", External{}, MutString_MutString_to_MutString};
 
 bool init_builtin(CT_Scope& scope, CT_Definition& definition) {
     if (!scope.create_identifier(&definition)) {

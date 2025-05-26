@@ -20,6 +20,9 @@ public:
     virtual bool is_concrete() const { return wrapped_type_->is_concrete(); }
     virtual bool is_complex() const { return true; }
     virtual std::string_view name() const { return name_; }
+    virtual std::string_view function_signature() const { 
+        return wrapped_type_->function_signature(); 
+    }
     virtual bool is_voidish() const { return wrapped_type_->is_voidish(); }
 
     virtual bool concretize(Expression& _) const { (void) _; return is_concrete(); }
@@ -45,6 +48,9 @@ public:
     virtual bool is_concrete() const { return wrapped_type_->is_concrete(); }
     virtual bool is_complex() const { return true; }
     virtual std::string_view name() const { return name_; }
+    virtual std::string_view function_signature() const { 
+        return wrapped_type_->function_signature(); 
+    }
     virtual bool is_voidish() const { return wrapped_type_->is_voidish(); }
 
     virtual bool concretize(Expression& _) const { (void) _; return is_concrete(); }

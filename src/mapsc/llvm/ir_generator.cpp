@@ -62,22 +62,6 @@ using Log = Maps::LogInContext<Maps::LogContext::ir_gen>;
                           
 namespace IR {
 
-namespace {
-
-// creates the internal name for a function based on arg types
-std::string create_internal_name(const std::string& name, const Maps::FunctionType& maps_type) {
-    std::string internal_name = name;
-
-    // append arg names
-    // for (const Maps::Type* arg_type: maps_type.param_types()) {
-    //     internal_name += "_" + static_cast<std::string>(arg_type->name());
-    // }
-
-    return internal_name;
-}
-
-} // namespace
-
 // ----- IR GENERATOR -----
 
 IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module,
@@ -136,6 +120,16 @@ void IR_Generator::fail(const std::string& message) {
 }
 
 optional<llvm::Function*> IR_Generator::function_definition(const std::string& name, 
+    llvm::FunctionType* llvm_type, llvm::Function::LinkageTypes linkage) {
+
+    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, name, module_);
+    function_store_->insert(name, {llvm_type, function});
+    llvm::BasicBlock* body = llvm::BasicBlock::Create(*context_, "", function);
+    builder_->SetInsertPoint(body);
+    return function;
+}
+
+optional<llvm::Function*> IR_Generator::overloaded_function_definition(const std::string& name, 
     const Maps::FunctionType& maps_type, llvm::FunctionType* llvm_type, 
     llvm::Function::LinkageTypes linkage) {
 
@@ -146,15 +140,15 @@ optional<llvm::Function*> IR_Generator::function_definition(const std::string& n
         return nullopt;
     }
 
-    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, 
-        create_internal_name(name, maps_type), module_);
-    function_store_->insert(name, {llvm_type, function});
+    auto suffixed_name = name + FunctionStore::get_suffix(maps_type);
+
+    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, suffixed_name, module_);
+    function_store_->insert_overloaded(name, maps_type, {llvm_type, function});
     llvm::BasicBlock* body = llvm::BasicBlock::Create(*context_, "", function);
     builder_->SetInsertPoint(body);
     return function;
 }
 
-// ??? how to do recursion?
 bool IR_Generator::close_function_definition(const llvm::Function& function, 
     llvm::Value* return_value) {
     
@@ -172,12 +166,21 @@ bool IR_Generator::close_function_definition(const llvm::Function& function,
 }
 
 optional<llvm::Function*> IR_Generator::forward_declaration(const std::string& name, 
+    llvm::FunctionType* llvm_type, llvm::Function::LinkageTypes linkage) {
+    
+    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, name, module_);
+    function_store_->insert(name, function);
+    return function;
+}
+
+optional<llvm::Function*> IR_Generator::overloaded_forward_declaration(const std::string& name, 
     const Maps::FunctionType& maps_type, llvm::FunctionType* llvm_type,
     llvm::Function::LinkageTypes linkage) {
     
-    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, 
-        create_internal_name(name, maps_type), module_);
-    function_store_->insert(name, function);
+    auto suffixed_name = name + FunctionStore::get_suffix(maps_type);
+
+    llvm::Function* function = llvm::Function::Create(llvm_type, linkage, suffixed_name, module_);
+    function_store_->insert_overloaded(name, maps_type, function);
     return function;
 }
 
@@ -227,10 +230,10 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
         return nullopt;
     }
     
-    auto wrapper = function_definition(name, *maps_type, *llvm_type);
+    auto wrapper = function_definition(name, *llvm_type);
     auto value = handle_expression(expression);
 
-    if (!value) {
+    if (!*value) {
         fail("Converting " + expression.log_message_string() + " to a value failed");
         return nullopt;
     }
@@ -262,8 +265,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
         return nullopt;
     }
 
-    optional<llvm::Function*> function = function_definition(definition.name_string(), 
-        *dynamic_cast<const Maps::FunctionType*>(definition.get_type()), *signature);
+    optional<llvm::Function*> function = function_definition(definition.name_string(), *signature);
 
     if (!function)
         return nullopt;
@@ -283,7 +285,7 @@ bool IR_Generator::handle_statement(const Statement& statement) {
 
         case StatementType::return_: {
             optional<llvm::Value*> value = handle_expression(*get<Expression*>(statement.value));
-            if (!value)
+            if (!*value)
                 fail("Missing value while creating return statement");
             return builder_->CreateRet(*value);
         }
@@ -303,19 +305,19 @@ bool IR_Generator::handle_statement(const Statement& statement) {
     }
 }
 
-bool IR_Generator::handle_block(const Statement& statement, bool repl_top_level) {
+bool IR_Generator::handle_block(const Statement& statement) {
     assert(statement.statement_type == StatementType::block && 
         "IR_Generator::handle_block called with a statement that wasn't a block");
 
     for (const Statement* sub_statement: get<Maps::Block>(statement.value)) {
         switch (sub_statement->statement_type) {
             case StatementType::expression_statement:
-                if (!handle_expression_statement(*sub_statement, repl_top_level))
+                if (!handle_expression_statement(*sub_statement))
                     return false;
                 break;
 
             case StatementType::block:
-                if (!handle_block(*sub_statement, repl_top_level))
+                if (!handle_block(*sub_statement))
                     return false;
                 break;
 
@@ -330,7 +332,7 @@ bool IR_Generator::handle_block(const Statement& statement, bool repl_top_level)
 }
 
 std::optional<llvm::Value*> IR_Generator::handle_expression_statement(
-    const Maps::Statement& statement, bool repl_top_level) {
+    const Maps::Statement& statement) {
     
     assert(statement.statement_type == StatementType::expression_statement && 
         "IR_Generator::handle_expression_statement called with non-expression statement");
@@ -338,21 +340,8 @@ std::optional<llvm::Value*> IR_Generator::handle_expression_statement(
     Maps::Expression* expression = get<Expression*>(statement.value);
     optional<llvm::Value*> value = handle_expression(*expression);
 
-    if (!value)
+    if (!*value)
         return nullopt;
-
-    if (!repl_top_level)
-        return value;
-
-    optional<llvm::FunctionCallee> print = 
-        function_store_->get("print_" + expression->type->name_string(), false);
-
-    if (!print) {
-        fail("no print function for top level expression");
-        return nullopt;
-    }
-
-    builder_->CreateCall(*print, *value);
 
     return value;
 }
@@ -412,8 +401,7 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     // auto deduced_type = deduce_function_type(*compilation_state_->types_, call);
     // Log::debug_extra("Deduced function type to be " + deduced_type->name_string(), call.location);
 
-    std::optional<llvm::FunctionCallee> function = function_store_->get(
-        callee->name_string(), true);
+    std::optional<llvm::FunctionCallee> function = function_store_->get(*callee);
 
     if (!function) {
         fail("Attempt to call unknown function: \"" + callee->name_string() + "\"");
