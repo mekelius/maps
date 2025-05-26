@@ -6,6 +6,7 @@
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
 #include "mapsc/logging_options.hh"
+#include "mapsc/types/type_defs.hh"
 
 using namespace Maps;
 using namespace std;
@@ -121,6 +122,30 @@ TEST_CASE("Unary minus in parentheses and a type declaration") {
     CHECK(*outer->type == Float);
 }
 
-TEST_CASE("joo") {
+TEST_CASE("MutString (1 + 2)") {
+    auto options = LogOptions::Lock::global();
+    options.options_->set_loglevel(LogLevel::debug_extra);
 
+    auto [state, _1] = CompilationState::create_test_state_with_builtins();
+    auto& ast_store = *state.ast_store_;
+
+    auto value1 = Expression::numeric_literal(ast_store, "1", TSL);
+    auto value2 = Expression::numeric_literal(ast_store, "2", TSL);
+    auto op = RT_Operator{"+", External{}, &IntInt_to_Int, {Operator::Fixity::binary}, true, TSL};
+    auto op_ref = Expression::operator_reference(*state.ast_store_, &op, TSL);
+    auto type_specifier = Expression::type_reference(ast_store, &MutString, TSL);
+
+    auto inner = Expression::termed(ast_store, {value1, op_ref, value2}, TSL);
+    auto expr = Expression::termed(ast_store, {type_specifier, inner}, TSL);
+
+    auto success = run_layer2(state, expr);
+
+    ReverseParser::Options rp_options{};
+    rp_options.include_all_types = true;
+    rp_options.debug_node_types = true;
+    ReverseParser{&std::cerr, rp_options} << *expr << "\n";
+
+    CHECK(success);
+    CHECK(*expr->type == MutString);
+    CHECK(expr->expression_type == ExpressionType::call);
 }

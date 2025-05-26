@@ -68,6 +68,7 @@ private:
     void initial_partial_binop_call_right_state();
     void initial_partial_binop_call_left_state();
     void initial_partial_binop_call_both_state();
+    void initial_type_reference_state();
 
     void reference_state();
     void call_state();
@@ -108,9 +109,8 @@ private:
         SourceLocation location);
     // convenience function that creates an unary call expression and pushes it onto the parse stack
     void push_unary_operator_call(Expression* operator_ref, Expression* value);
-    void apply_type_declaration(Expression* type_declaration, Expression* value);
+    void apply_type_declaration_and_push(Expression* type_declaration, Expression* value);
     
-    void initial_type_reference_state();
     void type_reference_state();
 
     void initial_type_constructor_state();

@@ -457,6 +457,15 @@ void TermedExpressionParser::initial_partial_binop_call_both_state() {
     assert(false && "not implemented");
 }
 
+void TermedExpressionParser::initial_type_reference_state() {
+    assert(current_term()->expression_type == ExpressionType::type_reference && 
+        "TermedExpressionParser::type_specifier_state entered with not a type_specifier/type_reference \
+on the stack");
+
+    type_reference_state();
+    initial_goto();
+}
+
 void TermedExpressionParser::reference_state() {
     if (at_expression_end())
         return;
@@ -1104,15 +1113,6 @@ void TermedExpressionParser::reduce_minus_sign_to_unary_minus_call() {
     parse_stack_.push_back(*call);
 }
 
-void TermedExpressionParser::initial_type_reference_state() {
-    assert(current_term()->expression_type == ExpressionType::type_reference && 
-        "TermedExpressionParser::type_specifier_state entered with not a type_specifier/type_reference \
-on the stack");
-
-    type_reference_state();
-    initial_goto();
-}
-
 void TermedExpressionParser::type_reference_state() {
     if (at_expression_end()) {
         if (!possibly_type_expression_) {
@@ -1126,8 +1126,11 @@ void TermedExpressionParser::type_reference_state() {
             handle_termed_sub_expression(peek());
             return type_reference_state();
 
-        case GUARANTEED_VALUE:
-        case ExpressionType::call: {
+        case ExpressionType::call:
+            apply_type_declaration_and_push(*pop_term(), get_term());
+            return call_state();
+
+        case GUARANTEED_VALUE: {
             auto type_term = *pop_term();
             assert(std::holds_alternative<const Type*>(type_term->value) && "no type");
             auto type_value = std::get<const Type*>(type_term->value);
@@ -1158,17 +1161,17 @@ void TermedExpressionParser::type_reference_state() {
             shift();
             binary_operator_state();
             auto value = pop_term();
-            return apply_type_declaration(*pop_term(), *value);
+            return apply_type_declaration_and_push(*pop_term(), *value);
         }
 
         case ExpressionType::minus_sign: {
             shift();
             minus_sign_state();
             auto value = pop_term();
-            return apply_type_declaration(*pop_term(), *value);
+            return apply_type_declaration_and_push(*pop_term(), *value);
         }
         case ExpressionType::partially_applied_minus:
-            return apply_type_declaration(*pop_term(), get_term());
+            return apply_type_declaration_and_push(*pop_term(), get_term());
 
         case ExpressionType::type_reference:
         default:
@@ -1245,7 +1248,7 @@ void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, 
     return initial_value_state();
 }
 
-void TermedExpressionParser::apply_type_declaration(Expression* type_declaration, Expression* value) {
+void TermedExpressionParser::apply_type_declaration_and_push(Expression* type_declaration, Expression* value) {
     Log::debug_extra("Applying type declaration " + type_declaration->log_message_string() + " to " + 
         value->log_message_string(), type_declaration->location);
 
