@@ -175,16 +175,22 @@ add_executable(unit_tests
     tests/unit/ast/ast.cpp
 
     tests/unit/parser/lexer.cpp
-    tests/unit/parser/layer1.cpp
-    tests/unit/parser/layer2.cpp
     tests/unit/parser/unary_minus.cpp
     tests/unit/parser/unary_operators.cpp
 
-    tests/unit/parser/layer1/lambda.cpp
-    tests/unit/parser/layer1/ternary.cpp
+    tests/unit/parser/layer1/basics.cpp
     tests/unit/parser/layer1/block.cpp
+    tests/unit/parser/layer1/lambda.cpp
+    tests/unit/parser/layer1/minus.cpp
     tests/unit/parser/layer1/termed.cpp
+    tests/unit/parser/layer1/ternary.cpp
     
+    tests/unit/parser/layer2/basics.cpp
+    tests/unit/parser/layer2/minus.cpp
+    tests/unit/parser/layer2/partial_application.cpp
+    tests/unit/parser/layer2/precedence.cpp
+    tests/unit/parser/layer2/type_declarations.cpp
+
     tests/unit/types/types.cpp
     tests/unit/types/type_casts.cpp
     tests/unit/types/type_store.cpp

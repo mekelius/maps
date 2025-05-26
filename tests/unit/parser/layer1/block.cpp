@@ -135,3 +135,32 @@ TEST_CASE("Should parse a block") {
         CHECK(block.at(1)->statement_type == StatementType::return_);
     }
 }
+
+TEST_CASE("layer1 eval should simplify single statement blocks") {
+    TypeStore types{};
+    RT_Scope scope{};
+    CompilationState state{get_builtins(), &types};
+    
+    REQUIRE(state.ast_store_->empty());
+
+    #define CURLY_BRACE_SUBCASE(test_string)\
+        SUBCASE(test_string) {\
+            std::string source = test_string;\
+            std::stringstream source_s{source};\
+            \
+            auto [success, definition, _1, _2, _3, _4] = run_layer1_eval(state, scope, source_s);\
+            \
+            CHECK(success);\
+            CHECK(definition);\
+            CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));\
+            \
+            auto expression = std::get<const Expression*>((*definition)->const_body());\
+            \
+            CHECK(expression->expression_type == ExpressionType::numeric_literal);\
+            CHECK(expression->string_value() == "4");\
+        }\
+
+    CURLY_BRACE_SUBCASE("{ 4 }");
+    CURLY_BRACE_SUBCASE("{4}");
+    CURLY_BRACE_SUBCASE("{{ {4} }}");
+}

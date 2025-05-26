@@ -1,59 +1,13 @@
-#include <sstream>
 #include "doctest.h"
+
+#include <sstream>
 
 #include "mapsc/parser/layer1.hh"
 #include "mapsc/compilation_state.hh"
-#include "mapsc/types/type_store.hh"
-#include "mapsc/builtins.hh"
 
 using namespace Maps;
+using namespace std;
 
-TEST_CASE("layer1 eval should not put top level let statements into the root") {
-    auto [state, types, builtins] = CompilationState::create_test_state();
-    RT_Scope scope{};
-
-    std::stringstream source{"let x = 5"};
-    auto [success, top_level_definition, _2, _3, _4, _5] = run_layer1_eval(state, scope, source);
-
-    CHECK(success);
-    CHECK(!scope.empty());
-    CHECK(!top_level_definition);
-
-    CHECK(scope.identifier_exists("x"));
-    auto x = *scope.get_identifier("x");
-    CHECK(std::holds_alternative<const Expression*>(x->const_body()));
-    auto expression = std::get<const Expression*>(x->const_body());
-    CHECK(expression->string_value() == "5");
-}
-
-TEST_CASE("layer1 eval should simplify single statement blocks") {
-    TypeStore types{};
-    RT_Scope scope{};
-    CompilationState state{get_builtins(), &types};
-    
-    REQUIRE(state.ast_store_->empty());
-
-    #define CURLY_BRACE_SUBCASE(test_string)\
-        SUBCASE(test_string) {\
-            std::string source = test_string;\
-            std::stringstream source_s{source};\
-            \
-            auto [success, definition, _1, _2, _3, _4] = run_layer1_eval(state, scope, source_s);\
-            \
-            CHECK(success);\
-            CHECK(definition);\
-            CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));\
-            \
-            auto expression = std::get<const Expression*>((*definition)->const_body());\
-            \
-            CHECK(expression->expression_type == ExpressionType::numeric_literal);\
-            CHECK(expression->string_value() == "4");\
-        }\
-
-    CURLY_BRACE_SUBCASE("{ 4 }");
-    CURLY_BRACE_SUBCASE("{4}");
-    CURLY_BRACE_SUBCASE("{{ {4} }}");
-}
 
 TEST_CASE("Should handle various cases") {
     TypeStore types{};
@@ -150,26 +104,22 @@ TEST_CASE("Should handle various cases") {
     }
 }
 
-TEST_CASE("Should recognize minus as a special case") {
-    auto types = TypeStore{};
+TEST_CASE("layer1 eval should not put top level let statements into the root") {
+    auto [state, types, builtins] = CompilationState::create_test_state();
     RT_Scope scope{};
-    auto state = CompilationState{get_builtins(), &types};
 
-    std::stringstream source{"-5"};
+    std::stringstream source{"let x = 5"};
+    auto [success, top_level_definition, _2, _3, _4, _5] = run_layer1_eval(state, scope, source);
 
-    auto [success, definition, _1, _2, _3, _4] = run_layer1_eval(state, scope, source);
     CHECK(success);
-    CHECK(definition);
+    CHECK(!scope.empty());
+    CHECK(!top_level_definition);
 
-    CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
-    auto expression = std::get<const Expression*>((*definition)->const_body());
-
-    CHECK(expression->expression_type == ExpressionType::termed_expression);
-    auto terms = expression->terms();
-    CHECK(terms.size() == 2);
-    CHECK(terms.at(0)->expression_type == ExpressionType::minus_sign);
-    CHECK(terms.at(1)->expression_type == ExpressionType::numeric_literal);
-    CHECK(terms.at(1)->string_value() == "5");
+    CHECK(scope.identifier_exists("x"));
+    auto x = *scope.get_identifier("x");
+    CHECK(std::holds_alternative<const Expression*>(x->const_body()));
+    auto expression = std::get<const Expression*>(x->const_body());
+    CHECK(expression->string_value() == "5");
 }
 
 TEST_CASE("Should correctly produce empty results") {
