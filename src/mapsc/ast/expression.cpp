@@ -333,4 +333,41 @@ optional<Expression*> Expression::wrap_in_runtime_cast(CompilationState& state, 
     return wrapper;
 }
 
+std::string_view Expression::expression_type_string() const {
+    switch (expression_type) {
+        case ExpressionType::string_literal: return "string_literal";
+        case ExpressionType::numeric_literal: return "numeric_literal";
+        case ExpressionType::known_value: return "known_value";
+        case ExpressionType::identifier: return "identifier";
+        case ExpressionType::operator_identifier: return "operator_identifier";
+        case ExpressionType::type_operator_identifier: return "type_operator_identifier";
+        case ExpressionType::type_identifier: return "type_identifier";
+        case ExpressionType::type_construct: return "type_construct";
+        case ExpressionType::type_argument: return "type_argument";
+        case ExpressionType::minus_sign: return "minus_sign";
+        case ExpressionType::reference: return "reference";
+        case ExpressionType::known_value_reference: return "known_value_reference";
+        case ExpressionType::binary_operator_reference: return "binary_operator_reference";
+        case ExpressionType::prefix_operator_reference: return "prefix_operator_reference";
+        case ExpressionType::postfix_operator_reference: return "postfix_operator_reference";
+        case ExpressionType::type_reference: return "type_reference";
+        case ExpressionType::type_operator_reference: return "type_operator_reference";
+        case ExpressionType::type_constructor_reference: return "type_constructor_reference";
+        case ExpressionType::type_field_name: return "type_field_name";
+        case ExpressionType::termed_expression: return "termed_expression";
+        case ExpressionType::user_error: return "user_error";
+        case ExpressionType::compiler_error: return "compiler_error";
+        case ExpressionType::call: return "call";
+        case ExpressionType::partial_call: return "partial_call";
+        case ExpressionType::partial_binop_call_left: return "partial_binop_call_left";
+        case ExpressionType::partial_binop_call_right: return "partial_binop_call_right";
+        case ExpressionType::partial_binop_call_both: return "partial_binop_call_both";
+        case ExpressionType::partially_applied_minus: return "partially_applied_minus";
+        case ExpressionType::missing_arg: return "missing_arg";
+        case ExpressionType::lambda: return "lambda";
+        case ExpressionType::ternary_expression: return "ternary_expression";
+        case ExpressionType::deleted: return "deleted"; 
+    }
+}
+
 } // namespace Maps

@@ -269,6 +269,8 @@ struct Expression {
     bool is_allowed_in_type_declaration() const;
     bool is_constant_value() const;
 
+    std::string_view expression_type_string() const;
+
     bool operator==(const Expression& other) const = default;
 
     // ----- PUBLIC FIELDS -----

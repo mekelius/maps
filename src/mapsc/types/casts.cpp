@@ -30,6 +30,7 @@ namespace {
 
 template<typename T>
 void cast_value(Expression& expression, const Type* type, T value) {
+    assert(expression.is_constant_value() && "Trying to compile-time cast a runtime value");
     expression.value = value;
     expression.expression_type = ExpressionType::known_value;
     expression.type = type;

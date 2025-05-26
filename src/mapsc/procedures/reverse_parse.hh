@@ -19,6 +19,7 @@ public:
     struct Options {
         bool include_debug_info = false;
         bool debug_separators = false;
+        bool debug_node_types = false;
         unsigned int indent_width = 4;
         bool include_all_types = false;
     };

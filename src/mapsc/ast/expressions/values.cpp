@@ -3,7 +3,7 @@
 #include <variant>
 #include <optional>
 
-using std::optional, std::nullopt;
+using std::optional, std::nullopt, std::holds_alternative;
 
 #include "common/std_visit_helper.hh"
 #include "mapsc/logging.hh"
@@ -15,9 +15,15 @@ namespace Maps {
 
 bool Expression::is_constant_value() const {
     switch (expression_type) {
-        case ExpressionType::known_value:
         case ExpressionType::numeric_literal:
         case ExpressionType::string_literal:
+            assert(holds_alternative<std::string>(value) && 
+                "Encountered an expression with literal expressiontype but wrong type of body");
+            return true;
+
+        case ExpressionType::known_value:
+            assert((!holds_alternative<CallExpressionValue>(value)) && 
+                "Encountered an expression with expressiontype known value but wrong type of body");
             return true;
 
         default:

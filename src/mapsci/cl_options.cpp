@@ -192,6 +192,9 @@ std::tuple<bool, int, REPL_Options> process_cl_options(int argc, char* argv[],
         } else if (key == "--types" || key == "--print-all-types" || key == "--print-types" || key == "--include-all-types" || key == "--include-types") {
             repl_options.reverse_parse.include_all_types = true;
 
+        } else if (key == "--node-types") {
+            repl_options.reverse_parse.debug_node_types = true;
+
         } else if (key == "--no-history") {
             repl_options.save_history = false;
 

@@ -169,31 +169,31 @@ target_compile_options(mapsci PRIVATE
 # ----------------------- UNIT TESTS -----------------------
 
 add_executable(unit_tests
-    tests/tests_main.cpp
+    tests/unit/tests_main.cpp
 
-    tests/pragmas.cpp
-    tests/ast/ast.cpp
+    tests/unit/pragmas.cpp
+    tests/unit/ast/ast.cpp
 
-    tests/parser/lexer.cpp
-    tests/parser/layer1.cpp
-    tests/parser/layer2.cpp
-    tests/parser/unary_minus.cpp
-    tests/parser/unary_operators.cpp
+    tests/unit/parser/lexer.cpp
+    tests/unit/parser/layer1.cpp
+    tests/unit/parser/layer2.cpp
+    tests/unit/parser/unary_minus.cpp
+    tests/unit/parser/unary_operators.cpp
 
-    tests/parser/layer1/lambda.cpp
-    tests/parser/layer1/ternary.cpp
-    tests/parser/layer1/block.cpp
-    tests/parser/layer1/termed.cpp
+    tests/unit/parser/layer1/lambda.cpp
+    tests/unit/parser/layer1/ternary.cpp
+    tests/unit/parser/layer1/block.cpp
+    tests/unit/parser/layer1/termed.cpp
     
-    tests/types/types.cpp
-    tests/types/type_casts.cpp
-    tests/types/type_store.cpp
-    tests/types/type_specifiers.cpp
-    tests/types/function_type.cpp
+    tests/unit/types/types.cpp
+    tests/unit/types/type_casts.cpp
+    tests/unit/types/type_store.cpp
+    tests/unit/types/type_specifiers.cpp
+    tests/unit/types/function_type.cpp
     
-    tests/procedures/inline.cpp
-    tests/procedures/concretize.cpp
-    tests/procedures/create_call.cpp
+    tests/unit/procedures/inline.cpp
+    tests/unit/procedures/concretize.cpp
+    tests/unit/procedures/create_call.cpp
 )
 
 set_property(TARGET unit_tests 
@@ -206,9 +206,9 @@ target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
 # --------------------- DSIR UNIT TESTS -----------------------
 
 add_executable(dsir_unit_tests
-    tests/tests_main.cpp
+    tests/unit/tests_main.cpp
 
-    tests/dsir/basics.cpp
+    tests/unit/dsir/basics.cpp
 )
 
 set_property(TARGET dsir_unit_tests 

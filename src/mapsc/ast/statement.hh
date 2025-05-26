@@ -74,6 +74,8 @@ struct Statement {
     bool is_empty() const;
     bool is_definition() const;
 
+    std::string_view statement_type_string() const;
+
     bool operator==(const Statement& other) const {
         return std::tie(statement_type, value) == std::tie(other.statement_type, other.value);
     };

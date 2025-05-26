@@ -20,7 +20,6 @@ TEST_CASE("Basics") {
     SUBCASE ("Should do nothing if the types match") {
         auto value1 = Expression::known_value(ast_store, static_cast<maps_Float>(1), TSL);
         auto value2 = Expression::known_value(ast_store, static_cast<maps_Float>(2), TSL);
-        auto callee_ref = Expression::reference(ast_store, callee_def, TSL);
 
         std::vector<Expression*> args{value1, value2};
 
@@ -42,8 +41,6 @@ TEST_CASE("Basics") {
     SUBCASE ("Should fill in missing args") {
         auto log_options = LogOptions::Lock::global();
         log_options.options_->set_loglevel(LogLevel::debug_extra);
-
-        auto callee_ref = Expression::reference(ast_store, callee_def, TSL);
 
         std::vector<Expression*> args{};
 
@@ -79,8 +76,6 @@ TEST_CASE("Creating an arg list should coerce args correctly") {
         types->get_function_type(&Float, {&Float, &Float}, false), TSL);
     auto value1 = Expression::known_value(ast_store, static_cast<maps_Int>(1), TSL);
     auto value2 = Expression::known_value(ast_store, static_cast<maps_Int>(2), TSL);
-
-    auto callee_ref = Expression::reference(ast_store, callee_def, TSL);
 
     std::vector<Expression*> args{value1, value2};
 

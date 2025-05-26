@@ -52,8 +52,11 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
         skipped_initial_linebreak_doubling_ = true;
     }
 
-    if (options_.debug_separators) 
+    if (options_.debug_separators || options_.debug_node_types) 
         *this << "$";
+
+    if (options_.debug_node_types)
+        *this << std::string{statement.statement_type_string()} << " ";
 
     switch (statement.statement_type) {
         case StatementType::deleted:
@@ -105,10 +108,14 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
 }
 
 ReverseParser& ReverseParser::print_expression(const Expression& expression) {
-    if (options_.debug_separators) *this << "£";
-
     if (options_.include_all_types)
         print_type_declaration(expression);
+
+    if (options_.debug_separators || options_.debug_node_types) *this << "£";
+
+    if (options_.debug_node_types)
+        *this << std::string{expression.expression_type_string()} << " ";
+
 
     switch (expression.expression_type) {
         case ExpressionType::string_literal:

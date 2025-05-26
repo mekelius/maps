@@ -110,5 +110,26 @@ bool Statement::is_definition() const {
     }
 }
 
+std::string_view Statement::statement_type_string() const {
+    switch (statement_type) {
+            case StatementType::user_error: return "user_error";
+            case StatementType::compiler_error: return "compiler_error";
+            case StatementType::deleted: return "deleted";
+            case StatementType::empty: return "empty";
+            case StatementType::expression_statement: return "expression_statement";
+            case StatementType::block: return "block";
+            case StatementType::assignment: return "assignment";
+            case StatementType::return_: return "return_";
+            // case StatementType::if: return "if";
+            // case StatementType::else: return "else";
+            // case StatementType::for: return "for";
+            // case StatementType::for_in: return "for_in";
+            // case StatementType::do_while: return "do_while";
+            // case StatementType::do_for: return "do_for";
+            // case StatementType::while: return "while";
+            // case StatementType::until: return "until";
+            // case StatementType::switch: return "switch";
+    }
+}
 
 } // namespace AST
