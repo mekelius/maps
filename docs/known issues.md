@@ -2,6 +2,7 @@
 
 ## Critical
 
+- every runtime created string leaks
 - concretizer should copy/runtime cast the values instead of changing the original
 - repl only takes a shallow copy of the definitions
 - 8* reduces to 8
@@ -18,17 +19,9 @@
 
 ## Compilation and validity
 
-- string literals missing closing \" are parsed as valid
-
 ## Logging and feedback
 
 - :t doesn't show function types
-- :stop_at doesn't print anything on success
-- reverse parse doesn't print string values quoted
-- Reverse parse doesn't print reference names correctly because definitions store string_views
-    - bandaid fix is to add scope reference to the definitions and have them check the name from the scope
-        - honestly definitions need a bit of a rework, but that should be combined with making expressions and statements constexprable
-            - how can this be done without virtualizing them as well?
 
 ## Memory
 

@@ -4,8 +4,6 @@
 
 #### Short term
 
-- layer2 should take into account if the type has been set
-    - may be set by coerse args if gets an unparsed termed expression as argument
 - clear pure expression statements in blocks etc
 - split declarations/definitions off from statements
 - finish dsir
@@ -14,11 +12,6 @@
     - type casts
 - do the ifs in dsir
 - do like loops an stuff in dsir
-- move inserting to global scope into a separate step after layer1 (layer1 should return like dsir does)
-- fix arithmetic etc.
-- rename layers to stages and clear up the structure
-- then:
-    - maybe make expression constructors private?
 - then:
     - look into conditionals
     - look into runtime casts
@@ -27,6 +20,17 @@
             - optionals require some form of contexts to unwrap
 - make compiler know whether we are currently in a generic or not
     - encountering abstract types in generics is always ok, but in concrete functions it depends on stage?
+
+#### Medium term
+
+- types are a mess
+    - make creating them easier
+    - tie them to llvm types properly
+    - do we really need IO wrapped types now?
+
+- need to read bultins from some kind of file
+    - tie in creating builtins in llvm and maps
+    - cache the llvm ir for them
 
 #### Current long term goal
 
@@ -57,13 +61,13 @@ Needed features:
 
 - language features
     - immutable variables
-        - substitution
-    - type casts and simple type declarations
-    - arithmetic expressions
+        - substitution: mostly done
+    - type casts and simple type declarations: mostly done
+    - arithmetic expressions: mostly done
     - function calls (and definitions)
         - pure function inlining as substitution
             - imperative pure function return value expression construction
-    - blocks and parentheses
+    - blocks and parentheses: mostly done
     - if, for etc.
     - polymorphic function definitions
         - picking the right specialization
@@ -72,11 +76,11 @@ Needed features:
     - restore mapsc functionality
 
 - architecture and code quality
-    - print definitions in messages nicely
+    - print definitions in messages nicely: kinda done
     - clean up IR_Generator
     - what to do with ast nodes?
-        - how to convert between statements and expressions in-place
-        - how to make them constexprable
+        - how to convert between statements and expressions in-place?
+        - how to make them constexprable?
 
 #### Accumulated tweaks
 
@@ -92,9 +96,6 @@ Needed features:
 
 #### UX tweaks
 
-- aliases
-- :no-eval and :eval
-
 #### Untested features
 
 - hex and octal numbers
@@ -108,8 +109,7 @@ Needed features:
 - operator definitions
 - top-level-evaluation via pragma
 - scopes and contexts (likely 0.2)
-- retain definitions in REPL
-- internal: Rename layers
+- retain definitions in REPL: done
 - named args
 - traits and generics
 - optional unwrapping syntax
@@ -141,7 +141,7 @@ Needed features:
 
 #### At some point
 
-- add Int64 (and Int32 as an alias for Int)
+- add Int64 (and Int32 as an alias for Int): we have MemUInt now
 - utf-8 support in Lexer
 
 #### Possible simplifications
