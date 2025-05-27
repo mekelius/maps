@@ -18,8 +18,8 @@ TEST_CASE("Basics") {
         types->get_function_type(&Float, {&Float, &Float}, false), TSL);
 
     SUBCASE ("Should do nothing if the types match") {
-        auto value1 = Expression::known_value(ast_store, static_cast<maps_Float>(1), TSL);
-        auto value2 = Expression::known_value(ast_store, static_cast<maps_Float>(2), TSL);
+        auto value1 = Expression::known_value(state, static_cast<maps_Float>(1), TSL);
+        auto value2 = Expression::known_value(state, static_cast<maps_Float>(2), TSL);
 
         std::vector<Expression*> args{value1, value2};
 
@@ -71,8 +71,8 @@ TEST_CASE("Creating an arg list should coerce args correctly") {
 
     auto callee_def = RT_Definition::external(ast_store, "test", 
         types->get_function_type(&Float, {&Float, &Float}, false), TSL);
-    auto value1 = Expression::known_value(ast_store, static_cast<maps_Int>(1), TSL);
-    auto value2 = Expression::known_value(ast_store, static_cast<maps_Int>(2), TSL);
+    auto value1 = Expression::known_value(state, static_cast<maps_Int>(1), TSL);
+    auto value2 = Expression::known_value(state, static_cast<maps_Int>(2), TSL);
 
     std::vector<Expression*> args{value1, value2};
 

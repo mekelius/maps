@@ -73,6 +73,7 @@ private:
     void reference_state();
     void call_state();
     void value_state();
+    void known_value_reference_state();
     void prefix_operator_state();
 
     void binary_operator_state();
@@ -110,6 +111,7 @@ private:
     // convenience function that creates an unary call expression and pushes it onto the parse stack
     void push_unary_operator_call(Expression* operator_ref, Expression* value);
     void apply_type_declaration_and_push(Expression* type_declaration, Expression* value);
+    void substitute_known_value_reference(Expression* known_value_reference);
     
     void type_reference_state();
 
@@ -131,6 +133,7 @@ private:
 
     Expression* const expression_;
     std::vector<Expression*>* expression_terms_;
+    RT_Definition* expression_context_;
     std::vector<Expression*>::iterator next_term_it_;
     CompilationState* const compilation_state_;
     AST_Store* const ast_store_;

@@ -265,7 +265,7 @@ bool REPL::run_transforms(CompilationState& state,
     if (!top_level_definition)
         return true;
 
-    if (!Maps::run_transforms(state, scope, std::array{*top_level_definition}))
+    if (!Maps::concretize(**top_level_definition))
         return false;
 
     return true;

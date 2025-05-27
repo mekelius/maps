@@ -2,6 +2,7 @@
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
+#include "mapsc/procedures/evaluate.hh"
 
 namespace Maps {
 
@@ -41,8 +42,24 @@ Definition* Expression::operator_reference_value() const {
 Expression* Expression::reference(AST_Store& store, Definition* definition, 
     const SourceLocation& location) {
     
-    return store.allocate_expression(
-        {ExpressionType::reference, definition, definition->get_type(), location});
+    return std::visit(overloaded{
+        [&store, &definition, &location](const Expression* expression) {
+            switch (expression->expression_type) {
+                case ExpressionType::known_value:
+                    return store.allocate_expression(
+                        {ExpressionType::known_value_reference, definition, definition->get_type(), 
+                            location});
+
+                default:
+                    return store.allocate_expression(
+                        {ExpressionType::reference, definition, definition->get_type(), location});
+            }
+        },
+        [&store, &definition, &location](auto) {
+            return store.allocate_expression(
+                {ExpressionType::reference, definition, definition->get_type(), location});
+        }
+    }, definition->const_body());
 }
 
 std::optional<Expression*> Expression::reference(AST_Store& store, const Scope& scope, 
@@ -114,6 +131,30 @@ void Expression::convert_to_operator_reference(Definition* definition) {
     type = definition->get_type();
 }
     
+bool Expression::convert_by_value_substitution() {
+    using Log = LogInContext<LogContext::inline_>;
+    assert(expression_type == ExpressionType::known_value_reference &&
+        "convert_by_value_substitution called on not a known value reference");
+
+    assert(*type == *reference_value()->get_type() && 
+        "attempting to substitute a value of a different type");
+
+    Log::debug_extra("Attempting to substitute " + log_message_string(), location);
+
+    auto new_value = evaluate(reference_value());
+    if (!new_value) {
+        Log::error("Substitution failed", location);
+        return false;
+    }
+
+    expression_type = ExpressionType::known_value;
+    value = std::visit([](auto value)->ExpressionValue { return {value}; }, *new_value);
+
+    Log::debug_extra("Succesfully substituted, new expression: " + log_message_string(), location);
+
+    return true;
+}
+
 Operator::Precedence get_operator_precedence(const Expression& operator_ref) {
     assert(operator_ref.expression_type == ExpressionType::binary_operator_reference && 
         "get_operator_precedence called with not a binary operator reference");

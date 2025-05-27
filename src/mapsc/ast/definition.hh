@@ -8,7 +8,7 @@
 #include "mapsc/source.hh"
 #include "mapsc/types/type_defs.hh"
 #include "common/std_visit_helper.hh"
-
+#include "mapsc/ast/scope.hh"
 
 namespace Maps {
 
@@ -76,6 +76,17 @@ public:
     virtual bool is_operator() const { return false; }
     virtual bool is_const() const { return false; }
 
+    std::string body_type_string() const {
+        return std::visit(overloaded{
+            [](Undefined){ return "undefined"; },
+            [](External){ return "external"; },
+            [](Error){ return "error"; },
+            [](const Expression*){ return "expression"; },
+            [](const Statement*){ return "statement"; },
+            [](BTD_Binding){ return "BTD binding"; },
+        }, const_body());
+    }
+
     virtual bool operator==(const Definition& other) const = 0;
 };
 
@@ -129,6 +140,9 @@ public:
     void mark_deleted() { is_deleted_ = true; }
 
     bool is_top_level_definition() const { return is_top_level_; }
+    RT_Scope* inner_scope() const {
+        return inner_scope_ ? *inner_scope_ : outer_scope_;
+    }
 
     virtual bool operator==(const Definition& other) const {
         if (this == &other)
@@ -146,6 +160,10 @@ private:
     SourceLocation location_;
     std::optional<const Type*> type_;
     std::optional<const Type*> declared_type_;
+
+    RT_Scope* outer_scope_;
+    std::optional<RT_Scope*> inner_scope_ = std::nullopt;
+
     bool is_top_level_;
     bool is_deleted_ = false;
 };

@@ -186,6 +186,7 @@ add_executable(unit_tests
     tests/unit/parser/layer1/ternary.cpp
     
     tests/unit/parser/layer2/basics.cpp
+    tests/unit/parser/layer2/calls.cpp
     tests/unit/parser/layer2/minus.cpp
     tests/unit/parser/layer2/partial_application.cpp
     tests/unit/parser/layer2/precedence.cpp

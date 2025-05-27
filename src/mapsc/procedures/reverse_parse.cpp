@@ -114,7 +114,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
     if (options_.debug_separators || options_.debug_node_types) *this << "£";
 
     if (options_.debug_node_types)
-        *this << std::string{expression.expression_type_string()} << " ";
+        *this << std::string{expression.expression_type_string_view()} << " ";
 
 
     switch (expression.expression_type) {

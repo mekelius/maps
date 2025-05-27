@@ -201,8 +201,9 @@ std::string Expression::log_message_string() const {
         case ExpressionType::type_identifier:
             return "type identifier " + string_value();
 
-        case ExpressionType::reference:
         case ExpressionType::known_value_reference:
+            return "reference to known value " + reference_value()->name_string();
+        case ExpressionType::reference:
             return "reference to " + reference_value()->name_string();
         case ExpressionType::type_reference:
             return "reference to type " + type_reference_value()->name_string();
@@ -266,6 +267,19 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
         case ExpressionType::string_literal:
         case ExpressionType::numeric_literal:
         case ExpressionType::known_value:
+            // as a special case, every type can be casted into a const function of itself
+            if (target_type->is_function()) {
+                auto function_type = dynamic_cast<const FunctionType*>(target_type);
+                if (*function_type->return_type() != *type) {
+                    Log::debug("Could not cast " + log_message_string() + " to " + target_type->name_string(), 
+                        type_declaration_location);
+                    return nullopt;
+                }
+
+                type = target_type;
+                return this;
+            }
+
             if (type->cast_to(target_type, *this)) {
                 Log::debug_extra("Casted expression " + log_message_string() + " to " + 
                     target_type->name_string(), type_declaration_location);
@@ -333,7 +347,7 @@ optional<Expression*> Expression::wrap_in_runtime_cast(CompilationState& state, 
     return wrapper;
 }
 
-std::string_view Expression::expression_type_string() const {
+std::string_view Expression::expression_type_string_view() const {
     switch (expression_type) {
         case ExpressionType::string_literal: return "string_literal";
         case ExpressionType::numeric_literal: return "numeric_literal";

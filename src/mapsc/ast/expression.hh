@@ -139,10 +139,10 @@ struct Expression {
         const std::string& value, const SourceLocation& location);
     static Expression* numeric_literal(AST_Store& store, 
         const std::string& value, const SourceLocation& location);
-    static Expression* known_value(AST_Store& store, KnownValue value,
+    static Expression* known_value(CompilationState& state, KnownValue value,
         const SourceLocation& location);
-    static std::optional<Expression*> known_value(AST_Store& store, KnownValue value, const Type* type,
-        const SourceLocation& location);
+    static std::optional<Expression*> known_value(CompilationState& state, KnownValue value, 
+        const Type* type, const SourceLocation& location);
 
     static Expression* identifier(AST_Store& store, RT_Scope* scope, 
         const std::string& value, const SourceLocation& location);
@@ -226,7 +226,8 @@ struct Expression {
     // expect to be a partially applied minus
     void convert_to_partial_binop_minus_call_left(AST_Store& store);
     void convert_to_unary_minus_call();
-    
+    [[nodiscard]] bool convert_by_value_substitution();
+
     // For example partial binop call, currently a no-op
     void convert_to_partial_call();
 
@@ -242,6 +243,7 @@ struct Expression {
     Definition* reference_value() const;
     const Type* type_reference_value() const;
     Definition* operator_reference_value() const;
+    std::optional<KnownValue> known_value_value() const;
 
     LambdaExpressionValue& lambda_value();
     const LambdaExpressionValue& lambda_value() const;
@@ -274,7 +276,9 @@ struct Expression {
     bool is_allowed_in_type_declaration() const;
     bool is_constant_value() const;
 
-    std::string_view expression_type_string() const;
+    std::string_view expression_type_string_view() const;
+    std::string expression_type_string() const { 
+        return std::string{expression_type_string_view()}; }
 
     bool operator==(const Expression& other) const = default;
 

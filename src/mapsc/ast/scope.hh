@@ -6,15 +6,17 @@
 #include <variant>
 #include <vector>
 #include <cassert>
+#include <span>
 
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/types/type.hh"
-#include "mapsc/ast/statement.hh"
-#include "mapsc/ast/definition.hh"
-#include "mapsc/ast/operator.hh"
 
 namespace Maps {
+
+class Definition;
+class RT_Definition;
+class CT_Definition;
 
 using Log_resolution = LogInContext<LogContext::name_resolution>;
 using Log_creation = LogInContext<LogContext::identifier_creation>;

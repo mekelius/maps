@@ -46,7 +46,6 @@ using Log = LogInContext<LogContext::layer2>;
 // Expression types guaranteed to be simple values
 #define GUARANTEED_VALUE ExpressionType::string_literal:\
                     case ExpressionType::numeric_literal:\
-                    case ExpressionType::known_value_reference:\
                     case ExpressionType::known_value
 
 #define POTENTIAL_FUNCTION ExpressionType::call:\
@@ -61,6 +60,7 @@ using Log = LogInContext<LogContext::layer2>;
 TermedExpressionParser::TermedExpressionParser(
     CompilationState* compilation_state, Expression* expression)
 :expression_(expression), 
+ expression_context_(expression->termed_context()),
  compilation_state_(compilation_state), 
  ast_store_(compilation_state->ast_store_.get()) {
     expression_terms_ = &expression->terms();
@@ -158,7 +158,7 @@ bool is_value_literal(Expression* expression) {
 
 optional<Expression*> TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
-        fail("layer2 tried to parse an empty expression", expression_->location);
+        fail("Layer2 tried to parse an empty expression", expression_->location);
         return Expression::valueless(*ast_store_, ExpressionType::user_error, expression_->location);
     }
 
@@ -167,19 +167,19 @@ optional<Expression*> TermedExpressionParser::parse_termed_expression() {
     initial_goto();
 
     if (!success_) {
-        Log::error("parsing termed expression failed", expression_->location);
+        Log::error("Parsing termed expression failed", expression_->location);
         return Expression::valueless(*ast_store_, ExpressionType::user_error, expression_->location);
     }
 
     if (!at_expression_end()) {
         assert(false && "parse_termed_expression didn't parse the whole expression");
-        fail("parse_termed_expression didn't parse the whole expression", expression_->location);
+        fail("Parse_termed_expression didn't parse the whole expression", expression_->location);
         return expression_;
     }
     
     if (!parse_stack_reduced()) {
         assert(false && "parse_termed_expression failed to reduce completely");
-        fail("parse_termed_expression failed to reduce the stack", expression_->location);
+        fail("Parse_termed_expression failed to reduce the stack", expression_->location);
         return expression_;
     }
 
@@ -323,9 +323,6 @@ void TermedExpressionParser::reduce_partially_applied_minus() {
 }
 
 void TermedExpressionParser::initial_goto() {
-    if (at_expression_end())
-        return;
-
     switch (current_term()->expression_type) {
         case ExpressionType::termed_expression:
             handle_termed_sub_expression(current_term());
@@ -361,6 +358,10 @@ void TermedExpressionParser::initial_goto() {
             initial_value_state();
             break;
 
+        case ExpressionType::known_value_reference:
+            known_value_reference_state();
+            return initial_goto();
+
         case ExpressionType::binary_operator_reference:
             initial_binary_operator_state();
             break;
@@ -390,8 +391,7 @@ void TermedExpressionParser::initial_goto() {
         case ExpressionType::type_construct:
         case ExpressionType::type_constructor_reference:
         case NOT_ALLOWED_IN_LAYER2:
-            // TODO: make expressions print out nice
-            fail("bad term type: " + std::to_string(static_cast<int>(peek()->expression_type)), 
+            fail("bad term type: " + current_term()->expression_type_string(), 
                 expression_->location);
             return;
     }
@@ -440,7 +440,9 @@ void TermedExpressionParser::initial_partially_applied_minus_state() {
 // Basically we just unwrap it
 void TermedExpressionParser::initial_partial_binop_call_right_state() {
     partial_binop_call_right_state();
-    return initial_goto();
+
+    if (!at_expression_end())
+        return initial_goto();
 }
 
 void TermedExpressionParser::initial_partial_binop_call_left_state() {
@@ -499,6 +501,9 @@ void TermedExpressionParser::value_state() {
     if (at_expression_end())
         return;
 
+    if (current_term()->type->is_function())
+        return call_state();
+
     switch (peek()->expression_type) {
         case ExpressionType::lambda:
         case ExpressionType::ternary_expression:
@@ -538,6 +543,9 @@ void TermedExpressionParser::value_state() {
             return post_binary_operator_state();
         }
 
+        case ExpressionType::known_value_reference:
+            substitute_known_value_reference(peek());
+            // intentional fall-through
         case ExpressionType::reference:
         case ExpressionType::call:
         case GUARANTEED_VALUE:
@@ -571,6 +579,11 @@ void TermedExpressionParser::value_state() {
     }
 }
 
+void TermedExpressionParser::known_value_reference_state() {
+    substitute_known_value_reference(current_term());
+    return value_state();
+}
+
 void TermedExpressionParser::prefix_operator_state() {
     if (at_expression_end()) {
         auto op = *pop_term();
@@ -586,15 +599,10 @@ void TermedExpressionParser::prefix_operator_state() {
         case GUARANTEED_VALUE:
             return push_unary_operator_call(*pop_term(), get_term());
 
-        case ExpressionType::prefix_operator_reference: {
-            auto location = current_term()->location;
+        case ExpressionType::prefix_operator_reference:
             shift();
             prefix_operator_state();
-
-            reduce_prefix_operator();
-
-            return;
-        }
+            return reduce_prefix_operator();
 
         case ExpressionType::postfix_operator_reference:
         case NOT_ALLOWED_IN_LAYER2:
@@ -630,6 +638,9 @@ void TermedExpressionParser::binary_operator_state() {
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");
 
+        case ExpressionType::known_value_reference:
+            substitute_known_value_reference(peek());
+            // intentional fall-through
         case GUARANTEED_VALUE:
             precedence_stack_.push_back(
                 dynamic_cast<Operator*>(current_term()->operator_reference_value())
@@ -969,6 +980,9 @@ void TermedExpressionParser::post_binary_operator_state() {
         case ExpressionType::partial_call:
             assert(false && "not implemented");
             
+        case ExpressionType::known_value_reference:
+            substitute_known_value_reference(peek());
+            // intentional fall-through
         case GUARANTEED_VALUE:
             shift();
             return compare_precedence_state();
@@ -1263,6 +1277,18 @@ void TermedExpressionParser::apply_type_declaration_and_push(Expression* type_de
         "Applying type declaration didn't change the type");
     parse_stack_.push_back(*new_expression);
 }
+
+void TermedExpressionParser::substitute_known_value_reference(Expression* known_value_reference) {
+    assert(known_value_reference->expression_type == ExpressionType::known_value_reference &&
+        "substitute_known_value_reference called with not a value reference");
+
+    Log::debug_extra("Substituting known value reference term", known_value_reference->location);
+
+    if (!known_value_reference->convert_by_value_substitution())
+        fail("Value substitution of " + known_value_reference->log_message_string() + "failed", 
+            known_value_reference->location);
+}
+
 
 bool TermedExpressionParser::is_acceptable_next_arg(Definition* callee, 
     const std::vector<Expression*>& args/*, Expression* next_arg*/) {

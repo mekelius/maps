@@ -30,6 +30,7 @@ enum class LogContext {
     transform_stage     = 14,
     type_checks         = 15,
     type_casts          = 16,
+    eval                = 17,
 };
 constexpr auto LOG_CONTEXT_COUNT = __LINE__ - LOG_CONTEXTS_START_LINE - 3;
 
@@ -69,6 +70,8 @@ constexpr std::string_view prefix(LogContext context) {
             return "in type checks";
         case LogContext::type_casts:
             return "in type cast";
+        case LogContext::eval:
+            return "during compile time evaluation";
     }
 }
 

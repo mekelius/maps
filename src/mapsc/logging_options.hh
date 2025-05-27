@@ -17,13 +17,15 @@ public:
     class Lock {
     public:
         static Lock global();
-        ~Lock();        
+        ~Lock();
         LogOptions* options_;
 
     private:
         Lock();
         bool global_lock_ = false;
     };
+
+    static Lock set_global(LogLevel loglevel);
 
     LogLevel get_loglevel() const;
     LogLevel get_loglevel(LogContext context) const;

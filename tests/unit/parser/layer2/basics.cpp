@@ -1,6 +1,7 @@
 #include "doctest.h"
 
 #include <sstream>
+#include <tuple>
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
@@ -9,6 +10,16 @@
 
 using namespace Maps;
 using namespace std;
+
+tuple<CompilationState, shared_ptr<AST_Store>, RT_Scope> setup() {
+    auto [state, _0, _1] = CompilationState::create_test_state();
+
+    return {
+        std::move(state),
+        state.ast_store_,
+        RT_Scope{}
+    };
+}
 
 TEST_CASE("Should report failure correctly") {
     auto [state, _0, types] = CompilationState::create_test_state();
@@ -123,4 +134,22 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         
         CHECK(expr->type == &Number);
     }
+}
+
+TEST_CASE("Should perform known value substitution") {
+    auto [state, ast_store, scope] = setup();
+
+    auto known_val = Expression::known_value(state, 34, &Int, TSL);
+    auto known_val_def = ast_store->allocate_definition(RT_Definition{"x", *known_val, true, TSL});
+
+    auto known_val_ref = Expression::reference(*ast_store, known_val_def, TSL);
+
+    REQUIRE(known_val_ref->expression_type == ExpressionType::known_value_reference);
+
+    auto termed = Expression::termed_testing(*ast_store, {known_val_ref}, TSL);
+
+    CHECK(run_layer2(state, termed));
+
+    CHECK(termed->expression_type == ExpressionType::known_value);
+    CHECK(termed->value == (*known_val)->value);
 }

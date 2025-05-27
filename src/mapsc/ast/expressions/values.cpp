@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <optional>
+#include <utility>
 
 using std::optional, std::nullopt, std::holds_alternative;
 
@@ -55,7 +56,7 @@ Expression* Expression::numeric_literal(AST_Store& store, const std::string& val
         {ExpressionType::numeric_literal, value, &NumberLiteral, location});
 }
 
-Expression* Expression::known_value(AST_Store& store, KnownValue value,
+Expression* Expression::known_value(CompilationState& state, KnownValue value,
     const SourceLocation& location) {
 
     auto [unwrapped_value, type] = std::visit(overloaded{
@@ -71,10 +72,11 @@ Expression* Expression::known_value(AST_Store& store, KnownValue value,
             { return {value, &MutString}; },
     }, value);
 
-    return store.allocate_expression({ExpressionType::known_value, unwrapped_value, type, location});
+    return state.ast_store_->allocate_expression(
+        {ExpressionType::known_value, unwrapped_value, type, location});
 }
 
-optional<Expression*> Expression::known_value(AST_Store& store, KnownValue value, const Type* type,
+optional<Expression*> Expression::known_value(CompilationState& state, KnownValue value, const Type* type,
     const SourceLocation& location) {
 
     using Log = LogInContext<LogContext::type_checks>;
@@ -92,7 +94,7 @@ optional<Expression*> Expression::known_value(AST_Store& store, KnownValue value
             { return {value, &MutString}; },
     }, value);
 
-    auto expression = store.allocate_expression(
+    auto expression = state.ast_store_->allocate_expression(
         {ExpressionType::known_value, unwrapped_value, de_facto_type, location});
 
     if (*de_facto_type == *type)
@@ -102,13 +104,40 @@ optional<Expression*> Expression::known_value(AST_Store& store, KnownValue value
     Log::debug_extra("While creating known value expression: de-facto type didn't match given type, attempting to cast...", 
         location);
 
-    if (!de_facto_type->cast_to(type, *expression)) {
+    if (!expression->cast_to(state, type)) {
         Log::error("Couldn't create a known value of type " + type->name_string() + 
             " from value:" + Expression::value_to_string(value), location);
         return nullopt;
     }
 
+    Log::debug_extra("Succesfully casted to " + type->name_string(), location);
+
     return expression;
 }
+
+optional<KnownValue> Expression::known_value_value() const {
+    assert(expression_type == ExpressionType::known_value && 
+        "known_value_value called on not a known_value");
+
+    return std::visit(overloaded {
+        [](maps_Int value)->optional<KnownValue>
+            { return {value}; },
+        [](maps_Float value)->optional<KnownValue>
+            { return {value}; },
+        [](bool value)->optional<KnownValue>
+            { return {value}; },
+        [](std::string value)->optional<KnownValue>
+            { return {value}; },
+        [](maps_MutString value)->optional<KnownValue>
+            { return {value}; },
+        [this](auto)->optional<KnownValue> {
+            assert(false && "known_value expression didn't have a correct value type");
+            LogNoContext::compiler_error(log_message_string() + " held an incorrect value type", 
+                location);
+            return nullopt;
+        }
+    }, value);
+}
+
 
 } // namespace Maps

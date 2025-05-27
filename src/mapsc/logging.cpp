@@ -25,6 +25,12 @@ LogOptions::Lock::Lock() {
     global_lock_ = true;
 }
 
+LogOptions::Lock LogOptions::set_global(LogLevel loglevel) {
+    auto lock = Lock::global();
+    lock.options_->set_loglevel(loglevel);
+    return lock;
+}
+
 LogLevel LogOptions::get_loglevel() const {
     return loglevel_;
 }

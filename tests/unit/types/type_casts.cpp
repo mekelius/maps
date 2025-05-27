@@ -3,7 +3,9 @@
 #include <variant>
 
 #include "mapsc/source.hh"
+#include "mapsc/compilation_state.hh"
 #include "mapsc/ast/expression.hh"
+#include "mapsc/types/type_defs.hh"
 #include "mapsc/procedures/type_check.hh"
 
 using std::holds_alternative, std::get;
@@ -77,4 +79,13 @@ TEST_CASE("Should be able to cast a Number with an int value into Float") {
     CHECK(*expr.type == Float);
     CHECK(holds_alternative<maps_Float>(expr.value));
     CHECK(get<maps_Float>(expr.value) == 999);
+}
+
+TEST_CASE("Should be able to cast a known value into a constant function into that value") {
+    auto [state, _1] = CompilationState::create_test_state_with_builtins();
+
+    auto value = Expression::known_value(state, 23.3, TSL);
+
+    CHECK(value->cast_to(state, &Int_to_Float));
+    CHECK(*value->type == Int_to_Float);
 }

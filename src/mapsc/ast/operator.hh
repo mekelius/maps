@@ -62,8 +62,8 @@ public:
                 is_top_level, location };
     }
 
-    RT_Operator(std::string_view name, const External external, const Type* type, 
-        const Operator::Properties& operator_props)
+    RT_Operator(std::string_view name, const External external, 
+        const Type* type, const Operator::Properties& operator_props)
     :RT_Definition(name, external, type),
      operator_props_(operator_props) {}
 

@@ -5,6 +5,7 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/compilation_state.hh"
 
 using namespace Maps;
 
@@ -26,12 +27,12 @@ TEST_CASE("Should be able to compare types") {
 }
 
 TEST_CASE("Should be able to compare types of expressions") {
-    TypeStore types{};
-    AST_Store store{};
+    auto [state, _1, types] = CompilationState::create_test_state();
+    AST_Store& store = *state.ast_store_;
 
     SUBCASE("Expression to global") {
-        auto int_e = Expression::known_value(store, 123, TSL);
-        auto string_e = Expression::known_value(store, "qweqe", TSL);
+        auto int_e = Expression::known_value(state, 123, TSL);
+        auto string_e = Expression::known_value(state, "qweqe", TSL);
 
         CHECK(*int_e->type == Int);
         CHECK(*string_e->type == String);
