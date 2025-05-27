@@ -216,10 +216,10 @@ struct Expression {
 
     static std::tuple<Expression*, RT_Definition*> const_lambda(CompilationState& state, 
         Expression* expression, std::span<const Type* const> param_types, 
-        const SourceLocation& location);
+        const SourceLocation& location, bool is_pure = true);
     static std::tuple<Expression*, RT_Definition*> const_lambda(CompilationState& state, 
         KnownValue value, std::span<const Type* const> param_types, 
-        const SourceLocation& location);
+        const SourceLocation& location, bool is_pure = true);
 
     static Expression* valueless(AST_Store& store, 
         ExpressionType expression_type, const SourceLocation& location);

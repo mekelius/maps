@@ -50,7 +50,8 @@ namespace Maps {
 // }
 
 std::tuple<Expression*, RT_Definition*> Expression::const_lambda(CompilationState& state, 
-    Expression* value, std::span<const Type* const> param_types, const SourceLocation& location) {
+    Expression* value, std::span<const Type* const> param_types, 
+    const SourceLocation& location, bool is_pure) {
 
     auto& ast_store = *state.ast_store_;
 
@@ -63,17 +64,18 @@ std::tuple<Expression*, RT_Definition*> Expression::const_lambda(CompilationStat
     auto definition = RT_Definition::function_definition(state, parameter_list, inner_scope, value,
         false, location);
 
-    definition->set_type(state.types_->get_function_type(value->type, param_types, true));
+    definition->set_type(state.types_->get_function_type(value->type, param_types, is_pure));
     auto expression = Expression::reference(ast_store, definition, location);
 
     return {expression, definition};
 }
 
 std::tuple<Expression*, RT_Definition*> Expression::const_lambda(CompilationState& state, 
-    KnownValue value, std::span<const Type* const> param_types, const SourceLocation& location) {
+    KnownValue value, std::span<const Type* const> param_types, const SourceLocation& location,
+    bool is_pure) {
 
     auto value_expr = Expression::known_value(state, value, location);
-    return Expression::const_lambda(state, value_expr, param_types, location);
+    return Expression::const_lambda(state, value_expr, param_types, location, is_pure);
 }
 
 } // namespace Maps

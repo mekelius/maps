@@ -83,7 +83,7 @@ TEST_CASE("Should be able to cast a Number with an int value into Float") {
     CHECK(get<maps_Float>(expr.value) == 999);
 }
 
-TEST_CASE("Should be able to cast a known value into a constant function into that value") {
+TEST_CASE("Should be able to cast a known value into a constant function yielding that value") {
     auto [state, _1] = CompilationState::create_test_state_with_builtins();
 
     auto value = Expression::known_value(state, 23.3, TSL);
@@ -96,7 +96,6 @@ TEST_CASE("Casting a known value into a function type with mathcing return type 
     auto lock = LogOptions::set_global(LogLevel::debug_extra);
 
     auto [state, _0, types] = CompilationState::create_test_state();
-    AST_Store& ast_store = *state.ast_store_;
     RT_Scope scope{};
 
     const FunctionType* IntString = types->get_function_type(&String, array{&Int}, false);

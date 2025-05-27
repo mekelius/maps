@@ -33,7 +33,6 @@ TEST_CASE("Should be able to call a lambda function") {
     auto [lambda_expr, lambda_def] = Expression::const_lambda(state, "qwe", 
         std::array<const Type*, 1>{&Int}, TSL);
     auto arg = Expression::numeric_literal(*ast_store, "3", TSL);
-
     auto expr = Expression::termed_testing(*ast_store, {lambda_expr, arg}, TSL);
 
     run_layer2(state, expr);

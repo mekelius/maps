@@ -59,10 +59,15 @@ RT_Definition* RT_Definition::function_definition(CompilationState& state,
     for (auto param: parameter_list)
         param_types.push_back(param->get_type());
 
+    if (std::holds_alternative<Expression*>(body)) {
+        return state.ast_store_->allocate_definition(RT_Definition{
+            MAPS_INTERNALS_PREFIX + "anonymous_function", body, is_top_level, location});
+    }
+
     auto type = state.types_->get_function_type(&Hole, param_types, false);
 
     return state.ast_store_->allocate_definition(RT_Definition{
-        MAPS_INTERNALS_PREFIX + "anonymous_function", Undefined{}, type, is_top_level, location});
+        MAPS_INTERNALS_PREFIX + "anonymous_function", body, type, is_top_level, location});
 }
 
 RT_Definition* RT_Definition::function_definition(CompilationState& state, 

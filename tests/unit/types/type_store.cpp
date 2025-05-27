@@ -58,7 +58,7 @@ const std::array<const FunctionType*, 1> test_builtin_function_types = {
 TEST_CASE("Should get a compile-time functiontype without issue") {
     TypeStore types{BUILTIN_TYPES, test_builtin_function_types};
 
-    auto function_type = types.get_function_type(&TestingType, array{&TestingType}, true);
+    auto function_type = types.get_function_type(&TestingType, array{&TestingType}, false);
 
     CHECK(*function_type == test_ct_function_type);
     CHECK(function_type == &test_ct_function_type);

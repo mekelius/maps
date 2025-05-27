@@ -9,6 +9,21 @@
 using namespace Maps;
 using namespace std;
 
+namespace {
+
+tuple<CompilationState, shared_ptr<AST_Store>, RT_Scope, unique_ptr<TypeStore>> setup() {
+    auto [state, _0, types] = CompilationState::create_test_state();
+
+    return {
+        std::move(state),
+        state.ast_store_,
+        RT_Scope{},
+        std::move(types)
+    };
+}
+
+} // namespace
+
 TEST_CASE("AST should be empty when created") {
     AST_Store ast{};
     CHECK(ast.empty());
@@ -26,4 +41,13 @@ TEST_CASE("Operator::create_binary should create an operator") {
     CHECK(op);
     
     CHECK(op->is_binary());
+}
+
+TEST_CASE("Expression_const_lambda should produce a reference") {
+    auto [state, ast_store, scope, types] = setup();
+
+    auto [lambda_expr, lambda_def] = Expression::const_lambda(state, "qwe", 
+        std::array<const Type*, 1>{&Int}, TSL);
+
+    CHECK(lambda_expr->expression_type == ExpressionType::reference);
 }

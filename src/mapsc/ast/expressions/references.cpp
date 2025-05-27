@@ -42,6 +42,10 @@ Definition* Expression::operator_reference_value() const {
 Expression* Expression::reference(AST_Store& store, Definition* definition, 
     const SourceLocation& location) {
     
+    if (definition->get_type()->is_function())
+        return store.allocate_expression(
+            {ExpressionType::reference, definition, definition->get_type(), location});
+
     return std::visit(overloaded{
         [&store, &definition, &location](const Expression* expression) {
             switch (expression->expression_type) {

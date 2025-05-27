@@ -39,6 +39,8 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
         case ExpressionType::known_value:
             // as a special case, every type can be casted into a const function of itself
             if (target_type->is_function()) {
+                Log::debug_extra("Attempting to cast " + log_message_string() + " to const lambda " + 
+                    target_type->name_string(), type_declaration_location);
                 auto function_type = dynamic_cast<const FunctionType*>(target_type);
                 if (*function_type->return_type() != *type) {
                     Log::debug("Could not cast " + log_message_string() + " to " + target_type->name_string(), 
@@ -46,13 +48,20 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
                     return nullopt;
                 }
 
-                auto [expression, definition] = Expression::const_lambda(
-                    state, this, function_type->param_types(), type_declaration_location);
+                auto [expression, definition] = Expression::const_lambda(state, this, 
+                    function_type->param_types(), type_declaration_location, 
+                    function_type->is_pure());
+                
+                Log::debug_extra("Succesfully casted " + log_message_string() + " into " + 
+                    type->name_string(), type_declaration_location);
+
+                Log::debug_extra("Created lambda wrapper " + definition->name_string(), 
+                    type_declaration_location);
                 return expression;
             }
 
             if (type->cast_to(target_type, *this)) {
-                Log::debug_extra("Casted expression " + log_message_string() + " to " + 
+                Log::debug_extra("Casted " + log_message_string() + " to " + 
                     target_type->name_string(), type_declaration_location);
                 return this;
             }
