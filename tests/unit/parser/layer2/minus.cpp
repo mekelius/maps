@@ -17,12 +17,11 @@ TEST_CASE("Unary minus by itself should result in a partially applied minus") {
     auto value = Expression::numeric_literal(ast_store, "456", TSL);
     auto minus = Expression::minus_sign(ast_store, TSL);
 
-    auto expr = Expression{ExpressionType::termed_expression, 
-            TermedExpressionValue{{minus, value}, db_false}, TSL};    
+    auto expr = Expression::termed_testing(ast_store, {minus, value}, TSL);    
 
-    run_layer2(state, &expr);
+    run_layer2(state, expr);
 
-    CHECK(expr.expression_type == ExpressionType::partially_applied_minus);
-    CHECK(std::get<Expression*>(expr.value) == value);
-    CHECK(*expr.type == Int);
+    CHECK(expr->expression_type == ExpressionType::partially_applied_minus);
+    CHECK(std::get<Expression*>(expr->value) == value);
+    CHECK(*expr->type == Int);
 }

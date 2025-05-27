@@ -1,6 +1,7 @@
 #include "doctest.h"
 
 #include <sstream>
+#include <tuple>
 
 #include "mapsc/parser/layer1.hh"
 #include "mapsc/compilation_state.hh"
@@ -8,6 +9,15 @@
 using namespace Maps;
 using namespace std;
 
+tuple<CompilationState, RT_Scope, stringstream> setup(const string& source_str) { 
+    auto [state, _1, _2] = CompilationState::create_test_state();
+
+    return {
+        std::move(state), 
+        RT_Scope{}, 
+        stringstream{source_str}
+    };
+}
 
 TEST_CASE("Should handle various cases") {
     TypeStore types{};
@@ -150,4 +160,33 @@ TEST_CASE("Should correctly produce empty results") {
         CHECK(scope.empty());
         CHECK(!result.top_level_definition);
     }
+}
+
+TEST_CASE("Should mark context on termed expressions") {
+    auto [state, scope, source] = setup("let f = x + 2");
+
+    auto result = run_layer1_eval(state, scope, source);
+
+    CHECK(result.success);
+    CHECK(scope.identifier_exists("f"));
+
+    auto f = *scope.get_identifier("f");
+
+    auto expr = std::get<const Expression*>((f)->const_body());
+    CHECK(expr->expression_type == ExpressionType::termed_expression);
+
+    CHECK(*expr->termed_context() == *f);
+}
+
+TEST_CASE("Should mark context on top level termed expressions") {
+    auto [state, scope, source] = setup("x + 2");
+
+    auto result = run_layer1_eval(state, scope, source);
+
+    CHECK(result.success);
+    CHECK(result.top_level_definition);
+
+    auto expr = std::get<const Expression*>((*result.top_level_definition)->const_body());
+    CHECK(expr->expression_type == ExpressionType::termed_expression);
+    CHECK(*expr->termed_context() == **result.top_level_definition);
 }

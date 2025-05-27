@@ -39,9 +39,6 @@ TEST_CASE("Basics") {
     }
 
     SUBCASE ("Should fill in missing args") {
-        auto log_options = LogOptions::Lock::global();
-        log_options.options_->set_loglevel(LogLevel::debug_extra);
-
         std::vector<Expression*> args{};
 
         auto [success, is_partial, is_done, return_type] = 
@@ -98,9 +95,6 @@ TEST_CASE("Creating an arg list should coerce args correctly") {
 // }
 
 // TEST_CASE("Creating an arg list should add in missing args correctly") {
-//     auto log_options = LogOptions::Lock::global();
-//     log_options.options_->set_loglevel(LogLevel::debug_extra);
-
 //     auto [state, _, types] = CompilationState::create_test_state();
 //     auto& ast_store = *state.ast_store_;
 

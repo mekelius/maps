@@ -19,13 +19,12 @@ TEST_CASE("Layer2 should handle type specifiers") {
     auto value = Expression{ExpressionType::string_literal, "32", &String, TSL};
 
     SUBCASE("Int \"32\"") {
-        auto expr = Expression{ExpressionType::termed_expression, 
-            TermedExpressionValue{{&type_specifier, &value}, db_false}, TSL};
+        auto expr = Expression::termed_testing(*state.ast_store_, {&type_specifier, &value}, TSL);
 
-        run_layer2(state, &expr);
+        run_layer2(state, expr);
 
-        CHECK(*expr.type == Int);
-        CHECK(expr.expression_type == ExpressionType::known_value);
+        CHECK(*expr->type == Int);
+        CHECK(expr->expression_type == ExpressionType::known_value);
 
         CHECK(*value.type == Int);
         CHECK(holds_alternative<maps_Int>(value.value));
@@ -39,15 +38,15 @@ TEST_CASE("Layer2 should handle type specifiers") {
         
         auto op_ref = Expression::operator_reference(*state.ast_store_, &op, TSL);
         auto rhs = Expression::numeric_literal(*state.ast_store_, "987", TSL);
-        auto expr = Expression{ExpressionType::termed_expression, 
-            TermedExpressionValue{{&type_specifier, &value, op_ref, rhs}, db_false}, TSL};
+        auto expr = Expression::termed_testing(*state.ast_store_, 
+            {&type_specifier, &value, op_ref, rhs}, TSL);
 
-        run_layer2(state, &expr);
+        run_layer2(state, expr);
 
-        CHECK(*expr.type == Int);
-        CHECK(expr.expression_type == ExpressionType::call);
+        CHECK(*expr->type == Int);
+        CHECK(expr->expression_type == ExpressionType::call);
 
-        auto [callee, args] = expr.call_value();
+        auto [callee, args] = expr->call_value();
 
         CHECK(args.size() == 2);
         CHECK(callee == &op);
@@ -65,7 +64,7 @@ TEST_CASE("Should apply a type declaration") {
     auto value = Expression::numeric_literal(ast_store, "23", TSL);
     auto type = Expression::type_reference(ast_store, &Float, TSL);
 
-    auto outer = Expression::termed(ast_store, {type, value}, TSL);
+    auto outer = Expression::termed_testing(ast_store, {type, value}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -81,7 +80,7 @@ TEST_CASE("Partially applied minus and type declaration") {
     auto part_app_minus = Expression::partially_applied_minus(ast_store, value, TSL);
     auto type = Expression::type_reference(ast_store, &Float, TSL);
 
-    auto outer = Expression::termed(ast_store, {type, part_app_minus}, TSL);
+    auto outer = Expression::termed_testing(ast_store, {type, part_app_minus}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -97,7 +96,7 @@ TEST_CASE("Unary minus and type declaration") {
     auto minus_sign = Expression::minus_sign(ast_store, TSL);
     auto type = Expression::type_reference(ast_store, &Float, TSL);
 
-    auto outer = Expression::termed(ast_store, {type, minus_sign, value}, TSL);
+    auto outer = Expression::termed_testing(ast_store, {type, minus_sign, value}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -113,8 +112,8 @@ TEST_CASE("Unary minus in parentheses and a type declaration") {
     auto minus_sign = Expression::minus_sign(ast_store, TSL);
     auto type = Expression::type_reference(ast_store, &Float, TSL);
 
-    auto inner = Expression::termed(ast_store, {minus_sign, value}, TSL);
-    auto outer = Expression::termed(ast_store, {type, inner}, TSL);
+    auto inner = Expression::termed_testing(ast_store, {minus_sign, value}, TSL);
+    auto outer = Expression::termed_testing(ast_store, {type, inner}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -123,9 +122,6 @@ TEST_CASE("Unary minus in parentheses and a type declaration") {
 }
 
 TEST_CASE("MutString (1 + 2)") {
-    auto options = LogOptions::Lock::global();
-    options.options_->set_loglevel(LogLevel::debug_extra);
-
     auto [state, _1] = CompilationState::create_test_state_with_builtins();
     auto& ast_store = *state.ast_store_;
 
@@ -135,15 +131,10 @@ TEST_CASE("MutString (1 + 2)") {
     auto op_ref = Expression::operator_reference(*state.ast_store_, &op, TSL);
     auto type_specifier = Expression::type_reference(ast_store, &MutString, TSL);
 
-    auto inner = Expression::termed(ast_store, {value1, op_ref, value2}, TSL);
-    auto expr = Expression::termed(ast_store, {type_specifier, inner}, TSL);
+    auto inner = Expression::termed_testing(ast_store, {value1, op_ref, value2}, TSL);
+    auto expr = Expression::termed_testing(ast_store, {type_specifier, inner}, TSL);
 
     auto success = run_layer2(state, expr);
-
-    ReverseParser::Options rp_options{};
-    rp_options.include_all_types = true;
-    rp_options.debug_node_types = true;
-    ReverseParser{&std::cerr, rp_options} << *expr << "\n";
 
     CHECK(success);
     CHECK(*expr->type == MutString);

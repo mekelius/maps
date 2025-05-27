@@ -69,6 +69,8 @@ void ParserLayer1::run_parse(std::istream& source_is) {
     result_.top_level_definition = ast_store_->allocate_definition(RT_Definition{
         "root", root_statement, true, {0,0}});
 
+    context_stack_.push_back(*result_.top_level_definition);
+
     while (current_token().token_type != TokenType::eof) {
         #ifndef NDEBUG
         int prev_buf_slot = which_buf_slot_; // a bit of a hack, an easy way to do the assertion below
@@ -192,6 +194,8 @@ void ParserLayer1::log(const std::string& message, LogLevel loglevel,
 void ParserLayer1::reset_to_top_level() {
     log("resetting to global scope", LogLevel::debug);
 
+    context_stack_ = {};
+
     while (
         current_token().token_type != TokenType::eof          && (
             !is_statement_separator(current_token())    || 
@@ -202,6 +206,26 @@ void ParserLayer1::reset_to_top_level() {
         )
     ) get_token();
     get_token();
+}
+
+void ParserLayer1::push_context(RT_Definition* context) {
+    context_stack_.push_back(context);
+}
+
+std::optional<RT_Definition*> ParserLayer1::pop_context() {
+    if (context_stack_.empty())
+        return nullopt;
+
+    auto context = context_stack_.back();
+    context_stack_.pop_back();
+    return context;
+}
+
+std::optional<RT_Definition*> ParserLayer1::current_context() const {
+    if (context_stack_.empty())
+        return nullopt;
+
+    return context_stack_.back();
 }
 
 bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
@@ -239,16 +263,14 @@ bool ParserLayer1::identifier_exists(const std::string& identifier) const {
     return false;
 }
 
-void ParserLayer1::create_identifier(const std::string& name, bool is_top_level, SourceLocation location) {
-    create_identifier(name, Undefined{}, is_top_level, location);
+optional<RT_Definition*> ParserLayer1::create_undefined_identifier(const std::string& name, bool is_top_level, SourceLocation location) {
+    return parse_scope_->create_identifier(
+        ast_store_->allocate_definition(RT_Definition{name, Undefined{}, is_top_level, location})
+    );
 }
 
-void ParserLayer1::create_identifier(const std::string& name,
-    DefinitionBody body, bool is_top_level, SourceLocation location) {
-    log("Parsed identifier " + name, LogLevel::debug_extra);
-    parse_scope_->create_identifier(
-        ast_store_->allocate_definition(RT_Definition{name, body, is_top_level, location})
-    );
+optional<RT_Definition*> ParserLayer1::create_identifier(RT_Definition* definition) {
+    return parse_scope_->create_identifier(definition);
 }
 
 std::optional<Definition*> ParserLayer1::lookup_identifier(const std::string& identifier) {
@@ -257,7 +279,19 @@ std::optional<Definition*> ParserLayer1::lookup_identifier(const std::string& id
 
 // ----- CREATION HELPERS -----
 
-Definition* ParserLayer1::create_definition(DefinitionBody body, bool is_top_level, 
+RT_Definition* ParserLayer1::create_definition(const std::string& name, DefinitionBody body, 
+    bool is_top_level, SourceLocation location) {
+    
+    return ast_store_->allocate_definition(RT_Definition{name, body, is_top_level, location});
+}
+
+RT_Definition* ParserLayer1::create_definition(const std::string& name, bool is_top_level, 
+    SourceLocation location) {
+
+    return ast_store_->allocate_definition(RT_Definition{name, Undefined{}, is_top_level, location}); 
+}
+
+RT_Definition* ParserLayer1::create_definition(DefinitionBody body, bool is_top_level, 
     SourceLocation location) {
     
     return ast_store_->allocate_definition(RT_Definition{body, is_top_level, location});

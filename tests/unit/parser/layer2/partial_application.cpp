@@ -37,7 +37,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     auto val = Expression::numeric_literal(ast, "34", {0,0});
 
     SUBCASE("left") {
-        Expression* expr = Expression::termed(ast, {op_ref, val}, {0,0});
+        Expression* expr = Expression::termed_testing(ast, {op_ref, val}, {0,0});
         
         run_layer2(state, expr);
         
@@ -50,7 +50,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     }
 
     SUBCASE("right") {
-        Expression* expr = Expression::termed(ast, {val, op_ref}, {0,0});
+        Expression* expr = Expression::termed_testing(ast, {val, op_ref}, {0,0});
         
         run_layer2(state, expr);
         
@@ -75,7 +75,7 @@ TEST_CASE("Should set the type on a non-partial call expression to the return ty
     auto arg = Expression{ExpressionType::numeric_literal, "3", &NumberLiteral, TSL};
     auto reference = Expression::reference(ast, &test_f, TSL);
 
-    auto expr = Expression::termed(ast, {reference, &arg}, TSL);
+    auto expr = Expression::termed_testing(ast, {reference, &arg}, TSL);
 
     run_layer2(state, expr);
 
@@ -100,7 +100,7 @@ TEST_CASE("Should set the type on a non-partial \"operator expression\" to the r
 
     auto reference = Expression::operator_reference(ast, &test_op, TSL);
 
-    auto expr = Expression::termed(ast, {&lhs, reference, &rhs}, TSL);
+    auto expr = Expression::termed_testing(ast, {&lhs, reference, &rhs}, TSL);
 
     run_layer2(state, expr);
 

@@ -15,14 +15,13 @@ TEST_CASE("prefix purely unary operator") {
         {Operator::Fixity::unary_prefix}, true, TSL};
     auto op_ref = Expression{ExpressionType::prefix_operator_reference, &op, TSL};
     auto value = Expression{ExpressionType::known_value, true, &Boolean, TSL};
-    auto expr = Expression{ExpressionType::termed_expression, 
-        TermedExpressionValue{{&op_ref, &value}}, TSL};
+    auto expr = Expression::termed_testing(*state.ast_store_, {&op_ref, &value}, TSL);
 
-    run_layer2(state, &expr);
+    run_layer2(state, expr);
 
-    CHECK(expr.expression_type == ExpressionType::call);
+    CHECK(expr->expression_type == ExpressionType::call);
     
-    auto [callee, args] = expr.call_value();
+    auto [callee, args] = expr->call_value();
 
     CHECK(args.size() == 1);
     CHECK(**args.begin() == value);
@@ -36,14 +35,13 @@ TEST_CASE("postfix purely unary operator") {
         {Operator::Fixity::unary_postfix}, true, TSL};
     auto op_ref = Expression{ExpressionType::postfix_operator_reference, &op, op.get_type(), TSL};
     auto value = Expression{ExpressionType::known_value, true, &Boolean, TSL};
-    auto expr = Expression{ExpressionType::termed_expression, 
-        TermedExpressionValue{{&value, &op_ref}}, TSL};
+    auto expr = Expression::termed_testing(*state.ast_store_, {&value, &op_ref}, TSL);
 
-    run_layer2(state, &expr);
+    run_layer2(state, expr);
 
-    CHECK(expr.expression_type == ExpressionType::call);
+    CHECK(expr->expression_type == ExpressionType::call);
     
-    auto [callee, args] = expr.call_value();
+    auto [callee, args] = expr->call_value();
 
     CHECK(args.size() == 1);
     CHECK(**args.begin() == value);
@@ -63,14 +61,14 @@ TEST_CASE("Chained unary prefixes") {
     auto op_ref3 = Expression{ExpressionType::prefix_operator_reference, &op1, op1.get_type(), TSL};
 
     auto value = Expression{ExpressionType::known_value, true, &Boolean, TSL};
-    auto expr = Expression{ExpressionType::termed_expression, 
-        TermedExpressionValue{{&op_ref3, &op_ref2, &op_ref1, &value}}, TSL};
+    auto expr = Expression::termed_testing(*state.ast_store_, 
+        {&op_ref3, &op_ref2, &op_ref1, &value}, TSL);
 
-    run_layer2(state, &expr);
+    run_layer2(state, expr);
 
-    CHECK(expr.expression_type == ExpressionType::call);
+    CHECK(expr->expression_type == ExpressionType::call);
     
-    auto [callee1, args1] = expr.call_value();
+    auto [callee1, args1] = expr->call_value();
     CHECK(*callee1 == op1);
     CHECK(args1.size() == 1);
     auto arg1 = *args1.begin();

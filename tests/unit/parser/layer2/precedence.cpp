@@ -81,7 +81,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
     auto [state, _0, _1] = CompilationState::create_test_state();
     auto ast = state.ast_store_.get();
 
-    Expression* expr = Expression::termed(*ast, {}, {0,0});
+    Expression* expr = Expression::termed_testing(*ast, {}, {0,0});
 
     Expression* val1 = Expression::numeric_literal(*ast, "23", TSL);
     Expression* val2 = Expression::numeric_literal(*ast, "12", TSL);
@@ -172,7 +172,7 @@ TEST_CASE ("should handle more complex expressions") {
     auto [state, _0, _1] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
-    Expression* expr = Expression::termed(ast, {}, {0,0});
+    Expression* expr = Expression::termed_testing(ast, {}, {0,0});
 
     auto [op1_ref, op1] = create_operator_helper(state, "1", 1);
     auto [op2_ref, op2] = create_operator_helper(state, "2", 2);

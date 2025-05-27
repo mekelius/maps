@@ -86,6 +86,8 @@ using TypeConstruct = std::tuple<
 
 struct TermedExpressionValue {
     std::vector<Expression*> terms;
+    RT_Definition* context;
+
     DeferredBool is_type_declaration = DeferredBool::maybe_;
 
     bool operator==(const TermedExpressionValue&) const = default;
@@ -152,7 +154,9 @@ struct Expression {
         const std::string& value, const SourceLocation& location);
 
     static Expression* termed(AST_Store& store, 
-        std::vector<Expression*>&& terms, const SourceLocation& location);
+        std::vector<Expression*>&& terms, RT_Definition* context, const SourceLocation& location);
+    static Expression* termed_testing(AST_Store& store, 
+        std::vector<Expression*>&& terms, const SourceLocation& location, bool top_level = true);
 
     static Expression* reference(AST_Store& store, 
         Definition* callee, const SourceLocation& location);
@@ -232,6 +236,7 @@ struct Expression {
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();
     const std::vector<Expression*>& terms() const;
+    RT_Definition* termed_context() const;
 
     CallExpressionValue& call_value();
     Definition* reference_value() const;

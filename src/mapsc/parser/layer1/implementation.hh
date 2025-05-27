@@ -48,6 +48,10 @@ protected:
 
     void update_brace_levels(Token token);
     void reset_to_top_level();
+
+    void push_context(RT_Definition* context);
+    std::optional<RT_Definition*> pop_context();
+    std::optional<RT_Definition*> current_context() const;
     
     void fail(const std::string& message, SourceLocation location, bool compiler_error = false);
     Expression* fail_expression(const std::string& message, SourceLocation location, 
@@ -65,14 +69,20 @@ protected:
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& name) const;
 
-    void create_identifier(const std::string& name, DefinitionBody body, bool is_top_level, SourceLocation location);
-    void create_identifier(const std::string& name, bool is_top_level, SourceLocation location);
+    [[nodiscard]] std::optional<RT_Definition*> create_undefined_identifier(const std::string& name, 
+        bool is_top_level, SourceLocation location);
+    [[nodiscard]] std::optional<RT_Definition*> create_identifier(RT_Definition* definition);
     std::optional<Definition*> lookup_identifier(const std::string& name);
 
     // attempts to collapse a single statement block
     bool simplify_single_statement_block(Statement* outer);
 
-    Definition* create_definition(DefinitionBody body, bool is_top_level, SourceLocation location);
+    RT_Definition* create_definition(const std::string& name, DefinitionBody body, bool is_top_level, 
+        SourceLocation location);
+    RT_Definition* create_definition(const std::string& name, bool is_top_level, 
+        SourceLocation location);
+    RT_Definition* create_definition(DefinitionBody body, bool is_top_level, 
+        SourceLocation location);
     // creates an expression using ast_, marking the location as the expression_location_stack_
     Statement* create_statement(StatementType statement_type, SourceLocation location);
 
@@ -146,6 +156,8 @@ protected:
     unsigned int parenthese_level_ = 0;
     unsigned int curly_brace_level_ = 0;
     unsigned int angle_bracket_level_ = 0;
+
+    std::vector<RT_Definition*> context_stack_{};
 };
 
 } // namespace Maps

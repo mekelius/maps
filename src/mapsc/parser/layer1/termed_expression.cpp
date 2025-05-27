@@ -33,7 +33,12 @@ using Log = LogInContext<LogContext::layer1>;
 // expects to be called with the first term as current
 // tied expression = no whitespace
 Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
-    Expression* expression = Expression::termed(*ast_store_, {}, current_token().location);
+    auto context = current_context();
+
+    if (!context)
+        return fail_expression("Termed expressions require a context", current_token().location, true);
+
+    Expression* expression = Expression::termed(*ast_store_, {}, *context, current_token().location);
 
     log(
         in_tied_expression ? "start parsing tied expression" : "start parsing termed expression", 
@@ -78,7 +83,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
                 // colon has to add parenthesis around left side as well
                 if (expression->terms().size() > 1) {
-                    Expression* lhs = Expression::termed(*ast_store_, {}, expression->location);
+                    Expression* lhs = Expression::termed(*ast_store_, {}, *context, expression->location);
                     *lhs = *expression;
                     expression->terms() = {close_termed_expression(lhs)};
                     std::get<TermedExpressionValue>(expression->value).is_type_declaration = 

@@ -16,7 +16,7 @@ TEST_CASE("Should report failure correctly") {
 
     auto value = Expression::numeric_literal(ast_store, "23", TSL);
 
-    auto outer = Expression::termed(ast_store, {value, value, value}, TSL);
+    auto outer = Expression::termed_testing(ast_store, {value, value, value}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -26,12 +26,12 @@ TEST_CASE("Should report failure correctly") {
 TEST_CASE("TermedExpressionParser should replace a single value term with that value") {
     auto [state, _0, _1] = CompilationState::create_test_state();
 
-    Expression* expr = Expression::termed(*state.ast_store_, {}, {0,0});
+    Expression* expr = Expression::termed_testing(*state.ast_store_, {}, TSL);
 
     REQUIRE(expr->terms().size() == 0);
 
     SUBCASE("String value") {
-        Expression* value = Expression::string_literal(*state.ast_store_, "TEST_STRING:oasrpkorsapok", {0,0});
+        Expression* value = Expression::string_literal(*state.ast_store_, "TEST_STRING:oasrpkorsapok", TSL);
         expr->terms().push_back(value);
         run_layer2(state, expr);
 
@@ -40,7 +40,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
     }
 
     SUBCASE("Number value") {
-        Expression* value = Expression::numeric_literal(*state.ast_store_, "234.52", {0,0});
+        Expression* value = Expression::numeric_literal(*state.ast_store_, "234.52", TSL);
         expr->terms().push_back(value);
         run_layer2(state, expr);
 
@@ -54,7 +54,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     RT_Scope globals{};
     AST_Store& ast = *state.ast_store_;
 
-    Expression* expr = Expression::termed(ast, {}, {0,0});
+    Expression* expr = Expression::termed_testing(ast, {}, TSL);
     
     SUBCASE("1 arg") {    
         const Type* function_type = types->get_function_type(&Void, {&String}, true);
@@ -62,8 +62,8 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
         globals.create_identifier(&function);
 
-        Expression* id = Expression::reference(ast, &function, {0,0});
-        Expression* arg1 = Expression::string_literal(ast, "", {0,0});
+        Expression* id = Expression::reference(ast, &function, TSL);
+        Expression* arg1 = Expression::string_literal(ast, "", TSL);
 
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
@@ -82,13 +82,13 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
             {&String, &String, &String, &String}, true);
         
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
-        Expression* id{Expression::reference(ast, &function, {0,0})};
+        Expression* id{Expression::reference(ast, &function, TSL)};
         id->type = function_type;
     
-        Expression* arg1 = Expression::string_literal(ast, "", {0,0});
-        Expression* arg2 = Expression::string_literal(ast, "", {0,0});
-        Expression* arg3 = Expression::string_literal(ast, "", {0,0});
-        Expression* arg4 = Expression::string_literal(ast, "", {0,0});
+        Expression* arg1 = Expression::string_literal(ast, "", TSL);
+        Expression* arg2 = Expression::string_literal(ast, "", TSL);
+        Expression* arg3 = Expression::string_literal(ast, "", TSL);
+        Expression* arg4 = Expression::string_literal(ast, "", TSL);
 
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
@@ -112,9 +112,9 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Type* function_type = types->get_function_type(&Number, {&String}, true);
         
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
-        Expression* ref = Expression::reference(ast, &function, {0,0});
+        Expression* ref = Expression::reference(ast, &function, TSL);
 
-        Expression* arg1 = Expression::string_literal(ast, "", {0,0});
+        Expression* arg1 = Expression::string_literal(ast, "", TSL);
 
         expr->terms().push_back(ref);
         expr->terms().push_back(arg1);

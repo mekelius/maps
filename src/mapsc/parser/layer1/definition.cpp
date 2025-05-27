@@ -86,19 +86,35 @@ Definition* ParserLayer1::parse_top_level_let_definition() {
                     get_token(); // eat the semicolon
 
                     // create an unitialized identifier
-                    create_identifier(name, Undefined{}, true, location);
+                    auto definition = create_undefined_identifier(name, true, location);
+                    if (!definition)
+                        return fail_definition("Creating undefined identifier failed", location, true);
 
-                    return nullptr; //!!!
+                    return *definition; //!!!
                 }
 
                 if (is_assignment_operator(current_token())) {
                     get_token(); // eat the assignment operator
 
+                    auto definition = create_definition(name, true, location);
+                    push_context(definition);
+
                     DefinitionBody body = parse_definition_body();
 
-                    create_identifier(name, body, true, location);
-                    log("parsed let definition", LogLevel::debug_extra);
-                    return nullptr; //!!!
+                    definition->body() = body;
+                    if (!create_identifier(definition))
+                        return fail_definition("Creating top level identifier failed", location, true);
+                    
+                    auto popped_context = pop_context();
+
+                    // This means a syntax error
+                    if (!popped_context)
+                        return fail_definition("Creating top level definition body failed", location);
+
+                    assert(popped_context == definition && "context stack not returned to correct state");
+
+                    log("Parsed let definition", LogLevel::debug_extra);
+                    return definition;
                 }
 
                 get_token();
