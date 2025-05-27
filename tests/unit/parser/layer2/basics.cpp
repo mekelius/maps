@@ -68,7 +68,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     Expression* expr = Expression::termed_testing(ast, {}, TSL);
     
     SUBCASE("1 arg") {    
-        const Type* function_type = types->get_function_type(&Void, {&String}, true);
+        const Type* function_type = types->get_function_type(&Void, array{&String}, true);
 
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
         globals.create_identifier(&function);
@@ -90,7 +90,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
 
     SUBCASE("4 args") {    
         const Type* function_type = types->get_function_type(&Void, 
-            {&String, &String, &String, &String}, true);
+            array{&String, &String, &String, &String}, true);
         
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
         Expression* id{Expression::reference(ast, &function, TSL)};
@@ -120,7 +120,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     }
 
     SUBCASE("If the call is not partial, the call expression's type should be the return type") {
-        const Type* function_type = types->get_function_type(&Number, {&String}, true);
+        const Type* function_type = types->get_function_type(&Number, std::array{&String}, true);
         
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
         Expression* ref = Expression::reference(ast, &function, TSL);

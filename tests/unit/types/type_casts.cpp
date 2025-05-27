@@ -7,9 +7,11 @@
 #include "mapsc/ast/expression.hh"
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/procedures/type_check.hh"
+#include "mapsc/logging_options.hh"
 
 using std::holds_alternative, std::get;
 using namespace Maps;
+using namespace std;
 
 TEST_CASE("Should be able to cast a string into Float") {
     Expression expr{
@@ -88,4 +90,27 @@ TEST_CASE("Should be able to cast a known value into a constant function into th
 
     CHECK(value->cast_to(state, &Int_to_Float));
     CHECK(*value->type == Int_to_Float);
+}
+
+TEST_CASE("Casting a known value into a function type with mathcing return type should produce a const lambda") {
+    auto lock = LogOptions::set_global(LogLevel::debug_extra);
+
+    auto [state, _0, types] = CompilationState::create_test_state();
+    AST_Store& ast_store = *state.ast_store_;
+    RT_Scope scope{};
+
+    const FunctionType* IntString = types->get_function_type(&String, array{&Int}, false);
+
+    auto value = Expression::known_value(state, "qwe", &String, TSL);
+    REQUIRE(value);
+
+    auto const_lambda = (*value)->cast_to(state, IntString);
+
+    CHECK(const_lambda);
+
+    auto expr = *const_lambda;
+
+    CHECK(expr->expression_type == ExpressionType::reference);
+    CHECK(*expr->type == *IntString);
+    CHECK(std::get<const Expression*>(expr->reference_value()->const_body())->string_value() == "qwe");
 }

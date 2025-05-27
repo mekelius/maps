@@ -76,8 +76,8 @@ Expression* Expression::known_value(CompilationState& state, KnownValue value,
         {ExpressionType::known_value, unwrapped_value, type, location});
 }
 
-optional<Expression*> Expression::known_value(CompilationState& state, KnownValue value, const Type* type,
-    const SourceLocation& location) {
+optional<Expression*> Expression::known_value(CompilationState& state, KnownValue value, 
+    const Type* type, const SourceLocation& location) {
 
     using Log = LogInContext<LogContext::type_checks>;
 

@@ -33,7 +33,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
 
     SUBCASE("Int \"32\" + 987") {
         auto op = RT_Operator{"+", External{}, 
-            types->get_function_type(&Int, {&Int, &Int}, true),
+            types->get_function_type(&Int, array{&Int, &Int}, true),
             {Operator::Fixity::binary}, true, TSL};
         
         auto op_ref = Expression::operator_reference(*state.ast_store_, &op, TSL);

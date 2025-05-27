@@ -109,7 +109,7 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
             "Expression::partial_binop_call called with a non matching lhs type");
         
         auto partial_return_type = state.types_->get_function_type(
-            return_type, {lhs->type}, callee_f_type->is_pure());
+            return_type, std::array{lhs->type}, callee_f_type->is_pure());
 
         return store.allocate_expression(
             {ExpressionType::partial_binop_call_left, 
@@ -124,7 +124,7 @@ optional<Expression*> Expression::partial_binop_call(CompilationState& state,
             "Expression::partial_binop_call called with a non matching lhs type");
 
     auto partial_return_type = state.types_->get_function_type(
-        return_type, {rhs->type}, callee_f_type->is_pure());
+        return_type, std::array{rhs->type}, callee_f_type->is_pure());
     return store.allocate_expression(
             {ExpressionType::partial_binop_call_right, 
                 CallExpressionValue{definition, {lhs, rhs}}, partial_return_type, 

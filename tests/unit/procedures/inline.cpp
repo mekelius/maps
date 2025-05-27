@@ -1,11 +1,14 @@
 #include "doctest.h"
 
+#include <array>
+
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/procedures/inline.hh"
 #include "mapsc/types/type_store.hh"
 
 using namespace Maps;
+using namespace std;
 
 #define COMMON_TESTS(function)\
 \
@@ -53,7 +56,7 @@ TEST_CASE("Should be able to inline a nullary call to a value definition as if a
 TEST_CASE("Should be able to inline a nullary call to a nullary pure function definition as if a reference") {
     TypeStore types{};
     
-    Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, {}, true), TSL};
+    Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, array<const Type*, 0>{}, true), TSL};
     RT_Definition definition{&value, true, TSL};
     Expression ref{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
 
@@ -63,7 +66,7 @@ TEST_CASE("Should be able to inline a nullary call to a nullary pure function de
 TEST_CASE("Should not be able to inline a nullary call to a nullary pure function definition as an expression") {
     TypeStore types{};
 
-    Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, {}, false), TSL};
+    Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, array<const Type*, 0>{}, false), TSL};
     RT_Definition definition{&value, true, TSL};
     Expression ref{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
 

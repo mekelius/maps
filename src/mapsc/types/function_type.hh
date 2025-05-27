@@ -4,6 +4,7 @@
 #include <array>
 #include <optional>
 #include <span>
+#include <ranges>
 #include <string>
 #include <vector>
 #include <sys/types.h>
@@ -15,8 +16,9 @@ namespace Maps {
 
 class FunctionType: public Type {
 public:
+    template <std::ranges::forward_range R>
     static std::string create_name(const Type* return_type, 
-        std::span<const Type* const, std::dynamic_extent>param_types, bool is_pure) {
+        R param_types, bool is_pure) {
         
         if (param_types.size() == 0 && !is_pure) {
             return "Void -> " + std::string{return_type->name()};
@@ -58,12 +60,14 @@ private:
 
 class RTFunctionType: public FunctionType {
 public:
-    RTFunctionType(const Type* return_type, 
-        const std::vector<const Type*>& param_types, bool is_pure)
-    :name_(FunctionType::create_name(return_type, std::span{param_types}, is_pure)),
-     return_type_(return_type), 
-     param_types_(param_types),
-     is_pure_(is_pure) {}
+    template <std::ranges::forward_range R>
+    RTFunctionType(const Type* return_type, R param_types, bool is_pure)
+    :name_(FunctionType::create_name(return_type, param_types, is_pure)),
+     return_type_(return_type),
+     param_types_({}),
+     is_pure_(is_pure) {
+        param_types_.assign(param_types.begin(), param_types.end());
+    }
 
     virtual bool is_pure() const { return is_pure_; }
     std::string_view name() const { return name_; }

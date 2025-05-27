@@ -1,6 +1,7 @@
 #include "doctest.h"
 
 #include <sstream>
+#include <array>
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
@@ -16,7 +17,8 @@ namespace {
 inline tuple<Expression*, Definition*> create_operator_helper(CompilationState& state, 
     const string& op_string, unsigned int precedence = 500) {
 
-    const Type* type = state.types_->get_function_type(&Number, {&Number, &Number}, true);
+    const Type* type = state.types_->get_function_type(
+        &Number, std::array<const Type* const, 2>{&Number, &Number}, true);
     Definition* op_definition = state.ast_store_->allocate_operator(
         RT_Operator::create_binary(op_string, External{}, type, precedence, 
             RT_Operator::Associativity::left, true, TSL));

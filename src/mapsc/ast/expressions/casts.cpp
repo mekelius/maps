@@ -46,8 +46,9 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
                     return nullopt;
                 }
 
-                type = target_type;
-                return this;
+                auto [expression, definition] = Expression::const_lambda(
+                    state, this, function_type->param_types(), type_declaration_location);
+                return expression;
             }
 
             if (type->cast_to(target_type, *this)) {
@@ -87,7 +88,6 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
             assert(false && "not implemented");
     }
 }
-
 
 optional<Expression*> Expression::cast_to(CompilationState& state, const Type* target_type) {
     return this->cast_to(state, target_type, this->location);

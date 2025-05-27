@@ -50,7 +50,7 @@ namespace Maps {
 // }
 
 std::tuple<Expression*, RT_Definition*> Expression::const_lambda(CompilationState& state, 
-    Expression* value, const std::vector<const Type*>& param_types, const SourceLocation& location) {
+    Expression* value, std::span<const Type* const> param_types, const SourceLocation& location) {
 
     auto& ast_store = *state.ast_store_;
 
@@ -70,7 +70,7 @@ std::tuple<Expression*, RT_Definition*> Expression::const_lambda(CompilationStat
 }
 
 std::tuple<Expression*, RT_Definition*> Expression::const_lambda(CompilationState& state, 
-    KnownValue value, const std::vector<const Type*>& param_types, const SourceLocation& location) {
+    KnownValue value, std::span<const Type* const> param_types, const SourceLocation& location) {
 
     auto value_expr = Expression::known_value(state, value, location);
     return Expression::const_lambda(state, value_expr, param_types, location);

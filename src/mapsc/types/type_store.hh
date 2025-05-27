@@ -5,9 +5,11 @@
 #include <span>
 #include <memory>
 #include <unordered_map>
+#include <concepts>
 #include <vector>
 #include <string>
 #include <optional>
+#include <ranges>
 
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
@@ -34,15 +36,58 @@ public:
     std::optional<const Type*> get(const std::string& identifier);
     const Type* get_unsafe(const std::string& identifier);
 
-    const FunctionType* get_function_type(const Type* return_type,
-        const std::vector<const Type*>& arg_types, bool pure);
+    template <std::ranges::forward_range R>
+        requires std::convertible_to<std::ranges::range_value_t<R>, const Type*>
+    const FunctionType* get_function_type(const Type* return_type, R arg_types, bool is_pure) {
+        std::string signature = make_function_signature(return_type, arg_types, is_pure);
+        auto existing_it = types_by_structure_.find(signature);
+
+        // if type with this structure exists, just return that
+        if (existing_it != types_by_structure_.end())
+            return dynamic_cast<const FunctionType*>(existing_it->second);
+        
+        // else create that type
+        return create_function_type(signature, return_type, arg_types, is_pure);
+    }
     
-    std::string make_function_signature(const Type* return_type,
-        const std::span<const Type* const> arg_types, bool is_pure = true) const;
+    template <std::ranges::forward_range R>
+    std::string make_function_signature(const Type* return_type, R arg_types, bool is_pure) const {
+        // nullary pure function is just a value
+        if (arg_types.size() == 0 && is_pure)
+            return std::string{return_type->name()};
+
+        // nullary impure function gets the special type =>return_type
+        if (arg_types.size() == 0)
+            return "=>" + std::string{return_type->name()};
+
+        std::string signature = "";
+        bool first = true;
+        for (auto arg_type: arg_types) {
+            if (!first)
+                signature += "-";
+            first = false;
+            signature += std::string{arg_type->name()};
+        }
+
+        signature += is_pure ? "-" : "=";
+
+        return signature + std::string{return_type->name()};
+    }
 
 private:
+    template <std::ranges::forward_range R>
     const FunctionType* create_function_type(const std::string& signature,
-        const Type* return_type, const std::vector<const Type*>& arg_types, bool is_pure = true);
+        const Type* return_type, R arg_types, bool is_pure = true) {
+
+        std::unique_ptr<const Type> up = 
+            make_unique<const RTFunctionType>(return_type, arg_types, is_pure);
+        types_.push_back(std::move(up));
+        auto raw_ptr = types_.back().get();
+
+        types_by_structure_.insert({signature, raw_ptr});
+
+        return dynamic_cast<const FunctionType*>(raw_ptr);
+    }
 
     std::unordered_map<std::string, const Type*> types_by_identifier_ = {};
     std::unordered_map<std::string, const Type*> types_by_structure_ = {};

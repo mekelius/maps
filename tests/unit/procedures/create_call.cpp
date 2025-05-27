@@ -15,7 +15,7 @@ TEST_CASE("Basics") {
     auto& ast_store = *state.ast_store_;
 
     auto callee_def = RT_Definition::external(ast_store, "test", 
-        types->get_function_type(&Float, {&Float, &Float}, false), TSL);
+        types->get_function_type(&Float, std::array<const Type* const, 2>{&Float, &Float}, false), TSL);
 
     SUBCASE ("Should do nothing if the types match") {
         auto value1 = Expression::known_value(state, static_cast<maps_Float>(1), TSL);
@@ -70,7 +70,7 @@ TEST_CASE("Creating an arg list should coerce args correctly") {
     auto& ast_store = *state.ast_store_;
 
     auto callee_def = RT_Definition::external(ast_store, "test", 
-        types->get_function_type(&Float, {&Float, &Float}, false), TSL);
+        types->get_function_type(&Float, std::array<const Type* const, 2>{&Float, &Float}, false), TSL);
     auto value1 = Expression::known_value(state, static_cast<maps_Int>(1), TSL);
     auto value2 = Expression::known_value(state, static_cast<maps_Int>(2), TSL);
 
