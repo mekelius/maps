@@ -111,11 +111,11 @@ void REPL::debug_print(REPL_Stage stage, const Maps::RT_Scope& scope,
 }
 
 void REPL::debug_print(REPL_Stage stage, const Maps::RT_Scope& scope, const Maps::Definition* definition) {
-    debug_print(stage, scope, std::array<const Maps::Definition* const, 1>{definition});
+    debug_print(stage, scope, std::array{definition});
 }
 
 void REPL::debug_print(REPL_Stage stage, const Maps::RT_Scope& scope) {
-    debug_print(stage, scope, std::array<const Maps::Definition* const, 0>{});
+    debug_print(stage, scope, {});
 }
 
 void REPL::debug_print(REPL_Stage stage, const llvm::Module& module) {

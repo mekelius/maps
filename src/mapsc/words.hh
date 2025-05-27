@@ -12,7 +12,7 @@
 constexpr std::string_view OPERATOR_GLYPHS = "+-*/%^=!?|<>.$&€£@¬§¤";
 constexpr std::string_view GLYPHS_FORBIDDEN_IN_NAMES = "+-*/%^=|<>.$&€£@¬§¤;:\\#~[]{}()\"` \n";
 
-constexpr std::array<std::string_view, 42> RESERVED_WORDS = {
+constexpr std::array RESERVED_WORDS = {
     "return",
     "let", "mut", "const", "type", "class",
     "if", "else",

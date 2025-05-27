@@ -26,7 +26,7 @@ constexpr PragmaFlag mutable_global_variables{"mutable global variables", false}
 
 }
 
-constexpr std::array<PragmaFlag, 2> flags{
+constexpr std::array flags{
     Flags::top_level_evaluation_context,
     Flags::mutable_global_variables
 };

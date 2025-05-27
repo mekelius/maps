@@ -26,6 +26,7 @@
 #include "mapsc/procedures/name_resolution.hh"
 #include "mapsc/transform_stage.hh"
 #include "mapsc/procedures/cleanup.hh"
+#include "mapsc/procedures/concretize.hh"
 
 #include "mapsc/llvm/ir_generator.hh"
 #include "mapsc/llvm/ir_builtins.hh"
@@ -221,7 +222,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         return false;
     }
 
-    bool ir_success = generator.run({std::array<RT_Scope* const, 1>{&global_scope}}, 
+    bool ir_success = generator.run({std::array{&global_scope}}, 
         std::array<Definition*, 2>{*top_level_definition, *repl_wrapper});
 
     debug_print(REPL_Stage::ir, *module_);
@@ -253,18 +254,19 @@ bool REPL::run_layer2(CompilationState& state, std::vector<Expression*> unparsed
 bool REPL::run_transforms(CompilationState& state, 
     RT_Scope& scope, optional<RT_Definition* const> top_level_definition) {
 
-    Maps::run_transforms(state, scope, scope.identifiers_in_order_);
-        
-
-    if (top_level_definition) {
-        Maps::run_transforms(state, scope, std::array<RT_Definition* const, 1>{*top_level_definition});
-        // if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, 
-        //         std::array<RT_Definition* const, 1>{*top_level_definition}))
-        //     return false;
-    } else {
-        // if (!SimpleTypeChecker{}.run(state, std::array<RT_Scope* const, 1>{&scope}, {}))
-        //     return false;
+    for (auto definition: scope) {
+        if (!Maps::concretize(*definition))
+            return false;
     }
+
+    if (!Maps::run_transforms(state, scope, scope.identifiers_in_order_))
+        return false;
+        
+    if (!top_level_definition)
+        return true;
+
+    if (!Maps::run_transforms(state, scope, std::array{*top_level_definition}))
+        return false;
 
     return true;
 }

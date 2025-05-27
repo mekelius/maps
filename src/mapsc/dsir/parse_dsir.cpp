@@ -26,7 +26,7 @@ using Log = LogInContext<LogContext::dsir_parser>;
 namespace DSIR {
 namespace {
 
-constexpr std::array<std::string_view, 6> reserved_words {
+constexpr std::array reserved_words {
     "let", "fn", "return",
     "if", "then", "else"
 };

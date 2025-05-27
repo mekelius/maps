@@ -46,7 +46,7 @@ optional<Definition*> lookup_identifier(std::span<const CT_Scope* const> ct_scop
 optional<Definition*> lookup_identifier(const CT_Scope& ct_scope, const_Scopes rt_scopes, 
     const std::string& name) {
 
-    return lookup_identifier(std::array<const CT_Scope* const, 1>{&ct_scope}, rt_scopes, name);
+    return lookup_identifier(std::array{&ct_scope}, rt_scopes, name);
 }
 
 optional<Definition*> lookup_identifier(CompilationState& state, const_Scopes rt_scopes, 
@@ -142,7 +142,7 @@ bool resolve_identifiers(CompilationState& state, const RT_Scope& scope,
     std::vector<Expression*>& unresolved_identifiers) {
 
     return resolve_identifiers(state,
-        std::array<const RT_Scope* const, 1>{&scope}, 
+        std::array{&scope}, 
         unresolved_identifiers);
 }
 
