@@ -1,8 +1,8 @@
 // RUN: %mapsci --layer2 --stop-after=layer2 < %s | filecheck %s
 
-let a;
-let b;
-let c;
+let a = "a";
+let b = "b";
+let c = "c";
 
 a + b           // CHECK: ( a + b )
 (+b)            // CHECK: ( @missing arg@ + b )

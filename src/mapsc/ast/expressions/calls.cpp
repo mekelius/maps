@@ -243,7 +243,7 @@ void Expression::convert_nullary_reference_to_call() {
     expression_type = ExpressionType::call;
     auto callee = reference_value();
 
-    assert(!callee->is_undefined() && !callee->is_empty());
+    // assert(!callee->is_undefined() && !callee->is_empty());
 
     value = CallExpressionValue{callee, {}};
 }

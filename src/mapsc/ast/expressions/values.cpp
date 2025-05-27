@@ -116,7 +116,9 @@ optional<Expression*> Expression::known_value(CompilationState& state, KnownValu
 }
 
 optional<KnownValue> Expression::known_value_value() const {
-    assert(expression_type == ExpressionType::known_value && 
+    assert((expression_type == ExpressionType::known_value || 
+        expression_type == ExpressionType::string_literal || 
+        expression_type == ExpressionType::numeric_literal) && 
         "known_value_value called on not a known_value");
 
     return std::visit(overloaded {
