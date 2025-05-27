@@ -16,6 +16,29 @@
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
 
+#define OPERATOR_EXPRESSION ExpressionType::operator_identifier:\
+                       case ExpressionType::binary_operator_reference:\
+                       case ExpressionType::prefix_operator_reference:\
+                       case ExpressionType::postfix_operator_reference
+
+#define TYPE_EXPRESSION ExpressionType::type_identifier:\
+                   case ExpressionType::type_reference:\
+                   case ExpressionType::type_operator_identifier:\
+                   case ExpressionType::type_operator_reference:\
+                   case ExpressionType::type_constructor_reference:\
+                   case ExpressionType::type_field_name:\
+                   case ExpressionType::type_construct:\
+                   case ExpressionType::type_argument
+
+#define ILLEGAL_EXPRESSION ExpressionType::deleted:\
+                      case ExpressionType::compiler_error:\
+                      case ExpressionType::user_error
+
+#define NON_CASTABLE_EXPRESSION ExpressionType::minus_sign:\
+                           case OPERATOR_EXPRESSION:\
+                           case TYPE_EXPRESSION:\
+                           case ILLEGAL_EXPRESSION
+
 namespace Maps {
 
 class CompilationState;

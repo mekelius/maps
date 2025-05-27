@@ -57,6 +57,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/ast/ast_store.cpp
 
     src/mapsc/ast/expressions/calls.cpp
+    src/mapsc/ast/expressions/casts.cpp
     src/mapsc/ast/expressions/identifiers.cpp
     src/mapsc/ast/expressions/references.cpp
     src/mapsc/ast/expressions/termed.cpp
