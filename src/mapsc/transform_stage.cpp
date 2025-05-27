@@ -84,7 +84,7 @@ bool run_transforms(CompilationState& state, RT_Scope& scope, RT_Definition& def
 
     Log::debug_extra("Concretize " + definition.name_string() + "...", 
         definition.location());
-    if (!concretize(definition)) {
+    if (!concretize(state, definition)) {
         Log::error("Concretizing " + definition.name_string() + " failed", definition.location());
         return false;
     }

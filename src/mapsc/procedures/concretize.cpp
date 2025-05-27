@@ -12,6 +12,7 @@
 
 
 #include "mapsc/ast/expression.hh"
+#include "mapsc/compilation_state.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/function_type.hh"
@@ -25,12 +26,12 @@ namespace Maps {
 
 using Log = LogInContext<LogContext::concretize>;
 
-bool concretize(RT_Definition& definition) {
+bool concretize(CompilationState& state, RT_Definition& definition) {
     return std::visit(overloaded{
-        [definition](Expression* expression) {
+        [definition, &state](Expression* expression) {
             Log::debug_extra("Concretizing definition body of " + definition.name_string(), 
                 definition.location());
-            return concretize(*expression);
+            return concretize(state, *expression);
         },
         [definition](auto) { 
             Log::info("Not concretizing " + definition.name_string() + 
@@ -40,13 +41,13 @@ bool concretize(RT_Definition& definition) {
     }, definition.body());
 }
 
-bool concretize_call(Expression& call) {
+bool concretize_call(CompilationState& state, Expression& call) {
     auto [callee, args] = call.call_value();
 
     // attempt inline first
     Log::debug_extra("Attempting to inline " + call.log_message_string(), call.location);
     if (inline_call(call, *callee))
-        return concretize(call);
+        return concretize(state, call);
 
     Log::debug_extra("Could not inline, attempting to cast arguments", call.location);
 
@@ -93,7 +94,7 @@ bool concretize_call(Expression& call) {
                 return false;
             }
         }
-        if (!concretize(*arg))
+        if (!concretize(state, *arg))
             return false;
 
         if (*arg->type != *param_type) {
@@ -130,10 +131,10 @@ bool concretize_value(Expression& value) {
     return(value.type->concretize(value));
 }
 
-bool concretize(Expression& expression) {
+bool concretize(CompilationState& state, Expression& expression) {
     switch (expression.expression_type) {
         case ExpressionType::call:
-            return concretize_call(expression);
+            return concretize_call(state, expression);
 
         case ExpressionType::string_literal:
             return true;
@@ -146,8 +147,9 @@ bool concretize(Expression& expression) {
             return concretize_reference(expression);
 
         case ExpressionType::partially_applied_minus:
-            expression.convert_to_unary_minus_call();
-            return concretize_call(expression);
+            if (!expression.convert_to_unary_minus_call(state))
+                return false;
+            return concretize_call(state, expression);
 
         default:
             Log::error("Concretizer encountered an expression that was not a value or a call", 

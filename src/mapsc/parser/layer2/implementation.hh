@@ -120,7 +120,10 @@ private:
     // calls/access operations
     bool is_acceptable_next_arg(Definition* callee, 
       const std::vector<Expression*>& args/*, Expression* next_arg*/);
-      
+
+    // mainly checks that the expression type is correct
+    bool ensure_proper_argument_expression_type(Expression* arg, const Type* param_type);
+
     void call_expression_state();
     void partial_call_state();
     void deferred_call_state();

@@ -5,11 +5,14 @@
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/types/type_store.hh"
+#include "mapsc/compilation_state.hh"
 
 using namespace Maps;
 using namespace std;
 
 TEST_CASE("Type concretizer should handle an Int Number") {
+    auto [state, _, types] = CompilationState::create_test_state();
+
     Expression expr{
         ExpressionType::known_value,
         "34",
@@ -17,7 +20,7 @@ TEST_CASE("Type concretizer should handle an Int Number") {
         TSL,
     };
     
-    bool success = concretize(expr);
+    bool success = concretize(state, expr);
 
     CHECK(success);
     CHECK(*expr.type == Int);
@@ -26,6 +29,8 @@ TEST_CASE("Type concretizer should handle an Int Number") {
 }
 
 TEST_CASE("Type concretizer should handle a Float Number") {
+    auto [state, _, types] = CompilationState::create_test_state();
+
     Expression expr{
         ExpressionType::known_value,
         "3.4",
@@ -33,7 +38,7 @@ TEST_CASE("Type concretizer should handle a Float Number") {
         TSL,
     };
     
-    bool success = concretize(expr);
+    bool success = concretize(state, expr);
 
     CHECK(success);
     CHECK(*expr.type == Float);
@@ -42,6 +47,8 @@ TEST_CASE("Type concretizer should handle a Float Number") {
 }
 
 TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
+    auto [state, _, types] = CompilationState::create_test_state();
+
     Expression expr{
         ExpressionType::known_value,
         "3.4",
@@ -49,7 +56,7 @@ TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
         TSL,
     };
     
-    bool success = concretize(expr);
+    bool success = concretize(state, expr);
 
     CHECK(success);
     CHECK(*expr.type == Float);
@@ -58,30 +65,34 @@ TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
 }
 
 TEST_CASE("Concretizer should run variable substitution with a concrete type") {
+    auto [state, _, types] = CompilationState::create_test_state();
+
     Expression value{ExpressionType::known_value, 1, &Int, TSL};
     RT_Definition definition{&value, true, TSL};
     Expression ref{ExpressionType::reference, &definition, TSL};
     ref.type = &Int;
 
-    CHECK(concretize(ref));
+    CHECK(concretize(state, ref));
     CHECK(ref == value);
 } 
 
 TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
+    auto [state, _, types] = CompilationState::create_test_state();
+
     Expression value{ExpressionType::known_value, 1, &Int, TSL};
     RT_Definition definition{&value, true, TSL};
     Expression call{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
     call.type = &Int;
 
-    CHECK(concretize(call));
+    CHECK(concretize(state, call));
     CHECK(call == value);
 }
 
 TEST_CASE("Concretizer should concretize the arguments to a call based on the definition type") {
-    TypeStore types{};
-    REQUIRE(types.empty());
+    auto [state, _, types] = CompilationState::create_test_state();
+    REQUIRE(types->empty());
     
-    auto IntInt = types.get_function_type(&Int, array{&Int}, false);
+    auto IntInt = types->get_function_type(&Int, array{&Int}, false);
     Expression value{ExpressionType::known_value, 1, IntInt, TSL};
     RT_Definition const_Int{"const_Int", &value, true, TSL};
 
@@ -89,7 +100,7 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the de
     Expression call{ExpressionType::call, CallExpressionValue{&const_Int, {&arg}}, TSL};
     call.type = dynamic_cast<const FunctionType*>(const_Int.get_type())->return_type();
 
-    CHECK(concretize(call));
+    CHECK(concretize(state, call));
     CHECK(call != value);
     CHECK(*arg.type == Int);
     CHECK(std::holds_alternative<maps_Int>(arg.value));
@@ -97,10 +108,10 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the de
 }
 
 TEST_CASE("Concretizer should be able to concretize function calls based on arguments") {
-    TypeStore types{};
-    REQUIRE(types.empty());
+    auto [state, _, types] = CompilationState::create_test_state();
+    REQUIRE(types->empty());
 
-    auto IntIntInt = types.get_function_type(&Int, array{&Int, &Int}, true);
+    auto IntIntInt = types->get_function_type(&Int, array{&Int, &Int}, true);
     RT_Definition dummy_definition = RT_Definition::testing_definition(IntIntInt);
 
     REQUIRE(*dummy_definition.get_type() == *IntIntInt);
@@ -112,7 +123,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
         Expression call{ExpressionType::call,
             CallExpressionValue{&dummy_definition, {&arg1, &arg2}}, &Int, TSL};
 
-        CHECK(concretize(call));
+        CHECK(concretize(state, call));
 
         CHECK(*call.type == Int);
         CHECK(*arg1.type == Int);
@@ -128,7 +139,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
         Expression call{ExpressionType::call,
             CallExpressionValue{&dummy_definition, {&arg1, &arg2}}, &Int, TSL};
 
-        CHECK(concretize(call));
+        CHECK(concretize(state, call));
 
         CHECK(*call.type == Int);
         CHECK(*arg1.type == Int);
@@ -144,7 +155,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
         Expression call{ExpressionType::call,
             CallExpressionValue{&dummy_definition, {&arg1, &arg2}}, &Int, TSL};
 
-        CHECK(concretize(call));
+        CHECK(concretize(state, call));
 
         CHECK(*call.type == Int);
         CHECK(*arg1.type == Int);
@@ -155,10 +166,10 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
 }
 
 TEST_CASE("Concretizer should be able to cast arguments up if needed") {
-    TypeStore types{};
-    REQUIRE(types.empty());
+    auto [state, _, types] = CompilationState::create_test_state();
+    REQUIRE(types->empty());
 
-    auto IntIntInt = types.get_function_type(&Float, array{&Float, &Float}, true);
+    auto IntIntInt = types->get_function_type(&Float, array{&Float, &Float}, true);
     RT_Definition dummy_definition = RT_Definition::testing_definition(IntIntInt);
 
     SUBCASE("Number -> Int -> Float into Float -> Float -> Float") {
@@ -168,7 +179,7 @@ TEST_CASE("Concretizer should be able to cast arguments up if needed") {
         Expression call{ExpressionType::call, 
             CallExpressionValue{&dummy_definition, {&arg1, &arg2}}, &Float, TSL};
 
-        CHECK(concretize(call));
+        CHECK(concretize(state, call));
 
         CHECK(*call.type == Float);
         CHECK(*arg1.type == Float);

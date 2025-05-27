@@ -11,6 +11,34 @@ namespace Maps {
 
 using Log = LogNoContext;
 
+bool Expression::is_allowed_as_arg() const {
+    switch (expression_type) {
+        case OPERATOR_EXPRESSION:
+        case TYPE_EXPRESSION:
+        case ILLEGAL_EXPRESSION:
+        case ExpressionType::identifier:
+        case ExpressionType::minus_sign:
+        case ExpressionType::partially_applied_minus:
+        case ExpressionType::termed_expression:
+            return false;
+
+        case ExpressionType::reference:
+        case ExpressionType::ternary_expression:
+        case ExpressionType::missing_arg:
+        case ExpressionType::call:
+        case ExpressionType::partial_call:
+        case ExpressionType::partial_binop_call_left:
+        case ExpressionType::partial_binop_call_right:
+        case ExpressionType::partial_binop_call_both:
+        case ExpressionType::known_value_reference:
+        case ExpressionType::string_literal:
+        case ExpressionType::numeric_literal:
+        case ExpressionType::known_value:
+            return true;
+    }
+}
+
+
 bool Expression::is_partial_call() const {
     switch (expression_type) {
         case ExpressionType::partial_binop_call_left:
@@ -49,6 +77,9 @@ Expression* Expression::missing_argument(AST_Store& store, const Type* type,
 
 optional<Expression*> Expression::call(CompilationState& state, 
     Definition* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
+
+    for (auto arg: args)
+        assert(arg->is_allowed_as_arg() && "invalid arg passed to Expression::call");
 
     auto& store = *state.ast_store_;
     auto callee_type = callee->get_type();
@@ -138,7 +169,7 @@ static std::optional<Expression*> partial_binop_call_both(CompilationState& stat
 }
 
 
-void Expression::convert_to_partial_binop_minus_call_left(AST_Store& store) {
+bool Expression::convert_to_partial_binop_minus_call_left(CompilationState& state) {
     if (expression_type != ExpressionType::partially_applied_minus) {
         assert(false && 
            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus");
@@ -148,18 +179,32 @@ void Expression::convert_to_partial_binop_minus_call_left(AST_Store& store) {
             location);
 
         expression_type = ExpressionType::compiler_error;
-        return;
+        return false;
     }
 
     expression_type = ExpressionType::partial_binop_call_left;
 
     auto rhs = std::get<Expression*>(value);
-    value = CallExpressionValue(&binary_minus_Int, 
-        {Expression::missing_argument(store, &Int, location), rhs});
-    type = &Int_to_Int;
+
+    std::vector<Expression*> args{
+        Expression::missing_argument(*state.ast_store_, &Int, location), rhs};
+
+    auto [types_ok, is_partial, work_to_be_done, return_type] = 
+        check_and_coerce_args(state, &binary_minus_Int, args, location);
+
+    if (!types_ok)
+        return false;
+    
+    value = CallExpressionValue(&binary_minus_Int, args);
+
+    // value = CallExpressionValue(&binary_minus_Int, 
+    //     {Expression::missing_argument(store, &Int, location), rhs});
+    type = return_type;
+
+    return true;
 }
 
-void Expression::convert_to_unary_minus_call() {
+bool Expression::convert_to_unary_minus_call(CompilationState& state) {
     if (expression_type != ExpressionType::partially_applied_minus) {
         assert(false && 
            "Expression::convert_to_unary_minus_call called on a not partially applied minus");
@@ -169,13 +214,25 @@ void Expression::convert_to_unary_minus_call() {
             location);
 
         expression_type = ExpressionType::compiler_error;
-        return;
+        return false;
     }
 
-    expression_type = ExpressionType::call;
     auto arg = std::get<Expression*>(value);
-    value = CallExpressionValue(&unary_minus_Int, {arg});
-    type = &Int;
+    std::vector<Expression*> args{arg};
+
+    auto [types_ok, is_partial, work_to_be_done, return_type] = 
+        check_and_coerce_args(state, &unary_minus_Int, args, location);
+
+    assert(!is_partial);
+
+    if (!types_ok)
+        return false;
+
+    expression_type = ExpressionType::call;
+    value = CallExpressionValue(&unary_minus_Int, args);
+    type = return_type;
+
+    return true;
 }
 
 void Expression::convert_nullary_reference_to_call() {
@@ -191,9 +248,22 @@ void Expression::convert_nullary_reference_to_call() {
     value = CallExpressionValue{callee, {}};
 }
 
-// do we even have to do anything?
+bool Expression::convert_partially_applied_minus_to_arg(CompilationState& state,
+    const Type* param_type) {
+
+    assert(expression_type == ExpressionType::partially_applied_minus && 
+        "convert_partially_applied_minus_to_arg called with not a partially applied minus");
+
+    if (param_type->arity() == 0)
+        return convert_to_unary_minus_call(state);
+
+    convert_to_partial_call();
+    return true;
+}
+
+
 void Expression::convert_to_partial_call() {
-    return;
+    expression_type = ExpressionType::partial_call;
 }
 
 Expression* Expression::partially_applied_minus(AST_Store& store, Expression* rhs, 

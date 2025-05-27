@@ -257,10 +257,11 @@ struct Expression {
 
     // ----- CONVERSIONS -----
     // expect to be a partially applied minus
-    void convert_to_partial_binop_minus_call_left(AST_Store& store);
-    void convert_to_unary_minus_call();
+    [[nodiscard]] bool convert_to_partial_binop_minus_call_left(CompilationState& state);
+    [[nodiscard]] bool convert_to_unary_minus_call(CompilationState& state);
     void convert_nullary_reference_to_call();
     [[nodiscard]] bool convert_by_value_substitution();
+    [[nodiscard]] bool convert_partially_applied_minus_to_arg(CompilationState& state, const Type* param_type);
 
     // For example partial binop call, currently a no-op
     void convert_to_partial_call();
@@ -309,6 +310,7 @@ struct Expression {
     bool is_castable_expression() const;
     bool is_allowed_in_type_declaration() const;
     bool is_constant_value() const;
+    bool is_allowed_as_arg() const;
 
     std::string_view expression_type_string_view() const;
     std::string expression_type_string() const { 

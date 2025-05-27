@@ -255,7 +255,7 @@ bool REPL::run_transforms(CompilationState& state,
     RT_Scope& scope, optional<RT_Definition* const> top_level_definition) {
 
     for (auto definition: scope) {
-        if (!Maps::concretize(*definition))
+        if (!Maps::concretize(state, *definition))
             return false;
     }
 
@@ -265,7 +265,7 @@ bool REPL::run_transforms(CompilationState& state,
     if (!top_level_definition)
         return true;
 
-    if (!Maps::concretize(**top_level_definition))
+    if (!Maps::concretize(state, **top_level_definition))
         return false;
 
     return true;

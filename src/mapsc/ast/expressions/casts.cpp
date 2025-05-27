@@ -79,17 +79,38 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
             assert(false && "not implemented");
             // copy and cast
 
-        case ExpressionType::reference:
-        case ExpressionType::identifier:
-        case ExpressionType::termed_expression:
-        
-        case ExpressionType::partially_applied_minus:
-        case ExpressionType::call:
         case ExpressionType::partial_call:
         case ExpressionType::partial_binop_call_left:
         case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_binop_call_both:
+            Log::debug("Expression " + log_message_string() + 
+                " in not castable due to being a partial call", type_declaration_location);
+            return nullopt;
+
+        case ExpressionType::reference:
+        case ExpressionType::identifier:
+        case ExpressionType::termed_expression:
             return wrap_in_runtime_cast(state, target_type, type_declaration_location);
+
+        case ExpressionType::partially_applied_minus:
+            if (target_type->arity() != 0) {
+                Log::debug("Expression " + log_message_string() + 
+                    " in not castable due to being a partial call", type_declaration_location);
+                return nullopt;
+            }
+
+            if (!convert_to_unary_minus_call(state)) {
+                Log::error("Converting to unary minus call failed", type_declaration_location);
+                return nullopt;
+            }
+            // intentional fall-through
+        case ExpressionType::call:
+            if (!is_partial_call())
+                return wrap_in_runtime_cast(state, target_type, type_declaration_location);
+
+            Log::debug("Expression " + log_message_string() + 
+                " in not castable due to being a partial call", type_declaration_location);
+            return nullopt;
 
         // case ExpressionType::lambda:
         case ExpressionType::ternary_expression:
