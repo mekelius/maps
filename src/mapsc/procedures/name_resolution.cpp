@@ -66,6 +66,11 @@ bool resolve_identifier(CompilationState& state, const_Scopes scopes,
     }
 
     expression->convert_to_reference(*definition);
+
+    if (expression->expression_type == ExpressionType::known_value_reference)
+        if (!expression->convert_by_value_substitution())
+            return false;
+
     return true;
 }
 
