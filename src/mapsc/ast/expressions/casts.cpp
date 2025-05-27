@@ -81,7 +81,7 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
         case ExpressionType::partial_binop_call_both:
             return wrap_in_runtime_cast(state, target_type, type_declaration_location);
 
-        case ExpressionType::lambda:
+        // case ExpressionType::lambda:
         case ExpressionType::ternary_expression:
             Log::compiler_error("Casts on lambdas and ternary expressions not implemented", location);
             assert(false && "not implemented");

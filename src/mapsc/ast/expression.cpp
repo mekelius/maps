@@ -47,7 +47,7 @@ std::string Expression::value_to_string(const ExpressionValue& value) {
         [](TermedExpressionValue value) { 
             return "@unparsed termed expression of length " + to_string(value.terms.size()) + "@"; },
         [](CallExpressionValue)->std::string { return "@call@"; },
-        [](LambdaExpressionValue)->std::string { return "@lambda@"; },
+        // [](LambdaExpressionValue)->std::string { return "@lambda@"; },
         [](TernaryExpressionValue)->std::string { return "@ternary expression value@"; },
         [](TypeArgument)->std::string { return "@type argument@"; },
         [](TypeConstruct)->std::string { return "@type construct@"; },
@@ -211,8 +211,8 @@ std::string Expression::log_message_string() const {
             return output.str();
         }
 
-        case ExpressionType::lambda:
-            return "lambda expression";
+        // case ExpressionType::lambda:
+        //     return "lambda expression";
 
         case ExpressionType::ternary_expression:
             return "ternary expression";
@@ -262,7 +262,7 @@ std::string_view Expression::expression_type_string_view() const {
         case ExpressionType::partial_binop_call_both: return "partial_binop_call_both";
         case ExpressionType::partially_applied_minus: return "partially_applied_minus";
         case ExpressionType::missing_arg: return "missing_arg";
-        case ExpressionType::lambda: return "lambda";
+        // case ExpressionType::lambda: return "lambda";
         case ExpressionType::ternary_expression: return "ternary_expression";
         case ExpressionType::deleted: return "deleted"; 
     }

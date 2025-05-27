@@ -132,10 +132,26 @@ Expression* ParserLayer1::parse_lambda_expression() {
     bool is_pure = current_token().string_value() == "->";
     get_token();
 
-    DefinitionBody body = parse_definition_body();
+    RT_Definition* definition = RT_Definition::function_definition(*compilation_state_, 
+        *parameter_list, lambda_scope, false, location);
 
-    return Expression::lambda(*compilation_state_, {*parameter_list, lambda_scope, body}, is_pure, 
-        location);
+    push_context(definition);
+    DefinitionBody body = parse_definition_body();
+    auto popped_context = pop_context();
+
+    if (!popped_context || popped_context != definition)
+        return fail_expression("Parsing lambda body failed", location);
+
+    std::vector<const Type*> param_types{};
+
+    for (auto param: *parameter_list)
+        param_types.push_back(param->get_type());
+
+    definition->body() = body;
+    definition->set_type(compilation_state_->types_->get_function_type(
+        definition->get_type(), param_types, is_pure));
+
+    return Expression::reference(*compilation_state_->ast_store_, definition, location);
 }
 
 optional<ParameterList> ParserLayer1::parse_lambda_parameters(RT_Scope* lambda_scope) {

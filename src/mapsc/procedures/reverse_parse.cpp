@@ -252,10 +252,10 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
         case ExpressionType::minus_sign:
             return *this << "-";
 
-        case ExpressionType::lambda:
-            return *this << "\\" << expression.lambda_value().parameters 
-                         << ( expression.type->is_pure() ? "-> " : "=> " ) 
-                         << expression.lambda_value().body;
+        // case ExpressionType::lambda:
+        //     return *this << "\\" << expression.lambda_value().parameters 
+        //                  << ( expression.type->is_pure() ? "-> " : "=> " ) 
+        //                  << expression.lambda_value().body;
 
         case ExpressionType::ternary_expression:
             return *this << *expression.ternary_value().condition << "?" 

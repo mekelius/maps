@@ -328,10 +328,10 @@ void TermedExpressionParser::initial_goto() {
             handle_termed_sub_expression(current_term());
             return initial_goto();
 
-        case ExpressionType::lambda:
-            assert(false && "not implemented");
-            // initial_definition_state();
-            break;
+        // case ExpressionType::lambda:
+        //     assert(false && "not implemented");
+        //     // initial_definition_state();
+        //     break;
 
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");
@@ -505,7 +505,7 @@ void TermedExpressionParser::value_state() {
         return call_state();
 
     switch (peek()->expression_type) {
-        case ExpressionType::lambda:
+        // case ExpressionType::lambda:
         case ExpressionType::ternary_expression:
             assert(false && "not implemented");
 
@@ -633,7 +633,7 @@ void TermedExpressionParser::binary_operator_state() {
             handle_termed_sub_expression(peek());
             return binary_operator_state();
 
-        case ExpressionType::lambda:
+        // case ExpressionType::lambda:
         case ExpressionType::ternary_expression:
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");
@@ -938,7 +938,7 @@ void TermedExpressionParser::post_binary_operator_state() {
         case ExpressionType::binary_operator_reference:
         case ExpressionType::prefix_operator_reference:
         case ExpressionType::postfix_operator_reference:
-        case ExpressionType::lambda:
+        // case ExpressionType::lambda:
         case ExpressionType::ternary_expression:
             assert(false && "not implemented");
 

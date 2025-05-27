@@ -3,6 +3,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 
 using SourceFileID = int;
 
@@ -11,6 +12,8 @@ constexpr SourceFileID NULL_SOURCE_FILE = -1;
 constexpr SourceFileID BUILTIN_SOURCE_FILE = -2;
 constexpr SourceFileID EXTERNAL_SOURCE_FILE = -3;
 constexpr SourceFileID COMPILER_INIT_SOURCE_FILE = -4;
+
+constexpr std::string MAPS_INTERNALS_PREFIX = "MAPS_";
 
 struct SourceLocation {
     static constexpr int OUT_OF_SOURCE = -1;

@@ -139,5 +139,14 @@ optional<KnownValue> Expression::known_value_value() const {
     }, value);
 }
 
+const Type* Expression::deduce_type(KnownValue value) {
+    return std::visit(overloaded{
+        [](maps_Int) { return &Int; },
+        [](maps_Float) { return &Float; },
+        [](bool) { return &Boolean; },
+        [](std::string) { return &String; },
+        [](maps_MutString) { return &MutString; },
+    }, value);
+}
 
 } // namespace Maps

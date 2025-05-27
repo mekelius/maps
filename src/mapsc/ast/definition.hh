@@ -16,6 +16,7 @@ class Type;
 struct Expression;
 struct Statement;
 class AST_Store;
+class CompilationState;
 
 struct External {
     template<typename T>
@@ -90,6 +91,8 @@ public:
     virtual bool operator==(const Definition& other) const = 0;
 };
 
+using ParameterList = std::vector<Definition*>;
+
 class RT_Definition: public Definition {
 public:
     // creates a new dummy definition suitable for unit testing
@@ -101,6 +104,12 @@ public:
         const SourceLocation& location);
     static RT_Definition* discarded_parameter(AST_Store& store, const Type* type, 
         const SourceLocation& location);
+    static RT_Definition* function_definition(CompilationState& state, 
+        const ParameterList& parameter_list, RT_Scope* inner_scope, bool is_top_level, 
+        const SourceLocation& location);
+    static RT_Definition* function_definition(CompilationState& state, 
+        const ParameterList& parameter_list, RT_Scope* inner_scope, DefinitionBody body, 
+        bool is_top_level, const SourceLocation& location);
 
     RT_Definition(std::string_view name, External external, const Type* type)
     :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(type), 

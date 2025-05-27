@@ -52,21 +52,21 @@ struct Expression;
 // NOTE: references and calls are created by scopes, rest are created by AST
 // See: 'docs/internals/ast\ nodes' for description of what these mean 
 enum class ExpressionType {
-    string_literal = 0,        // value: string
+    string_literal = 0,         // value: string
     numeric_literal,
 
     known_value,
     
-    identifier,                // value: string
+    identifier,                 // value: string
     operator_identifier,
     type_operator_identifier,
 
-    type_identifier,           // value: string
-    type_construct, // value: type_identifier | (type_constructor_identifier, [type_parameter])
-    type_argument,             // value: (type_construct, optional<string>)
+    type_identifier,            // value: string
+    type_construct,             // value: type_identifier | (type_constructor_identifier, [type_parameter])
+    type_argument,              // value: (type_construct, optional<string>)
 
-    minus_sign,                // minus sign is special, value: std::monostate
-    reference,                 // value: Callable*
+    minus_sign,                 // minus sign is special, value: std::monostate
+    reference,                  // value: Callable*
     known_value_reference,
     binary_operator_reference,
     prefix_operator_reference,
@@ -76,12 +76,12 @@ enum class ExpressionType {
     type_constructor_reference,
     type_field_name,
 
-    termed_expression,      // value: std::vector<Expression*>
+    termed_expression,          // value: std::vector<Expression*>
     
-    user_error,           // value: std::string
+    user_error,                 // value: std::string
     compiler_error,
     
-    call,                   // value: 
+    call,                       // value: 
     partial_call,
     partial_binop_call_left,
     partial_binop_call_right,
@@ -89,10 +89,10 @@ enum class ExpressionType {
     partially_applied_minus,
     missing_arg,
 
-    lambda,
+    // lambda,
     ternary_expression,
 
-    deleted,                // value: std::monostate
+    deleted,                    // value: std::monostate
 };
 
 using CallExpressionValue = std::tuple<Definition*, std::vector<Expression*>>;
@@ -116,17 +116,18 @@ struct TermedExpressionValue {
     bool operator==(const TermedExpressionValue&) const = default;
 };
 
-using ParameterList = std::vector<Definition*>;
+// struct LambdaExpressionValue {
+//     static LambdaExpressionValue const_value(AST_Store& ast_store, Expression* value, 
+//         const std::vector<const Type*>& param_types, const SourceLocation& location);
 
-struct LambdaExpressionValue {
-    ParameterList parameters;
-    RT_Scope* scope;
-    DefinitionBody body;
+//     ParameterList parameters;
+//     std::optional<RT_Scope*> scope;
+//     Definition* definition;
 
-    bool operator==(const LambdaExpressionValue& other) const {
-        return this == &other;
-    };
-};
+//     bool operator==(const LambdaExpressionValue& other) const {
+//         return this == &other;
+//     };
+// };
 
 struct TernaryExpressionValue {
     Expression* condition;
@@ -150,7 +151,7 @@ using ExpressionValue = std::variant<
     const Type*,                       // for type expressions
     TermedExpressionValue,
     CallExpressionValue,
-    LambdaExpressionValue,
+    // LambdaExpressionValue,
     TernaryExpressionValue,
     TypeArgument,
     TypeConstruct
@@ -208,10 +209,17 @@ struct Expression {
     static Expression* partially_applied_minus(AST_Store& store, 
         Expression* rhs, const SourceLocation& location);
 
-    static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
-        const Type* return_type, bool is_pure, const SourceLocation& location);
-    static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
-        bool is_pure, const SourceLocation& location);
+    // static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
+    //     const Type* return_type, bool is_pure, const SourceLocation& location);
+    // static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
+    //     bool is_pure, const SourceLocation& location);
+
+    static std::tuple<Expression*, RT_Definition*> const_lambda(CompilationState& state, 
+        Expression* value, const std::vector<const Type*>& arg_types, 
+        const SourceLocation& location);
+    static std::tuple<Expression*, RT_Definition*> const_lambda(CompilationState& state, 
+        KnownValue value, const std::vector<const Type*>& arg_types, 
+        const SourceLocation& location);
 
     static Expression* valueless(AST_Store& store, 
         ExpressionType expression_type, const SourceLocation& location);
@@ -228,6 +236,8 @@ struct Expression {
 
     static std::string value_to_string(const ExpressionValue& value);
     static std::string value_to_string(const KnownValue& value);
+
+    static const Type* deduce_type(KnownValue value);
 
     // ----- CONSTRUCTORS -----
     Expression(ExpressionType expression_type, const SourceLocation& location)
@@ -268,8 +278,8 @@ struct Expression {
     Definition* operator_reference_value() const;
     std::optional<KnownValue> known_value_value() const;
 
-    LambdaExpressionValue& lambda_value();
-    const LambdaExpressionValue& lambda_value() const;
+    // LambdaExpressionValue& lambda_value();
+    // const LambdaExpressionValue& lambda_value() const;
     
     TernaryExpressionValue& ternary_value();
     const TernaryExpressionValue& ternary_value() const;

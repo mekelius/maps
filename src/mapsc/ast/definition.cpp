@@ -14,6 +14,7 @@
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/compilation_state.hh"
 
 using std::optional, std::nullopt;
 
@@ -49,6 +50,27 @@ RT_Definition* RT_Definition::discarded_parameter(AST_Store& store, const Type* 
         "_", BTD_Binding{BTD_Binding::Type::discarded_parameter, type}, type, false, location});
 }
 
+RT_Definition* RT_Definition::function_definition(CompilationState& state, 
+    const ParameterList& parameter_list, RT_Scope* inner_scope, DefinitionBody body, 
+    bool is_top_level, const SourceLocation& location) {
+
+    std::vector<const Type*> param_types{};
+
+    for (auto param: parameter_list)
+        param_types.push_back(param->get_type());
+
+    auto type = state.types_->get_function_type(&Hole, param_types, false);
+
+    return state.ast_store_->allocate_definition(RT_Definition{
+        MAPS_INTERNALS_PREFIX + "anonymous_function", Undefined{}, type, is_top_level, location});
+}
+
+RT_Definition* RT_Definition::function_definition(CompilationState& state, 
+    const ParameterList& parameter_list, RT_Scope* inner_scope, bool is_top_level, 
+    const SourceLocation& location) {
+    
+    return function_definition(state, parameter_list, inner_scope, Undefined{}, is_top_level, location);
+}
 
 // --------------------------------------- CONSTRUCTORS -------------------------------------------
 

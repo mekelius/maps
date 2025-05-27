@@ -23,7 +23,7 @@ TEST_CASE("Should parse lambdas") {
         CHECK(result.top_level_definition);
 
         auto expression = std::get<const Expression*>((*result.top_level_definition)->const_body());
-        CHECK(expression->expression_type == ExpressionType::lambda);
+        CHECK(expression->expression_type == ExpressionType::reference);
         CHECK(expression->type->is_function());
         CHECK(expression->type->is_pure());
         CHECK(expression->type->arity() == 1);
@@ -38,7 +38,7 @@ TEST_CASE("Should parse lambdas") {
         CHECK(result.top_level_definition);
 
         auto expression = std::get<const Expression*>((*result.top_level_definition)->const_body());
-        CHECK(expression->expression_type == ExpressionType::lambda);
+        CHECK(expression->expression_type == ExpressionType::reference);
         CHECK(expression->type->is_function());
         CHECK(!expression->type->is_pure());
         CHECK(expression->type->arity() == 1);
@@ -53,15 +53,15 @@ TEST_CASE("Should parse lambdas") {
         CHECK(result.top_level_definition);
 
         auto expression = std::get<const Expression*>((*result.top_level_definition)->const_body());
-        CHECK(expression->expression_type == ExpressionType::lambda);
+        CHECK(expression->expression_type == ExpressionType::reference);
         CHECK(expression->type->is_function());
         CHECK(expression->type->is_pure());
         CHECK(expression->type->arity() == 2);
 
-        auto& body = expression->lambda_value().body;
-        CHECK(std::holds_alternative<Expression*>(body));
+        auto body = expression->reference_value()->const_body();
+        CHECK(std::holds_alternative<const Expression*>(body));
 
-        auto body_expression = std::get<Expression*>(body);
+        auto body_expression = std::get<const Expression*>(body);
         CHECK(body_expression->expression_type == ExpressionType::termed_expression);
         CHECK(body_expression->terms().size() == 3);
         CHECK(body_expression->terms().at(0)->expression_type == ExpressionType::identifier);
@@ -78,18 +78,19 @@ TEST_CASE("Should parse lambdas") {
         CHECK(result.top_level_definition);
 
         auto expression = std::get<const Expression*>((*result.top_level_definition)->const_body());
-        CHECK(expression->expression_type == ExpressionType::lambda);
+        CHECK(expression->expression_type == ExpressionType::reference);
         CHECK(expression->type->is_function());
         CHECK(!expression->type->is_pure());
         CHECK(expression->type->arity() == 1);
 
-        auto& body = expression->lambda_value().body;
-        CHECK(std::holds_alternative<Statement*>(body));
+        auto body = expression->reference_value()->const_body();
+        CHECK(std::holds_alternative<const Statement*>(body));
 
-        auto body_statement = std::get<Statement*>(body);        
+        auto body_statement = std::get<const Statement*>(body);        
         CHECK(body_statement->statement_type == StatementType::block);
 
-        auto block = std::get<Block>(body_statement->value);
+        StatementValue value = body_statement->value;
+        auto block = std::get<Block>(value);
         CHECK(block.size() == 2);
         CHECK(block.at(0)->statement_type == StatementType::expression_statement);
         CHECK(block.at(1)->statement_type == StatementType::return_);
