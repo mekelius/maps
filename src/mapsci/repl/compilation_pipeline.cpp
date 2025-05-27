@@ -169,13 +169,8 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (options_.stop_after == REPL_Stage::layer2)
         return true;
 
-    if (!top_level_definition || ((*top_level_definition)->get_type()->is_pure() && (*top_level_definition)->get_type()->is_voidish())) {
-        std::cout << "Top level definition doesn't produce a value or doesn't exist" << std::endl;
-        return true;
-    }
 
-
-    // --------------------------------- TYPE CHECKS --------------------------------------
+    // --------------------------------- TRANSFORM STAGE --------------------------------------
 
     if (!run_transforms(state, global_scope, top_level_definition) && !options_.ignore_errors) {
         std::cout << "Transform stage failed" << std::endl;
