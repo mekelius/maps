@@ -259,6 +259,7 @@ struct Expression {
     // expect to be a partially applied minus
     void convert_to_partial_binop_minus_call_left(AST_Store& store);
     void convert_to_unary_minus_call();
+    void convert_nullary_reference_to_call();
     [[nodiscard]] bool convert_by_value_substitution();
 
     // For example partial binop call, currently a no-op

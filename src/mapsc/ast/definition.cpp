@@ -25,6 +25,17 @@ using Log = LogNoContext;
 
 // ------------------------------------- FACTORY FUNTIONS -----------------------------------------
 
+bool Definition::is_known_scalar_value() const {
+    return std::visit(overloaded {
+        [](const Expression* expression) { 
+            return (
+                !(expression->type->is_function()) && 
+                expression->is_constant_value());
+        },
+        [](auto) { return false; }
+    }, const_body());
+}
+
 RT_Definition RT_Definition::testing_definition(const Type* type, bool is_top_level) {
     return RT_Definition{"DUMMY_DEFINITION", External{}, type, is_top_level, TSL};
 }

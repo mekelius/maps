@@ -108,7 +108,8 @@ Expression* Expression::operator_reference(AST_Store& store, Definition* definit
 }
 
 void Expression::convert_to_reference(Definition* definition) {
-    expression_type = ExpressionType::reference;
+    expression_type = definition->is_known_scalar_value() ? 
+        ExpressionType::known_value_reference : ExpressionType::reference;
     value = definition;
     type = definition->get_type();
 }

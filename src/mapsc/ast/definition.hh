@@ -76,6 +76,7 @@ public:
 
     virtual bool is_operator() const { return false; }
     virtual bool is_const() const { return false; }
+    bool is_known_scalar_value() const;
 
     std::string body_type_string() const {
         return std::visit(overloaded{

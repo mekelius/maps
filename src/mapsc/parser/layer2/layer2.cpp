@@ -474,8 +474,10 @@ void TermedExpressionParser::reference_state() {
 
     // if it's not a function it's treated as a value
     // i.e. the next term has to be an operator
-    if (current_term()->type->arity() == 0)
+    if (current_term()->type->arity() == 0) {
+        current_term()->convert_nullary_reference_to_call();
         return value_state();
+    }
 
     switch (peek()->expression_type) {
         case ExpressionType::termed_expression:
@@ -919,7 +921,7 @@ void TermedExpressionParser::call_state() {
         return deferred_call_state();
 
     // known nullary type
-    return initial_value_state();
+    return value_state();
 }
 
 void TermedExpressionParser::partial_binop_call_standoff_state() {

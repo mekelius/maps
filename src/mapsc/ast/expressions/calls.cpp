@@ -178,6 +178,19 @@ void Expression::convert_to_unary_minus_call() {
     type = &Int;
 }
 
+void Expression::convert_nullary_reference_to_call() {
+    assert(expression_type == ExpressionType::reference && 
+        "convert_nullary_reference_to_call called with not a ref");
+    assert(type->arity() == 0 && "convert_nullary_reference_to_call called with not a nullary ref");
+
+    expression_type = ExpressionType::call;
+    auto callee = reference_value();
+
+    assert(!callee->is_undefined() && !callee->is_empty());
+
+    value = CallExpressionValue{callee, {}};
+}
+
 // do we even have to do anything?
 void Expression::convert_to_partial_call() {
     return;

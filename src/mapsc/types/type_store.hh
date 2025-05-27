@@ -11,6 +11,8 @@
 #include <optional>
 #include <ranges>
 
+#include <initializer_list>
+
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
 
@@ -36,7 +38,7 @@ public:
     std::optional<const Type*> get(const std::string& identifier);
     const Type* get_unsafe(const std::string& identifier);
 
-    template <std::ranges::forward_range R>
+    template <std::ranges::forward_range R = std::initializer_list<const Type*>>
         requires std::convertible_to<std::ranges::range_value_t<R>, const Type*>
     const FunctionType* get_function_type(const Type* return_type, R arg_types, bool is_pure) {
         std::string signature = make_function_signature(return_type, arg_types, is_pure);
@@ -49,7 +51,7 @@ public:
         // else create that type
         return create_function_type(signature, return_type, arg_types, is_pure);
     }
-    
+
     template <std::ranges::forward_range R>
     std::string make_function_signature(const Type* return_type, R arg_types, bool is_pure) const {
         // nullary pure function is just a value
