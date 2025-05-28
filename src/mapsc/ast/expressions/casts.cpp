@@ -1,24 +1,17 @@
 #include "../expression.hh"
 
-#include <memory>
-#include <span>
 #include <cassert>
-#include <sstream>
-#include <variant>
 #include <string>
 
-#include "common/std_visit_helper.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/builtins.hh"
 
 #include "mapsc/ast/expression_properties.hh"
-#include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/call_expression.hh"
 #include "mapsc/ast/lambda.hh"
 #include "mapsc/types/function_type.hh"
-#include "mapsc/procedures/reverse_parse.hh"
 
 using std::optional, std::nullopt, std::to_string;
 

@@ -49,7 +49,7 @@ using llvm::LLVMContext;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if;
 using std::unique_ptr, std::make_unique;
 using Maps::Expression, Maps::Statement, Maps::Definition, Maps::ExpressionType, 
-    Maps::StatementType, Maps::PragmaStore;
+    Maps::StatementType, Maps::PragmaStore, Maps::NO_SOURCE_LOCATION;
 using Maps::Helpers::capitalize;
 
 #define BAD_STATEMENT_TYPE StatementType::user_error:\

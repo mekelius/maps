@@ -5,11 +5,12 @@
 #include <optional>
 #include <vector>
 
-#include "mapsc/ast/definition.hh"
 #include "mapsc/ast/scope.hh"
-#include "mapsc/ast/expression.hh"
 
 namespace Maps {
+
+class CompilationState;
+struct Expression;
 
 struct Layer1Result {
     bool success = true;

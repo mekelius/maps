@@ -27,7 +27,7 @@
         {
             "name": "iwyu",
             "displayName": "include-what-you-use",
-            "inherits": "base",
+            "binaryDir": "build/${presetName}",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_CXX_INCLUDE_WHAT_YOU_USE": "include-what-you-use",

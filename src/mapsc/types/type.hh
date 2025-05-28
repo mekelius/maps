@@ -4,9 +4,6 @@
 #include <string>
 #include <string_view>
 
-#include "common/deferred_bool.hh"
-
-
 namespace Maps {
 
 class Type;

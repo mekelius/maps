@@ -9,13 +9,13 @@
 
 #include "mapsc/logging.hh"
 
-
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/function_type.hh"
 
 namespace llvm { class LLVMContext; }
 
 using std::optional, std::nullopt, std::vector;
+using Maps::COMPILER_INIT_SOURCE_LOCATION;
 
 using Log = Maps::LogInContext<Maps::LogContext::ir_gen_init>;
 

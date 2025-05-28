@@ -1,7 +1,5 @@
 #include "expression.hh"
 
-#include <memory>
-#include <span>
 #include <cassert>
 #include <sstream>
 #include <variant>
@@ -9,12 +7,8 @@
 
 #include "common/std_visit_helper.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/compilation_state.hh"
-#include "mapsc/builtins.hh"
 
-#include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/definition.hh"
-#include "mapsc/types/function_type.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 
 using std::optional, std::nullopt, std::to_string;

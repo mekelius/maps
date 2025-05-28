@@ -3,7 +3,6 @@
 #include <cassert>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -11,7 +10,6 @@
 #include "mapsc/logging.hh"
 
 #include "mapsc/types/type.hh"
-#include "mapsc/types/function_type.hh"
 
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/definition.hh"

@@ -1,8 +1,5 @@
 #include "../expression.hh"
 
-#include "mapsc/ast/ast_store.hh"
-#include "mapsc/compilation_state.hh"
-
 namespace Maps {
 
 TernaryExpressionValue& Expression::ternary_value() {

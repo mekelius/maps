@@ -9,10 +9,8 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
 
-#include "mapsc/types/type.hh"
-
 namespace llvm { class LLVMContext; }
-namespace Maps { class FunctionType; }
+namespace Maps { class FunctionType; class Type; }
 
 
 namespace IR {

@@ -12,7 +12,7 @@
 
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if, std::unique_ptr, std::make_unique;
 
-using Maps::LogInContext, Maps::LogContext;
+using Maps::LogInContext, Maps::LogContext, Maps::NO_SOURCE_LOCATION, Maps::COMPILER_INIT_SOURCE_LOCATION;
 
 namespace IR {
 

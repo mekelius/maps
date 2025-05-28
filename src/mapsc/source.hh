@@ -5,6 +5,8 @@
 #include <string>
 #include <string_view>
 
+namespace Maps {
+
 using SourceFileID = int;
 
 constexpr SourceFileID DEFAULT_SOURCE_FILE = 0;
@@ -45,5 +47,7 @@ constexpr SourceLocation BUILTIN_SOURCE_LOCATION{
         
 constexpr SourceLocation EXTERNAL_SOURCE_LOCATION{
     SourceLocation::OUT_OF_SOURCE, SourceLocation::OUT_OF_SOURCE, EXTERNAL_SOURCE_FILE};
+
+} // namespace Maps
 
 #endif

@@ -10,16 +10,11 @@
 #include "common/maps_datatypes.h"
 
 #include "mapsc/source.hh"
-#include "mapsc/logging.hh"
-
-#include "mapsc/types/function_type.hh"
-#include "mapsc/types/type_defs.hh"
 
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
-#include "mapsc/ast/statement.hh"
 
 namespace Maps {
 

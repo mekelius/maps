@@ -9,7 +9,6 @@
 #include <vector>
 #include <sys/types.h>
 
-#include "mapsc/types/casts.hh"
 #include "mapsc/types/type.hh"
 
 namespace Maps {
@@ -19,7 +18,8 @@ public:
     template <std::ranges::forward_range R>
     static std::string create_name(const Type* return_type, 
         R param_types, bool is_pure) {
-        
+        #include <ranges>
+
         if (param_types.size() == 0 && !is_pure) {
             return "Void -> " + std::string{return_type->name()};
         }

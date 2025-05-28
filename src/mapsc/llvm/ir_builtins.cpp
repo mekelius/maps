@@ -26,6 +26,7 @@
 #include "mapsc/llvm/type_mapping.hh"
 
 using std::optional;
+using Maps::COMPILER_INIT_SOURCE_LOCATION;
 using Log = Maps::LogInContext<Maps::LogContext::ir_gen_init>;
 
 namespace llvm { class Type; }

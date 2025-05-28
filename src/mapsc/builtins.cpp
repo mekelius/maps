@@ -6,8 +6,6 @@
 #include <string_view>
 #include <variant>
 
-#include "common/maps_datatypes.h"
-
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
 
@@ -18,7 +16,6 @@
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
-#include "mapsc/ast/statement.hh"
 
 using std::optional, std::nullopt;
 using std::monostate;
@@ -27,7 +24,6 @@ using std::monostate;
 namespace Maps {
 
 using Log = LogInContext<LogContext::compiler_init>;
-class Type;
 
 const_DefinitionBody CT_Definition::const_body() const {
     if (auto external = std::get_if<External>(&builtin_body_)) {

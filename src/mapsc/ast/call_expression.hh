@@ -1,9 +1,6 @@
 #ifndef __CALL_EXPRESSION_HH
 #define __CALL_EXPRESSION_HH
 
-#include <string>
-
-#include "mapsc/ast/scope.hh"
 #include "expression.hh"
 
 namespace Maps {

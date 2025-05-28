@@ -2,16 +2,14 @@
 #define __REPL_HH
 
 #include <filesystem>
-#include <memory>
-#include <optional>
 #include <string>
-#include <istream>
 
 #include "mapsc/compilation_state.hh"
-#include "mapsc/ast/scope.hh"
+#include "mapsc/procedures/reverse_parse.hh"
 
-#include "mapsci/jit_manager.hh"
-#include "mapsc/parser/layer1.hh"
+class JIT_Manager;
+
+namespace llvm { class LLVMContext; class raw_ostream; }
 
 static constexpr std::string_view REPL_DEFAULT_MODULE_NAME = "ir_module";
 static constexpr std::string_view REPL_DEFAULT_PROMPT = "mapsci> ";

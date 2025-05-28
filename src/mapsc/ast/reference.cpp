@@ -1,7 +1,6 @@
 #include "reference.hh"
 
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/compilation_state.hh"
 #include "mapsc/procedures/evaluate.hh"
 
 namespace Maps {

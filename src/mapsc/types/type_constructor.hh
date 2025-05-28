@@ -2,9 +2,6 @@
 #define __TYPE_CONSTRUCTOR_HH
 
 #include <string_view>
-#include <functional>
-#include <span>
-#include <ranges>
 
 #include "mapsc/types/type.hh"
 

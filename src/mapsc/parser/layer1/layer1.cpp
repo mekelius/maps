@@ -1,6 +1,5 @@
 #include "implementation.hh"
 
-#include <algorithm>
 #include <cassert>
 #include <initializer_list>
 #include <sstream>
@@ -9,14 +8,10 @@
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
 
-#include "mapsc/pragma.hh"
 #include "mapsc/compilation_state.hh"
 
-#include "mapsc/types/type.hh"
-#include "mapsc/ast/expression.hh"
 #include "mapsc/ast/misc_expression.hh"
 #include "mapsc/ast/statement.hh"
-#include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/ast_store.hh"
 

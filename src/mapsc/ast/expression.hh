@@ -8,11 +8,11 @@
 #include <vector>
 
 #include "common/maps_datatypes.h"
+#include "common/deferred_bool.hh"
 
 #include "mapsc/source.hh"
 
 #include "mapsc/ast/operator.hh"
-#include "mapsc/ast/scope.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
 

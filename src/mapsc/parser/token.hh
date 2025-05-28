@@ -6,6 +6,8 @@
 
 #include "mapsc/source.hh"
 
+namespace Maps {
+
 enum class TokenType: int {
     eof,
     identifier, type_identifier, 
@@ -52,5 +54,7 @@ bool is_access_operator(const Token& token);
 bool is_block_starter(const Token& token);
 bool is_right_tieable_token(const Token& token);  
 bool is_term_token(const Token& token);
+
+} // namespace Maps
 
 #endif

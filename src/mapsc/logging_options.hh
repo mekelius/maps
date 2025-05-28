@@ -1,11 +1,14 @@
 #ifndef __LOGGING_OPTIONS_HH
 #define __LOGGING_OPTIONS_HH
 
+#include <iostream>
+
 /**
  * This header exists to prevent recompilations
  * The definitions are in logging.cpp
  */
 
+#include "common/array_helpers.hh"
 #include "mapsc/logging.hh"
 
 namespace Maps {

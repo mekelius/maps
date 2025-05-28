@@ -7,11 +7,9 @@
 
 #include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/ast/lambda.hh"
-#include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/reference.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
-#include "mapsc/logging_options.hh"
 #include "mapsc/types/type_defs.hh"
 
 using namespace Maps;

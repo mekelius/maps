@@ -1,5 +1,7 @@
 #include "implementation.hh"
 
+#include <iostream>
+
 void REPL::run_command(Maps::CompilationState& state, const std::string& input) {
     std::stringstream input_stream{input};
     std::string command;

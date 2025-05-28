@@ -1,9 +1,6 @@
 #ifndef __LAMBDA_EXPRESSION_HH
 #define __LAMBDA_EXPRESSION_HH
 
-#include <string>
-
-#include "mapsc/ast/scope.hh"
 #include "expression.hh"
 
 namespace Maps {

@@ -5,10 +5,13 @@
 #include <string>
 
 #include "mapsc/ast/scope.hh"
-#include "mapsc/ast/ast_store.hh"
-#include "mapsc/source.hh"
 
 namespace Maps {
+
+class Definition;
+struct SourceLocation;
+class Type;
+class AST_Store;
 
 Expression* create_reference(AST_Store& store, 
     Definition* callee, const SourceLocation& location);

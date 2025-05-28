@@ -1,26 +1,12 @@
 #include "implementation.hh"
 
-#include <algorithm>
 #include <cassert>
-#include <initializer_list>
-#include <sstream>
 #include <variant>
 
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-
-#include "mapsc/pragma.hh"
-#include "mapsc/compilation_state.hh"
-
-#include "mapsc/types/type.hh"
-#include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
-#include "mapsc/ast/operator.hh"
-#include "mapsc/ast/scope.hh"
-#include "mapsc/ast/ast_store.hh"
-
 #include "mapsc/parser/token.hh"
-#include "mapsc/procedures/simplify.hh"
 
 using std::optional, std::nullopt, std::make_unique;
 

@@ -20,10 +20,6 @@
 
 #include "mapsc/procedures/reverse_parse.hh"
 #include "mapsc/types/type_store.hh"
-#include "mapsc/types/type.hh"
-
-#include "mapsc/llvm/ir_generator.hh"
-
 
 using std::optional, std::nullopt;
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple;

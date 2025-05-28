@@ -13,7 +13,6 @@
 
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/call_expression.hh"
-#include "mapsc/compilation_state.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/function_type.hh"

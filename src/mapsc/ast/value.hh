@@ -3,7 +3,6 @@
 
 #include <string>
 
-#include "mapsc/ast/scope.hh"
 #include "expression.hh"
 
 namespace Maps {

@@ -2,15 +2,13 @@
 
 #include <span>
 
-#include "mapsc/procedures/simplify.hh"
 #include "mapsc/logging.hh"
+
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/definition.hh"
-#include "mapsc/compilation_state.hh"
-#include "mapsc/ast/ast_node.hh"
+
 #include "mapsc/procedures/concretize.hh"
-#include "mapsc/procedures/inline.hh"
-#include "mapsc/procedures/type_check.hh"
+#include "mapsc/compilation_state.hh"
 
 namespace Maps {
 

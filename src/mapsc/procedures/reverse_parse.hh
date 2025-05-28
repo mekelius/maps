@@ -6,13 +6,9 @@
 
 #include "common/maps_datatypes.h"
 
-#include "mapsc/ast/expression.hh"
 #include "mapsc/ast/definition.hh"
 
-
 namespace Maps {
-
-class CompilationState;
 
 class ReverseParser final {
 public:

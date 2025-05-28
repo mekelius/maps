@@ -9,7 +9,6 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-#include "mapsc/compilation_state.hh"
 
 #include "mapsc/types/type.hh"
 

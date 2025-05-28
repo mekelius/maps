@@ -21,6 +21,7 @@
 #include "mapsc/ast/call_expression.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/source.hh"
 
 
 using std::optional, std::nullopt;
@@ -163,7 +164,7 @@ bool is_value_literal(Expression* expression) {
 optional<Expression*> TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
         fail("Layer2 tried to parse an empty expression", expression_->location);
-        return create_valueless(*ast_store_, ExpressionType::user_error, expression_->location);
+        return create_user_error(*ast_store_, expression_->location);
     }
 
     // enter initial goto to find the first state
@@ -172,7 +173,7 @@ optional<Expression*> TermedExpressionParser::parse_termed_expression() {
 
     if (!success_) {
         Log::error("Parsing termed expression failed", expression_->location);
-        return create_valueless(*ast_store_, ExpressionType::user_error, expression_->location);
+        return create_user_error(*ast_store_, expression_->location);
     }
 
     if (!at_expression_end()) {

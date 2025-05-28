@@ -7,11 +7,7 @@
 
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/statement.hh"
-#include "mapsc/ast/expression.hh"
 #include "mapsc/types/type.hh"
-#include "mapsc/types/function_type.hh"
-
-#include "mapsc/procedures/inline.hh"
 
 namespace Maps {
 

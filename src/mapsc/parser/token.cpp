@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+namespace Maps {
+
 Token::Token(TokenType token_type, const std::string& value, SourceLocation location)
 :token_type(token_type), value(value), location(location) {}
 
@@ -178,3 +180,5 @@ bool is_term_token(const Token& token) {
 }
 
 const Token Token::dummy_token{TokenType::dummy, NO_SOURCE_LOCATION};
+
+} // namespace Maps

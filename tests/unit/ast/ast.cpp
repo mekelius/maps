@@ -2,7 +2,6 @@
 
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/types/type_store.hh"
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/lambda.hh"
 #include "mapsc/compilation_state.hh"

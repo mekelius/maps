@@ -1,12 +1,7 @@
 #ifndef __PARSER_LAYER_2_HH
 #define __PARSER_LAYER_2_HH
 
-#include <optional>
-#include <string>
 #include <vector>
-
-#include "mapsc/source.hh"
-#include "mapsc/ast/operator.hh"
 
 /**
  * Parser layer 2 is responsible for:

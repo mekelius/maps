@@ -1,11 +1,8 @@
 #include "reverse_parse.hh"
 
 #include <cassert>
-#include <memory>
 #include <optional>
-#include <string_view>
 #include <tuple>
-#include <utility>
 #include <variant>
 #include <vector>
 #include <string>
@@ -15,7 +12,6 @@
 #include "mapsc/ast/statement.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/compilation_state.hh"
 
 namespace Maps {
 

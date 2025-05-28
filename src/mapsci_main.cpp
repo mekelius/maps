@@ -1,13 +1,6 @@
-#include <algorithm>
 #include <cstdlib>
-#include <filesystem>
 #include <iostream>
 #include <memory>
-#include <optional>
-#include <sstream>
-#include <string>
-#include <string_view>
-#include <vector>
 
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 #include "llvm/IR/LLVMContext.h"
@@ -15,7 +8,6 @@
 
 #include "mapsc/logging.hh"
 #include "mapsc/logging_options.hh"
-#include "mapsc/compilation_state.hh"
 
 #include "mapsci/cl_options.hh"
 #include "mapsci/init_llvm.hh"

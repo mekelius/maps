@@ -2,11 +2,7 @@
 #define __LOGGING_HH
 
 #include <array>
-#include <functional>
-#include <iostream>
-#include <string>
 
-#include "common/array_helpers.hh"
 #include "mapsc/source.hh"
 
 namespace Maps {
