@@ -4,6 +4,9 @@
 #include <array>
 
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/value.hh"
+#include "mapsc/ast/reference.hh"
+#include "mapsc/ast/termed_expression.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
 #include "mapsc/logging_options.hh"
@@ -23,7 +26,7 @@ inline tuple<Expression*, Definition*> create_operator_helper(CompilationState& 
         RT_Operator::create_binary(op_string, External{}, type, precedence, 
             RT_Operator::Associativity::left, true, TSL));
 
-    Expression* op_ref = Expression::operator_reference(*state.ast_store_, op_definition, {0,0});
+    Expression* op_ref = create_operator_reference(*state.ast_store_, op_definition, {0,0});
 
     return {op_ref, op_definition};
 }
@@ -36,10 +39,10 @@ TEST_CASE("Should handle partial application of binary operators") {
     AST_Store& ast = *state.ast_store_;
 
     auto [op_ref, op] = create_operator_helper(state, "-");
-    auto val = Expression::numeric_literal(ast, "34", {0,0});
+    auto val = create_numeric_literal(ast, "34", {0,0});
 
     SUBCASE("left") {
-        Expression* expr = Expression::termed_testing(ast, {op_ref, val}, {0,0});
+        Expression* expr = create_termed_testing(ast, {op_ref, val}, {0,0});
         
         run_layer2(state, expr);
         
@@ -52,7 +55,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     }
 
     SUBCASE("right") {
-        Expression* expr = Expression::termed_testing(ast, {val, op_ref}, {0,0});
+        Expression* expr = create_termed_testing(ast, {val, op_ref}, {0,0});
         
         run_layer2(state, expr);
         

@@ -3,6 +3,9 @@
 #include <sstream>
 
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/value.hh"
+#include "mapsc/ast/termed_expression.hh"
+#include "mapsc/ast/reference.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
 #include "mapsc/logging_options.hh"
@@ -22,7 +25,7 @@ inline tuple<Expression*, Definition*> create_operator_helper(CompilationState& 
         RT_Operator::create_binary(op_string, External{}, type, precedence, 
             RT_Operator::Associativity::left, true, TSL));
 
-    Expression* op_ref = Expression::operator_reference(*state.ast_store_, op_definition, {0,0});
+    Expression* op_ref = create_operator_reference(*state.ast_store_, op_definition, {0,0});
 
     return {op_ref, op_definition};
 }
@@ -81,10 +84,10 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
     auto [state, _0, _1] = CompilationState::create_test_state();
     auto ast = state.ast_store_.get();
 
-    Expression* expr = Expression::termed_testing(*ast, {}, {0,0});
+    Expression* expr = create_termed_testing(*ast, {}, {0,0});
 
-    Expression* val1 = Expression::numeric_literal(*ast, "23", TSL);
-    Expression* val2 = Expression::numeric_literal(*ast, "12", TSL);
+    Expression* val1 = create_numeric_literal(*ast, "23", TSL);
+    Expression* val2 = create_numeric_literal(*ast, "12", TSL);
 
     // create the operator
     auto [op1_ref, op1] = create_operator_helper(state, "+");
@@ -110,7 +113,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         auto [op2_ref, op2] = create_operator_helper(state, "*", 1);
         expr->terms().push_back(op2_ref);
 
-        Expression* val3 = Expression::numeric_literal(*ast, "235", {0,0});
+        Expression* val3 = create_numeric_literal(*ast, "235", {0,0});
         expr->terms().push_back(val3);
 
         run_layer2(state, expr);
@@ -141,7 +144,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
         auto [op2_ref, op2] = create_operator_helper(state, "*", 999);
         expr->terms().push_back(op2_ref);
 
-        Expression* val3 = Expression::numeric_literal(*ast, "235", {0,0});
+        Expression* val3 = create_numeric_literal(*ast, "235", {0,0});
 
         expr->terms().push_back(val3);
 
@@ -172,12 +175,12 @@ TEST_CASE ("should handle more complex expressions") {
     auto [state, _0, _1] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
-    Expression* expr = Expression::termed_testing(ast, {}, {0,0});
+    Expression* expr = create_termed_testing(ast, {}, {0,0});
 
     auto [op1_ref, op1] = create_operator_helper(state, "1", 1);
     auto [op2_ref, op2] = create_operator_helper(state, "2", 2);
     auto [op3_ref, op3] = create_operator_helper(state, "3", 3);
-    Expression* val = Expression::numeric_literal(ast, "v", {0,0});
+    Expression* val = create_numeric_literal(ast, "v", {0,0});
 
     REQUIRE(expr->terms().size() == 0);
 

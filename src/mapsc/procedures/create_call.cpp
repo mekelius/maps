@@ -4,6 +4,7 @@
 
 #include "mapsc/compilation_state.hh"
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/call_expression.hh"
 #include "mapsc/types/function_type.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/logging.hh"
@@ -72,7 +73,7 @@ std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState
     // fill in the missing args, if any
     while (i < param_types.size()) {
         missing_args = true;
-        args.push_back(Expression::missing_argument(*state.ast_store_, *callee_f_type->param_type(i), 
+        args.push_back(create_missing_argument(*state.ast_store_, *callee_f_type->param_type(i), 
             location));
         Log::debug_extra("Inserted missing argument placeholder as argument " + to_string(i), location);
         i++;
@@ -84,7 +85,7 @@ std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState
         for (size_t i = args.size(); i < param_types.size(); i++) {
             auto param_type = *callee_f_type->param_type(i);
             missing_arg_types.push_back(param_type);
-            args.push_back(Expression::missing_argument(*state.ast_store_, param_type, location));
+            args.push_back(create_missing_argument(*state.ast_store_, param_type, location));
         }
 
         auto partial_return_type = state.types_->get_function_type(

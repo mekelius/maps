@@ -14,6 +14,7 @@
 
 #include "mapsc/types/type.hh"
 #include "mapsc/ast/expression.hh"
+#include "mapsc/ast/misc_expression.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
@@ -154,8 +155,8 @@ Expression* ParserLayer1::fail_expression(const std::string& message, SourceLoca
     fail(message, location, compiler_error);
     get_token();
     return compiler_error ? 
-        Expression::compiler_error(*ast_store_, location) : 
-        Expression::user_error(*ast_store_, location);
+        create_compiler_error(*ast_store_, location) : 
+        create_user_error(*ast_store_, location);
 }
  
 Definition* ParserLayer1::fail_definition(const std::string& message, SourceLocation location, 

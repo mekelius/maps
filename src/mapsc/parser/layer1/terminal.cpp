@@ -13,10 +13,12 @@
 #include "mapsc/compilation_state.hh"
 
 #include "mapsc/types/type.hh"
+#include "mapsc/ast/identifier.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
+#include "mapsc/ast/value.hh"
 #include "mapsc/ast/ast_store.hh"
 
 #include "mapsc/parser/token.hh"
@@ -30,7 +32,7 @@ namespace Maps {
 using Log = LogInContext<LogContext::layer1>;
 
 Expression* ParserLayer1::handle_string_literal() {
-    Expression* expression = Expression::string_literal(*ast_store_, current_token().string_value(), 
+    Expression* expression = create_string_literal(*ast_store_, current_token().string_value(), 
         current_token().location);
 
     get_token();
@@ -40,7 +42,7 @@ Expression* ParserLayer1::handle_string_literal() {
 }
 
 Expression* ParserLayer1::handle_numeric_literal() {
-    Expression* expression = Expression::numeric_literal(*ast_store_, current_token().string_value(), 
+    Expression* expression = create_numeric_literal(*ast_store_, current_token().string_value(), 
         current_token().location);
     
     get_token();
@@ -50,7 +52,7 @@ Expression* ParserLayer1::handle_numeric_literal() {
 }
 
 Expression* ParserLayer1::handle_identifier() {
-    Expression* expression = Expression::identifier(*ast_store_, parse_scope_, 
+    Expression* expression = Maps::create_identifier(*ast_store_, parse_scope_, 
         current_token().string_value(), current_token().location);
     result_.unresolved_identifiers.push_back(expression);
 
@@ -61,7 +63,7 @@ Expression* ParserLayer1::handle_identifier() {
 }
 
 Expression* ParserLayer1::handle_type_identifier() {
-    Expression* expression = Expression::type_identifier(*ast_store_, 
+    Expression* expression = create_type_identifier(*ast_store_, 
         current_token().string_value(), current_token().location);
     result_.unresolved_type_identifiers.push_back(expression);
 

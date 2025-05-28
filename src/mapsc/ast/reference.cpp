@@ -1,4 +1,4 @@
-#include "../expression.hh"
+#include "reference.hh"
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
@@ -39,7 +39,7 @@ Definition* Expression::operator_reference_value() const {
     return std::get<Definition*>(value);
 }
 
-Expression* Expression::reference(AST_Store& store, Definition* definition, 
+Expression* create_reference(AST_Store& store, Definition* definition, 
     const SourceLocation& location) {
     
     if (definition->get_type()->is_function())
@@ -66,13 +66,13 @@ Expression* Expression::reference(AST_Store& store, Definition* definition,
     }, definition->const_body());
 }
 
-Expression* Expression::type_reference(AST_Store& store, const Type* type, 
+Expression* create_type_reference(AST_Store& store, const Type* type, 
     const SourceLocation& location) {
     
     return store.allocate_expression({ExpressionType::type_reference, type, &Void, location});
 }
 
-Expression Expression::operator_reference(Definition* definition, const SourceLocation& location) {
+Expression create_operator_reference(Definition* definition, const SourceLocation& location) {
     assert(definition->is_operator() && "AST::create_operator_ref called with not an operator");
 
     ExpressionType expression_type;
@@ -92,10 +92,10 @@ Expression Expression::operator_reference(Definition* definition, const SourceLo
     return {expression_type, definition, definition->get_type(), location};
 }
 
-Expression* Expression::operator_reference(AST_Store& store, Definition* definition, 
+Expression* create_operator_reference(AST_Store& store, Definition* definition, 
     const SourceLocation& location) {
     
-    return store.allocate_expression(operator_reference(definition, location));
+    return store.allocate_expression(create_operator_reference(definition, location));
 }
 
 void Expression::convert_to_reference(Definition* definition) {

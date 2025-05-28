@@ -14,6 +14,8 @@
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/call_expression.hh"
+#include "mapsc/ast/lambda.hh"
 #include "mapsc/types/function_type.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 
@@ -48,7 +50,7 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
                     return nullopt;
                 }
 
-                auto [expression, definition] = Expression::const_lambda(state, this, 
+                auto [expression, definition] = create_const_lambda(state, this, 
                     function_type->param_types(), type_declaration_location, 
                     function_type->is_pure());
                 
@@ -136,7 +138,7 @@ optional<Expression*> Expression::wrap_in_runtime_cast(CompilationState& state, 
         return nullopt;
     }
 
-    optional<Expression*> wrapper = Expression::call(state, *runtime_cast, {this},type_declaration_location);
+    optional<Expression*> wrapper = create_call(state, *runtime_cast, {this},type_declaration_location);
 
     if (!wrapper) {
         Log::debug("Could not create cast wrapper for " + log_message_string() + " to type " + 

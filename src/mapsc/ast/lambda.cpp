@@ -1,7 +1,9 @@
-#include "../expression.hh"
+#include "lambda.hh"
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
+#include "mapsc/ast/reference.hh"
+#include "mapsc/ast/value.hh"
 
 using std::nullopt, std::optional;
 
@@ -49,7 +51,7 @@ namespace Maps {
 //     return lambda(state, value, &Hole, is_pure, location);
 // }
 
-std::tuple<Expression*, RT_Definition*> Expression::const_lambda(CompilationState& state, 
+std::tuple<Expression*, RT_Definition*> create_const_lambda(CompilationState& state, 
     Expression* value, std::span<const Type* const> param_types, 
     const SourceLocation& location, bool is_pure) {
 
@@ -65,17 +67,17 @@ std::tuple<Expression*, RT_Definition*> Expression::const_lambda(CompilationStat
         false, location);
 
     definition->set_type(state.types_->get_function_type(value->type, param_types, is_pure));
-    auto expression = Expression::reference(ast_store, definition, location);
+    auto expression = create_reference(ast_store, definition, location);
 
     return {expression, definition};
 }
 
-std::tuple<Expression*, RT_Definition*> Expression::const_lambda(CompilationState& state, 
+std::tuple<Expression*, RT_Definition*> create_const_lambda(CompilationState& state, 
     KnownValue value, std::span<const Type* const> param_types, const SourceLocation& location,
     bool is_pure) {
 
-    auto value_expr = Expression::known_value(state, value, location);
-    return Expression::const_lambda(state, value_expr, param_types, location, is_pure);
+    auto value_expr = create_known_value(state, value, location);
+    return create_const_lambda(state, value_expr, param_types, location, is_pure);
 }
 
 } // namespace Maps

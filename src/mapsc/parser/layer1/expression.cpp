@@ -12,11 +12,13 @@
 #include "mapsc/pragma.hh"
 #include "mapsc/compilation_state.hh"
 
+#include "mapsc/ast/reference.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
+#include "mapsc/ast/misc_expression.hh"
 #include "mapsc/ast/ast_store.hh"
 
 #include "mapsc/parser/token.hh"
@@ -35,11 +37,8 @@ Expression* ParserLayer1::parse_expression() {
     auto location = current_token().location;
 
     switch (current_token().token_type) {
-        case TokenType::eof: {
-            Expression* expression = Expression::valueless(*ast_store_,
-                ExpressionType::user_error, location);
-            return expression;
-        }
+        case TokenType::eof:
+            return create_user_error(*ast_store_, location);
 
         case TokenType::identifier: {
             Token next_token = peek();
@@ -151,7 +150,7 @@ Expression* ParserLayer1::parse_lambda_expression() {
     definition->set_type(compilation_state_->types_->get_function_type(
         definition->get_type(), param_types, is_pure));
 
-    return Expression::reference(*compilation_state_->ast_store_, definition, location);
+    return create_reference(*compilation_state_->ast_store_, definition, location);
 }
 
 optional<ParameterList> ParserLayer1::parse_lambda_parameters(RT_Scope* lambda_scope) {

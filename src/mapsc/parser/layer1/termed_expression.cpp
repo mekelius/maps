@@ -13,6 +13,10 @@
 #include "mapsc/compilation_state.hh"
 
 #include "mapsc/types/type.hh"
+
+#include "mapsc/ast/identifier.hh"
+#include "mapsc/ast/termed_expression.hh"
+#include "mapsc/ast/misc_expression.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/operator.hh"
@@ -38,7 +42,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     if (!context)
         return fail_expression("Termed expressions require a context", current_token().location, true);
 
-    Expression* expression = Expression::termed(*ast_store_, {}, *context, current_token().location);
+    Expression* expression = create_termed(*ast_store_, {}, *context, current_token().location);
 
     log(
         in_tied_expression ? "start parsing tied expression" : "start parsing termed expression", 
@@ -83,7 +87,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
                 // colon has to add parenthesis around left side as well
                 if (expression->terms().size() > 1) {
-                    Expression* lhs = Expression::termed(*ast_store_, {}, *context, expression->location);
+                    Expression* lhs = create_termed(*ast_store_, {}, *context, expression->location);
                     *lhs = *expression;
                     expression->terms() = {close_termed_expression(lhs)};
                     std::get<TermedExpressionValue>(expression->value).is_type_declaration = 
@@ -181,8 +185,7 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             fail("unhandled token type: " + current_token().get_string() + 
                 ", reached ParserLayer1::parse_term", current_token().location);
             assert(false && "colons should be handled by parse_termed expression");
-            return Expression::valueless(*ast_store_, ExpressionType::user_error, 
-                current_token().location);
+            return create_user_error(*ast_store_, current_token().location);
 
         case TokenType::parenthesis_open: 
             return parse_parenthesized_expression();
@@ -199,10 +202,10 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             if (current_token().string_value() == "-") {
                 auto location = current_token().location;
                 get_token();
-                return Expression::minus_sign(*ast_store_, location);
+                return create_minus_sign(*ast_store_, location);
             }
 
-            Expression* expression = Expression::operator_identifier(*ast_store_, parse_scope_,
+            Expression* expression = create_operator_identifier(*ast_store_, parse_scope_,
                 current_token().string_value(), current_token().location);
             result_.unresolved_identifiers.push_back(expression);
 

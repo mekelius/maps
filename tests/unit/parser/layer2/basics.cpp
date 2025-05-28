@@ -6,6 +6,9 @@
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
+#include "mapsc/ast/reference.hh"
+#include "mapsc/ast/value.hh"
+#include "mapsc/ast/termed_expression.hh"
 #include "mapsc/logging_options.hh"
 
 using namespace Maps;
@@ -25,9 +28,9 @@ TEST_CASE("Should report failure correctly") {
     auto [state, _0, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
-    auto value = Expression::numeric_literal(ast_store, "23", TSL);
+    auto value = create_numeric_literal(ast_store, "23", TSL);
 
-    auto outer = Expression::termed_testing(ast_store, {value, value, value}, TSL);
+    auto outer = create_termed_testing(ast_store, {value, value, value}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -37,12 +40,12 @@ TEST_CASE("Should report failure correctly") {
 TEST_CASE("TermedExpressionParser should replace a single value term with that value") {
     auto [state, _0, _1] = CompilationState::create_test_state();
 
-    Expression* expr = Expression::termed_testing(*state.ast_store_, {}, TSL);
+    Expression* expr = create_termed_testing(*state.ast_store_, {}, TSL);
 
     REQUIRE(expr->terms().size() == 0);
 
     SUBCASE("String value") {
-        Expression* value = Expression::string_literal(*state.ast_store_, "TEST_STRING:oasrpkorsapok", TSL);
+        Expression* value = create_string_literal(*state.ast_store_, "TEST_STRING:oasrpkorsapok", TSL);
         expr->terms().push_back(value);
         run_layer2(state, expr);
 
@@ -51,7 +54,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
     }
 
     SUBCASE("Number value") {
-        Expression* value = Expression::numeric_literal(*state.ast_store_, "234.52", TSL);
+        Expression* value = create_numeric_literal(*state.ast_store_, "234.52", TSL);
         expr->terms().push_back(value);
         run_layer2(state, expr);
 
@@ -65,7 +68,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     RT_Scope globals{};
     AST_Store& ast = *state.ast_store_;
 
-    Expression* expr = Expression::termed_testing(ast, {}, TSL);
+    Expression* expr = create_termed_testing(ast, {}, TSL);
     
     SUBCASE("1 arg") {    
         const Type* function_type = types->get_function_type(&Void, array{&String}, true);
@@ -73,8 +76,8 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
         globals.create_identifier(&function);
 
-        Expression* id = Expression::reference(ast, &function, TSL);
-        Expression* arg1 = Expression::string_literal(ast, "", TSL);
+        Expression* id = create_reference(ast, &function, TSL);
+        Expression* arg1 = create_string_literal(ast, "", TSL);
 
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
@@ -93,13 +96,13 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
             array{&String, &String, &String, &String}, true);
         
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
-        Expression* id{Expression::reference(ast, &function, TSL)};
+        Expression* id{create_reference(ast, &function, TSL)};
         id->type = function_type;
     
-        Expression* arg1 = Expression::string_literal(ast, "", TSL);
-        Expression* arg2 = Expression::string_literal(ast, "", TSL);
-        Expression* arg3 = Expression::string_literal(ast, "", TSL);
-        Expression* arg4 = Expression::string_literal(ast, "", TSL);
+        Expression* arg1 = create_string_literal(ast, "", TSL);
+        Expression* arg2 = create_string_literal(ast, "", TSL);
+        Expression* arg3 = create_string_literal(ast, "", TSL);
+        Expression* arg4 = create_string_literal(ast, "", TSL);
 
         expr->terms().push_back(id);
         expr->terms().push_back(arg1);
@@ -123,9 +126,9 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Type* function_type = types->get_function_type(&Number, std::array{&String}, true);
         
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
-        Expression* ref = Expression::reference(ast, &function, TSL);
+        Expression* ref = create_reference(ast, &function, TSL);
 
-        Expression* arg1 = Expression::string_literal(ast, "", TSL);
+        Expression* arg1 = create_string_literal(ast, "", TSL);
 
         expr->terms().push_back(ref);
         expr->terms().push_back(arg1);
@@ -139,14 +142,14 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
 TEST_CASE("Should perform known value substitution") {
     auto [state, ast_store, scope] = setup();
 
-    auto known_val = Expression::known_value(state, 34, &Int, TSL);
+    auto known_val = create_known_value(state, 34, &Int, TSL);
     auto known_val_def = ast_store->allocate_definition(RT_Definition{"x", *known_val, true, TSL});
 
-    auto known_val_ref = Expression::reference(*ast_store, known_val_def, TSL);
+    auto known_val_ref = create_reference(*ast_store, known_val_def, TSL);
 
     REQUIRE(known_val_ref->expression_type == ExpressionType::known_value_reference);
 
-    auto termed = Expression::termed_testing(*ast_store, {known_val_ref}, TSL);
+    auto termed = create_termed_testing(*ast_store, {known_val_ref}, TSL);
 
     CHECK(run_layer2(state, termed));
 

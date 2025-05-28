@@ -1,4 +1,4 @@
-#include "../expression.hh"
+#include "termed_expression.hh"
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
@@ -44,14 +44,14 @@ DeferredBool Expression::is_type_declaration() {
     }
 }
 
-Expression* Expression::termed(AST_Store& store, std::vector<Expression*>&& terms, 
+Expression* create_termed(AST_Store& store, std::vector<Expression*>&& terms, 
     RT_Definition* context, const SourceLocation& location) {
     
     return store.allocate_expression({ExpressionType::termed_expression, 
         TermedExpressionValue{terms, context}, &Hole, location});
 }
 
-Expression* Expression::termed_testing(AST_Store& store, std::vector<Expression*>&& terms, 
+Expression* create_termed_testing(AST_Store& store, std::vector<Expression*>&& terms, 
     const SourceLocation& location, bool top_level) {
 
     auto context = store.allocate_definition(RT_Definition{"testing_definition", Undefined{}, 

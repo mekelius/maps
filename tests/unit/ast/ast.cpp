@@ -4,6 +4,7 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/type_store.hh"
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/lambda.hh"
 #include "mapsc/compilation_state.hh"
 
 using namespace Maps;
@@ -46,7 +47,7 @@ TEST_CASE("Operator::create_binary should create an operator") {
 TEST_CASE("Expression_const_lambda should produce a reference") {
     auto [state, ast_store, scope, types] = setup();
 
-    auto [lambda_expr, lambda_def] = Expression::const_lambda(state, "qwe", 
+    auto [lambda_expr, lambda_def] = create_const_lambda(state, "qwe", 
         std::array<const Type*, 1>{&Int}, TSL);
 
     CHECK(lambda_expr->expression_type == ExpressionType::reference);

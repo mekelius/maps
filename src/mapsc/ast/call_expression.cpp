@@ -1,4 +1,4 @@
-#include "../expression.hh"
+#include "call_expression.hh"
 
 #include "mapsc/source.hh"
 #include "mapsc/ast/ast_store.hh"
@@ -74,14 +74,14 @@ Expression* Expression::partially_applied_minus_arg_value() const {
     // return std::get<>(value);
 }
 
-Expression* Expression::missing_argument(AST_Store& store, const Type* type, 
+Expression* create_missing_argument(AST_Store& store, const Type* type, 
     const SourceLocation& location) {
     
     return store.allocate_expression({ExpressionType::missing_arg, std::monostate{}, type, 
         location});
 }
 
-optional<Expression*> Expression::call(CompilationState& state, 
+optional<Expression*> create_call(CompilationState& state, 
     Definition* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
 
     for (auto arg: args)
@@ -124,7 +124,7 @@ optional<Expression*> Expression::call(CompilationState& state,
             return_type, location});
 }
 
-optional<Expression*> Expression::partial_binop_call(CompilationState& state, 
+optional<Expression*> create_partial_binop_call(CompilationState& state, 
     Definition* definition, Expression* lhs, Expression* rhs, const SourceLocation& location) {
 
     auto& store = *state.ast_store_;
@@ -193,7 +193,7 @@ bool Expression::convert_to_partial_binop_minus_call_left(CompilationState& stat
     auto rhs = std::get<Expression*>(value);
 
     std::vector<Expression*> args{
-        Expression::missing_argument(*state.ast_store_, &Int, location), rhs};
+        create_missing_argument(*state.ast_store_, &Int, location), rhs};
 
     auto [types_ok, is_partial, work_to_be_done, return_type] = 
         check_and_coerce_args(state, &binary_minus_Int, args, location);
@@ -272,7 +272,7 @@ void Expression::convert_to_partial_call() {
     expression_type = ExpressionType::partial_call;
 }
 
-Expression* Expression::partially_applied_minus(AST_Store& store, Expression* rhs, 
+Expression* create_partially_applied_minus(AST_Store& store, Expression* rhs, 
     const SourceLocation& location) {
 
     return store.allocate_expression(

@@ -3,9 +3,14 @@
 #include <sstream>
 
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/misc_expression.hh"
+#include "mapsc/ast/reference.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
 #include "mapsc/logging_options.hh"
+
+#include "mapsc/ast/value.hh"
+#include "mapsc/ast/termed_expression.hh"
 
 using namespace Maps;
 using namespace std;
@@ -14,10 +19,10 @@ TEST_CASE("Unary minus by itself should result in a partially applied minus") {
     auto [state, _0, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
-    auto value = Expression::numeric_literal(ast_store, "456", TSL);
-    auto minus = Expression::minus_sign(ast_store, TSL);
+    auto value = create_numeric_literal(ast_store, "456", TSL);
+    auto minus = create_minus_sign(ast_store, TSL);
 
-    auto expr = Expression::termed_testing(ast_store, {minus, value}, TSL);    
+    auto expr = create_termed_testing(ast_store, {minus, value}, TSL);    
 
     bool success = run_layer2(state, expr);
 
@@ -32,12 +37,12 @@ TEST_CASE("Unary minus by itself should result in a partially applied minus") {
 //     auto [state, _0, types] = CompilationState::create_test_state();
 //     auto& ast_store = *state.ast_store_;
 
-//     auto value = Expression::numeric_literal(ast_store, "456", TSL);
+//     auto value = create_numeric_literal(ast_store, "456", TSL);
 //     auto value_def = ast_store.allocate_definition(RT_Definition{"x", value, true, TSL});
-//     auto value_ref = Expression::reference(ast_store, value_def, TSL);
-//     auto minus = Expression::minus_sign(ast_store, TSL);
+//     auto value_ref = create_reference(ast_store, value_def, TSL);
+//     auto minus = create_minus_sign(ast_store, TSL);
 
-//     auto expr = Expression::termed_testing(ast_store, {minus, value_ref}, TSL);    
+//     auto expr = create_termed_testing(ast_store, {minus, value_ref}, TSL);    
 
 //     bool success = run_layer2(state, expr);
 
@@ -58,12 +63,12 @@ TEST_CASE("7 + - 2") {
     auto plus = RT_Operator::create_binary("+", External{}, &IntInt_to_Int, 2, 
         Operator::Associativity::left, true, TSL);
 
-    auto value1 = Expression::numeric_literal(ast_store, "7", TSL);
-    auto plus_ref = Expression::operator_reference(ast_store, &plus, TSL);
-    auto minus = Expression::minus_sign(ast_store, TSL);
-    auto value2 = Expression::numeric_literal(ast_store, "2", TSL);
+    auto value1 = create_numeric_literal(ast_store, "7", TSL);
+    auto plus_ref = create_operator_reference(ast_store, &plus, TSL);
+    auto minus = create_minus_sign(ast_store, TSL);
+    auto value2 = create_numeric_literal(ast_store, "2", TSL);
 
-    auto expr = Expression::termed_testing(ast_store, {value1, plus_ref, minus, value2}, TSL);    
+    auto expr = create_termed_testing(ast_store, {value1, plus_ref, minus, value2}, TSL);    
 
     bool success = run_layer2(state, expr);
     CHECK(success);
@@ -97,12 +102,12 @@ TEST_CASE("7 - - 2") {
     auto [state, types] = CompilationState::create_test_state_with_builtins();
     auto& ast_store = *state.ast_store_;
 
-    auto value1 = Expression::numeric_literal(ast_store, "7", TSL);
-    auto minus1 = Expression::minus_sign(ast_store, TSL);
-    auto minus2 = Expression::minus_sign(ast_store, TSL);
-    auto value2 = Expression::numeric_literal(ast_store, "2", TSL);
+    auto value1 = create_numeric_literal(ast_store, "7", TSL);
+    auto minus1 = create_minus_sign(ast_store, TSL);
+    auto minus2 = create_minus_sign(ast_store, TSL);
+    auto value2 = create_numeric_literal(ast_store, "2", TSL);
 
-    auto expr = Expression::termed_testing(ast_store, {value1, minus1, minus2, value2}, TSL);    
+    auto expr = create_termed_testing(ast_store, {value1, minus1, minus2, value2}, TSL);    
 
     bool success = run_layer2(state, expr);
     CHECK(success);

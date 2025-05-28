@@ -2,6 +2,7 @@
 
 #include "mapsc/ast/expression.hh"
 #include "mapsc/compilation_state.hh"
+#include "mapsc/ast/termed_expression.hh"
 
 #include "mapsc/parser/layer2.hh"
 
@@ -15,7 +16,7 @@ TEST_CASE("prefix purely unary operator") {
         {Operator::Fixity::unary_prefix}, true, TSL};
     auto op_ref = Expression{ExpressionType::prefix_operator_reference, &op, TSL};
     auto value = Expression{ExpressionType::known_value, true, &Boolean, TSL};
-    auto expr = Expression::termed_testing(*state.ast_store_, {&op_ref, &value}, TSL);
+    auto expr = create_termed_testing(*state.ast_store_, {&op_ref, &value}, TSL);
 
     run_layer2(state, expr);
 
@@ -35,7 +36,7 @@ TEST_CASE("postfix purely unary operator") {
         {Operator::Fixity::unary_postfix}, true, TSL};
     auto op_ref = Expression{ExpressionType::postfix_operator_reference, &op, op.get_type(), TSL};
     auto value = Expression{ExpressionType::known_value, true, &Boolean, TSL};
-    auto expr = Expression::termed_testing(*state.ast_store_, {&value, &op_ref}, TSL);
+    auto expr = create_termed_testing(*state.ast_store_, {&value, &op_ref}, TSL);
 
     run_layer2(state, expr);
 
@@ -61,7 +62,7 @@ TEST_CASE("Chained unary prefixes") {
     auto op_ref3 = Expression{ExpressionType::prefix_operator_reference, &op1, op1.get_type(), TSL};
 
     auto value = Expression{ExpressionType::known_value, true, &Boolean, TSL};
-    auto expr = Expression::termed_testing(*state.ast_store_, 
+    auto expr = create_termed_testing(*state.ast_store_, 
         {&op_ref3, &op_ref2, &op_ref1, &value}, TSL);
 
     run_layer2(state, expr);

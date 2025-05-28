@@ -1,7 +1,8 @@
-#include "../expression.hh"
+#include "identifier.hh"
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
+#include "mapsc/ast/expression.hh"
 
 namespace Maps {
 
@@ -18,7 +19,7 @@ bool Expression::is_identifier() const {
     }
 }
 
-Expression* Expression::identifier(AST_Store& store, RT_Scope* scope, const std::string& value, 
+Expression* create_identifier(AST_Store& store, RT_Scope* scope, const std::string& value, 
     const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
@@ -26,7 +27,7 @@ Expression* Expression::identifier(AST_Store& store, RT_Scope* scope, const std:
     return expression;
 }
 
-Expression* Expression::operator_identifier(AST_Store& store, RT_Scope* scope, 
+Expression* create_operator_identifier(AST_Store& store, RT_Scope* scope, 
     const std::string& value, const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
@@ -34,7 +35,7 @@ Expression* Expression::operator_identifier(AST_Store& store, RT_Scope* scope,
     return expression;
 }
 
-Expression* Expression::type_identifier(AST_Store& store, const std::string& value, 
+Expression* create_type_identifier(AST_Store& store, const std::string& value, 
     const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
@@ -42,7 +43,7 @@ Expression* Expression::type_identifier(AST_Store& store, const std::string& val
     return expression;
 }
 
-Expression* Expression::type_operator_identifier(AST_Store& store, const std::string& value, 
+Expression* create_type_operator_identifier(AST_Store& store, const std::string& value, 
     const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression({

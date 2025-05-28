@@ -55,15 +55,15 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/ast/statement.cpp
     src/mapsc/ast/definition.cpp
     src/mapsc/ast/ast_store.cpp
+    src/mapsc/ast/identifier.cpp
+    src/mapsc/ast/reference.cpp
+    src/mapsc/ast/value.cpp
+    src/mapsc/ast/termed_expression.cpp
+    src/mapsc/ast/misc_expression.cpp
+    src/mapsc/ast/call_expression.cpp
+    src/mapsc/ast/lambda.cpp
 
-    src/mapsc/ast/expressions/calls.cpp
     src/mapsc/ast/expressions/casts.cpp
-    src/mapsc/ast/expressions/identifiers.cpp
-    src/mapsc/ast/expressions/references.cpp
-    src/mapsc/ast/expressions/termed.cpp
-    src/mapsc/ast/expressions/valueless.cpp
-    src/mapsc/ast/expressions/values.cpp
-    src/mapsc/ast/expressions/lambda.cpp
     src/mapsc/ast/expressions/ternary.cpp
 
     src/mapsc/builtins.cpp

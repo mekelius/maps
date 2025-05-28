@@ -159,83 +159,12 @@ using ExpressionValue = std::variant<
 
 struct Expression {
     // ----- STATIC METHODS -----
-    static Expression* string_literal(AST_Store& store, 
-        const std::string& value, const SourceLocation& location);
-    static Expression* numeric_literal(AST_Store& store, 
-        const std::string& value, const SourceLocation& location);
-    static Expression* known_value(CompilationState& state, KnownValue value,
-        const SourceLocation& location);
-    static std::optional<Expression*> known_value(CompilationState& state, KnownValue value, 
-        const Type* type, const SourceLocation& location);
-
-    static Expression* identifier(AST_Store& store, RT_Scope* scope, 
-        const std::string& value, const SourceLocation& location);
-    static Expression* operator_identifier(AST_Store& store, RT_Scope* scope, 
-        const std::string& value, const SourceLocation& location);
-    static Expression* type_identifier(AST_Store& store, 
-        const std::string& value, const SourceLocation& location);
-    static Expression* type_operator_identifier(AST_Store& store, 
-        const std::string& value, const SourceLocation& location);
-
-    static Expression* termed(AST_Store& store, 
-        std::vector<Expression*>&& terms, RT_Definition* context, const SourceLocation& location);
-    static Expression* termed_testing(AST_Store& store, 
-        std::vector<Expression*>&& terms, const SourceLocation& location, bool top_level = true);
-
-    static Expression* reference(AST_Store& store, 
-        Definition* callee, const SourceLocation& location);
-    static Expression* type_reference(AST_Store& store, 
-        const Type* type, const SourceLocation& location);
-    static Expression operator_reference(
-        Definition* callee, const SourceLocation& location);
-    static Expression* operator_reference(AST_Store& store, 
-        Definition* callee, const SourceLocation& location);
-
-    template <class T>
-    static std::optional<Expression*> reference(AST_Store& store, const Scope_T<T> scope, 
-        const std::string& name, const SourceLocation& location) {
-            if (auto definition = scope.get_identifier(name))
-                return reference(store, *definition, location);
-
-            return std::nullopt;
-        }
-
-    static std::optional<Expression*> type_operator_reference(AST_Store& store, 
-        const std::string& name, const Type* type, const SourceLocation& location);
-
-    static std::optional<Expression*> call(CompilationState& state, 
-        Definition* callee, std::vector<Expression*>&& args, const SourceLocation& location);
-
-    static std::optional<Expression*> partial_binop_call(CompilationState& state, 
-        Definition* callee, Expression* lhs, Expression* rhs, const SourceLocation& location);
-
-    // not implemented
-    static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
-        Definition* lhs, Expression* lambda, Definition* rhs, const SourceLocation& location);
-    
-    static Expression* partially_applied_minus(AST_Store& store, 
-        Expression* rhs, const SourceLocation& location);
 
     // static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
     //     const Type* return_type, bool is_pure, const SourceLocation& location);
     // static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
     //     bool is_pure, const SourceLocation& location);
 
-    static std::tuple<Expression*, RT_Definition*> const_lambda(CompilationState& state, 
-        Expression* expression, std::span<const Type* const> param_types, 
-        const SourceLocation& location, bool is_pure = true);
-    static std::tuple<Expression*, RT_Definition*> const_lambda(CompilationState& state, 
-        KnownValue value, std::span<const Type* const> param_types, 
-        const SourceLocation& location, bool is_pure = true);
-
-    static Expression* valueless(AST_Store& store, 
-        ExpressionType expression_type, const SourceLocation& location);
-    static Expression* missing_argument(AST_Store& store, 
-        const Type* type, const SourceLocation& location);
-    static Expression* minus_sign(AST_Store& store, const SourceLocation& location);
-
-    static Expression* user_error(AST_Store& store, const SourceLocation& location);
-    static Expression* compiler_error(AST_Store& store, const SourceLocation& location);
 
     static Expression builtin(const ExpressionValue& value, const Type& type) {
         return Expression{ExpressionType::known_value, value, &type, BUILTIN_SOURCE_LOCATION};

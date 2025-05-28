@@ -5,6 +5,7 @@
 #include "mapsc/source.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/ast/expression.hh"
+#include "mapsc/ast/value.hh"
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/procedures/type_check.hh"
 #include "mapsc/logging_options.hh"
@@ -86,7 +87,7 @@ TEST_CASE("Should be able to cast a Number with an int value into Float") {
 TEST_CASE("Should be able to cast a known value into a constant function yielding that value") {
     auto [state, _1] = CompilationState::create_test_state_with_builtins();
 
-    auto value = Expression::known_value(state, 23.3, TSL);
+    auto value = create_known_value(state, 23.3, TSL);
 
     CHECK(value->cast_to(state, &Int_to_Float));
     CHECK(*value->type == Int_to_Float);
@@ -100,7 +101,7 @@ TEST_CASE("Casting a known value into a function type with mathcing return type 
 
     const FunctionType* IntString = types->get_function_type(&String, array{&Int}, false);
 
-    auto value = Expression::known_value(state, "qwe", &String, TSL);
+    auto value = create_known_value(state, "qwe", &String, TSL);
     REQUIRE(value);
 
     auto const_lambda = (*value)->cast_to(state, IntString);

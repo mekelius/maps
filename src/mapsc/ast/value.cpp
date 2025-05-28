@@ -1,4 +1,4 @@
-#include "../expression.hh"
+#include "value.hh"
 
 #include <variant>
 #include <optional>
@@ -43,20 +43,20 @@ bool Expression::is_literal() const {
     }
 }
 
-Expression* Expression::string_literal(AST_Store& store, const std::string& value, 
+Expression* create_string_literal(AST_Store& store, const std::string& value, 
     const SourceLocation& location) {
     
     return store.allocate_expression({ExpressionType::string_literal, value, &String, location});
 }
 
-Expression* Expression::numeric_literal(AST_Store& store, const std::string& value, 
+Expression* create_numeric_literal(AST_Store& store, const std::string& value, 
     const SourceLocation& location) {
     
     return store.allocate_expression(
         {ExpressionType::numeric_literal, value, &NumberLiteral, location});
 }
 
-Expression* Expression::known_value(CompilationState& state, KnownValue value,
+Expression* create_known_value(CompilationState& state, KnownValue value,
     const SourceLocation& location) {
 
     auto [unwrapped_value, type] = std::visit(overloaded{
@@ -76,7 +76,7 @@ Expression* Expression::known_value(CompilationState& state, KnownValue value,
         {ExpressionType::known_value, unwrapped_value, type, location});
 }
 
-optional<Expression*> Expression::known_value(CompilationState& state, KnownValue value, 
+optional<Expression*> create_known_value(CompilationState& state, KnownValue value, 
     const Type* type, const SourceLocation& location) {
 
     using Log = LogInContext<LogContext::type_checks>;
