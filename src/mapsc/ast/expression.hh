@@ -76,7 +76,7 @@ enum class ExpressionType {
     type_constructor_reference,
     type_field_name,
 
-    termed_expression,          // value: std::vector<Expression*>
+    layer2_expression,          // value: std::vector<Expression*>
     
     user_error,                 // value: std::string
     compiler_error,

@@ -124,7 +124,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
         case ExpressionType::numeric_literal:
             return *this << std::get<std::string>(expression.value);
 
-        case ExpressionType::termed_expression: {
+        case ExpressionType::layer2_expression: {
             // indent_stack++;
             // *this << linebreak();
             *this << "( ";

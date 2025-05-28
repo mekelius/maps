@@ -58,7 +58,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/ast/identifier.cpp
     src/mapsc/ast/reference.cpp
     src/mapsc/ast/value.cpp
-    src/mapsc/ast/termed_expression.cpp
+    src/mapsc/ast/layer2_expression.cpp
     src/mapsc/ast/misc_expression.cpp
     src/mapsc/ast/call_expression.cpp
     src/mapsc/ast/lambda.cpp
@@ -87,7 +87,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/parser/layer1/expression.cpp
     src/mapsc/parser/layer1/pragma.cpp
     src/mapsc/parser/layer1/statement.cpp
-    src/mapsc/parser/layer1/termed_expression.cpp
+    src/mapsc/parser/layer1/layer2_expression.cpp
     src/mapsc/parser/layer1/terminal.cpp
 
     src/mapsc/parser/layer2.cpp

@@ -121,7 +121,7 @@ protected:
 
     std::optional<const Type*> parse_parameter_type_declaration();
 
-    // ############################## layer1/termed_expression.cpp ################################
+    // ############################## layer1/layer2_expression.cpp ################################
 
     Expression* parse_termed_expression(bool is_tied = false);
     Expression* parse_term(bool is_tied = false);

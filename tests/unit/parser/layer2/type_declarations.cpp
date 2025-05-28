@@ -11,7 +11,8 @@
 #include "mapsc/ast/misc_expression.hh"
 #include "mapsc/ast/call_expression.hh"
 #include "mapsc/ast/reference.hh"
-#include "mapsc/ast/termed_expression.hh"
+
+#include "mapsc/ast/layer2_expression.hh"
 
 using namespace Maps;
 using namespace std;
@@ -24,7 +25,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
     auto value = Expression{ExpressionType::string_literal, "32", &String, TSL};
 
     SUBCASE("Int \"32\"") {
-        auto expr = create_termed_testing(*state.ast_store_, {&type_specifier, &value}, TSL);
+        auto expr = create_layer2_expression_testing(*state.ast_store_, {&type_specifier, &value}, TSL);
 
         run_layer2(state, expr);
 
@@ -43,7 +44,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
         
         auto op_ref = create_operator_reference(*state.ast_store_, &op, TSL);
         auto rhs = create_numeric_literal(*state.ast_store_, "987", TSL);
-        auto expr = create_termed_testing(*state.ast_store_, 
+        auto expr = create_layer2_expression_testing(*state.ast_store_, 
             {&type_specifier, &value, op_ref, rhs}, TSL);
 
         run_layer2(state, expr);
@@ -69,7 +70,7 @@ TEST_CASE("Should apply a type declaration") {
     auto value = create_numeric_literal(ast_store, "23", TSL);
     auto type = create_type_reference(ast_store, &Float, TSL);
 
-    auto outer = create_termed_testing(ast_store, {type, value}, TSL);
+    auto outer = create_layer2_expression_testing(ast_store, {type, value}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -85,7 +86,7 @@ TEST_CASE("Partially applied minus and type declaration") {
     auto part_app_minus = create_partially_applied_minus(ast_store, value, TSL);
     auto type = create_type_reference(ast_store, &Float, TSL);
 
-    auto outer = create_termed_testing(ast_store, {type, part_app_minus}, TSL);
+    auto outer = create_layer2_expression_testing(ast_store, {type, part_app_minus}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -101,7 +102,7 @@ TEST_CASE("Unary minus and type declaration") {
     auto minus_sign = create_minus_sign(ast_store, TSL);
     auto type = create_type_reference(ast_store, &Float, TSL);
 
-    auto outer = create_termed_testing(ast_store, {type, minus_sign, value}, TSL);
+    auto outer = create_layer2_expression_testing(ast_store, {type, minus_sign, value}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -117,8 +118,8 @@ TEST_CASE("Unary minus in parentheses and a type declaration") {
     auto minus_sign = create_minus_sign(ast_store, TSL);
     auto type = create_type_reference(ast_store, &Float, TSL);
 
-    auto inner = create_termed_testing(ast_store, {minus_sign, value}, TSL);
-    auto outer = create_termed_testing(ast_store, {type, inner}, TSL);
+    auto inner = create_layer2_expression_testing(ast_store, {minus_sign, value}, TSL);
+    auto outer = create_layer2_expression_testing(ast_store, {type, inner}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -136,8 +137,8 @@ TEST_CASE("MutString (1 + 2)") {
     auto op_ref = create_operator_reference(*state.ast_store_, &op, TSL);
     auto type_specifier = create_type_reference(ast_store, &MutString, TSL);
 
-    auto inner = create_termed_testing(ast_store, {value1, op_ref, value2}, TSL);
-    auto expr = create_termed_testing(ast_store, {type_specifier, inner}, TSL);
+    auto inner = create_layer2_expression_testing(ast_store, {value1, op_ref, value2}, TSL);
+    auto expr = create_layer2_expression_testing(ast_store, {type_specifier, inner}, TSL);
 
     auto success = run_layer2(state, expr);
 

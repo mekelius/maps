@@ -14,17 +14,22 @@
 #include "readline.h"
 
 #include "mapsc/builtins.hh"
-#include "mapsc/ast/definition.hh"
 #include "mapsc/compilation_state.hh"
+#include "mapsc/transform_stage.hh"
 
-#include "mapsc/procedures/reverse_parse.hh"
-#include "mapsc/types/type_store.hh"
 #include "mapsc/types/type.hh"
+#include "mapsc/types/type_store.hh"
+
+#include "mapsc/ast/definition.hh"
+#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/call_expression.hh"
+
 #include "mapsc/parser/layer1.hh"
 #include "mapsc/parser/layer2.hh"
+
+#include "mapsc/procedures/reverse_parse.hh"
 #include "mapsc/procedures/type_check.hh"
 #include "mapsc/procedures/name_resolution.hh"
-#include "mapsc/transform_stage.hh"
 #include "mapsc/procedures/cleanup.hh"
 #include "mapsc/procedures/concretize.hh"
 
@@ -47,7 +52,7 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
     auto top_level_type = top_level_definition->get_type();
 
     if (top_level_type->is_function()) {
-        auto run_eval = Expression::call(state, top_level_definition, {}, location);
+        auto run_eval = create_call(state, top_level_definition, {}, location);
 
         if (!run_eval) {
             std::cout << "creating REPL wrapper failed: could not create top-level call" 
@@ -56,21 +61,21 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
         }
 
         // try string first
-        eval_and_print = Expression::call(state, state.special_definitions_.print_String, 
+        eval_and_print = create_call(state, state.special_definitions_.print_String, 
             {*run_eval}, location);
 
         if (!eval_and_print)
-            eval_and_print = Expression::call(state, state.special_definitions_.print_MutString, 
+            eval_and_print = create_call(state, state.special_definitions_.print_MutString, 
                 {*run_eval}, location);
 
 
     } else {
-        eval_and_print = Expression::call(state, state.special_definitions_.print_String,
+        eval_and_print = create_call(state, state.special_definitions_.print_String,
             {std::get<Expression*>(top_level_definition->body())}, 
             location);
 
         if (!eval_and_print)
-            eval_and_print = Expression::call(state, state.special_definitions_.print_MutString,
+            eval_and_print = create_call(state, state.special_definitions_.print_MutString,
                 {std::get<Expression*>(top_level_definition->body())}, 
                 location);
     }
@@ -81,7 +86,7 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
     }
 
     if (!eval_and_print && top_level_type->is_impure()) {
-        auto eval = Expression::call(state, top_level_definition, {}, location);
+        auto eval = create_call(state, top_level_definition, {}, location);
 
         return state.ast_store_->allocate_definition(
             RT_Definition{options_.repl_wrapper_name, *eval, true, location});

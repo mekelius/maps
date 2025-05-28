@@ -22,7 +22,7 @@ TEST_CASE("Should recognize minus as a special case") {
     CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
     auto expression = std::get<const Expression*>((*definition)->const_body());
 
-    CHECK(expression->expression_type == ExpressionType::termed_expression);
+    CHECK(expression->expression_type == ExpressionType::layer2_expression);
     auto terms = expression->terms();
     CHECK(terms.size() == 2);
     CHECK(terms.at(0)->expression_type == ExpressionType::minus_sign);

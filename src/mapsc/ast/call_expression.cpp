@@ -19,7 +19,7 @@ bool Expression::is_allowed_as_arg() const {
         case ExpressionType::identifier:
         case ExpressionType::minus_sign:
         case ExpressionType::partially_applied_minus:
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             return false;
 
         case ExpressionType::reference:

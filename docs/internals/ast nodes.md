@@ -23,7 +23,7 @@ Expressions have a data type, an expression type and a value determined by their
 | operator_identifier | 1 | 1.5             | String                              | done    |
 | type_operator_identifier | 1 | 1.5        | String                              | work in progress |
 | type_identifier     | 1 | 1.5             | String                              | done    |
-| termed_expression   | 1   | 2       | [ Expression* ]                            | done    |
+| layer2_expression   | 1   | 2       | [ Expression* ]                            | done    |
 | string_literal      | 1   | codegen | String                                     | done    |
 | numeric_literal     | 1   | codegen | String                                     | done    |
 | reference           | 1.5 | 2       | Callable*                                  | done    |

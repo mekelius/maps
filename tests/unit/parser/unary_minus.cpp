@@ -15,7 +15,7 @@ using namespace Maps;
 
     // auto op_ref = Expression::operator_reference{&op, TSL};
     // auto value = Expression{ExpressionType::value, TSL, true, &Boolean};
-    // auto expr = Expression{ExpressionType::termed_expression, TSL, 
+    // auto expr = Expression{ExpressionType::layer2_expression, TSL, 
     //     TermedExpressionValue{{&op_ref, &value}}};
 
     // TermedExpressionParser{&state, &expr}.run();

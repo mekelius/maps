@@ -40,7 +40,7 @@ std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState
     for (auto& arg: args) {
         auto param_type = *callee_f_type->param_type(i);
 
-        if (arg->expression_type == ExpressionType::termed_expression) {
+        if (arg->expression_type == ExpressionType::layer2_expression) {
             Log::debug_extra("Argument " + to_string(i) + " was unparsed", location);
             seen_unparsed_expression = true;
             arg->type = param_type; // NOTE: not handled yet in layer2

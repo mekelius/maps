@@ -6,7 +6,8 @@
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/value.hh"
 #include "mapsc/ast/reference.hh"
-#include "mapsc/ast/termed_expression.hh"
+
+#include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
 #include "mapsc/logging_options.hh"
@@ -42,7 +43,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     auto val = create_numeric_literal(ast, "34", {0,0});
 
     SUBCASE("left") {
-        Expression* expr = create_termed_testing(ast, {op_ref, val}, {0,0});
+        Expression* expr = create_layer2_expression_testing(ast, {op_ref, val}, {0,0});
         
         run_layer2(state, expr);
         
@@ -55,7 +56,7 @@ TEST_CASE("Should handle partial application of binary operators") {
     }
 
     SUBCASE("right") {
-        Expression* expr = create_termed_testing(ast, {val, op_ref}, {0,0});
+        Expression* expr = create_layer2_expression_testing(ast, {val, op_ref}, {0,0});
         
         run_layer2(state, expr);
         

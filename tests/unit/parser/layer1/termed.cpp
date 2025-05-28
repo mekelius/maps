@@ -28,11 +28,11 @@ TEST_CASE("Should parse parentheses and colons correctly") {
         CHECK(std::holds_alternative<Expression*>((*result.top_level_definition)->body()));
 
         auto outer = std::get<Expression*>((*result.top_level_definition)->body());
-        CHECK(outer->expression_type == ExpressionType::termed_expression);
+        CHECK(outer->expression_type == ExpressionType::layer2_expression);
         CHECK(outer->terms().size() == 3);
 
         Expression* inner = outer->terms().at(2);
-        CHECK(inner->expression_type == ExpressionType::termed_expression);
+        CHECK(inner->expression_type == ExpressionType::layer2_expression);
         CHECK(inner->terms().size() == 5);
     }
 
@@ -50,11 +50,11 @@ TEST_CASE("Should parse parentheses and colons correctly") {
         CHECK(std::holds_alternative<Expression*>((*result.top_level_definition)->body()));
 
         auto outer = std::get<Expression*>((*result.top_level_definition)->body());
-        CHECK(outer->expression_type == ExpressionType::termed_expression);
+        CHECK(outer->expression_type == ExpressionType::layer2_expression);
         CHECK(outer->terms().size() == 3);
 
         Expression* inner = outer->terms().at(2);
-        CHECK(inner->expression_type == ExpressionType::termed_expression);
+        CHECK(inner->expression_type == ExpressionType::layer2_expression);
         CHECK(inner->terms().size() == 5);
     }
 
@@ -72,11 +72,11 @@ TEST_CASE("Should parse parentheses and colons correctly") {
         CHECK(std::holds_alternative<Expression*>((*result.top_level_definition)->body()));
 
         auto outer = std::get<Expression*>((*result.top_level_definition)->body());
-        CHECK(outer->expression_type == ExpressionType::termed_expression);
+        CHECK(outer->expression_type == ExpressionType::layer2_expression);
         CHECK(outer->terms().size() == 3);
 
         Expression* inner = outer->terms().at(2);
-        CHECK(inner->expression_type == ExpressionType::termed_expression);
+        CHECK(inner->expression_type == ExpressionType::layer2_expression);
         CHECK(inner->terms().size() == 5);
     }
 
@@ -94,11 +94,11 @@ TEST_CASE("Should parse parentheses and colons correctly") {
         CHECK(std::holds_alternative<Expression*>((*result.top_level_definition)->body()));
 
         auto outer = std::get<Expression*>((*result.top_level_definition)->body());
-        CHECK(outer->expression_type == ExpressionType::termed_expression);
+        CHECK(outer->expression_type == ExpressionType::layer2_expression);
         CHECK(outer->terms().size() == 3);
 
         Expression* inner = outer->terms().at(2);
-        CHECK(inner->expression_type == ExpressionType::termed_expression);
+        CHECK(inner->expression_type == ExpressionType::layer2_expression);
         CHECK(inner->terms().size() == 5);
     }
 
@@ -109,7 +109,7 @@ TEST_CASE("Should parse parentheses and colons correctly") {
 
         CHECK(result.success);
         CHECK(result.top_level_definition);
-        CHECK(std::get<Expression*>((*result.top_level_definition)->body())->expression_type == ExpressionType::termed_expression);
+        CHECK(std::get<Expression*>((*result.top_level_definition)->body())->expression_type == ExpressionType::layer2_expression);
 
         auto termed = result.unparsed_termed_expressions;
 
@@ -124,7 +124,7 @@ TEST_CASE("Should parse parentheses and colons correctly") {
 
         CHECK(result.success);
         CHECK(result.top_level_definition);
-        CHECK(std::get<Expression*>((*result.top_level_definition)->body())->expression_type == ExpressionType::termed_expression);
+        CHECK(std::get<Expression*>((*result.top_level_definition)->body())->expression_type == ExpressionType::layer2_expression);
 
         auto termed = result.unparsed_termed_expressions;
 
@@ -139,7 +139,7 @@ TEST_CASE("Should parse parentheses and colons correctly") {
 
         CHECK(result.success);
         CHECK(result.top_level_definition);
-        CHECK(std::get<Expression*>((*result.top_level_definition)->body())->expression_type == ExpressionType::termed_expression);
+        CHECK(std::get<Expression*>((*result.top_level_definition)->body())->expression_type == ExpressionType::layer2_expression);
 
         auto termed = result.unparsed_termed_expressions;
 
@@ -161,7 +161,7 @@ TEST_CASE("Should parse parentheses and colons correctly") {
         CHECK(std::holds_alternative<Expression*>((*result.top_level_definition)->body()));
 
         auto outer = std::get<Expression*>((*result.top_level_definition)->body());
-        CHECK(outer->expression_type == ExpressionType::termed_expression);
+        CHECK(outer->expression_type == ExpressionType::layer2_expression);
         CHECK(outer->terms().size() == 2);
 
         Expression* lhs = outer->terms().at(0);
@@ -185,7 +185,7 @@ TEST_CASE("Should parse parentheses and colons correctly") {
         CHECK(std::holds_alternative<Expression*>((*result.top_level_definition)->body()));
 
         auto outer = std::get<Expression*>((*result.top_level_definition)->body());
-        CHECK(outer->expression_type == ExpressionType::termed_expression);
+        CHECK(outer->expression_type == ExpressionType::layer2_expression);
         CHECK(outer->terms().size() == 2);
     }
 
@@ -203,7 +203,7 @@ TEST_CASE("Should parse parentheses and colons correctly") {
         CHECK(std::holds_alternative<Expression*>((*result.top_level_definition)->body()));
 
         auto outer = std::get<Expression*>((*result.top_level_definition)->body());
-        CHECK(outer->expression_type == ExpressionType::termed_expression);
+        CHECK(outer->expression_type == ExpressionType::layer2_expression);
         CHECK(outer->terms().size() == 2);
 
         Expression* lhs1 = outer->terms().at(0);

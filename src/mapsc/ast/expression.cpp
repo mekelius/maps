@@ -122,7 +122,7 @@ bool Expression::is_castable_expression() const {
 
 bool Expression::is_allowed_in_type_declaration() const {
     switch (expression_type) {
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             return std::get<TermedExpressionValue>(value).is_type_declaration != 
                 DeferredBool::false_;
 
@@ -156,7 +156,7 @@ std::string Expression::log_message_string() const {
             // TOOD:
             // return type_argument_value().to_string();
 
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             return Expression::value_to_string(value);
 
         case ExpressionType::string_literal:
@@ -252,7 +252,7 @@ std::string_view Expression::expression_type_string_view() const {
         case ExpressionType::type_operator_reference: return "type_operator_reference";
         case ExpressionType::type_constructor_reference: return "type_constructor_reference";
         case ExpressionType::type_field_name: return "type_field_name";
-        case ExpressionType::termed_expression: return "termed_expression";
+        case ExpressionType::layer2_expression: return "termed_expression";
         case ExpressionType::user_error: return "user_error";
         case ExpressionType::compiler_error: return "compiler_error";
         case ExpressionType::call: return "call";

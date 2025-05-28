@@ -12,7 +12,9 @@
 
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/definition.hh"
-#include "mapsc/ast/expression.hh"
+#include "mapsc/ast/value.hh"
+#include "mapsc/ast/identifier.hh"
+#include "mapsc/ast/misc_expression.hh"
 
 #include "mapsc/procedures/name_resolution.hh"
 
@@ -373,7 +375,7 @@ private:
         switch (current_token_.token_type) {
             case Token::Type::eof:
                 fail("Unexpected eof");
-                return Expression::user_error(*ast_store_, current_token_.location);
+                return create_user_error(*ast_store_, current_token_.location);
 
             case Token::Type::identifier:
                 return parse_identifier();
@@ -399,7 +401,7 @@ private:
             case Token::Type::comma:
             default:
                 fail("Unexpected " + current_token_.to_string() + ", expected an expression");
-                return Expression::user_error(*ast_store_, current_token_.location);
+                return create_user_error(*ast_store_, current_token_.location);
         }
     }
 
@@ -431,25 +433,25 @@ private:
 
     Expression* parse_call() {
         assert(false && "not implemented");
-        // return Expression::call(*compilation_state_, , )
+        // return create_call(*compilation_state_, , )
     }
 
     Expression* parse_string_literal() {
-        auto expression = Expression::string_literal(*ast_store_, 
+        auto expression = create_string_literal(*ast_store_, 
             current_token_.value, current_token_.location);
         get_token();
         return expression;
     }
 
     Expression* parse_number_literal() {
-        auto expression = Expression::numeric_literal(*ast_store_, 
+        auto expression = create_numeric_literal(*ast_store_, 
             current_token_.value, current_token_.location);
         get_token();
         return expression;
     }
 
     Expression* parse_identifier() {
-        auto expression = Expression::identifier(*ast_store_, &result_.definitions,
+        auto expression = create_identifier(*ast_store_, &result_.definitions,
             current_token_.value, current_token_.location);
         result_.unresolved_identifiers.push_back(expression);
 
@@ -458,7 +460,7 @@ private:
     }
 
     Expression* parse_type_identifier() {
-        auto expression = Expression::identifier(*ast_store_, &result_.definitions,
+        auto expression = create_identifier(*ast_store_, &result_.definitions,
             current_token_.value, current_token_.location);
         result_.unresolved_identifiers.push_back(expression);
 

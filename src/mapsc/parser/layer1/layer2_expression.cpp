@@ -15,7 +15,8 @@
 #include "mapsc/types/type.hh"
 
 #include "mapsc/ast/identifier.hh"
-#include "mapsc/ast/termed_expression.hh"
+
+#include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/ast/misc_expression.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
@@ -42,7 +43,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     if (!context)
         return fail_expression("Termed expressions require a context", current_token().location, true);
 
-    Expression* expression = create_termed(*ast_store_, {}, *context, current_token().location);
+    Expression* expression = create_layer2_expression(*ast_store_, {}, *context, current_token().location);
 
     log(
         in_tied_expression ? "start parsing tied expression" : "start parsing termed expression", 
@@ -87,7 +88,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
                 // colon has to add parenthesis around left side as well
                 if (expression->terms().size() > 1) {
-                    Expression* lhs = create_termed(*ast_store_, {}, *context, expression->location);
+                    Expression* lhs = create_layer2_expression(*ast_store_, {}, *context, expression->location);
                     *lhs = *expression;
                     expression->terms() = {close_termed_expression(lhs)};
                     std::get<TermedExpressionValue>(expression->value).is_type_declaration = 
@@ -138,7 +139,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 }
 
 Expression* ParserLayer1::close_termed_expression(Expression* expression) {
-    assert(expression->expression_type == ExpressionType::termed_expression &&
+    assert(expression->expression_type == ExpressionType::layer2_expression &&
         "close_termed_expression called with not a termed expression");
 
     // unwrap redundant parentheses

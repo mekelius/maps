@@ -8,7 +8,8 @@
 #include "mapsc/parser/layer2.hh"
 #include "mapsc/ast/reference.hh"
 #include "mapsc/ast/value.hh"
-#include "mapsc/ast/termed_expression.hh"
+
+#include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/logging_options.hh"
 
 using namespace Maps;
@@ -30,7 +31,7 @@ TEST_CASE("Should report failure correctly") {
 
     auto value = create_numeric_literal(ast_store, "23", TSL);
 
-    auto outer = create_termed_testing(ast_store, {value, value, value}, TSL);
+    auto outer = create_layer2_expression_testing(ast_store, {value, value, value}, TSL);
 
     auto success = run_layer2(state, outer);
 
@@ -40,7 +41,7 @@ TEST_CASE("Should report failure correctly") {
 TEST_CASE("TermedExpressionParser should replace a single value term with that value") {
     auto [state, _0, _1] = CompilationState::create_test_state();
 
-    Expression* expr = create_termed_testing(*state.ast_store_, {}, TSL);
+    Expression* expr = create_layer2_expression_testing(*state.ast_store_, {}, TSL);
 
     REQUIRE(expr->terms().size() == 0);
 
@@ -68,7 +69,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     RT_Scope globals{};
     AST_Store& ast = *state.ast_store_;
 
-    Expression* expr = create_termed_testing(ast, {}, TSL);
+    Expression* expr = create_layer2_expression_testing(ast, {}, TSL);
     
     SUBCASE("1 arg") {    
         const Type* function_type = types->get_function_type(&Void, array{&String}, true);
@@ -149,7 +150,7 @@ TEST_CASE("Should perform known value substitution") {
 
     REQUIRE(known_val_ref->expression_type == ExpressionType::known_value_reference);
 
-    auto termed = create_termed_testing(*ast_store, {known_val_ref}, TSL);
+    auto termed = create_layer2_expression_testing(*ast_store, {known_val_ref}, TSL);
 
     CHECK(run_layer2(state, termed));
 

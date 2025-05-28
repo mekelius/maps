@@ -1,5 +1,5 @@
-#ifndef __AST_NODE_HH
-#define __AST_NODE_HH
+#ifndef __AST_NODE_VISITOR_HH
+#define __AST_NODE_VISITOR_HH
 
 #include <concepts>
 

@@ -10,7 +10,8 @@
 #include "mapsc/logging_options.hh"
 
 #include "mapsc/ast/value.hh"
-#include "mapsc/ast/termed_expression.hh"
+
+#include "mapsc/ast/layer2_expression.hh"
 
 using namespace Maps;
 using namespace std;
@@ -22,7 +23,7 @@ TEST_CASE("Unary minus by itself should result in a partially applied minus") {
     auto value = create_numeric_literal(ast_store, "456", TSL);
     auto minus = create_minus_sign(ast_store, TSL);
 
-    auto expr = create_termed_testing(ast_store, {minus, value}, TSL);    
+    auto expr = create_layer2_expression_testing(ast_store, {minus, value}, TSL);    
 
     bool success = run_layer2(state, expr);
 
@@ -68,7 +69,7 @@ TEST_CASE("7 + - 2") {
     auto minus = create_minus_sign(ast_store, TSL);
     auto value2 = create_numeric_literal(ast_store, "2", TSL);
 
-    auto expr = create_termed_testing(ast_store, {value1, plus_ref, minus, value2}, TSL);    
+    auto expr = create_layer2_expression_testing(ast_store, {value1, plus_ref, minus, value2}, TSL);    
 
     bool success = run_layer2(state, expr);
     CHECK(success);
@@ -107,7 +108,7 @@ TEST_CASE("7 - - 2") {
     auto minus2 = create_minus_sign(ast_store, TSL);
     auto value2 = create_numeric_literal(ast_store, "2", TSL);
 
-    auto expr = create_termed_testing(ast_store, {value1, minus1, minus2, value2}, TSL);    
+    auto expr = create_layer2_expression_testing(ast_store, {value1, minus1, minus2, value2}, TSL);    
 
     bool success = run_layer2(state, expr);
     CHECK(success);

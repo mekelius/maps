@@ -53,7 +53,7 @@ using Log = LogInContext<LogContext::layer2>;
 
 #define POTENTIAL_FUNCTION ExpressionType::call:\
                       case ExpressionType::reference:\
-                      case ExpressionType::termed_expression:\
+                      case ExpressionType::layer2_expression:\
                       case ExpressionType::ternary_expression
 
 #define GUARANTEED_NON_OPERATOR_FUNCTION ExpressionType::lambda:\
@@ -72,7 +72,7 @@ TermedExpressionParser::TermedExpressionParser(
 
 bool TermedExpressionParser::run() {
     // some expressions might be parsed early as sub-expressions
-    if (expression_->expression_type != ExpressionType::termed_expression) {
+    if (expression_->expression_type != ExpressionType::layer2_expression) {
         Log::debug_extra("TermedExpressionPareser::run called on a non-termed expression, skipping", 
             expression_->location);
         return true;
@@ -190,7 +190,7 @@ optional<Expression*> TermedExpressionParser::parse_termed_expression() {
 }
 
 Expression* TermedExpressionParser::handle_termed_sub_expression(Expression* expression) {
-    assert(expression->expression_type == ExpressionType::termed_expression 
+    assert(expression->expression_type == ExpressionType::layer2_expression 
         && "handle_sub_termed_expression called with non-termed expression");
 
     // TODO: pass some kind of type hint
@@ -332,7 +332,7 @@ void TermedExpressionParser::reduce_partially_applied_minus() {
 
 void TermedExpressionParser::initial_goto() {
     switch (current_term()->expression_type) {
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             handle_termed_sub_expression(current_term());
             return initial_goto();
 
@@ -490,7 +490,7 @@ void TermedExpressionParser::reference_state() {
     }
 
     switch (peek()->expression_type) {
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             handle_termed_sub_expression(peek());
             return reference_state();
 
@@ -521,7 +521,7 @@ void TermedExpressionParser::value_state() {
         case ExpressionType::ternary_expression:
             assert(false && "not implemented");
 
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             handle_termed_sub_expression(peek());
             return value_state();
 
@@ -606,7 +606,7 @@ void TermedExpressionParser::prefix_operator_state() {
     }
 
     switch (peek()->expression_type) {
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             handle_termed_sub_expression(peek());
             return prefix_operator_state();
 
@@ -643,7 +643,7 @@ void TermedExpressionParser::binary_operator_state() {
         return;        
 
     switch (peek()->expression_type) {
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             handle_termed_sub_expression(peek());
             return binary_operator_state();
 
@@ -775,7 +775,7 @@ void TermedExpressionParser::minus_sign_state() {
     }
 
     switch (peek()->expression_type) {
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             handle_termed_sub_expression(peek());
             return minus_sign_state();
 
@@ -947,7 +947,7 @@ void TermedExpressionParser::post_binary_operator_state() {
         return reduce_to_partial_binop_call_right();
 
     switch (peek()->expression_type) {
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             handle_termed_sub_expression(peek());
             return post_binary_operator_state();
 
@@ -1166,7 +1166,7 @@ void TermedExpressionParser::type_reference_state() {
     }
 
     switch (peek()->expression_type) {
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             handle_termed_sub_expression(peek());
             return type_reference_state();
 
@@ -1439,7 +1439,7 @@ Expression* TermedExpressionParser::handle_arg_state(
     Definition* callee, const std::vector<Expression*>& args) { 
     
     switch (current_term()->expression_type) {
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             handle_termed_sub_expression(current_term());
             return handle_arg_state(callee, args);
             

@@ -91,7 +91,7 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
 
         case ExpressionType::reference:
         case ExpressionType::identifier:
-        case ExpressionType::termed_expression:
+        case ExpressionType::layer2_expression:
             return wrap_in_runtime_cast(state, target_type, type_declaration_location);
 
         case ExpressionType::partially_applied_minus:

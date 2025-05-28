@@ -4,7 +4,8 @@
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/value.hh"
-#include "mapsc/ast/termed_expression.hh"
+
+#include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/ast/reference.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
@@ -84,7 +85,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
     auto [state, _0, _1] = CompilationState::create_test_state();
     auto ast = state.ast_store_.get();
 
-    Expression* expr = create_termed_testing(*ast, {}, {0,0});
+    Expression* expr = create_layer2_expression_testing(*ast, {}, {0,0});
 
     Expression* val1 = create_numeric_literal(*ast, "23", TSL);
     Expression* val2 = create_numeric_literal(*ast, "12", TSL);
@@ -175,7 +176,7 @@ TEST_CASE ("should handle more complex expressions") {
     auto [state, _0, _1] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
-    Expression* expr = create_termed_testing(ast, {}, {0,0});
+    Expression* expr = create_layer2_expression_testing(ast, {}, {0,0});
 
     auto [op1_ref, op1] = create_operator_helper(state, "1", 1);
     auto [op2_ref, op2] = create_operator_helper(state, "2", 2);

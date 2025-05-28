@@ -4,7 +4,8 @@
 #include <memory>
 
 #include "mapsc/ast/value.hh"
-#include "mapsc/ast/termed_expression.hh"
+
+#include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/ast/lambda.hh"
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/reference.hh"
@@ -37,7 +38,7 @@ TEST_CASE("Should be able to call a lambda function") {
     auto [lambda_expr, lambda_def] = create_const_lambda(state, "qwe", 
         std::array<const Type*, 1>{&Int}, TSL);
     auto arg = create_numeric_literal(*ast_store, "3", TSL);
-    auto expr = create_termed_testing(*ast_store, {lambda_expr, arg}, TSL);
+    auto expr = create_layer2_expression_testing(*ast_store, {lambda_expr, arg}, TSL);
 
     run_layer2(state, expr);
 
@@ -109,7 +110,7 @@ TEST_CASE("Should set the type on a \"operator expression\" to the return type")
 
     auto reference = create_operator_reference(ast, &test_op, TSL);
 
-    auto expr = create_termed_testing(ast, {&lhs, reference, &rhs}, TSL);
+    auto expr = create_layer2_expression_testing(ast, {&lhs, reference, &rhs}, TSL);
 
     run_layer2(state, expr);
 

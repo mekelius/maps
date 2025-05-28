@@ -62,7 +62,7 @@ TEST_CASE("Should parse lambdas") {
         CHECK(std::holds_alternative<const Expression*>(body));
 
         auto body_expression = std::get<const Expression*>(body);
-        CHECK(body_expression->expression_type == ExpressionType::termed_expression);
+        CHECK(body_expression->expression_type == ExpressionType::layer2_expression);
         CHECK(body_expression->terms().size() == 3);
         CHECK(body_expression->terms().at(0)->expression_type == ExpressionType::identifier);
         CHECK(body_expression->terms().at(1)->expression_type == ExpressionType::operator_identifier);

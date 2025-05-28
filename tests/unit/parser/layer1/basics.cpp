@@ -47,7 +47,7 @@ TEST_CASE("Should handle various cases") {
         CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
         auto expression = std::get<const Expression*>((*definition)->const_body());
         
-        CHECK(expression->expression_type == ExpressionType::termed_expression);
+        CHECK(expression->expression_type == ExpressionType::layer2_expression);
         
         auto terms = expression->terms();
         CHECK(terms.size() == 3);
@@ -72,7 +72,7 @@ TEST_CASE("Should handle various cases") {
         CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
         auto expression = std::get<const Expression*>((*definition)->const_body());
 
-        CHECK(expression->expression_type == ExpressionType::termed_expression);
+        CHECK(expression->expression_type == ExpressionType::layer2_expression);
         
         auto terms = expression->terms();
         CHECK(terms.size() == 3);
@@ -97,7 +97,7 @@ TEST_CASE("Should handle various cases") {
         CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
         auto expression = std::get<const Expression*>((*definition)->const_body());
 
-        CHECK(expression->expression_type == ExpressionType::termed_expression);
+        CHECK(expression->expression_type == ExpressionType::layer2_expression);
         
         auto terms = expression->terms();
         CHECK(terms.size() == 3);
@@ -173,7 +173,7 @@ TEST_CASE("Should mark context on termed expressions") {
     auto f = *scope.get_identifier("f");
 
     auto expr = std::get<const Expression*>((f)->const_body());
-    CHECK(expr->expression_type == ExpressionType::termed_expression);
+    CHECK(expr->expression_type == ExpressionType::layer2_expression);
 
     CHECK(*expr->termed_context() == *f);
 }
@@ -187,6 +187,6 @@ TEST_CASE("Should mark context on top level termed expressions") {
     CHECK(result.top_level_definition);
 
     auto expr = std::get<const Expression*>((*result.top_level_definition)->const_body());
-    CHECK(expr->expression_type == ExpressionType::termed_expression);
+    CHECK(expr->expression_type == ExpressionType::layer2_expression);
     CHECK(*expr->termed_context() == **result.top_level_definition);
 }
