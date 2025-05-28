@@ -8,7 +8,6 @@
 #include "mapsc/parser/layer2.hh"
 #include "mapsc/ast/reference.hh"
 #include "mapsc/ast/value.hh"
-
 #include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/logging_options.hh"
 

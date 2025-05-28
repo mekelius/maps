@@ -14,35 +14,6 @@ using std::optional, std::nullopt, std::holds_alternative;
 
 namespace Maps {
 
-bool Expression::is_constant_value() const {
-    switch (expression_type) {
-        case ExpressionType::numeric_literal:
-        case ExpressionType::string_literal:
-            assert(holds_alternative<std::string>(value) && 
-                "Encountered an expression with literal expressiontype but wrong type of body");
-            return true;
-
-        case ExpressionType::known_value:
-            assert((!holds_alternative<CallExpressionValue>(value)) && 
-                "Encountered an expression with expressiontype known value but wrong type of body");
-            return true;
-
-        default:
-            return false;   
-    }
-}
-
-bool Expression::is_literal() const {
-    switch (expression_type) {
-        case ExpressionType::numeric_literal:
-        case ExpressionType::string_literal:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
 Expression* create_string_literal(AST_Store& store, const std::string& value, 
     const SourceLocation& location) {
     

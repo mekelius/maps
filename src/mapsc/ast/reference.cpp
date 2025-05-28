@@ -6,23 +6,6 @@
 
 namespace Maps {
 
-bool Expression::is_reference() const {
-    switch (expression_type) {
-        case ExpressionType::reference:
-        case ExpressionType::type_reference:
-        case ExpressionType::prefix_operator_reference:
-        case ExpressionType::postfix_operator_reference:
-        case ExpressionType::binary_operator_reference:
-        case ExpressionType::type_operator_reference:
-        case ExpressionType::type_constructor_reference:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-
 Definition* Expression::reference_value() const {
     assert(std::holds_alternative<Definition*>(value) && 
         "Expression::reference_value called with not a reference to definition");

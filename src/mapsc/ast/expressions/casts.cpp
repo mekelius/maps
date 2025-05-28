@@ -12,6 +12,7 @@
 #include "mapsc/compilation_state.hh"
 #include "mapsc/builtins.hh"
 
+#include "mapsc/ast/expression_properties.hh"
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/call_expression.hh"
@@ -107,7 +108,7 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
             }
             // intentional fall-through
         case ExpressionType::call:
-            if (!is_partial_call())
+            if (!is_partial_call(*this))
                 return wrap_in_runtime_cast(state, target_type, type_declaration_location);
 
             Log::debug("Expression " + log_message_string() + 
@@ -128,7 +129,7 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
 optional<Expression*> Expression::wrap_in_runtime_cast(CompilationState& state, const Type* target_type, 
     const SourceLocation& type_declaration_location) {
     
-    assert(is_castable_expression() && "wrap_in_runtime_cast called on not a castable expression");
+    assert(is_castable_expression(*this) && "wrap_in_runtime_cast called on not a castable expression");
 
     auto runtime_cast = find_external_runtime_cast(*state.builtins_, type, target_type);
 

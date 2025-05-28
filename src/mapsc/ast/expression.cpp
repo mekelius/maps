@@ -59,89 +59,12 @@ std::string Expression::value_to_string(const ExpressionValue& value) {
 
 // ----- EXPRESSION -----
 
-bool Expression::is_reduced_value() const {
-    switch (expression_type) {
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
-        case ExpressionType::known_value:
-        return true;
-        
-        case ExpressionType::reference:
-        case ExpressionType::call:
-        default:
-            return false;
-    }
-}
-
 std::string Expression::string_value() const {
     if (std::holds_alternative<Definition*>(value)) {
         // !!! this will cause crashes when lambdas come in
         return std::get<Definition*>(value)->name_string();
     }
     return std::get<std::string>(value);
-}
-
-bool Expression::is_illegal() const {
-    switch (expression_type) {
-        case ExpressionType::deleted:
-        case ExpressionType::user_error:
-        case ExpressionType::compiler_error:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-bool Expression::is_ok_in_layer2() const {
-    return !(is_identifier() || is_illegal() || expression_type == ExpressionType::type_operator_reference);
-}
-
-bool Expression::is_ok_in_codegen() const {
-    switch (expression_type) {
-        case ExpressionType::reference:
-        case ExpressionType::call:
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-bool Expression::is_castable_expression() const {
-    switch (expression_type) {
-        case NON_CASTABLE_EXPRESSION:
-            return false;
-
-        default:
-            return true;
-    }
-}
-
-bool Expression::is_allowed_in_type_declaration() const {
-    switch (expression_type) {
-        case ExpressionType::layer2_expression:
-            return std::get<TermedExpressionValue>(value).is_type_declaration != 
-                DeferredBool::false_;
-
-        case ExpressionType::type_argument:
-        case ExpressionType::type_construct:
-        case ExpressionType::type_operator_identifier:
-        case ExpressionType::type_operator_reference:
-        case ExpressionType::type_constructor_reference:
-        case ExpressionType::type_identifier:
-        case ExpressionType::type_reference:
-        case ExpressionType::type_field_name:
-            return true;
-
-        case ExpressionType::identifier:
-            return true;
-
-        default:
-            return false;
-    }
 }
 
 std::string Expression::log_message_string() const {

@@ -223,9 +223,6 @@ struct Expression {
     TernaryExpressionValue& ternary_value();
     const TernaryExpressionValue& ternary_value() const;
 
-    bool is_partial_call() const;
-    bool is_reduced_value() const;
-
     void mark_not_type_declaration();
     DeferredBool is_type_declaration();
 
@@ -237,17 +234,6 @@ struct Expression {
     std::optional<Expression*> cast_to(CompilationState& state, const Type* type);
     std::optional<Expression*> wrap_in_runtime_cast(CompilationState& state, const Type* type, 
         const SourceLocation& type_declaration_location);
-
-    bool is_literal() const;
-    bool is_illegal() const;
-    bool is_reference() const;
-    bool is_identifier() const;
-    bool is_ok_in_layer2() const;
-    bool is_ok_in_codegen() const;
-    bool is_castable_expression() const;
-    bool is_allowed_in_type_declaration() const;
-    bool is_constant_value() const;
-    bool is_allowed_as_arg() const;
 
     std::string_view expression_type_string_view() const;
     std::string expression_type_string() const { 

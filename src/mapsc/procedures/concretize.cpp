@@ -9,7 +9,7 @@
 
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
-
+#include "mapsc/ast/expression_properties.hh"
 
 #include "mapsc/ast/expression.hh"
 #include "mapsc/compilation_state.hh"
@@ -85,7 +85,7 @@ bool concretize_call(CompilationState& state, Expression& call) {
         if (*arg->type == *param_type)
             continue;
 
-        if (arg->is_constant_value()) { 
+        if (is_constant_value(*arg)) { 
             Log::debug_extra("Substituting constant argument: \"" + arg->log_message_string() + 
                 "\". Attempting to cast from " + arg->type->name_string() + " into " + param_type->name_string(), call.location);
             

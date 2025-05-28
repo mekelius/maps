@@ -40,6 +40,7 @@
 #include "mapsc/types/type_store.hh"
 
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/expression_properties.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/statement.hh"
@@ -523,12 +524,12 @@ optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression)
 }
 
 optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& expression) {
-    if (!expression.is_reduced_value()) {
+    if (!is_reduced_value(expression)) {
         fail(capitalize(expression.log_message_string()) + " is not a reduced value");
         return nullopt;
     }
 
-    if (expression.is_literal())
+    if (is_literal(expression))
         return convert_literal(expression);
 
     if (expression.expression_type == ExpressionType::known_value) {

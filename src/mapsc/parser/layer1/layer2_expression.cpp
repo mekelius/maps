@@ -23,6 +23,7 @@
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/expression_properties.hh"
 
 #include "mapsc/parser/token.hh"
 #include "mapsc/procedures/simplify.hh"
@@ -51,7 +52,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
 
     expression->terms().push_back(parse_term(in_tied_expression));
     
-    if (!expression->terms().back()->is_allowed_in_type_declaration())
+    if (!is_allowed_in_type_declaration(*expression->terms().back()))
         expression->mark_not_type_declaration();
 
     bool done = false;
@@ -100,7 +101,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
                 
                 expression->terms().push_back(parse_termed_expression(false));
 
-                if (!expression->terms().back()->is_allowed_in_type_declaration())
+                if (!is_allowed_in_type_declaration(*expression->terms().back()))
                     expression->mark_not_type_declaration();
                 break;
             }
@@ -110,7 +111,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
             case TokenType::bracket_open:
             case TokenType::curly_brace_open:
                 expression->terms().push_back(parse_term(in_tied_expression));
-                if (!expression->terms().back()->is_allowed_in_type_declaration())
+                if (!is_allowed_in_type_declaration(*expression->terms().back()))
                     expression->mark_not_type_declaration();
                 break;
 
@@ -122,7 +123,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
             case TokenType::type_identifier:
             case TokenType::arrow_operator:
                 expression->terms().push_back(parse_term(in_tied_expression));
-                if (!expression->terms().back()->is_allowed_in_type_declaration())
+                if (!is_allowed_in_type_declaration(*expression->terms().back()))
                     expression->mark_not_type_declaration();
                 break;
 

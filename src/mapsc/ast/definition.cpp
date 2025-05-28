@@ -13,6 +13,7 @@
 
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/expression.hh"
+#include "mapsc/ast/expression_properties.hh"
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
 
@@ -25,21 +26,9 @@ using Log = LogNoContext;
 
 // ------------------------------------- FACTORY FUNTIONS -----------------------------------------
 
-bool Definition::is_known_scalar_value() const {
-    return std::visit(overloaded {
-        [](const Expression* expression) { 
-            return (
-                !(expression->type->is_function()) && 
-                expression->is_constant_value());
-        },
-        [](auto) { return false; }
-    }, const_body());
-}
-
 RT_Definition RT_Definition::testing_definition(const Type* type, bool is_top_level) {
     return RT_Definition{"DUMMY_DEFINITION", External{}, type, is_top_level, TSL};
 }
-
 
 RT_Definition* RT_Definition::external(AST_Store& store, std::string_view name, const Type* type, 
     const SourceLocation& location) {
@@ -215,6 +204,17 @@ bool Definition::is_empty() const {
         [](const Expression*) { return false; },
         [](const Statement* statement) { return statement->is_empty(); },
         [](BTD_Binding) { return false; }
+    }, const_body());
+}
+
+bool Definition::is_known_scalar_value() const {
+    return std::visit(overloaded {
+        [](const Expression* expression) { 
+            return (
+                !(expression->type->is_function()) && 
+                    is_constant_value(*expression));
+        },
+        [](auto) { return false; }
     }, const_body());
 }
 

@@ -6,19 +6,6 @@
 
 namespace Maps {
 
-bool Expression::is_identifier() const {
-    switch (expression_type) {
-        case ExpressionType::identifier:
-        case ExpressionType::type_identifier:
-        case ExpressionType::operator_identifier:
-        case ExpressionType::type_operator_identifier:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
 Expression* create_identifier(AST_Store& store, RT_Scope* scope, const std::string& value, 
     const SourceLocation& location) {
     

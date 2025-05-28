@@ -7,7 +7,7 @@
 #include "mapsc/logging.hh"
 
 #include "mapsc/ast/expression.hh"
-
+#include "mapsc/ast/expression_properties.hh"
 
 using std::optional, std::nullopt;
 
@@ -22,13 +22,13 @@ bool Type::cast_to(const Type* target_type, Expression& expression) const {
     if (*expression.type == *target_type)
         return true;
 
-    if (!expression.is_castable_expression()) {
+    if (!is_castable_expression(expression)) {
         Log::error("expression " + expression.log_message_string() + ", is not castable", 
             expression.location);
         return false;
     }
     
-    if (expression.is_constant_value())
+    if (is_constant_value(expression))
         return cast_to_(target_type, expression);
 
     return false;

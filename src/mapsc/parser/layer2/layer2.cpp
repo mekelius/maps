@@ -11,6 +11,7 @@
 
 #include "mapsc/compilation_state.hh"
 
+#include "mapsc/ast/expression_properties.hh"
 #include "mapsc/ast/reference.hh"
 #include "mapsc/types/type.hh"
 #include "mapsc/types/function_type.hh"
@@ -93,7 +94,7 @@ bool TermedExpressionParser::run() {
 
 Expression* TermedExpressionParser::get_term() {
     Expression* current_term = *next_term_it_;
-    assert(current_term->is_ok_in_layer2() && 
+    assert(is_ok_in_layer2(*current_term) && 
         "TermedExpressionParser encountered a term not ok in layer2");
     next_term_it_++;
     return current_term;
@@ -975,7 +976,7 @@ void TermedExpressionParser::post_binary_operator_state() {
             // if the call is partial, try to complete it first
             // NOTE: partial call_state could also return a partial call, in which case
             //       we can try to apply the operator onto that
-            if (current_term()->is_partial_call()) {
+            if (is_partial_call(*current_term())) {
                 partial_call_state();
             }
             
@@ -1252,7 +1253,7 @@ void TermedExpressionParser::push_partial_call(Expression* callee_ref,
 void TermedExpressionParser::add_to_partial_call_and_push(Expression* partial_call, 
     const std::vector<Expression*>& args, SourceLocation location) {
 
-    assert(partial_call->is_partial_call() && 
+    assert(is_partial_call(*partial_call) && 
         "TermedExpressionParser::add_to_partial_call_and_push called with not a partial call");
 
     auto [callee, old_args] = partial_call->call_value();
@@ -1334,7 +1335,7 @@ bool TermedExpressionParser::is_acceptable_next_arg(Definition* callee,
 bool TermedExpressionParser::ensure_proper_argument_expression_type(
     Expression* arg, const Type* param_type) {
     
-    if (arg->is_allowed_as_arg())
+    if (is_allowed_as_arg(*arg))
         return true;
 
     if (arg->expression_type == ExpressionType::partially_applied_minus)
