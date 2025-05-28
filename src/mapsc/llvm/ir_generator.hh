@@ -128,7 +128,6 @@ public:
     std::optional<llvm::Value*> convert_value(const Maps::Expression& expression);
     std::optional<llvm::Value*> global_constant(const Maps::Expression& expression);
     std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression);
-    llvm::GlobalVariable* handle_string_literal(const Maps::Expression& str);
     std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression);
 
     // ----- PRIVATE FIELDS -----

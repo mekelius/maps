@@ -34,7 +34,7 @@ TEST_CASE("Should handle various cases") {
         CHECK(definition);
         CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
         auto expression = std::get<const Expression*>((*definition)->const_body());
-        CHECK(expression->expression_type == ExpressionType::string_literal);
+        CHECK(expression->expression_type == ExpressionType::known_value);
         CHECK(expression->string_value() == "asd");
     }
 
@@ -57,10 +57,10 @@ TEST_CASE("Should handle various cases") {
         auto rhs = terms.at(2);
 
         CHECK((lhs->expression_type == ExpressionType::known_value || 
-            lhs->expression_type == ExpressionType::string_literal));
+            lhs->expression_type == ExpressionType::known_value));
         CHECK(op->expression_type == ExpressionType::operator_identifier);
         CHECK((rhs->expression_type == ExpressionType::known_value || 
-            rhs->expression_type == ExpressionType::numeric_literal));
+            rhs->expression_type == ExpressionType::known_value));
     }
 
     SUBCASE("\"10\"+5") {
@@ -82,10 +82,10 @@ TEST_CASE("Should handle various cases") {
         auto rhs = terms.at(2);
 
         CHECK((lhs->expression_type == ExpressionType::known_value || 
-            lhs->expression_type == ExpressionType::string_literal));
+            lhs->expression_type == ExpressionType::known_value));
         CHECK(op->expression_type == ExpressionType::operator_identifier);
         CHECK((rhs->expression_type == ExpressionType::known_value || 
-            rhs->expression_type == ExpressionType::numeric_literal));
+            rhs->expression_type == ExpressionType::known_value));
     }
 
     SUBCASE("(\"10\"+5)") {
@@ -107,10 +107,10 @@ TEST_CASE("Should handle various cases") {
         auto rhs = terms.at(2);
 
         CHECK((lhs->expression_type == ExpressionType::known_value || 
-            lhs->expression_type == ExpressionType::string_literal));
+            lhs->expression_type == ExpressionType::known_value));
         CHECK(op->expression_type == ExpressionType::operator_identifier);
         CHECK((rhs->expression_type == ExpressionType::known_value || 
-            rhs->expression_type == ExpressionType::numeric_literal));
+            rhs->expression_type == ExpressionType::known_value));
     }
 }
 

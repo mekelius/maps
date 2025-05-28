@@ -52,9 +52,6 @@ struct Expression;
 // NOTE: references and calls are created by scopes, rest are created by AST
 // See: 'docs/internals/ast\ nodes' for description of what these mean 
 enum class ExpressionType {
-    string_literal = 0,         // value: string
-    numeric_literal,
-
     known_value,
     
     identifier,                 // value: string

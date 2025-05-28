@@ -30,8 +30,6 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
             Log::debug("Expression " + log_message_string() + " in not castable", type_declaration_location);
             return nullopt;
 
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
         case ExpressionType::known_value:
             // as a special case, every type can be casted into a const function of itself
             if (target_type->is_function()) {

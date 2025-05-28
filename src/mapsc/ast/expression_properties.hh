@@ -7,7 +7,6 @@ struct Expression;
 
 bool is_partial_call(const Expression&);
 bool is_reduced_value(const Expression&);
-bool is_literal(const Expression&);
 bool is_illegal(const Expression&);
 bool is_reference(const Expression&);
 bool is_identifier(const Expression&);

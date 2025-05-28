@@ -17,14 +17,14 @@ namespace Maps {
 Expression* create_string_literal(AST_Store& store, const std::string& value, 
     const SourceLocation& location) {
     
-    return store.allocate_expression({ExpressionType::string_literal, value, &String, location});
+    return store.allocate_expression({ExpressionType::known_value, value, &String, location});
 }
 
 Expression* create_numeric_literal(AST_Store& store, const std::string& value, 
     const SourceLocation& location) {
     
     return store.allocate_expression(
-        {ExpressionType::numeric_literal, value, &NumberLiteral, location});
+        {ExpressionType::known_value, value, &NumberLiteral, location});
 }
 
 Expression* create_known_value(CompilationState& state, KnownValue value,
@@ -87,9 +87,7 @@ optional<Expression*> create_known_value(CompilationState& state, KnownValue val
 }
 
 optional<KnownValue> Expression::known_value_value() const {
-    assert((expression_type == ExpressionType::known_value || 
-        expression_type == ExpressionType::string_literal || 
-        expression_type == ExpressionType::numeric_literal) && 
+    assert((expression_type == ExpressionType::known_value) && 
         "known_value_value called on not a known_value");
 
     return std::visit(overloaded {

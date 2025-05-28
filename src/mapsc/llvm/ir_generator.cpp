@@ -357,12 +357,6 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
         case ExpressionType::known_value:
             return handle_value(expression);
 
-        case ExpressionType::string_literal:
-            return handle_string_literal(expression);
-
-        case ExpressionType::numeric_literal:
-            return convert_numeric_literal(expression);
-
         default:
             *errs_ << "error during codegen: unhandled: " 
                    << expression.log_message_string() << "\n";
@@ -529,9 +523,6 @@ optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& exp
         return nullopt;
     }
 
-    if (is_literal(expression))
-        return convert_literal(expression);
-
     if (expression.expression_type == ExpressionType::known_value) {
         return convert_value(expression);
     }
@@ -551,10 +542,6 @@ optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expressio
     fail(capitalize(expression.log_message_string()) + " is not a literal");
 
     return nullopt;
-}
-
-llvm::GlobalVariable* IR_Generator::handle_string_literal(const Expression& expression) {
-    return builder_->CreateGlobalString(expression.string_value());
 }
 
 // ??? shouldn;t this have been done earlier

@@ -26,6 +26,6 @@ TEST_CASE("Should recognize minus as a special case") {
     auto terms = expression->terms();
     CHECK(terms.size() == 2);
     CHECK(terms.at(0)->expression_type == ExpressionType::minus_sign);
-    CHECK(terms.at(1)->expression_type == ExpressionType::numeric_literal);
+    CHECK(terms.at(1)->expression_type == ExpressionType::known_value);
     CHECK(terms.at(1)->string_value() == "5");
 }

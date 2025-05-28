@@ -26,7 +26,6 @@ constexpr ConcreteType Float { Float_ID, "Float", &cast_from_Float };
 constexpr ConcreteType String { String_ID, "String", &cast_from_String };
 constexpr CT_Type Absurd{ "Absurd", &not_castable, &not_concretizable, true };
 constexpr CT_Type Hole{ "Hole", &not_castable, &not_concretizable };
-constexpr CT_Type Number{ "Number", &cast_from_Number, &concretize_Number };
 constexpr CT_Type NumberLiteral{ "NumberLiteral", &cast_from_NumberLiteral, &concretize_NumberLiteral };
 constexpr CT_Type TestingType{ "TestingType", &not_castable, &not_concretizable };
 constexpr auto IO_Int = IO_TypeConstructor::ct_apply("IO_Int", Int);
@@ -39,7 +38,7 @@ constexpr auto CT_TYPES_COUNT = __LINE__ - CT_TYPES_START_LINE - 1;
 
 constexpr std::array<const Type*, CT_TYPES_COUNT> BUILTIN_TYPES {
     &Void, &Int, &Boolean, &Float, &String,
-    &Absurd, &Hole, &Number, &NumberLiteral, &TestingType,
+    &Absurd, &Hole, &NumberLiteral, &TestingType,
     &IO_Int, &IO_Boolean, &IO_Float, &IO_String, &IO_Void,
 
     &MutString

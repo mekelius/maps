@@ -22,7 +22,7 @@ inline tuple<Expression*, Definition*> create_operator_helper(CompilationState& 
     const string& op_string, unsigned int precedence = 500) {
 
     const Type* type = state.types_->get_function_type(
-        &Number, std::array<const Type* const, 2>{&Number, &Number}, true);
+        &NumberLiteral, {&NumberLiteral, &NumberLiteral}, true);
     Definition* op_definition = state.ast_store_->allocate_operator(
         RT_Operator::create_binary(op_string, External{}, type, precedence, 
             RT_Operator::Associativity::left, true, TSL));

@@ -76,12 +76,6 @@ std::string Expression::log_message_string() const {
         case ExpressionType::layer2_expression:
             return value_to_string(value);
 
-        case ExpressionType::string_literal:
-            return "string literal \"" + string_value() + "\"";
-
-        case ExpressionType::numeric_literal:
-            return "numeric literal +" + string_value();
-    
         case ExpressionType::known_value:
             return "value expression " + value_to_string(value);
         
@@ -150,8 +144,6 @@ std::string Expression::log_message_string() const {
 
 std::string_view Expression::expression_type_string_view() const {
     switch (expression_type) {
-        case ExpressionType::string_literal: return "string_literal";
-        case ExpressionType::numeric_literal: return "numeric_literal";
         case ExpressionType::known_value: return "known_value";
         case ExpressionType::identifier: return "identifier";
         case ExpressionType::operator_identifier: return "operator_identifier";

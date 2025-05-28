@@ -49,9 +49,7 @@ using Log = LogInContext<LogContext::layer2>;
                          case ExpressionType::type_construct
 
 // Expression types guaranteed to be simple values
-#define GUARANTEED_VALUE ExpressionType::string_literal:\
-                    case ExpressionType::numeric_literal:\
-                    case ExpressionType::known_value
+#define GUARANTEED_VALUE ExpressionType::known_value
 
 #define POTENTIAL_FUNCTION ExpressionType::call:\
                       case ExpressionType::reference:\
@@ -147,18 +145,6 @@ bool TermedExpressionParser::parse_stack_reduced() const {
     // quick and dirty
     // TODO: some better check
     return parse_stack_.size() == 1;
-}
-
-// TODO: mave this to AST
-bool is_value_literal(Expression* expression) {
-    switch (expression->expression_type) {
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
-            return true;
-        
-        default:
-            return false;
-    }
 }
 
 optional<Expression*> TermedExpressionParser::parse_termed_expression() {

@@ -103,16 +103,16 @@ TEST_CASE("Should set the type on a \"operator expression\" to the return type")
     auto test_op = RT_Operator::create_binary(">=?", &test_op_expr, 5, 
         Operator::Associativity::left, true, TSL);
 
-    auto lhs = Expression{ExpressionType::numeric_literal, "3", &NumberLiteral, TSL};
-    auto rhs = Expression{ExpressionType::numeric_literal, "7", &NumberLiteral, TSL};
+    auto lhs = create_numeric_literal(ast, "3", TSL);
+    auto rhs = create_numeric_literal(ast, "7", TSL);
 
     auto reference = create_operator_reference(ast, &test_op, TSL);
 
-    auto expr = create_layer2_expression_testing(ast, {&lhs, reference, &rhs}, TSL);
+    auto expr = create_layer2_expression_testing(ast, {lhs, reference, rhs}, TSL);
 
     run_layer2(state, expr);
 
     CHECK(expr->expression_type == ExpressionType::call);
-    CHECK(expr->call_value() == CallExpressionValue{&test_op, {&lhs, &rhs}});
+    CHECK(expr->call_value() == CallExpressionValue{&test_op, {lhs, rhs}});
     CHECK(*expr->type == String);
 }

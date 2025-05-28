@@ -114,12 +114,6 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 
 
     switch (expression.expression_type) {
-        case ExpressionType::string_literal:
-            return *this << "\"" << std::get<std::string>(expression.value) << "\"";
-        
-        case ExpressionType::numeric_literal:
-            return *this << std::get<std::string>(expression.value);
-
         case ExpressionType::layer2_expression: {
             // indent_stack++;
             // *this << linebreak();

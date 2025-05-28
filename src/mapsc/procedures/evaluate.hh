@@ -31,8 +31,6 @@ inline std::optional<KnownValue> evaluate(const Definition* definition) {
                 case ExpressionType::known_value_reference:
                     return evaluate(expression->reference_value());
 
-                case ExpressionType::string_literal:
-                case ExpressionType::numeric_literal:
                 case ExpressionType::known_value: {
                     Log::debug_extra("Evaluating " + expression->log_message_string(), 
                         expression->location);

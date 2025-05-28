@@ -16,7 +16,7 @@ TEST_CASE("Type concretizer should handle an Int Number") {
     Expression expr{
         ExpressionType::known_value,
         "34",
-        &Number,
+        &NumberLiteral,
         TSL,
     };
     
@@ -34,7 +34,7 @@ TEST_CASE("Type concretizer should handle a Float Number") {
     Expression expr{
         ExpressionType::known_value,
         "3.4",
-        &Number,
+        &NumberLiteral,
         TSL,
     };
     
@@ -96,7 +96,7 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the de
     Expression value{ExpressionType::known_value, 1, IntInt, TSL};
     RT_Definition const_Int{"const_Int", &value, true, TSL};
 
-    Expression arg{ExpressionType::known_value, "5", &Number, TSL};
+    Expression arg{ExpressionType::known_value, "5", &NumberLiteral, TSL};
     Expression call{ExpressionType::call, CallExpressionValue{&const_Int, {&arg}}, TSL};
     call.type = dynamic_cast<const FunctionType*>(const_Int.get_type())->return_type();
 
@@ -117,8 +117,8 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
     REQUIRE(*dummy_definition.get_type() == *IntIntInt);
 
     SUBCASE("Number -> Number -> Number into Int -> Int -> Int") {
-        Expression arg1{ExpressionType::known_value, "12", &Number, TSL};
-        Expression arg2{ExpressionType::known_value, "14", &Number, TSL};
+        Expression arg1{ExpressionType::known_value, "12", &NumberLiteral, TSL};
+        Expression arg2{ExpressionType::known_value, "14", &NumberLiteral, TSL};
 
         Expression call{ExpressionType::call,
             CallExpressionValue{&dummy_definition, {&arg1, &arg2}}, &Int, TSL};
@@ -133,7 +133,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
     }
 
     SUBCASE("Number -> Int -> Int into Int -> Int -> Int") {
-        Expression arg1{ExpressionType::known_value, "12", &Number, TSL};
+        Expression arg1{ExpressionType::known_value, "12", &NumberLiteral, TSL};
         Expression arg2{ExpressionType::known_value, 14, &Int, TSL};
 
         Expression call{ExpressionType::call,
@@ -149,7 +149,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
     }
 
     SUBCASE("Number -> Int -> Int into Int -> Int -> Int") {
-        Expression arg1{ExpressionType::known_value, "12", &Number, TSL};
+        Expression arg1{ExpressionType::known_value, "12", &NumberLiteral, TSL};
         Expression arg2{ExpressionType::known_value, 14, &Int, TSL};
 
         Expression call{ExpressionType::call,
@@ -173,7 +173,7 @@ TEST_CASE("Concretizer should be able to cast arguments up if needed") {
     RT_Definition dummy_definition = RT_Definition::testing_definition(IntIntInt);
 
     SUBCASE("Number -> Int -> Float into Float -> Float -> Float") {
-        Expression arg1{ExpressionType::known_value, "12.45", &Number, TSL};
+        Expression arg1{ExpressionType::known_value, "12.45", &NumberLiteral, TSL};
         Expression arg2{ExpressionType::known_value, 148, &Int, TSL};
 
         Expression call{ExpressionType::call, 

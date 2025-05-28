@@ -74,11 +74,11 @@ TEST_CASE("Should be able to cast a Number with an int value into Float") {
     Expression expr{
         ExpressionType::known_value,
         "999",
-        &Number,
+        &NumberLiteral,
         TSL,
     };
 
-    CHECK(Number.cast_to(&Float, expr));
+    CHECK(NumberLiteral.cast_to(&Float, expr));
     CHECK(*expr.type == Float);
     CHECK(holds_alternative<maps_Float>(expr.value));
     CHECK(get<maps_Float>(expr.value) == 999);

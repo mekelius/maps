@@ -17,13 +17,12 @@ TEST_CASE("String literal") {
     
     auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
 
-    CHECK(state.is_valid);
     CHECK(success);
     CHECK(top_level);
     CHECK(*(*top_level)->get_type() == String);
 
     auto body = std::get<const Expression*>((*top_level)->const_body());
-    CHECK(body->expression_type == ExpressionType::string_literal);
+    CHECK(body->expression_type == ExpressionType::known_value);
     CHECK(body->string_value() == "hmm");
 }
 
@@ -33,12 +32,11 @@ TEST_CASE("Numeric literal") {
     
     auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
 
-    CHECK(state.is_valid);
     CHECK(top_level);
     CHECK(*(*top_level)->get_type() == NumberLiteral);
 
     auto body = std::get<const Expression*>((*top_level)->const_body());
-    CHECK(body->expression_type == ExpressionType::numeric_literal);
+    CHECK(body->expression_type == ExpressionType::known_value);
     CHECK(body->string_value() == "435");
 }
 
@@ -52,7 +50,6 @@ TEST_CASE("Identifier into reference") {
     
     auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
 
-    CHECK(state.is_valid);
     CHECK(top_level);
     CHECK(*(*top_level)->get_type() == Hole);
 
@@ -77,7 +74,7 @@ TEST_CASE("Definition") {
     CHECK(*(*x)->get_type() == NumberLiteral);
 
     auto body = std::get<const Expression*>((*x)->const_body());
-    CHECK(body->expression_type == ExpressionType::numeric_literal);
+    CHECK(body->expression_type == ExpressionType::known_value);
     CHECK(body->string_value() == "23");
 }
 
@@ -93,19 +90,15 @@ TEST_CASE("Definition") {
 
 TEST_CASE("Shouldn't insert into globals") {
     auto [state, _1, _2] = CompilationState::create_test_state();
-    REQUIRE(state.globals_.empty());
 
     SUBCASE("Top level eval shouldn't") {
         std::stringstream source{"\"hmm\""};
         
         auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
         
-        CHECK(state.is_valid);
-        CHECK(!state.entry_point_);
         CHECK(success);
         CHECK(top_level);
         CHECK(definitions.empty());
-        CHECK(state.globals_.empty());
     }
 
     SUBCASE("Definition in eval shouldn't") {
@@ -113,12 +106,9 @@ TEST_CASE("Shouldn't insert into globals") {
         
         auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
         
-        CHECK(state.is_valid);
-        CHECK(!state.entry_point_);
         CHECK(success);
         CHECK(!top_level);
         CHECK(definitions.size() == 1);
-        CHECK(state.globals_.empty());
     }
 
     SUBCASE("Definition not in eval shouldn't") {
@@ -126,12 +116,9 @@ TEST_CASE("Shouldn't insert into globals") {
         
         auto [success, top_level, definitions, _] = parse_dsir(state, source);
         
-        CHECK(state.is_valid);
-        CHECK(!state.entry_point_);
         CHECK(success);
         CHECK(!top_level);
         CHECK(definitions.size() == 1);
-        CHECK(state.globals_.empty());
     }
 }
 

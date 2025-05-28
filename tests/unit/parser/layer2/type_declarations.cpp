@@ -2,17 +2,19 @@
 
 #include <sstream>
 
-#include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
-#include "mapsc/parser/layer2.hh"
 #include "mapsc/logging_options.hh"
+
 #include "mapsc/types/type_defs.hh"
+
+#include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/value.hh"
 #include "mapsc/ast/misc_expression.hh"
 #include "mapsc/ast/call_expression.hh"
+#include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/ast/reference.hh"
 
-#include "mapsc/ast/layer2_expression.hh"
+#include "mapsc/parser/layer2.hh"
 
 using namespace Maps;
 using namespace std;
@@ -22,19 +24,19 @@ TEST_CASE("Layer2 should handle type specifiers") {
     auto [state, _0, types] = CompilationState::create_test_state();
 
     auto type_specifier = Expression{ExpressionType::type_reference, &Int, TSL};
-    auto value = Expression{ExpressionType::string_literal, "32", &String, TSL};
+    auto value = create_numeric_literal(*state.ast_store_, "32", TSL);
 
     SUBCASE("Int \"32\"") {
-        auto expr = create_layer2_expression_testing(*state.ast_store_, {&type_specifier, &value}, TSL);
+        auto expr = create_layer2_expression_testing(*state.ast_store_, {&type_specifier, value}, TSL);
 
         run_layer2(state, expr);
 
         CHECK(*expr->type == Int);
         CHECK(expr->expression_type == ExpressionType::known_value);
 
-        CHECK(*value.type == Int);
-        CHECK(holds_alternative<maps_Int>(value.value));
-        CHECK(get<maps_Int>(value.value) == 32);
+        CHECK(*value->type == Int);
+        CHECK(holds_alternative<maps_Int>(value->value));
+        CHECK(get<maps_Int>(value->value) == 32);
     }
 
     SUBCASE("Int \"32\" + 987") {
@@ -45,7 +47,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
         auto op_ref = create_operator_reference(*state.ast_store_, &op, TSL);
         auto rhs = create_numeric_literal(*state.ast_store_, "987", TSL);
         auto expr = create_layer2_expression_testing(*state.ast_store_, 
-            {&type_specifier, &value, op_ref, rhs}, TSL);
+            {&type_specifier, value, op_ref, rhs}, TSL);
 
         run_layer2(state, expr);
 
@@ -56,10 +58,10 @@ TEST_CASE("Layer2 should handle type specifiers") {
 
         CHECK(args.size() == 2);
         CHECK(callee == &op);
-        CHECK(*value.type == Int);
-        CHECK(holds_alternative<maps_Int>(value.value));
-        CHECK(get<maps_Int>(value.value) == 32);
-        CHECK(*args.at(0) == value);
+        CHECK(*value->type == Int);
+        CHECK(holds_alternative<maps_Int>(value->value));
+        CHECK(get<maps_Int>(value->value) == 32);
+        CHECK(*args.at(0) == *value);
     }
 }
 

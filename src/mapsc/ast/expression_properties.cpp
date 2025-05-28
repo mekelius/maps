@@ -24,8 +24,6 @@ bool is_allowed_as_arg(const Expression& expression) {
         case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_binop_call_both:
         case ExpressionType::known_value_reference:
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
         case ExpressionType::known_value:
             return true;
     }
@@ -62,8 +60,6 @@ bool is_reference(Expression& expression) {
 
 bool is_constant_value(const Expression& expression) {
     switch (expression.expression_type) {
-        case ExpressionType::numeric_literal:
-        case ExpressionType::string_literal:
             assert(holds_alternative<std::string>(expression.value) && 
                 "Encountered an expression with literal expressiontype but wrong type of body");
             return true;
@@ -78,21 +74,8 @@ bool is_constant_value(const Expression& expression) {
     }
 }
 
-bool is_literal(const Expression& expression) {
-    switch (expression.expression_type) {
-        case ExpressionType::numeric_literal:
-        case ExpressionType::string_literal:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
 bool is_reduced_value(const Expression& expression) {
     switch (expression.expression_type) {
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
         case ExpressionType::known_value:
         return true;
         
@@ -125,8 +108,6 @@ bool is_ok_in_codegen(const Expression& expression) {
     switch (expression.expression_type) {
         case ExpressionType::reference:
         case ExpressionType::call:
-        case ExpressionType::string_literal:
-        case ExpressionType::numeric_literal:
             return true;
 
         default:

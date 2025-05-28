@@ -52,11 +52,6 @@ bool cast_from_Int(const Type* target_type, Expression& expression) {
         return true;
     }
 
-    if (*target_type == Number) {
-        cast_value<std::string>(expression, &Number, std::to_string(int_value));
-        return true;
-    }
-
     if (*target_type == String) {
         cast_value<std::string>(expression, &String, std::to_string(int_value));
         return true;
@@ -72,11 +67,6 @@ bool cast_from_Int(const Type* target_type, Expression& expression) {
 
 bool cast_from_Float(const Type* target_type, Expression& expression) {
     double double_value = std::get<maps_Float>(expression.value);
-
-    if (*target_type == Number) {
-        cast_value<std::string>(expression, &Number, std::to_string(double_value));
-        return true;
-    }
 
     if (*target_type == String) {
         cast_value<std::string>(expression, &String, std::to_string(double_value));
@@ -153,11 +143,6 @@ bool cast_from_Boolean(const Type* target_type, Expression& expression) {
 bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
     if (*target_type == String) {
         cast_value<std::string>(expression, &String, expression.string_value());
-        return true;
-    }
-    
-    if (*target_type == Number) {
-        cast_value<std::string>(expression, &Number, expression.string_value());
         return true;
     }
 

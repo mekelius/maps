@@ -47,7 +47,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
         expr->terms().push_back(value);
         run_layer2(state, expr);
 
-        CHECK(expr->expression_type == ExpressionType::string_literal);
+        CHECK(expr->expression_type == ExpressionType::known_value);
         CHECK(expr->string_value() == value->string_value());
     }
 
@@ -56,7 +56,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
         expr->terms().push_back(value);
         run_layer2(state, expr);
 
-        CHECK(expr->expression_type == ExpressionType::numeric_literal);
+        CHECK(expr->expression_type == ExpressionType::known_value);
         CHECK(expr->string_value() == value->string_value());
     }
 }
@@ -121,7 +121,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     }
 
     SUBCASE("If the call is not partial, the call expression's type should be the return type") {
-        const Type* function_type = types->get_function_type(&Number, std::array{&String}, true);
+        const Type* function_type = types->get_function_type(&NumberLiteral, std::array{&String}, true);
         
         RT_Definition function{"test_f", External{}, function_type, true, TSL};
         Expression* ref = create_reference(ast, &function, TSL);
@@ -133,7 +133,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
 
         run_layer2(state, expr);
         
-        CHECK(expr->type == &Number);
+        CHECK(expr->type == &NumberLiteral);
     }
 }
 

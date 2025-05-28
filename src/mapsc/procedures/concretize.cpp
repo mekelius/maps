@@ -136,10 +136,6 @@ bool concretize(CompilationState& state, Expression& expression) {
         case ExpressionType::call:
             return concretize_call(state, expression);
 
-        case ExpressionType::string_literal:
-            return true;
-
-        case ExpressionType::numeric_literal:
         case ExpressionType::known_value:
             return concretize_value(expression);
 

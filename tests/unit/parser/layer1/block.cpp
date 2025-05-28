@@ -156,7 +156,7 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
             \
             auto expression = std::get<const Expression*>((*definition)->const_body());\
             \
-            CHECK(expression->expression_type == ExpressionType::numeric_literal);\
+            CHECK(expression->expression_type == ExpressionType::known_value);\
             CHECK(expression->string_value() == "4");\
         }\
 
