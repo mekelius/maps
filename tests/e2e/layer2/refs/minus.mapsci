@@ -1,25 +1,25 @@
 // RUN: %mapsci --layer2 --stop-after=layer2 < %s | filecheck %s
 
-let a;
-let b;
-let c;
+let a = 1;
+let b = 2;
+let c = 3;
 
-a - b               // CHECK: a - b
--b                  // CHECK: -b
-(-b)                // CHECK: -b
--(a + b)            // CHECK: -( a + b )
-a -b                // CHECK: a - b
-a - ( b - c )       // CHECK: a - ( b - c )
-a - b-c             // CHECK: a - ( b - c )
+a - b               // CHECK: 1 - 2
+-b                  // CHECK: -2
+(-b)                // CHECK: -2
+-(a + b)            // CHECK: -( 1 + 2 )
+a -b                // CHECK: 1 - 2
+a - ( b - c )       // CHECK: 1 - ( 2 - 3 )
+a - b-c             // CHECK: 1 - ( 2 - 3 )
 
--a-b                // CHECK: ( -a ) - b
--a -b               // CHECK: ( -a ) - b
-- a - b             // CHECK: ( -a ) - b
--a*b                // CHECK: ( -a ) * b
-- -a                // CHECK: -( -a )
-- - -a              // CHECK: -(-( -a ))
--(a + b)            // CHECK: -( a + b )
-(-a + -b)           // CHECK: ( -a ) + ( -b )
-(-a + -b) + c       // CHECK: ( ( -a ) + ( -b ) ) + c
-a - - b             // CHECK: a - (-b)
--a*b                // CHECK: ( -a ) * b
+-a-b                // CHECK: ( -1 ) - 2
+-a -b               // CHECK: ( -1 ) - 2
+- a - b             // CHECK: ( -1 ) - 2
+-a*b                // CHECK: ( -1 ) * 2
+- -a                // CHECK: -( -1 )
+- - -a              // CHECK: -(-( -1 ))
+-( a + b )          // CHECK: (-( 1 + 2 ))
+(-a + -b)           // CHECK: ( -1 ) + ( -2 )
+(-a + -b) + c       // CHECK: ( ( -1 ) + ( -2 ) ) + 3
+a - - b             // CHECK: 1 - (-2)
+-a*b                // CHECK: ( -1 ) * 2

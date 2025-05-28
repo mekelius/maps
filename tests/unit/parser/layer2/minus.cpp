@@ -28,6 +28,29 @@ TEST_CASE("Unary minus by itself should result in a partially applied minus") {
     CHECK(*expr->type == Int);
 }
 
+// TEST_CASE("-known_val_ref") {
+//     auto [state, _0, types] = CompilationState::create_test_state();
+//     auto& ast_store = *state.ast_store_;
+
+//     auto value = Expression::numeric_literal(ast_store, "456", TSL);
+//     auto value_def = ast_store.allocate_definition(RT_Definition{"x", value, true, TSL});
+//     auto value_ref = Expression::reference(ast_store, value_def, TSL);
+//     auto minus = Expression::minus_sign(ast_store, TSL);
+
+//     auto expr = Expression::termed_testing(ast_store, {minus, value_ref}, TSL);    
+
+//     bool success = run_layer2(state, expr);
+
+//     CHECK(success);
+
+//     CHECK(expr->expression_type == ExpressionType::partially_applied_minus);
+
+//     auto inner_value = expr->partially_applied_minus_arg_value();
+
+//     CHECK(inner_value->expression_type == ExpressionType::known_value);
+//     CHECK(*inner_value->type == Int);
+// }
+
 TEST_CASE("7 + - 2") {
     auto [state, types] = CompilationState::create_test_state_with_builtins();
     auto& ast_store = *state.ast_store_;

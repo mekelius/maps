@@ -191,8 +191,15 @@ struct Expression {
     static Expression* operator_reference(AST_Store& store, 
         Definition* callee, const SourceLocation& location);
 
-    static std::optional<Expression*> reference(AST_Store& store, const Scope& scope, 
-        const std::string& name, const SourceLocation& location);
+    template <class T>
+    static std::optional<Expression*> reference(AST_Store& store, const Scope_T<T> scope, 
+        const std::string& name, const SourceLocation& location) {
+            if (auto definition = scope.get_identifier(name))
+                return reference(store, *definition, location);
+
+            return std::nullopt;
+        }
+
     static std::optional<Expression*> type_operator_reference(AST_Store& store, 
         const std::string& name, const Type* type, const SourceLocation& location);
 
@@ -279,6 +286,7 @@ struct Expression {
     const Type* type_reference_value() const;
     Definition* operator_reference_value() const;
     std::optional<KnownValue> known_value_value() const;
+    Expression* partially_applied_minus_arg_value() const;
 
     // LambdaExpressionValue& lambda_value();
     // const LambdaExpressionValue& lambda_value() const;

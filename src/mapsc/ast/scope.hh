@@ -23,10 +23,7 @@ using Log_creation = LogInContext<LogContext::identifier_creation>;
 
 class CT_Definition;
 
-/**
- * Scopes contain names bound to definitions
- * TODO: implement a constexpr hashmap that can be initialized in static memory 
- */
+// Scopes contain names bound to definitions
 template <typename T>
 class Scope_T {
 public:
@@ -38,6 +35,7 @@ public:
     size_t size() const { return identifiers_.size(); }
 
     Scope_T() = default;
+    Scope_T(Scope_T* parent_scope):parent_scope_(parent_scope) {}
     Scope_T(const Scope_T& other) = default;
     Scope_T& operator=(const Scope_T& other) = default;
     ~Scope_T() = default;
@@ -71,11 +69,14 @@ public:
 
     std::vector<T> identifiers_in_order_ = {};
 
+    bool is_top_level_scope() { return !parent_scope().has_value(); }
+    std::optional<Scope_T*> parent_scope() { return parent_scope_; } 
+    
 private:
+    std::optional<Scope_T*> parent_scope_ = std::nullopt;
     std::map<std::string, T> identifiers_;
 };
 
-using Scope = Scope_T<Definition*>;
 using RT_Scope = Scope_T<RT_Definition*>;
 using CT_Scope = Scope_T<CT_Definition*>;
 

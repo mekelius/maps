@@ -68,6 +68,12 @@ CallExpressionValue& Expression::call_value() {
     return std::get<CallExpressionValue>(value);
 }
 
+Expression* Expression::partially_applied_minus_arg_value() const {
+    assert(false && "not implemented");
+    return nullptr;
+    // return std::get<>(value);
+}
+
 Expression* Expression::missing_argument(AST_Store& store, const Type* type, 
     const SourceLocation& location) {
     

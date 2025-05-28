@@ -66,15 +66,6 @@ Expression* Expression::reference(AST_Store& store, Definition* definition,
     }, definition->const_body());
 }
 
-std::optional<Expression*> Expression::reference(AST_Store& store, const Scope& scope, 
-    const std::string& name, const SourceLocation& location) {
-    
-    if (auto definition = scope.get_identifier(name))
-        return reference(store, *definition, location);
-
-    return std::nullopt;
-}
-
 Expression* Expression::type_reference(AST_Store& store, const Type* type, 
     const SourceLocation& location) {
     
