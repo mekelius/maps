@@ -102,7 +102,7 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
                 return nullopt;
             }
 
-            if (!convert_to_unary_minus_call(state)) {
+            if (!convert_to_unary_minus_call(state, *this)) {
                 Log::error("Converting to unary minus call failed", type_declaration_location);
                 return nullopt;
             }

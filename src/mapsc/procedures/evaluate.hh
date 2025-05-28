@@ -9,6 +9,8 @@
 #include "mapsc/logging.hh"
 
 #include "mapsc/ast/expression.hh"
+#include "mapsc/ast/value.hh"
+
 #include "mapsc/ast/definition.hh"
 
 namespace Maps {
@@ -42,7 +44,7 @@ inline std::optional<KnownValue> evaluate(const Definition* definition) {
                         return nullopt;
                     }
 
-                    Log::debug_extra("Evaluated to " + Expression::value_to_string(*value), 
+                    Log::debug_extra("Evaluated to " + value_to_string(*value), 
                         expression->location);
                     return value;
                 }

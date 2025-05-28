@@ -77,7 +77,7 @@ optional<Expression*> create_known_value(CompilationState& state, KnownValue val
 
     if (!expression->cast_to(state, type)) {
         Log::error("Couldn't create a known value of type " + type->name_string() + 
-            " from value:" + Expression::value_to_string(value), location);
+            " from value:" + value_to_string(value), location);
         return nullopt;
     }
 
@@ -112,7 +112,7 @@ optional<KnownValue> Expression::known_value_value() const {
     }, value);
 }
 
-const Type* Expression::deduce_type(KnownValue value) {
+const Type* deduce_type(KnownValue value) {
     return std::visit(overloaded{
         [](maps_Int) { return &Int; },
         [](maps_Float) { return &Float; },

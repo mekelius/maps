@@ -25,7 +25,7 @@ using Log = LogNoContext;
 
 // ----- STATIC METHODS -----
 
-std::string Expression::value_to_string(const KnownValue& value) {
+std::string value_to_string(const KnownValue& value) {
     return std::visit(overloaded{
         [](const std::string& value)->std::string { return value; },
         [](const maps_MutString& value)->std::string { return std::string{value.data, value.mem_size}; },
@@ -35,10 +35,10 @@ std::string Expression::value_to_string(const KnownValue& value) {
 
 // workaround to deal with ambiguity
 std::string known_value_to_string(const KnownValue& value) {
-    return Expression::value_to_string(value);
+    return value_to_string(value);
 }
 
-std::string Expression::value_to_string(const ExpressionValue& value) {
+std::string value_to_string(const ExpressionValue& value) {
     return std::visit(overloaded{
         [](std::monostate)->std::string { return "@Undefined expression value@"; },
         [](Expression* expression) { return "@reference to@ " + expression->log_message_string(); },
@@ -80,7 +80,7 @@ std::string Expression::log_message_string() const {
             // return type_argument_value().to_string();
 
         case ExpressionType::layer2_expression:
-            return Expression::value_to_string(value);
+            return value_to_string(value);
 
         case ExpressionType::string_literal:
             return "string literal \"" + string_value() + "\"";
@@ -89,7 +89,7 @@ std::string Expression::log_message_string() const {
             return "numeric literal +" + string_value();
     
         case ExpressionType::known_value:
-            return "value expression " + Expression::value_to_string(value);
+            return "value expression " + value_to_string(value);
         
         case ExpressionType::identifier:
             return "identifier " + string_value();

@@ -19,6 +19,10 @@ Expression* create_known_value(CompilationState& state, KnownValue value,
 std::optional<Expression*> create_known_value(CompilationState& state, KnownValue value, 
     const Type* type, const SourceLocation& location);
 
+std::string value_to_string(const ExpressionValue& value);
+std::string value_to_string(const KnownValue& value);
+
+const Type* deduce_type(KnownValue value);
 
 } // namespace Maps
 

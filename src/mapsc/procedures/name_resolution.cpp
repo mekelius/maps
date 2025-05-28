@@ -9,6 +9,7 @@
 
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/expression.hh"
+#include "mapsc/ast/reference.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/logging.hh"
@@ -65,10 +66,10 @@ bool resolve_identifier(CompilationState& state, const_Scopes scopes,
         return false;
     }
 
-    expression->convert_to_reference(*definition);
+    convert_to_reference(*expression, *definition);
 
     if (expression->expression_type == ExpressionType::known_value_reference)
-        if (!expression->convert_by_value_substitution())
+        if (!convert_by_value_substitution(*expression))
             return false;
 
     return true;
@@ -84,7 +85,7 @@ bool resolve_operator(CompilationState& state, const_Scopes scopes,
         return false;
     }
 
-    expression->convert_to_operator_reference(*definition);
+    convert_to_operator_reference(*expression, *definition);
     return true;
 }
 

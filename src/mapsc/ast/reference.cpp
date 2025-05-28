@@ -81,14 +81,14 @@ Expression* create_operator_reference(AST_Store& store, Definition* definition,
     return store.allocate_expression(create_operator_reference(definition, location));
 }
 
-void Expression::convert_to_reference(Definition* definition) {
-    expression_type = definition->is_known_scalar_value() ? 
+void convert_to_reference(Expression& expression, Definition* definition) {
+    expression.expression_type = definition->is_known_scalar_value() ? 
         ExpressionType::known_value_reference : ExpressionType::reference;
-    value = definition;
-    type = definition->get_type();
+    expression.value = definition;
+    expression.type = definition->get_type();
 }
 
-void Expression::convert_to_operator_reference(Definition* definition) {
+void convert_to_operator_reference(Expression& expression, Definition* definition) {
     assert(definition->is_operator() && 
         "convert_to_operator_reference called with not an operator");
 
@@ -96,40 +96,41 @@ void Expression::convert_to_operator_reference(Definition* definition) {
 
     switch (op->fixity()) {
         case Operator::Fixity::binary:
-            expression_type = ExpressionType::binary_operator_reference;
+            expression.expression_type = ExpressionType::binary_operator_reference;
             break;
         case Operator::Fixity::unary_prefix:
-            expression_type = ExpressionType::prefix_operator_reference;
+            expression.expression_type = ExpressionType::prefix_operator_reference;
             break;
         case Operator::Fixity::unary_postfix:
-            expression_type = ExpressionType::postfix_operator_reference;
+            expression.expression_type = ExpressionType::postfix_operator_reference;
             break;
     }
 
-    value = definition;
-    type = definition->get_type();
+    expression.value = definition;
+    expression.type = definition->get_type();
 }
     
-bool Expression::convert_by_value_substitution() {
+bool convert_by_value_substitution(Expression& expression) {
     using Log = LogInContext<LogContext::inline_>;
-    assert(expression_type == ExpressionType::known_value_reference &&
+    assert(expression.expression_type == ExpressionType::known_value_reference &&
         "convert_by_value_substitution called on not a known value reference");
 
-    assert(*type == *reference_value()->get_type() && 
+    assert(*expression.type == *expression.reference_value()->get_type() && 
         "attempting to substitute a value of a different type");
 
-    Log::debug_extra("Attempting to substitute " + log_message_string(), location);
+    Log::debug_extra("Attempting to substitute " + expression.log_message_string(), expression.location);
 
-    auto new_value = evaluate(reference_value());
+    auto new_value = evaluate(expression.reference_value());
     if (!new_value) {
-        Log::error("Substitution failed", location);
+        Log::error("Substitution failed", expression.location);
         return false;
     }
 
-    expression_type = ExpressionType::known_value;
-    value = std::visit([](auto value)->ExpressionValue { return {value}; }, *new_value);
+    expression.expression_type = ExpressionType::known_value;
+    expression.value = std::visit([](auto value)->ExpressionValue { return {value}; }, *new_value);
 
-    Log::debug_extra("Succesfully substituted, new expression: " + log_message_string(), location);
+    Log::debug_extra("Succesfully substituted, new expression: " + expression.log_message_string(), 
+        expression.location);
 
     return true;
 }

@@ -31,6 +31,10 @@ std::optional<Expression*> create_reference(AST_Store& store, const Scope_T<T> s
 std::optional<Expression*> create_type_operator_reference(AST_Store& store, 
     const std::string& name, const Type* type, const SourceLocation& location);
 
+void convert_to_reference(Expression& expression, Definition* callee);
+void convert_to_operator_reference(Expression& expression, Definition* callee);
+[[nodiscard]] bool convert_by_value_substitution(Expression& expression);
+
 } // namespace Maps
 
 #endif

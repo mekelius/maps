@@ -12,6 +12,7 @@
 #include "mapsc/ast/expression_properties.hh"
 
 #include "mapsc/ast/expression.hh"
+#include "mapsc/ast/call_expression.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/types/type.hh"
@@ -147,7 +148,7 @@ bool concretize(CompilationState& state, Expression& expression) {
             return concretize_reference(expression);
 
         case ExpressionType::partially_applied_minus:
-            if (!expression.convert_to_unary_minus_call(state))
+            if (!convert_to_unary_minus_call(state, expression))
                 return false;
             return concretize_call(state, expression);
 

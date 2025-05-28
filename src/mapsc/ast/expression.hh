@@ -170,11 +170,6 @@ struct Expression {
         return Expression{ExpressionType::known_value, value, &type, BUILTIN_SOURCE_LOCATION};
     }
 
-    static std::string value_to_string(const ExpressionValue& value);
-    static std::string value_to_string(const KnownValue& value);
-
-    static const Type* deduce_type(KnownValue value);
-
     // ----- CONSTRUCTORS -----
     Expression(ExpressionType expression_type, const SourceLocation& location)
     :expression_type(expression_type), value(std::monostate{}), location(location) {}
@@ -190,20 +185,6 @@ struct Expression {
         const Type* declared_type, const SourceLocation& location)
     :expression_type(expression_type), value(value), type(type), declared_type(declared_type), 
      location(location) {}
-
-    // ----- CONVERSIONS -----
-    // expect to be a partially applied minus
-    [[nodiscard]] bool convert_to_partial_binop_minus_call_left(CompilationState& state);
-    [[nodiscard]] bool convert_to_unary_minus_call(CompilationState& state);
-    void convert_nullary_reference_to_call();
-    [[nodiscard]] bool convert_by_value_substitution();
-    [[nodiscard]] bool convert_partially_applied_minus_to_arg(CompilationState& state, const Type* param_type);
-
-    // For example partial binop call, currently a no-op
-    void convert_to_partial_call();
-
-    void convert_to_reference(Definition* callee);
-    void convert_to_operator_reference(Definition* callee);
 
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();

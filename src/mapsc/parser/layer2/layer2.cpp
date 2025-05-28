@@ -323,7 +323,7 @@ void TermedExpressionParser::reduce_partially_applied_minus() {
     auto location = (*pop_term())->location;
 
     if (arg->expression_type == ExpressionType::partially_applied_minus)
-        if (!arg->convert_to_unary_minus_call(*compilation_state_))
+        if (!convert_to_unary_minus_call(*compilation_state_, *arg))
             return fail("Creating umary minus call failed", current_term()->location);
 
     auto expression = create_partially_applied_minus(
@@ -442,7 +442,7 @@ void TermedExpressionParser::initial_partially_applied_minus_state() {
     if (at_expression_end())
         return;
 
-    if (!current_term()->convert_to_unary_minus_call(*compilation_state_))
+    if (!convert_to_unary_minus_call(*compilation_state_, *current_term()))
         return fail("Converting to unary minus failed", current_term()->location);
 
     return initial_call_state();
@@ -486,7 +486,7 @@ void TermedExpressionParser::reference_state() {
     // if it's not a function it's treated as a value
     // i.e. the next term has to be an operator
     if (current_term()->type->arity() == 0) {
-        current_term()->convert_nullary_reference_to_call();
+        convert_nullary_reference_to_call(*current_term());
         return value_state();
     }
 
@@ -566,7 +566,7 @@ void TermedExpressionParser::value_state() {
                 " in termed expression, expected an operator", peek()->location);
 
         case ExpressionType::partially_applied_minus:
-            if (!peek()->convert_to_partial_binop_minus_call_left(*compilation_state_))
+            if (!convert_to_partial_binop_minus_call_left(*compilation_state_, *peek()))
                 return fail("Converting to partial binop minus failed", current_term()->location);
 
             // intentional fall-through
@@ -822,7 +822,7 @@ void TermedExpressionParser::minus_sign_state() {
 
         case ExpressionType::partially_applied_minus:
             shift();
-            if (!current_term()->convert_to_unary_minus_call(*compilation_state_))
+            if (!convert_to_unary_minus_call(*compilation_state_, *current_term()))
                 return fail("Converting to unary minus failed", current_term()->location);
             return reduce_partially_applied_minus();
 
@@ -843,7 +843,7 @@ void TermedExpressionParser::partially_applied_minus_state() {
     if (at_expression_end())
         return;
 
-    if(!current_term()->convert_to_unary_minus_call(*compilation_state_))
+    if(!convert_to_unary_minus_call(*compilation_state_, *current_term()))
         return fail("Converting to unary minus failed", current_term()->location);
     return call_state();
 }
@@ -869,12 +869,12 @@ void TermedExpressionParser::partial_binop_call_right_state() {
 
     switch (peek()->expression_type) {
         case ExpressionType::binary_operator_reference:
-            current_term()->convert_to_partial_call(); // treat it as a value
+            convert_to_partial_call(*current_term()); // treat it as a value
             shift();
             return post_binary_operator_state();
 
         case ExpressionType::postfix_operator_reference:
-            current_term()->convert_to_partial_call();
+            convert_to_partial_call(*current_term());
             shift();
             return reduce_postfix_operator(); // It could be an operator that can act on this partial call
 
@@ -990,7 +990,7 @@ void TermedExpressionParser::post_binary_operator_state() {
 
         case ExpressionType::partially_applied_minus:
             shift();
-            if (!current_term()->convert_to_unary_minus_call(*compilation_state_))
+            if (!convert_to_unary_minus_call(*compilation_state_, *current_term()))
                 return fail("Converting to unary minus failed", current_term()->location);
 
             return compare_precedence_state();
@@ -1033,14 +1033,14 @@ void TermedExpressionParser::compare_precedence_state() {
 
     switch (peek()->expression_type) {
         case ExpressionType::partially_applied_minus:
-            peek()->convert_to_partial_call();
+            convert_to_partial_call(*peek());
         case ExpressionType::binary_operator_reference:
         case ExpressionType::partial_binop_call_left:
         case ExpressionType::partial_binop_call_both:
             break;
 
         case ExpressionType::minus_sign:
-            peek()->convert_to_operator_reference(
+            convert_to_operator_reference(*peek(),
                 compilation_state_->special_definitions_.binary_minus);
             break;
 
@@ -1217,7 +1217,7 @@ void TermedExpressionParser::type_reference_state() {
         }
         case ExpressionType::partially_applied_minus: {
             if (current_term()->type_reference_value()->arity() != 0)
-                peek()->convert_to_partial_call();
+                convert_to_partial_call(*peek());
             return apply_type_declaration_and_push(*pop_term(), get_term());
         }
         case ExpressionType::type_reference:
@@ -1317,7 +1317,7 @@ void TermedExpressionParser::substitute_known_value_reference(Expression* known_
 
     Log::debug_extra("Substituting known value reference term", known_value_reference->location);
 
-    if (!known_value_reference->convert_by_value_substitution())
+    if (!convert_by_value_substitution(*known_value_reference))
         fail("Value substitution of " + known_value_reference->log_message_string() + "failed", 
             known_value_reference->location);
 }
@@ -1339,7 +1339,7 @@ bool TermedExpressionParser::ensure_proper_argument_expression_type(
         return true;
 
     if (arg->expression_type == ExpressionType::partially_applied_minus)
-        return arg->convert_partially_applied_minus_to_arg(*compilation_state_, param_type);
+        return convert_partially_applied_minus_to_arg(*compilation_state_, *arg, param_type);
 
     return false;
 }
