@@ -140,14 +140,14 @@ Statement* ParserLayer1::parse_block_statement() {
     
     // determine the block type, i.e. curly-brace or indent
     // must trust the assertion above that other types of tokens won't end up here
-    TokenType ending_token;
+    TokenType block_ending_token;
 
     switch (current_token().token_type) {
         case TokenType::curly_brace_open:
-            ending_token = TokenType::curly_brace_close;
+            block_ending_token = TokenType::curly_brace_close;
             break;
         case TokenType::indent_block_start:
-            ending_token = TokenType::indent_block_end;
+            block_ending_token = TokenType::indent_block_end;
             break;
         default:
             return fail_statement("Something went wrong: " + current_token().get_string() + 
@@ -160,13 +160,13 @@ Statement* ParserLayer1::parse_block_statement() {
     // fetch the substatements vector
     std::vector<Statement*>* substatements = &std::get<Block>(statement->value);
 
-    while (current_token().token_type != ending_token   ||
-            indent_level_ > indent_at_start             || // allow nested blocks
-            curly_brace_level_ > curly_brace_at_start      // allow nested blocks
+    while (current_token().token_type != block_ending_token     ||
+            indent_level_ > indent_at_start + 1                 || // allow nested blocks
+            curly_brace_level_ > curly_brace_at_start + 1          // allow nested blocks
     ) {
         if (current_token().token_type == TokenType::eof)
-            return fail_statement("Unexpected eof while parsing block statement", location);
-
+            break;
+            
         Statement* substatement = parse_statement();
         // discard empty statements
         if (substatement->statement_type != StatementType::empty)

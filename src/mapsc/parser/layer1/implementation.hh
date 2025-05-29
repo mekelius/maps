@@ -44,6 +44,8 @@ protected:
     Token get_token();
     const Token& current_token() const;
     const Token& peek() const;
+    bool eof() const;
+    bool has_failed() const;
 
     void update_brace_levels(Token token);
     void reset_to_top_level();

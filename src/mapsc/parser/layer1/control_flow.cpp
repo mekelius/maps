@@ -5,7 +5,7 @@
 #include "mapsc/ast/misc_expression.hh"
 #include "mapsc/ast/statement.hh"
 
-using std::optional, std::nullopt;
+using std::optional, std::nullopt, std::to_string;
 
 namespace Maps {
 
@@ -13,6 +13,8 @@ using Log = LogInContext<LogContext::layer1>;
 
 Statement* ParserLayer1::parse_if_statement() {
     auto location = current_token().location;
+    auto initial_if_indent = indent_level_;
+    bool final_else_indented = false;
 
     Log::debug_extra("Parsing if statement", current_token().location);
 
@@ -40,6 +42,7 @@ Statement* ParserLayer1::parse_if_statement() {
 
         Log::debug_extra("Parsing else statement", location);
 
+        final_else_indented = indent_level_ > initial_if_indent;
         final_else = parse_statement();
         if (!result_.success)
             return *final_else;
@@ -47,6 +50,23 @@ Statement* ParserLayer1::parse_if_statement() {
         Log::debug_extra("Parsed else statement: " + (*final_else)->log_message_string(), location);
         break;
     }
+
+    if (final_else_indented)
+        while (indent_level_ > initial_if_indent && 
+                current_token().token_type == TokenType::indent_block_end) 
+            get_token();
+
+    if (indent_level_ < initial_if_indent && !eof()) {
+        auto location = current_token().location;
+        Log::debug_extra("Mismatched indents: " + to_string(indent_level_) + 
+            " and " + to_string(initial_if_indent), 
+            location);
+
+        return fail_statement("Mismatched indents at the end of if statement", 
+            location);
+    }
+
+    Log::debug_extra("Finished parsing if statement from " + location.to_string(), location);
 
     return create_if_else_chain(*ast_store_, chain, final_else, location);
 }
@@ -112,11 +132,18 @@ Statement* ParserLayer1::parse_if_statement_body() {
             if (!result_.success)
                 return body;
             
-            if (current_token().token_type != TokenType::indent_block_end)
-                return fail_statement("Mismatched indents in if statement body", 
-                    current_token().location);
+            switch (current_token().token_type) {
+                case TokenType::indent_block_end:
+                    get_token(); // eat indent end
+                    break;
+                case TokenType::eof:
+                case TokenType::else_t:
+                    break;
+                default:
+                    return fail_statement("Mismatched indents in if statement body", 
+                        current_token().location);
+            }
 
-            get_token(); // eat indent end
             return body;
         }
         default:

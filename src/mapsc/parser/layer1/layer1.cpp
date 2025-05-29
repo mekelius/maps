@@ -18,7 +18,7 @@
 #include "mapsc/parser/token.hh"
 #include "mapsc/procedures/simplify.hh"
 
-using std::optional, std::nullopt, std::make_unique;
+using std::optional, std::nullopt, std::make_unique, std::to_string;
 
 
 namespace Maps {
@@ -88,11 +88,11 @@ void ParserLayer1::prime_tokens() {
 }
 
 Token ParserLayer1::get_token() {
-    token_buf_[which_buf_slot_ % 2] = lexer_->get_token();
-    which_buf_slot_++;
-
     // manage the parentheses and indents etc.
     update_brace_levels(current_token());
+
+    token_buf_[which_buf_slot_ % 2] = lexer_->get_token();
+    which_buf_slot_++;
 
     return current_token();
 }
@@ -103,6 +103,14 @@ const Token& ParserLayer1::current_token() const {
 
 const Token& ParserLayer1::peek() const {
     return token_buf_[(which_buf_slot_+1) % 2];
+}
+
+bool ParserLayer1::eof() const {
+    return current_token().token_type == TokenType::eof;
+}
+
+bool ParserLayer1::has_failed() const {
+    return !result_.success;
 }
 
 void ParserLayer1::update_brace_levels(Token token) {
@@ -127,7 +135,7 @@ void ParserLayer1::update_brace_levels(Token token) {
         case TokenType::parenthesis_close:
             parenthese_level_--; break;
 
-        default: return;
+        default: break;
     }
 }
 

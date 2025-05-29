@@ -94,10 +94,17 @@ if (condition) {\n\
 }\
 ")
 
+// IF_CASE("\n\
+// if (\n\
+//     condition)\n\
+// then\n\
+//     return 1\n\
+// ")
+
 #define IF_ELSE_CASE(source_string)\
 TEST_CASE(source_string) {\
-    auto lock = LogOptions::set_global(LogContext::layer1, LogLevel::debug_extra);\
-    LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
+    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
+    LogInContext<LogContext::layer1>::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     \
     auto [state, scope, source] = setup(source_string);\
     \
@@ -142,6 +149,39 @@ IF_ELSE_CASE("\n\
         return 1\n\
     else\n\
         return 2\n\
+")
+
+IF_ELSE_CASE("\n\
+    if (condition) {\n\
+        return 1\n\
+    } else {\n\
+        return 2\n\
+    }\n\
+")
+
+IF_ELSE_CASE("\n\
+    if (condition) then {\n\
+        return 1\n\
+    } else {\n\
+        return 2\n\
+    }\n\
+")
+
+IF_ELSE_CASE("\n\
+    if condition\n\
+        then \n\
+            return 1\n\
+        else \n\
+            return 2\n\
+    ;\
+")
+
+IF_ELSE_CASE("\n\
+    if condition\n\
+        then \n\
+            return 1\n\
+        else \n\
+            return 2\n\
 ")
 
 // TEST_CASE("if_else_chain") {
