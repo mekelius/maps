@@ -53,48 +53,35 @@ Statement* ParserLayer1::parse_statement() {
 
         case TokenType::indent_block_end:
             assert(false && "parse_statement called at indent_block_end");
-            return fail_statement("parse_statement called at indent_block_end", location, true);
+            return fail_statement("Parse_statement called at indent_block_end", location, true);
         
         case TokenType::indent_error_fatal:
-            return fail_statement("indent error", location);
+            return fail_statement("Indent error", location);
 
-        case TokenType::reserved_word:
-            return parse_initial_reserved_word_statement();
-            
+        case TokenType::return_t:
+            return parse_return_statement();
+
+        case TokenType::let:
+            return parse_inner_let_definition();
+
+        case TokenType::if_t:
+            return parse_if_statement();
+        case TokenType::while_t:
+            return parse_while_loop();
+        case TokenType::for_t:
+            return parse_for_loop();
+        case TokenType::guard:
+            return parse_guard_statement();
+        case TokenType::switch_t:
+            return parse_switch_statement();
+        case TokenType::yield_t:
+            return parse_yield_statement();
+
         // ---- errors -----
         default:
             return fail_statement(
                 "Unexpected "+ current_token().get_string() + ", expected a statement", location);
     }
-}
-
-Statement* ParserLayer1::parse_initial_reserved_word_statement() {
-    auto reserved_word = current_token().string_value();
-
-    if (reserved_word == "let") {
-        return parse_inner_let_definition();
-
-    } else if (reserved_word == "return") {
-        return parse_return_statement();
-
-    } else if (reserved_word == "if") {
-        assert(false && "not implemented");
-    } else if (reserved_word == "else") {
-        assert(false && "not implemented");
-    } else if (reserved_word == "for") {
-        assert(false && "not implemented");
-    } else if (reserved_word == "while") {
-        assert(false && "not implemented");
-    } else if (reserved_word == "do") {
-        assert(false && "not implemented");
-    } else if (reserved_word == "switch") {
-        assert(false && "not implemented");
-    } else if (reserved_word == "match") {
-        assert(false && "not implemented");
-    }
-
-    return fail_statement("Unexpected reserved word " + reserved_word + " expected a statement", 
-        current_token().location);
 }
 
 Statement* ParserLayer1::parse_expression_statement() {
@@ -104,12 +91,12 @@ Statement* ParserLayer1::parse_expression_statement() {
     Statement* statement = create_expression_statement(*ast_store_, expression, location);
 
     if(!is_block_starter(current_token()) && !is_statement_separator(current_token()))
-        return fail_statement("statement didn't end in a statement separator", 
+        return fail_statement("Statement didn't end in a statement separator", 
             current_token().location, true);
 
     if (current_token().token_type == TokenType::semicolon)
         get_token(); // eat trailing semicolon
-    log("finished parsing expression statement from " + statement->location.to_string(), 
+    log("Finished parsing expression statement from " + statement->location.to_string(), 
         LogLevel::debug_extra);
     return statement;
 }
@@ -135,7 +122,7 @@ Statement* ParserLayer1::parse_assignment_statement() {
     Statement* statement = create_assignment_statement(*ast_store_, identifier, 
         create_definition(inner_statement, is_top_level, inner_statement->location), location);
 
-    log("finished parsing assignment statement from " + statement->location.to_string(), 
+    log("Finished parsing assignment statement from " + statement->location.to_string(), 
         LogLevel::debug_extra);
     return statement;
 }
@@ -149,7 +136,7 @@ Statement* ParserLayer1::parse_block_statement() {
     unsigned int indent_at_start = indent_level_;
     unsigned int curly_brace_at_start = curly_brace_level_;
 
-    log("start parsing block statement", LogLevel::debug_extra);
+    log("Start parsing block statement", LogLevel::debug_extra);
     
     // determine the block type, i.e. curly-brace or indent
     // must trust the assertion above that other types of tokens won't end up here
@@ -191,7 +178,7 @@ Statement* ParserLayer1::parse_block_statement() {
     if (current_token().token_type == TokenType::semicolon)
         get_token(); // eat possible trailing semicolon
 
-    log("finished parsing block statement from " + statement->location.to_string(), 
+    log("Finished parsing block statement from " + statement->location.to_string(), 
         LogLevel::debug_extra);
 
     if (substatements->size() == 1) {
@@ -213,21 +200,20 @@ Statement* ParserLayer1::parse_block_statement() {
 Statement* ParserLayer1::parse_return_statement() {
     auto location = current_token().location;
 
-    assert(current_token().token_type == TokenType::reserved_word && 
-        current_token().string_value() == "return" 
-        && "parse_return_statement called with current token other than \"return\"");
+    assert(current_token().token_type == TokenType::return_t &&
+        "Parse_return_statement called with current token other than return");
 
     get_token(); //eat return
     Expression* expression = parse_expression();
     Statement* statement = create_return_statement(*ast_store_, expression, location);
 
     assert(is_statement_separator(current_token()) 
-        && "return statement didn't end in statement separator");
+        && "Return statement didn't end in statement separator");
 
     if (current_token().token_type == TokenType::semicolon)
         get_token(); //eat statement separator
 
-    log("parsed return statement", LogLevel::debug_extra);
+    log("Parsed return statement", LogLevel::debug_extra);
     return statement;
 }
 

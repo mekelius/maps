@@ -12,7 +12,7 @@
 #include "mapsc/types/function_type.hh"
 #include "mapsc/ast/definition.hh"
 
-namespace Maps { 
+namespace Maps {
     
 class Type; 
 class FunctionType; 

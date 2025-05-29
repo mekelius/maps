@@ -101,11 +101,16 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
                     expression->mark_not_type_declaration();
                 break;
 
+            case TokenType::indent_block_start:
+                if (is_expression_ender(peek())) {
+                    done = true;
+                    break;
+                }
+                // intentional fall-through
             case TokenType::string_literal:
             case TokenType::number:
             case TokenType::identifier:
             case TokenType::operator_t:
-            case TokenType::indent_block_start:
             case TokenType::type_identifier:
             case TokenType::arrow_operator:
                 expression->terms().push_back(parse_term(in_tied_expression));

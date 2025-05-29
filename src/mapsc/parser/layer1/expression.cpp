@@ -34,7 +34,7 @@ Expression* ParserLayer1::parse_expression() {
         case TokenType::identifier: {
             Token next_token = peek();
 
-            if (is_statement_separator(next_token))
+            if (is_expression_ender(next_token))
                 return handle_identifier();
 
             if (is_access_operator(next_token))
@@ -85,9 +85,7 @@ Expression* ParserLayer1::parse_expression() {
             return expression;
         }
 
-        case TokenType::reserved_word:
-            if (current_token().string_value() != "let")
-                assert(false && "not implemented");
+        case TokenType::let:
             assert(false && "not implemented");            
             
         default:

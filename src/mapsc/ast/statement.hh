@@ -156,7 +156,7 @@ Statement* create_block(AST_Store& store, const Block& block, const SourceLocati
 Statement* create_expression_statement(AST_Store& store, Expression* expression, const SourceLocation& location);
 Statement* create_user_error_statement(AST_Store& store, const SourceLocation& location);
 Statement* create_compiler_error_statement(AST_Store& store, const SourceLocation& location);
-Statement* create_if(AST_Store& store, Expression* condition, const Block& block, const SourceLocation& location);
+Statement* create_if(AST_Store& store, Expression* condition, Statement* body, const SourceLocation& location);
 Statement* create_if_else_chain(AST_Store& store, const IfChain& chain, const SourceLocation& location);
 Statement* create_guard(AST_Store& store, Expression* condition, const SourceLocation& location);
 Statement* create_switch(AST_Store& store, Expression* key, const CaseBlock& cases, const SourceLocation& location);

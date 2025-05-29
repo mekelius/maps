@@ -24,7 +24,7 @@ Lexer::Lexer(std::istream* source_is, SourceFileID source_id)
 Token Lexer::get_token() {
     Token token = get_token_();
 
-    Log::debug_extra(prev_token_.get_string(), prev_token_.location);
+    Log::debug_extra("TOKEN: " + prev_token_.get_string(), prev_token_.location);
     
     // a bit of a hack to keep the outputs in sync
     prev_token_ = token;
@@ -232,8 +232,9 @@ Token Lexer::read_identifier() {
     }
 
     std::string value = buffer_.str();
-    if (is_reserved_word(value))
-        return create_token(TokenType::reserved_word, value);
+
+    if (auto token_type = lookup_reserved_word_token_type(value))
+        return create_token(*token_type);
 
     if (std::isupper(value.at(0)))
         return create_token(TokenType::type_identifier, value);

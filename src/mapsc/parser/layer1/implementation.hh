@@ -100,11 +100,19 @@ protected:
     // ################################## layer1/statement.cpp ####################################
 
     Statement* parse_statement();
-    Statement* parse_initial_reserved_word_statement();
     Statement* parse_expression_statement();
     Statement* parse_assignment_statement();
     Statement* parse_return_statement();
     Statement* parse_block_statement();
+
+    Statement* parse_if_statement();
+    Statement* parse_if_statement_body();
+
+    Statement* parse_while_loop();
+    Statement* parse_for_loop();
+    Statement* parse_guard_statement();
+    Statement* parse_switch_statement();
+    Statement* parse_yield_statement();
 
     // ################################# layer1/expression.cpp ####################################
 
@@ -114,6 +122,7 @@ protected:
     Expression* parse_access_expression();
     Expression* parse_ternary_expression();
     Expression* parse_lambda_expression();
+    Expression* parse_if_statement_condition();
 
     std::optional<ParameterList> parse_lambda_parameters(RT_Scope* lambda_scope);
     Expression* parse_binding_type_declaration();

@@ -32,16 +32,12 @@ Chunk ParserLayer1::parse_top_level_chunk() {
         case TokenType::eof:
             return std::monostate{};
 
-        case TokenType::reserved_word:
-            if (current_token().string_value() == "let") {
-                log("Scoping not yet implemented", LogLevel::warning);
+        case TokenType::let:
+            log("Scoping not yet implemented", LogLevel::warning);
                 return parse_top_level_let_definition();
-            }
 
             if (current_token().string_value() == "operator")
                 return parse_operator_definition();
-            
-            assert(false && "Unhandled reserved word in Parser::parse_top_level_statement");
             
 
         default:
@@ -127,6 +123,8 @@ Definition* ParserLayer1::parse_top_level_let_definition() {
 Definition* ParserLayer1::parse_operator_definition() {
     auto location = current_token().location;
 
+    assert (false && "not implemented");
+
     switch (get_token().token_type) {
         case TokenType::operator_t: {
             std::string op_string = current_token().string_value();
@@ -144,28 +142,42 @@ Definition* ParserLayer1::parse_operator_definition() {
 
             get_token();
 
-            if (current_token().token_type != TokenType::reserved_word || 
-                    (current_token().string_value() != "unary" && 
-                        current_token().string_value() != "binary"))
-                return fail_definition(
-                    "unexpected token: " + current_token().get_string() + 
-                    " in operator statement, expected \"unary|binary\"", location);
-
             unsigned int arity = current_token().string_value() == "binary" ? 2 : 1;
+
+            switch (current_token().token_type) {
+                case TokenType::binary:
+                    arity = 2;
+                    break;
+                case TokenType::unary: {
+                    arity = 1;
+                    get_token();
+
+                    Operator::Fixity fixity;
+
+                    switch (current_token().token_type) {
+                        case TokenType::prefix:
+                            fixity = Operator::Fixity::unary_prefix;
+                        case TokenType::postfix:
+                            fixity = Operator::Fixity::unary_postfix;
+
+                        default:
+                            return fail_definition(
+                                "unexpected token: " + current_token().get_string() + 
+                                " in unary operator statement, expected \"prefix|postfix\"", 
+                                current_token().location);
+                    }
+                }
+                default:
+                    return fail_definition(
+                        "unexpected token: " + current_token().get_string() + 
+                        " in operator statement, expected \"unary|binary\"", 
+                        current_token().location);
+            }
 
             get_token();
 
             // UNARY OPERATOR
             if (arity == 1) {
-                if (current_token().token_type != TokenType::reserved_word || 
-                        (current_token().string_value() != "prefix" && 
-                        current_token().string_value() != "postfix"))
-                    ("unexpected token: " + current_token().get_string() + 
-                        " in unary operator statement, expected \"prefix|postfix\"");
-
-                assert(current_token().get_string() == "prefix" && 
-                    "postfix operators not implemented");
-                Operator::Fixity fixity = Operator::Fixity::unary_prefix;
 
                 get_token(); // eat the fixity specifier
 
@@ -176,11 +188,11 @@ Definition* ParserLayer1::parse_operator_definition() {
                     body = parse_expression();
                 }
 
-                auto definition = ast_store_->allocate_definition(
-                    RT_Operator{op_string, body, {fixity}, true, location});
-                parse_scope_->create_identifier(definition);
-                log("parsed let statement", LogLevel::debug_extra);
-                return definition;
+                // auto definition = ast_store_->allocate_definition(
+                //     RT_Operator{op_string, body, {fixity}, true, location});
+                // parse_scope_->create_identifier(definition);
+                // log("parsed let statement", LogLevel::debug_extra);
+                // return definition;
             }
 
             // BINARY OPERATOR

@@ -24,7 +24,7 @@ Expression* ParserLayer1::handle_string_literal() {
 
     get_token();
     
-    log("parsed string literal", LogLevel::debug_extra);
+    log("Parsed string literal", LogLevel::debug_extra);
     return expression;
 }
 
@@ -34,7 +34,7 @@ Expression* ParserLayer1::handle_numeric_literal() {
     
     get_token();
         
-    log("parsed numeric literal", LogLevel::debug_extra);
+    log("Parsed numeric literal", LogLevel::debug_extra);
     return expression;
 }
 
@@ -45,7 +45,7 @@ Expression* ParserLayer1::handle_identifier() {
 
     get_token();
     
-    log("parsed unresolved identifier", LogLevel::debug_extra);
+    log("Parsed unresolved identifier", LogLevel::debug_extra);
     return expression;
 }
 
@@ -56,7 +56,7 @@ Expression* ParserLayer1::handle_type_identifier() {
 
     get_token();
     
-    log("parsed unresolved type identifier", LogLevel::debug_extra);
+    log("Parsed unresolved type identifier", LogLevel::debug_extra);
     return expression;
 }
 

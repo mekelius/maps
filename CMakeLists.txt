@@ -84,6 +84,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/parser/layer1.cpp
 
     src/mapsc/parser/layer1/layer1.cpp
+    src/mapsc/parser/layer1/control_flow.cpp
     src/mapsc/parser/layer1/definition.cpp
     src/mapsc/parser/layer1/expression.cpp
     src/mapsc/parser/layer1/pragma.cpp
@@ -182,6 +183,7 @@ add_executable(unit_tests
 
     tests/unit/parser/layer1/basics.cpp
     tests/unit/parser/layer1/block.cpp
+    tests/unit/parser/layer1/control_flow.cpp
     tests/unit/parser/layer1/lambda.cpp
     tests/unit/parser/layer1/minus.cpp
     tests/unit/parser/layer1/termed.cpp
