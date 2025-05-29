@@ -7,6 +7,7 @@
 #include <istream>
 #include <memory>
 #include <optional>
+#include <utility>
 #include <string>
 #include <vector>
 
@@ -107,7 +108,7 @@ protected:
     Statement* parse_block_statement();
 
     Statement* parse_if_statement();
-    IfBranch parse_if_branch();
+    std::pair<Expression*, Statement*> parse_if_branch();
     Statement* parse_conditional_body();
 
     Statement* parse_while_loop();

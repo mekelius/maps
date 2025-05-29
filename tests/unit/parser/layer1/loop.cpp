@@ -25,8 +25,8 @@ inline std::tuple<CompilationState, RT_Scope, stringstream> setup(const std::str
 
 #define WHILE_CASE(source_string)\
 TEST_CASE(source_string) {\
-    LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     auto lock = LogOptions::set_global(LogLevel::debug_extra);\
+    LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     \
     auto [state, scope, source] = setup(source_string);\
     \
@@ -71,37 +71,39 @@ WHILE_CASE("\n\
         \n\
 ")
 
-#define WHILE_ELSE_CASE(source_string)\
-TEST_CASE(source_string) {\
-    LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
-    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
-    \
-    auto [state, scope, source] = setup(source_string);\
-    \
-    auto result = run_layer1_eval(state, scope, source);\
-    \
-    CHECK(result.success);\
-    CHECK(result.top_level_definition);\
-    CHECK(result.unresolved_identifiers.size() == 2);\
-    \
-    auto root = *result.top_level_definition;\
-    CHECK(std::holds_alternative<const Statement*>(root->const_body()));\
-    auto root_body = std::get<const Statement*>(root->const_body());\
-    \
-    CHECK(loop_body->statement_type == StatementType::loop);\
-    auto loop_value = loop_body->get_value<LoopStatementValue>();\
-    \
-    CHECK(!loop_value.initializer);\
-    \
-    CHECK(loop_value.condition->expression_type == ExpressionType::identifier);\
-    CHECK(loop_value.condition->string_value() == "condition");\
-    \
-    auto loop_body = loop_value.body;\
-    CHECK(loop_body->statement_type == StatementType::expression_statement);\
-    auto loop_body_expression = loop_body->get_value<Expression*>();\
-    CHECK(loop_body_expression->expression_type == ExpressionType::identifier);\
-    CHECK(loop_body_expression->string_value() == "f");\
-}
+// #define WHILE_ELSE_CASE(source_string)\
+// TEST_CASE(source_string) {\
+//     LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
+//     auto lock = LogOptions::set_global(LogLevel::debug_extra);\
+//     \
+//     auto [state, scope, source] = setup(source_string);\
+//     \
+//     auto result = run_layer1_eval(state, scope, source);\
+//     \
+//     CHECK(result.success);\
+//     CHECK(result.top_level_definition);\
+//     CHECK(result.unresolved_identifiers.size() == 2);\
+//     \
+//     auto root = *result.top_level_definition;\
+//     CHECK(std::holds_alternative<const Statement*>(root->const_body()));\
+//     auto root_body = std::get<const Statement*>(root->const_body());\
+//     \
+//     root_body.chain.at(0);
+//     auto loop_body = first_branch()
+//     CHECK(loop_body->statement_type == StatementType::loop);\
+//     auto loop_value = loop_body->get_value<LoopStatementValue>();\
+//     \
+//     CHECK(!loop_value.initializer);\
+//     \
+//     CHECK(loop_value.condition->expression_type == ExpressionType::identifier);\
+//     CHECK(loop_value.condition->string_value() == "condition");\
+//     \
+//     auto loop_body = loop_value.body;\
+//     CHECK(loop_body->statement_type == StatementType::expression_statement);\
+//     auto loop_body_expression = loop_body->get_value<Expression*>();\
+//     CHECK(loop_body_expression->expression_type == ExpressionType::identifier);\
+//     CHECK(loop_body_expression->string_value() == "f");\
+// }
 
 // TEST_CASE("for") {
 //     auto [state, scope, source] = setup("\

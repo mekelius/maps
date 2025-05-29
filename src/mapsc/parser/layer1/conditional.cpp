@@ -14,46 +14,49 @@ using Log = LogInContext<LogContext::layer1>;
 Statement* ParserLayer1::parse_if_statement() {
     auto location = current_token().location;
     auto initial_if_indent = indent_level_;
-    bool final_else_indented = false;
+    bool indented = false;
 
     Log::debug_extra("Parsing if statement", current_token().location);
 
-    auto initial_branch = parse_if_branch();
+    get_token(); // eat the if
+
+    auto condition = parse_condition_expression();
     if (!result_.success)
-        return initial_branch.second;
+        return fail_statement("Parsing if statement condition failed", condition->location);
 
-    IfChain chain{ initial_branch };
-    optional<Statement*> final_else = nullopt;
+    Log::debug_extra("Parsed if statement condition: " + condition->log_message_string(), 
+        current_token().location);
 
-    // handle else(s)
-    while (current_token().token_type == TokenType::else_t) {
-        auto location = current_token().location;
-        get_token(); // eat the else
+    auto body = parse_conditional_body();
+    if (!result_.success)
+        return fail_statement("Parsing if statement body failed", body->location);
 
-        if (current_token().token_type == TokenType::if_t) {
-            Log::debug_extra("Parsing else if statement", location);
-            auto branch = parse_if_branch();
-            if (!result_.success)
-                return branch.second;
+    Log::debug_extra("Parsed if statement body: " + body->log_message_string(), 
+        current_token().location);
 
-            chain.push_back(branch);
-            continue;
-        }
-
-        Log::debug_extra("Parsing else statement", location);
-
-        final_else_indented = indent_level_ > initial_if_indent;
-        final_else = parse_statement();
-        if (!result_.success)
-            return *final_else;
-
-        Log::debug_extra("Parsed else statement: " + (*final_else)->log_message_string(), location);
-        break;
+    if (current_token().token_type != TokenType::else_t) {
+        Log::debug_extra("Finished parsing if statement from " + location.to_string(), 
+            current_token().location);
+        return create_if(*ast_store_, condition, body, location);
     }
 
-    if (final_else_indented)
-        while (indent_level_ > initial_if_indent && 
-                current_token().token_type == TokenType::indent_block_end) 
+    // handle else(s)
+    get_token(); // eat the else
+
+    Log::debug_extra("Parsing else statement", current_token().location);
+
+    if (indent_level_ > initial_if_indent)
+        indented = true;
+
+    auto else_branch = parse_statement();
+    if (has_failed())
+        return else_branch;
+
+    Log::debug_extra("Finished parsing if statement from " + location.to_string(), 
+        current_token().location);
+
+    if (indented)
+        while (indent_level_ > initial_if_indent && current_token().token_type == TokenType::indent_block_end && !eof())
             get_token();
 
     if (indent_level_ < initial_if_indent && !eof()) {
@@ -66,12 +69,10 @@ Statement* ParserLayer1::parse_if_statement() {
             location);
     }
 
-    Log::debug_extra("Finished parsing if statement from " + location.to_string(), location);
-
-    return create_if_else_chain(*ast_store_, chain, final_else, location);
+    return create_if_else(*ast_store_, condition, body, else_branch, location);
 }
 
-IfBranch ParserLayer1::parse_if_branch() {
+std::pair<Expression*, Statement*> ParserLayer1::parse_if_branch() {
     auto location = current_token().location;
     get_token();
 

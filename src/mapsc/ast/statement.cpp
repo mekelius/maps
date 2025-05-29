@@ -41,9 +41,9 @@ std::string Statement::log_message_string() const {
             return "return statement";
 
         case StatementType::guard: return "guard statement";
-        case StatementType::if_chain: return "if-else statement";
         case StatementType::switch_s: return "switch statement";
         case StatementType::loop: return "loop";
+        case StatementType::conditional: return "conditional statement";
     }
 }
 
@@ -56,9 +56,9 @@ bool Statement::is_illegal_as_single_statement_block() const {
         case StatementType::empty:
         case StatementType::block:
         case StatementType::switch_s:
-        case StatementType::if_chain:
         case StatementType::guard:
         case StatementType::loop:
+        case StatementType::conditional:
             return false;
 
         case StatementType::assignment:
@@ -114,19 +114,11 @@ Statement* create_compiler_error_statement(AST_Store& ast_store, const SourceLoc
 }
 Statement* create_if(AST_Store& ast_store, Expression* condition, Statement* body, const SourceLocation& location) {
     return ast_store.allocate_statement(
-        Statement{StatementType::if_chain, IfChainValue{{IfBranch{condition, body}}}, location});
+        Statement{StatementType::conditional, ConditionalValue{condition, body}, location});
 }
-Statement* create_if_else_chain(AST_Store& ast_store, const IfChain& chain, const SourceLocation& location) {
+Statement* create_if_else(AST_Store& ast_store, Expression* condition, Statement* body, Statement* else_body, const SourceLocation& location) {
     return ast_store.allocate_statement(
-        Statement{StatementType::if_chain, IfChainValue{chain}, location});
-}
-Statement* create_if_else_chain(AST_Store& ast_store, const IfChain& chain, Statement* final_else, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::if_chain, IfChainValue{chain, final_else}, location});
-}
-Statement* create_if_else_chain(AST_Store& ast_store, const IfChain& chain, optional<Statement*> final_else, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::if_chain, IfChainValue{chain, final_else}, location});
+        Statement{StatementType::conditional, ConditionalValue{condition, body, else_body}, location});
 }
 Statement* create_guard(AST_Store& ast_store, Expression* condition, const SourceLocation& location) {
     return ast_store.allocate_statement(
@@ -139,6 +131,10 @@ Statement* create_switch(AST_Store& ast_store, Expression* key, const std::vecto
 Statement* create_while(AST_Store& ast_store, Expression* condition, Statement* body, const SourceLocation& location) {
     return ast_store.allocate_statement(
         Statement{StatementType::loop, LoopStatementValue{condition, body}, location});
+}
+Statement* create_while_else(AST_Store& ast_store, Expression* condition, Statement* body, Statement* else_branch, const SourceLocation& location) {
+    auto loop = ast_store.allocate_statement(Statement{StatementType::loop, LoopStatementValue{condition, body}, location});
+    return create_if_else(ast_store, condition, loop, else_branch, location);
 }
 Statement* create_for(AST_Store& ast_store, Statement* initializer, Expression* condition, Statement* body, const SourceLocation& location) {
     return ast_store.allocate_statement(

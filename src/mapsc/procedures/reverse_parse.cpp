@@ -103,30 +103,24 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
             *this << "guard " << *statement.get_value<GuardValue>();
             break;
 
-        case StatementType::if_chain: {
-            auto [chain, final_else] = statement.get_value<IfChainValue>();
-            bool first = true;
-            for (auto [condition, body]: chain) {
-                if (!first) {
-                    *this << "} else";
-                }
+        case StatementType::conditional: {
+            auto [condition, body, else_branch] = statement.get_value<ConditionalValue>();
 
-                *this << "if (" << *condition << ") {";
-                indent_stack_++;
+            if (body->statement_type == StatementType::loop) {
                 *this << *body;
-                indent_stack_--;
-                *this << linebreak();
 
-                first = false;
+                if (else_branch)
+                    *this << " else " << **else_branch;
+
+                return *this;
             }
 
-            if (final_else) {
-                *this << "{";
-                indent_stack_++;
-                *this << **final_else;
-                indent_stack_--;
-                *this << "}";
-            }
+            *this << "if " << *condition << " then " << *body;
+
+            if (else_branch)
+                *this << " else " << **else_branch;
+            
+            return *this;
         }
         case StatementType::switch_s: {
             auto [key, cases] = statement.get_value<SwitchStatementValue>();

@@ -28,9 +28,9 @@ enum class StatementType {
     block,
     assignment,
     return_,
-    if_chain,
     guard,
     switch_s,
+    conditional,
     loop,
 };
 
@@ -56,8 +56,8 @@ constexpr std::string_view statement_type_string(StatementType statement_type) {
             str += "return_"; break;
         case StatementType::guard: 
             str += "guard"; break;
-        case StatementType::if_chain: 
-            str += "if-else"; break;
+        case StatementType::conditional: 
+            str += "if-statement"; break;
         case StatementType::switch_s: 
             str += "switch"; break;
         case StatementType::loop: 
@@ -69,9 +69,15 @@ constexpr std::string_view statement_type_string(StatementType statement_type) {
 
 using Block = std::vector<Statement*>;
 using CaseBlock = std::pair<Expression*, Statement*>;
-using IfBranch = std::pair<Expression*, Statement*>;
-using IfChain = std::vector<IfBranch>;
 using GuardValue = Expression*;
+
+struct ConditionalValue {
+    Expression* condition; 
+    Statement* body;
+    std::optional<Statement*> else_branch = std::nullopt;
+
+    bool operator==(const ConditionalValue&) const = default;
+};
 
 struct SwitchStatementValue {
     Expression* key;
@@ -88,13 +94,6 @@ struct LoopStatementValue {
     bool operator==(const LoopStatementValue&) const = default;
 };
 
-struct IfChainValue {
-    IfChain chain;
-    std::optional<Statement*> final_else = std::nullopt;
-
-    bool operator==(const IfChainValue&) const = default;
-};
-
 struct Assignment {
     Expression* identifier_or_reference; 
     RT_Definition* body;
@@ -109,7 +108,7 @@ using StatementValue = std::variant<
     Assignment,
     Block,
     Undefined,
-    IfChainValue,
+    ConditionalValue,
     LoopStatementValue,
     SwitchStatementValue
 >;
@@ -157,12 +156,11 @@ Statement* create_expression_statement(AST_Store& store, Expression* expression,
 Statement* create_user_error_statement(AST_Store& store, const SourceLocation& location);
 Statement* create_compiler_error_statement(AST_Store& store, const SourceLocation& location);
 Statement* create_if(AST_Store& store, Expression* condition, Statement* body, const SourceLocation& location);
-Statement* create_if_else_chain(AST_Store& store, const IfChain& chain, const SourceLocation& location);
-Statement* create_if_else_chain(AST_Store& store, const IfChain& chain, Statement* final_else, const SourceLocation& location);
-Statement* create_if_else_chain(AST_Store& store, const IfChain& chain, std::optional<Statement*> final_else, const SourceLocation& location);
+Statement* create_if_else(AST_Store& store, Expression* condition, Statement* body, Statement* statement, const SourceLocation& location);
 Statement* create_guard(AST_Store& store, Expression* condition, const SourceLocation& location);
 Statement* create_switch(AST_Store& store, Expression* key, const CaseBlock& cases, const SourceLocation& location);
 Statement* create_while(AST_Store& store, Expression* condition, Statement* body, const SourceLocation& location);
+Statement* create_while_else(AST_Store& ast_store, Expression* condition, Statement* body, Statement* else_branch, const SourceLocation& location);
 Statement* create_for(AST_Store& store, Statement* initializer, Expression* condition, Statement* body, const SourceLocation& location);
 
 } // namespace Maps

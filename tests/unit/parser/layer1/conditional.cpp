@@ -25,6 +25,7 @@ inline std::tuple<CompilationState, RT_Scope, stringstream> setup(const std::str
 
 #define IF_CASE(source_string)\
 TEST_CASE(source_string) {\
+    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
     LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     auto [state, scope, source] = setup(source_string);\
     \
@@ -38,21 +39,19 @@ TEST_CASE(source_string) {\
     CHECK(std::holds_alternative<const Statement*>(root->const_body()));\
     auto root_body = std::get<const Statement*>(root->const_body());\
     \
-    CHECK(root_body->statement_type == StatementType::if_chain);\
-    auto [chain, final_else] = root_body->get_value<IfChainValue>();\
+    CHECK(root_body->statement_type == StatementType::conditional);\
+    auto [condition, body, else_branch] = root_body->get_value<ConditionalValue>();\
     \
-    CHECK(chain.size() == 1);\
-    auto [condition, first_branch] = *chain.begin();\
     CHECK(condition->expression_type == ExpressionType::identifier);\
     CHECK(condition->string_value() == "condition");\
     \
-    CHECK(first_branch->statement_type == StatementType::return_);\
-    auto first_expression = first_branch->get_value<Expression*>();\
+    CHECK(body->statement_type == StatementType::return_);\
+    auto first_expression = body->get_value<Expression*>();\
     \
     CHECK(first_expression->expression_type == ExpressionType::known_value);\
     CHECK(first_expression->value == ExpressionValue{"1"});\
     \
-    CHECK(!final_else);\
+    CHECK(!else_branch);\
 }
 
 IF_CASE("if (condition) { return 1 }")
@@ -124,26 +123,24 @@ TEST_CASE(source_string) {\
     CHECK(std::holds_alternative<const Statement*>(root->const_body()));\
     auto root_body = std::get<const Statement*>(root->const_body());\
     \
-    CHECK(root_body->statement_type == StatementType::if_chain);\
-    auto [chain, final_else] = root_body->get_value<IfChainValue>();\
+    CHECK(root_body->statement_type == StatementType::conditional);\
+    auto [condition, body, else_branch] = root_body->get_value<ConditionalValue>();\
     \
-    CHECK(chain.size() == 1);\
-    auto [condition, first_branch] = *chain.begin();\
     CHECK(condition->expression_type == ExpressionType::identifier);\
     CHECK(condition->string_value() == "condition");\
     \
-    CHECK(first_branch->statement_type == StatementType::return_);\
-    auto first_expression = first_branch->get_value<Expression*>();\
+    CHECK(body->statement_type == StatementType::return_);\
+    auto first_expression = body->get_value<Expression*>();\
     \
     CHECK(first_expression->expression_type == ExpressionType::known_value);\
     CHECK(first_expression->value == ExpressionValue{"1"});\
     \
-    CHECK(final_else);\
-    CHECK((*final_else)->statement_type == StatementType::return_);\
-    auto second_expression = (*final_else)->get_value<Expression*>();\
+    CHECK(else_branch);\
+    CHECK((*else_branch)->statement_type == StatementType::return_);\
+    auto else_expression = (*else_branch)->get_value<Expression*>();\
     \
-    CHECK(second_expression->expression_type == ExpressionType::known_value);\
-    CHECK(second_expression->value == ExpressionValue{"2"});\
+    CHECK(else_expression->expression_type == ExpressionType::known_value);\
+    CHECK(else_expression->value == ExpressionValue{"2"});\
 }
 
 IF_ELSE_CASE("if (condition) { return 1 } else {return 2}");
@@ -206,12 +203,9 @@ TEST_CASE(source_string) {\
     CHECK(std::holds_alternative<const Statement*>(root->const_body()));\
     auto root_body = std::get<const Statement*>(root->const_body());\
     \
-    CHECK(root_body->statement_type == StatementType::if_chain);\
-    auto [chain, final_else] = root_body->get_value<IfChainValue>();\
+    CHECK(root_body->statement_type == StatementType::conditional);\
+    auto [condition1, branch1, else_branch1] = root_body->get_value<ConditionalValue>();\
     \
-    CHECK(chain.size() == 3);\
-    \
-    auto [condition1, branch1] = chain.at(0);\
     CHECK(condition1->expression_type == ExpressionType::identifier);\
     CHECK(condition1->string_value() == "condition1");\
     CHECK(branch1->statement_type == StatementType::return_);\
@@ -219,7 +213,8 @@ TEST_CASE(source_string) {\
     CHECK(expression1->expression_type == ExpressionType::known_value);\
     CHECK(expression1->value == ExpressionValue{"1"});\
     \
-    auto [condition2, branch2] = chain.at(1);\
+    CHECK((*else_branch1)->statement_type == StatementType::conditional);\
+    auto [condition2, branch2, else_branch2] = (*else_branch1)->get_value<ConditionalValue>();\
     CHECK(condition2->expression_type == ExpressionType::identifier);\
     CHECK(condition2->string_value() == "condition2");\
     CHECK(branch2->statement_type == StatementType::return_);\
@@ -227,7 +222,8 @@ TEST_CASE(source_string) {\
     CHECK(expression2->expression_type == ExpressionType::known_value);\
     CHECK(expression2->value == ExpressionValue{"2"});\
     \
-    auto [condition3, branch3] = chain.at(2);\
+    CHECK((*else_branch2)->statement_type == StatementType::conditional);\
+    auto [condition3, branch3, else_branch3] = (*else_branch2)->get_value<ConditionalValue>();\
     CHECK(condition3->expression_type == ExpressionType::identifier);\
     CHECK(condition3->string_value() == "condition3");\
     CHECK(branch3->statement_type == StatementType::return_);\
@@ -235,9 +231,9 @@ TEST_CASE(source_string) {\
     CHECK(expression3->expression_type == ExpressionType::known_value);\
     CHECK(expression3->value == ExpressionValue{"3"});\
     \
-    CHECK(final_else);\
-    CHECK((*final_else)->statement_type == StatementType::return_);\
-    auto final_expression = (*final_else)->get_value<Expression*>();\
+    CHECK(else_branch3);\
+    CHECK((*else_branch3)->statement_type == StatementType::return_);\
+    auto final_expression = (*else_branch3)->get_value<Expression*>();\
     \
     CHECK(final_expression->expression_type == ExpressionType::known_value);\
     CHECK(final_expression->value == ExpressionValue{"4"});\
