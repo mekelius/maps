@@ -151,31 +151,18 @@ Statement* ParserLayer1::parse_if_statement_body() {
     }
 }
 
-Statement* ParserLayer1::parse_while_loop() {
-    get_token();
-
-    assert(false && "not implemented");
-    // return create_
-}
-Statement* ParserLayer1::parse_for_loop() {
-    get_token();
-
-    assert(false && "not implemented");
-    // return create_
-}
 Statement* ParserLayer1::parse_guard_statement() {
+    auto location = current_token().location;
     get_token();
 
-    assert(false && "not implemented");
-    // return create_
+    auto condition = parse_expression();
+    if (has_failed())
+        return fail_statement("Parsing guard statement failed", condition->location);
+
+    return create_guard(*ast_store_, condition, location);
 }
+
 Statement* ParserLayer1::parse_switch_statement() {
-    get_token();
-
-    assert(false && "not implemented");
-    // return create_
-}
-Statement* ParserLayer1::parse_yield_statement() {
     get_token();
 
     assert(false && "not implemented");

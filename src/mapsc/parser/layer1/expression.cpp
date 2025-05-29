@@ -73,15 +73,19 @@ Expression* ParserLayer1::parse_expression() {
             return parse_termed_expression();
 
         case TokenType::indent_block_start: {
-            unsigned int starting_indent_level = indent_level_;
             get_token(); // eat the starting indent
+            unsigned int starting_indent_level = indent_level_;
             Expression* expression = parse_expression();
             
+            if (eof())
+                return expression;
+
             if (current_token().token_type != TokenType::indent_block_end)
-                return fail_expression("Mismatched indents!", current_token().location);
+                return fail_expression("Unexpected token " + current_token().get_string() + 
+                    " at end of indent block, expected indent block end token", current_token().location);
 
             get_token(); // eat the ending indent
-            assert(indent_level_ <= starting_indent_level && "Mismatched indents");
+            assert(indent_level_ < starting_indent_level && "Mismatched indents");
             return expression;
         }
 

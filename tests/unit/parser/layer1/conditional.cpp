@@ -94,6 +94,13 @@ if (condition) {\n\
 }\
 ")
 
+IF_CASE("\n\
+if\n\
+    condition\n\
+then\n\
+    return 1\n\
+")
+
 // IF_CASE("\n\
 // if (\n\
 //     condition)\n\
@@ -103,7 +110,6 @@ if (condition) {\n\
 
 #define IF_ELSE_CASE(source_string)\
 TEST_CASE(source_string) {\
-    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
     LogInContext<LogContext::layer1>::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     \
     auto [state, scope, source] = setup(source_string);\
@@ -184,83 +190,145 @@ IF_ELSE_CASE("\n\
             return 2\n\
 ")
 
-// TEST_CASE("if_else_chain") {
-//     auto [state, scope, source] = setup("\
-//         if condition\
-//             return 34\
-//         else\
-//             return 22\
-//     ");
+#define IF_ELSE_CHAIN_CASE(source_string)\
+TEST_CASE(source_string) {\
+    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
+    LogInContext<LogContext::layer1>::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
+    \
+    auto [state, scope, source] = setup(source_string);\
+    \
+    auto result = run_layer1_eval(state, scope, source);\
+    \
+    CHECK(result.success);\
+    CHECK(result.top_level_definition);\
+    CHECK(result.unresolved_identifiers.size() == 3);\
+    \
+    auto root = *result.top_level_definition;\
+    CHECK(std::holds_alternative<const Statement*>(root->const_body()));\
+    auto root_body = std::get<const Statement*>(root->const_body());\
+    \
+    CHECK(root_body->statement_type == StatementType::if_chain);\
+    auto [chain, final_else] = root_body->get_value<IfChainValue>();\
+    \
+    CHECK(chain.size() == 3);\
+    \
+    auto [condition1, branch1] = chain.at(0);\
+    CHECK(condition1->expression_type == ExpressionType::identifier);\
+    CHECK(condition1->string_value() == "condition1");\
+    CHECK(branch1->statement_type == StatementType::return_);\
+    auto expression1 = branch1->get_value<Expression*>();\
+    CHECK(expression1->expression_type == ExpressionType::known_value);\
+    CHECK(expression1->value == ExpressionValue{"1"});\
+    \
+    auto [condition2, branch2] = chain.at(1);\
+    CHECK(condition2->expression_type == ExpressionType::identifier);\
+    CHECK(condition2->string_value() == "condition2");\
+    CHECK(branch2->statement_type == StatementType::return_);\
+    auto expression2 = branch2->get_value<Expression*>();\
+    CHECK(expression2->expression_type == ExpressionType::known_value);\
+    CHECK(expression2->value == ExpressionValue{"2"});\
+    \
+    auto [condition3, branch3] = chain.at(2);\
+    CHECK(condition3->expression_type == ExpressionType::identifier);\
+    CHECK(condition3->string_value() == "condition3");\
+    CHECK(branch3->statement_type == StatementType::return_);\
+    auto expression3 = branch3->get_value<Expression*>();\
+    CHECK(expression3->expression_type == ExpressionType::known_value);\
+    CHECK(expression3->value == ExpressionValue{"3"});\
+    \
+    CHECK(final_else);\
+    CHECK((*final_else)->statement_type == StatementType::return_);\
+    auto final_expression = (*final_else)->get_value<Expression*>();\
+    \
+    CHECK(final_expression->expression_type == ExpressionType::known_value);\
+    CHECK(final_expression->value == ExpressionValue{"4"});\
+}
 
-//     auto result = run_layer1_eval(state, scope, source);
+IF_ELSE_CHAIN_CASE("if (condition1) then {return 1} else if (condition2) then {return 2} else if (condition3) then {return 3} else {return 4}")
+IF_ELSE_CHAIN_CASE("if (condition1) then {return 1;}; else if (condition2) {return 2} else if (condition3) then return 3 else return 4")
 
-//     CHECK(result.success);
-//     CHECK(result.top_level_definition);
-//     CHECK(result.unresolved_identifiers.size() == 1);
+IF_ELSE_CHAIN_CASE("\n\
+    if (condition1) {\n\
+        return 1\n\
+    } else if (condition2) {\n\
+        return 2\n\
+    } else if (condition3) {\n\
+        return 3\n\
+    } else {\n\
+        return 4\n\
+    }\n\
+")
+
+IF_ELSE_CHAIN_CASE("\n\
+    if condition1\n\
+        return 1\n\
+    else if condition2 \n\
+        return 2\n\
+    else if condition3 \n\
+        return 3\n\
+    else \n\
+        return 4\n\
+    \n\
+")
+
+IF_ELSE_CHAIN_CASE("\n\
+    if (condition1) \n\
+        then\n\
+            return 1\n\
+        else if (condition2) \n\
+            return 2\n\
+        else if (condition3) then return 3 else return 4")
+
+
+IF_ELSE_CHAIN_CASE("\n\
+    if (condition1) \n\
+        then\n\
+            return 1\n\
+        else if (condition2) \n\
+            return 2\n\
+        else if (condition3)\n\
+        then return 3\n\
+        else return 4")
+
+TEST_CASE("Simple guard") {
+    auto [state, scope, source] = setup("guard guard_condition");
+
+    auto result = run_layer1_eval(state, scope, source);
+
+    CHECK(result.success);
+    CHECK(result.top_level_definition);
+    CHECK(result.unresolved_identifiers.size() == 1);
     
-//     auto root = *result.top_level_definition;
-//     CHECK(std::holds_alternative<const Statement*>(root->const_body()));
-//     auto root_body = std::get<const Statement*>(root->const_body());
-// }
+    auto root = *result.top_level_definition;
+    CHECK(std::holds_alternative<const Statement*>(root->const_body()));
+    auto root_body = std::get<const Statement*>(root->const_body());
 
-// TEST_CASE("guard") {
-//     auto [state, scope, source] = setup("\
-//         if condition\
-//             return 34\
-//         else\
-//             return 22\
-//     ");
+    CHECK(root_body->statement_type == StatementType::guard);
+    auto condition_expression = root_body->get_value<Expression*>();
+    CHECK(condition_expression->expression_type == ExpressionType::identifier);
+    CHECK(condition_expression->string_value() == "guard_condition");
+}
 
-//     auto result = run_layer1_eval(state, scope, source);
+TEST_CASE("Simple guard") {
+    auto [state, scope, source] = setup("guard\n     guard_condition");
 
-//     CHECK(result.success);
-//     CHECK(result.top_level_definition);
-//     CHECK(result.unresolved_identifiers.size() == 1);
+    auto result = run_layer1_eval(state, scope, source);
+
+    CHECK(result.success);
+    CHECK(result.top_level_definition);
+    CHECK(result.unresolved_identifiers.size() == 1);
     
-//     auto root = *result.top_level_definition;
-//     CHECK(std::holds_alternative<const Statement*>(root->const_body()));
-//     auto root_body = std::get<const Statement*>(root->const_body());
-// }
+    auto root = *result.top_level_definition;
+    CHECK(std::holds_alternative<const Statement*>(root->const_body()));
+    auto root_body = std::get<const Statement*>(root->const_body());
+
+    CHECK(root_body->statement_type == StatementType::guard);
+    auto condition_expression = root_body->get_value<Expression*>();
+    CHECK(condition_expression->expression_type == ExpressionType::identifier);
+    CHECK(condition_expression->string_value() == "guard_condition");
+}
 
 // TEST_CASE("switch") {
-//     auto [state, scope, source] = setup("\
-//         if condition\
-//             return 34\
-//         else\
-//             return 22\
-//     ");
-
-//     auto result = run_layer1_eval(state, scope, source);
-
-//     CHECK(result.success);
-//     CHECK(result.top_level_definition);
-//     CHECK(result.unresolved_identifiers.size() == 1);
-    
-//     auto root = *result.top_level_definition;
-//     CHECK(std::holds_alternative<const Statement*>(root->const_body()));
-//     auto root_body = std::get<const Statement*>(root->const_body());
-// }
-
-// TEST_CASE("while") {
-//     auto [state, scope, source] = setup("\
-//         if condition\
-//             return 34\
-//         else\
-//             return 22\
-//     ");
-
-//     auto result = run_layer1_eval(state, scope, source);
-
-//     CHECK(result.success);
-//     CHECK(result.top_level_definition);
-//     CHECK(result.unresolved_identifiers.size() == 1);
-    
-//     auto root = *result.top_level_definition;
-//     CHECK(std::holds_alternative<const Statement*>(root->const_body()));
-//     auto root_body = std::get<const Statement*>(root->const_body());
-// }
-
-// TEST_CASE("for") {
 //     auto [state, scope, source] = setup("\
 //         if condition\
 //             return 34\
