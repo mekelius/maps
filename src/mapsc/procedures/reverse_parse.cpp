@@ -28,6 +28,11 @@ void ReverseParser::reset() {
 }
 
 std::string ReverseParser::linebreak() {
+    if (prevent_next_linebreak_) {
+        prevent_next_linebreak_ = false;
+        return "";
+    }
+
     return "\n" + std::string(indent_stack_ * options_.indent_width, ' ');
 }
 
@@ -82,8 +87,7 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
             }
 
             indent_stack_--;
-            *this << linebreak() << '}';
-            break;
+            return *this << linebreak() << '}';
         }
         
         case StatementType::assignment: {
@@ -107,19 +111,48 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
             auto [condition, body, else_branch] = statement.get_value<ConditionalValue>();
 
             if (body->statement_type == StatementType::loop) {
+                prevent_next_linebreak_ = true;
                 *this << *body;
 
-                if (else_branch)
-                    *this << " else " << **else_branch;
+            } else {
+                *this << "if (" << *condition << ") ";
+                
+                switch (body->statement_type) {
+                    case StatementType::block:
+                        *this << *body;
+                        break;
 
-                return *this;
+                    default:
+                        *this << "{";
+                        indent_stack_++;
+                        *this << *body;
+                        indent_stack_--;
+                        *this << linebreak() << "}";
+                        break;
+                }
             }
 
-            *this << "if " << *condition << " then " << *body;
+            if (else_branch) {
+                *this << " else "; 
+                
+                switch ((*else_branch)->statement_type) {
+                    case StatementType::conditional:
+                    case StatementType::loop:
+                    case StatementType::block:
+                        prevent_next_linebreak_ = true;
+                        *this << **else_branch;
+                        break;
 
-            if (else_branch)
-                *this << " else " << **else_branch;
-            
+                    default:
+                        *this << "{";
+                        indent_stack_++;
+                        *this << **else_branch;
+                        indent_stack_--;
+                        *this << linebreak() << "}";
+                        break;
+                }
+            }
+
             return *this;
         }
         case StatementType::switch_s: {
@@ -138,7 +171,19 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
             auto [condition, body, initializer] = statement.get_value<LoopStatementValue>();
 
             if (!initializer) {
-                *this << "while (" << *condition << ") " << "body";
+                *this << "while (" << *condition << ") ";
+                
+                switch (body->statement_type) {
+                    case StatementType::block:
+                        return *this << *body;
+
+                    default:
+                        *this << "{"; 
+                        indent_stack_++;
+                        *this << *body;
+                        indent_stack_--;
+                        return *this << linebreak() << "}";
+                }
                 break;
             }
 

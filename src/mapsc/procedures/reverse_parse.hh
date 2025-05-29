@@ -57,6 +57,7 @@ private:
     
     bool skipped_initial_linebreak_doubling_ = false;
     unsigned int indent_stack_ = 0;
+    bool prevent_next_linebreak_ = false;
 };
 
 } // namespace Maps

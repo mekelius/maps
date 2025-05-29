@@ -61,9 +61,25 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
 
 
     } else {
-        eval_and_print = create_call(state, state.special_definitions_.print_String,
-            {std::get<Expression*>(top_level_definition->body())}, 
-            location);
+        eval_and_print = std::visit(overloaded{
+            [&state, location](Expression* expression)->optional<Expression*> {
+                return create_call(state, state.special_definitions_.print_String,
+                    { expression }, location);
+            },
+            [&state, location](Statement* statement)->optional<Expression*> {
+                switch (statement->statement_type) {
+                    case StatementType::expression_statement:
+                    case StatementType::return_:
+                        return create_call(state, state.special_definitions_.print_String,
+                            {statement->get_value<Expression*>()}, location);
+                    default:
+                        assert(false && "not implemented");
+                }
+            },
+            [](auto)->optional<Expression*> {
+                assert(false && "not implemented");
+            }
+        }, top_level_definition->body());
 
         if (!eval_and_print)
             eval_and_print = create_call(state, state.special_definitions_.print_MutString,

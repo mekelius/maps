@@ -108,7 +108,6 @@ then\n\
 
 #define IF_ELSE_CASE(source_string)\
 TEST_CASE(source_string) {\
-    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
     LogInContext<LogContext::layer1>::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     \
     auto [state, scope, source] = setup(source_string);\
@@ -294,22 +293,13 @@ IF_ELSE_CHAIN_CASE("\n\
         else return 4")
 
 TEST_CASE("Simple guard") {
-    auto [state, scope, source] = setup("guard guard_condition");
+    auto [state, scope, source] = setup("while id1 do { while id2 then id3 else if id4 then {id5;id6} else target7 } else id8");
 
     auto result = run_layer1_eval(state, scope, source);
 
     CHECK(result.success);
     CHECK(result.top_level_definition);
-    CHECK(result.unresolved_identifiers.size() == 1);
-    
-    auto root = *result.top_level_definition;
-    CHECK(std::holds_alternative<const Statement*>(root->const_body()));
-    auto root_body = std::get<const Statement*>(root->const_body());
-
-    CHECK(root_body->statement_type == StatementType::guard);
-    auto condition_expression = root_body->get_value<Expression*>();
-    CHECK(condition_expression->expression_type == ExpressionType::identifier);
-    CHECK(condition_expression->string_value() == "guard_condition");
+    CHECK(result.unresolved_identifiers.size() == 8);    
 }
 
 TEST_CASE("Simple guard") {
