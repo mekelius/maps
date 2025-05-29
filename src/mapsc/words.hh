@@ -12,6 +12,7 @@
 constexpr std::string_view OPERATOR_GLYPHS = "+-*/%^=!?|<>.$&€£@¬§¤";
 constexpr std::string_view GLYPHS_FORBIDDEN_IN_NAMES = "+-*/%^=|<>.$&€£@¬§¤;:\\#~[]{}()\"` \n";
 
+// NOTE: out of date, actually implemented keywords can be found in mapsc/parser/token.cpp
 constexpr std::array RESERVED_WORDS = {
     "return",
     "let", "mut", "const", "type", "class",

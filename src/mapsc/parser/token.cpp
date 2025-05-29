@@ -78,6 +78,8 @@ std::string Token::get_string() const {
             return "while";
         case TokenType::for_t:
             return "for";
+        case TokenType::do_t:
+            return "do";
         case TokenType::guard:
             return "guard";
         case TokenType::switch_t:
@@ -142,6 +144,7 @@ bool is_statement_separator(const Token& token) {
         case TokenType::for_t:
         case TokenType::while_t:
         case TokenType::switch_t:
+        case TokenType::do_t:
             return true;
                 
         default: 
@@ -163,6 +166,7 @@ bool is_expression_ender(const Token& token) {
         case TokenType::return_t:
         case TokenType::for_t:
         case TokenType::while_t:
+        case TokenType::do_t:
         case TokenType::switch_t:
             return true;
 
@@ -242,6 +246,17 @@ bool is_term_token(const Token& token) {
     }
 }
 
+bool is_condition_ender(const Token& token) {
+    switch (token.token_type) {
+        case TokenType::then:
+        case TokenType::do_t:
+            return true;
+        default:
+            return false;
+    }
+}
+
+
 const Token Token::dummy_token{TokenType::dummy, NO_SOURCE_LOCATION};
 
 namespace {
@@ -252,6 +267,7 @@ std::map<std::string, TokenType> reserved_words_map{
         { "else",       TokenType::else_t       },
         { "while",      TokenType::while_t      },
         { "for",        TokenType::for_t        },
+        { "do",         TokenType::do_t         },
         { "guard",      TokenType::guard        },
         { "switch",     TokenType::switch_t     },
         { "case",       TokenType::case_t       },

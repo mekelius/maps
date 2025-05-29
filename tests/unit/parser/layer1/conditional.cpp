@@ -192,7 +192,6 @@ IF_ELSE_CASE("\n\
 
 #define IF_ELSE_CHAIN_CASE(source_string)\
 TEST_CASE(source_string) {\
-    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
     LogInContext<LogContext::layer1>::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     \
     auto [state, scope, source] = setup(source_string);\

@@ -19,7 +19,7 @@ enum class TokenType: int {
     operator_t, 
     arrow_operator, // -> and =>
     number, string_literal,
-    let, return_t, if_t, then, else_t, while_t, for_t, guard, switch_t, case_t, yield_t, 
+    let, return_t, if_t, then, else_t, while_t, for_t, do_t, guard, switch_t, case_t, yield_t, 
     operator_rwt, unary, binary, prefix, postfix, 
     indent_block_start, indent_block_end, indent_error_fatal,
     curly_brace_open, curly_brace_close,
@@ -63,6 +63,7 @@ bool is_access_operator(const Token& token);
 bool is_block_starter(const Token& token);
 bool is_right_tieable_token(const Token& token);  
 bool is_term_token(const Token& token);
+bool is_condition_ender(const Token& token);
 
 } // namespace Maps
 

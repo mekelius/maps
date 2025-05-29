@@ -136,13 +136,13 @@ Statement* create_switch(AST_Store& ast_store, Expression* key, const std::vecto
     return ast_store.allocate_statement(
         Statement{StatementType::switch_s, SwitchStatementValue{key, cases}, location});
 }
-Statement* create_while(AST_Store& ast_store, Expression* condition, Block block, const SourceLocation& location) {
+Statement* create_while(AST_Store& ast_store, Expression* condition, Statement* body, const SourceLocation& location) {
     return ast_store.allocate_statement(
-        Statement{StatementType::loop, LoopStatementValue{condition, block}, location});
+        Statement{StatementType::loop, LoopStatementValue{condition, body}, location});
 }
-Statement* create_for(AST_Store& ast_store, Statement* initializer, Expression* condition, const Block& block, const SourceLocation& location) {
+Statement* create_for(AST_Store& ast_store, Statement* initializer, Expression* condition, Statement* body, const SourceLocation& location) {
     return ast_store.allocate_statement(
-        Statement{StatementType::loop, LoopStatementValue{condition, block, initializer}, location});
+        Statement{StatementType::loop, LoopStatementValue{condition, body, initializer}, location});
 }
 
 } // namespace AST

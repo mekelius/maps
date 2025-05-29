@@ -75,7 +75,7 @@ IfBranch ParserLayer1::parse_if_branch() {
     auto location = current_token().location;
     get_token();
 
-    auto condition = parse_if_statement_condition();
+    auto condition = parse_condition_expression();
     if (!result_.success) {
         auto location = condition->location;
         fail("Parsing if statement condition failed", condition->location);
@@ -86,7 +86,7 @@ IfBranch ParserLayer1::parse_if_branch() {
     Log::debug_extra("Parsed if statement condition: " + condition->log_message_string(), 
         current_token().location);
 
-    auto body = parse_if_statement_body();
+    auto body = parse_conditional_body();
     if (!result_.success) {
         fail("Parsing if statement body failed", body->location);
         return {create_user_error(*ast_store_, location), 
@@ -99,7 +99,7 @@ IfBranch ParserLayer1::parse_if_branch() {
     return {condition, body};
 }
 
-Expression* ParserLayer1::parse_if_statement_condition() {
+Expression* ParserLayer1::parse_condition_expression() {
     switch (current_token().token_type) {
         case TokenType::parenthesis_open: {
             get_token(); // eat the '('
@@ -113,15 +113,16 @@ Expression* ParserLayer1::parse_if_statement_condition() {
     }
 }
 
-Statement* ParserLayer1::parse_if_statement_body() {
+Statement* ParserLayer1::parse_conditional_body() {
     switch (current_token().token_type) {
         case TokenType::then:
+        case TokenType::do_t:
         case TokenType::semicolon:
             get_token();
-            return parse_if_statement_body();
+            return parse_conditional_body();
 
         case TokenType::indent_block_start: {
-            if (peek().token_type != TokenType::then)
+            if (!is_condition_ender(peek()))
                 return parse_statement();
             
             // handle block starting with then

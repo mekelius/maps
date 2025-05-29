@@ -108,7 +108,7 @@ protected:
 
     Statement* parse_if_statement();
     IfBranch parse_if_branch();
-    Statement* parse_if_statement_body();
+    Statement* parse_conditional_body();
 
     Statement* parse_while_loop();
     Statement* parse_for_loop();
@@ -124,7 +124,7 @@ protected:
     Expression* parse_access_expression();
     Expression* parse_ternary_expression();
     Expression* parse_lambda_expression();
-    Expression* parse_if_statement_condition();
+    Expression* parse_condition_expression();
 
     std::optional<ParameterList> parse_lambda_parameters(RT_Scope* lambda_scope);
     Expression* parse_binding_type_declaration();

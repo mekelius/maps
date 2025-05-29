@@ -334,6 +334,9 @@ Token Lexer::read_linebreak() {
         }
     }
 
+    if (source_is_->eof())
+        return create_token(TokenType::eof);
+
     // if the indent didn't change, just insert a semicolon
     if (next_line_indent == current_indent) 
         return collapsed_semicolon_token();

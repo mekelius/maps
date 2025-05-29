@@ -82,7 +82,7 @@ struct SwitchStatementValue {
 
 struct LoopStatementValue {
     Expression* condition;
-    Block block;
+    Statement* body;
     std::optional<Statement*> initializer = std::nullopt;
 
     bool operator==(const LoopStatementValue&) const = default;
@@ -162,8 +162,8 @@ Statement* create_if_else_chain(AST_Store& store, const IfChain& chain, Statemen
 Statement* create_if_else_chain(AST_Store& store, const IfChain& chain, std::optional<Statement*> final_else, const SourceLocation& location);
 Statement* create_guard(AST_Store& store, Expression* condition, const SourceLocation& location);
 Statement* create_switch(AST_Store& store, Expression* key, const CaseBlock& cases, const SourceLocation& location);
-Statement* create_while(AST_Store& store, Expression* condition, const Block& body, const SourceLocation& location);
-Statement* create_for(AST_Store& store, Statement* initializer, Expression* condition, const Block& block, const SourceLocation& location);
+Statement* create_while(AST_Store& store, Expression* condition, Statement* body, const SourceLocation& location);
+Statement* create_for(AST_Store& store, Statement* initializer, Expression* condition, Statement* body, const SourceLocation& location);
 
 } // namespace Maps
 
