@@ -19,6 +19,7 @@
 #include "mapsc/ast/chunk.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/expression.hh"
+#include "mapsc/ast/statement.hh"
 
 namespace Maps {
 
@@ -26,8 +27,6 @@ class AST_Store;
 class CompilationState;
 class PragmaStore;
 enum class StatementType;
-struct Expression;
-struct Statement;
 
 class ParserLayer1 {
 public:
@@ -106,6 +105,7 @@ protected:
     Statement* parse_block_statement();
 
     Statement* parse_if_statement();
+    IfBranch parse_if_branch();
     Statement* parse_if_statement_body();
 
     Statement* parse_while_loop();

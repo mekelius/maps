@@ -96,7 +96,7 @@ if (condition) {\n\
 
 #define IF_ELSE_CASE(source_string)\
 TEST_CASE(source_string) {\
-    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
+    auto lock = LogOptions::set_global(LogContext::layer1, LogLevel::debug_extra);\
     LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     \
     auto [state, scope, source] = setup(source_string);\
@@ -127,7 +127,7 @@ TEST_CASE(source_string) {\
     \
     CHECK(final_else);\
     CHECK((*final_else)->statement_type == StatementType::return_);\
-    auto second_expression = first_branch->get_value<Expression*>();\
+    auto second_expression = (*final_else)->get_value<Expression*>();\
     \
     CHECK(second_expression->expression_type == ExpressionType::known_value);\
     CHECK(second_expression->value == ExpressionValue{"2"});\
@@ -135,9 +135,9 @@ TEST_CASE(source_string) {\
 
 IF_ELSE_CASE("if (condition) { return 1 } else {return 2}");
 
-IF_ELSE_CASE("if condition; return 1; else return 2;");
+IF_ELSE_CASE("if condition then return 1; else return 2;");
 
-IF_ELSE_CASE("\
+IF_ELSE_CASE("\n\
     if condition\n\
         return 1\n\
     else\n\

@@ -28,6 +28,7 @@ public:
         bool global_lock_ = false;
     };
 
+    static Lock set_global(LogContext context, LogLevel loglevel);
     static Lock set_global(LogLevel loglevel);
 
     LogLevel get_loglevel() const;

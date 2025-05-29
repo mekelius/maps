@@ -158,6 +158,8 @@ Statement* create_user_error_statement(AST_Store& store, const SourceLocation& l
 Statement* create_compiler_error_statement(AST_Store& store, const SourceLocation& location);
 Statement* create_if(AST_Store& store, Expression* condition, Statement* body, const SourceLocation& location);
 Statement* create_if_else_chain(AST_Store& store, const IfChain& chain, const SourceLocation& location);
+Statement* create_if_else_chain(AST_Store& store, const IfChain& chain, Statement* final_else, const SourceLocation& location);
+Statement* create_if_else_chain(AST_Store& store, const IfChain& chain, std::optional<Statement*> final_else, const SourceLocation& location);
 Statement* create_guard(AST_Store& store, Expression* condition, const SourceLocation& location);
 Statement* create_switch(AST_Store& store, Expression* key, const CaseBlock& cases, const SourceLocation& location);
 Statement* create_while(AST_Store& store, Expression* condition, const Block& body, const SourceLocation& location);

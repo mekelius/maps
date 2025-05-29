@@ -1,10 +1,13 @@
 #include "statement.hh"
 
 #include <cassert>
+#include <optional>
 
 #include "mapsc/log_format.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/ast_store.hh"
+
+using std::optional, std::nullopt;
 
 namespace Maps {
 
@@ -116,6 +119,14 @@ Statement* create_if(AST_Store& ast_store, Expression* condition, Statement* bod
 Statement* create_if_else_chain(AST_Store& ast_store, const IfChain& chain, const SourceLocation& location) {
     return ast_store.allocate_statement(
         Statement{StatementType::if_chain, IfChainValue{chain}, location});
+}
+Statement* create_if_else_chain(AST_Store& ast_store, const IfChain& chain, Statement* final_else, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::if_chain, IfChainValue{chain, final_else}, location});
+}
+Statement* create_if_else_chain(AST_Store& ast_store, const IfChain& chain, optional<Statement*> final_else, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::if_chain, IfChainValue{chain, final_else}, location});
 }
 Statement* create_guard(AST_Store& ast_store, Expression* condition, const SourceLocation& location) {
     return ast_store.allocate_statement(
