@@ -61,9 +61,10 @@ void ParserLayer1::run_parse(std::istream& source_is) {
 
     prime_tokens();
 
-    Statement* root_statement = ast_store_->allocate_statement({StatementType::block, {0,0}});
+    auto location = current_token().location;
+    Statement* root_statement = create_block(*ast_store_, {}, location);
     result_.top_level_definition = ast_store_->allocate_definition(RT_Definition{
-        "root", root_statement, true, {0,0}});
+        "root", root_statement, true, location});
 
     context_stack_.push_back(*result_.top_level_definition);
 
@@ -165,9 +166,9 @@ Statement* ParserLayer1::fail_statement(const std::string& message, SourceLocati
     bool compiler_error) {
     
     fail(message, location, compiler_error);
-    return create_statement(compiler_error ? 
-        StatementType::compiler_error : StatementType::user_error, 
-        location);
+    return compiler_error ? 
+        create_compiler_error_statement(*ast_store_, location)
+        : create_user_error_statement(*ast_store_, location);
 }
 
 std::nullopt_t ParserLayer1::fail_optional(const std::string& message, SourceLocation location, 
@@ -291,11 +292,6 @@ RT_Definition* ParserLayer1::create_definition(DefinitionBody body, bool is_top_
     SourceLocation location) {
     
     return ast_store_->allocate_definition(RT_Definition{body, is_top_level, location});
-}
-
-Statement* ParserLayer1::create_statement(StatementType statement_type, SourceLocation location) {
-    Statement* statement = ast_store_->allocate_statement({statement_type, location});
-    return statement;
 }
 
 } // namespace Maps

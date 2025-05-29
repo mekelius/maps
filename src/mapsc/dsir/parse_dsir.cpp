@@ -341,7 +341,7 @@ private:
                 return parse_expression_statement(); 
             
             case Token::Type::semicolon: {
-                auto statement = Statement::empty(*ast_store_, current_token_.location);
+                auto statement = create_empty_statement(*ast_store_, current_token_.location);
                 get_token();
                 return statement;
             }
@@ -367,7 +367,7 @@ private:
                 assert(false && "inner scopes not implemented");
             default:
                 fail("Unexpected " + current_token_.to_string() + ", expected a statement");
-                return Statement::syntax_error(*ast_store_, current_token_.location);
+                return create_user_error_statement(*ast_store_, current_token_.location);
         }
     }
 
@@ -406,7 +406,7 @@ private:
     }
 
     Statement* parse_expression_statement() {
-        return Statement::expression(*ast_store_, parse_expression(), current_token_.location);
+        return create_expression_statement(*ast_store_, parse_expression(), current_token_.location);
     }
 
     Definition* parse_let_statement() {
@@ -424,7 +424,7 @@ private:
     Statement* parse_return_statement() {
         auto location = current_token_.location;
         get_token(); // eat the "return"
-        return Statement::return_(*ast_store_, parse_expression(), location);
+        return create_return_statement(*ast_store_, parse_expression(), location);
     }
 
     Expression* parse_ternary_expression() {

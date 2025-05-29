@@ -29,16 +29,16 @@ bool simplify(RT_Definition& definition) {
                     
                 case StatementType::block: {
                     // TODO: check type
-                    auto block = &std::get<Block>(statement->value);
+                    auto& block = statement->get_value<Block>();
 
-                    if (block->size() == 0) {
+                    if (block.size() == 0) {
                         definition.body() = Undefined{};
                         statement->statement_type = StatementType::deleted;
                         return true;
                     }
 
-                    if (block->size() == 1) {
-                        *statement = *block->back();
+                    if (block.size() == 1) {
+                        *statement = *block.back();
                         // definition SEGFAULTS! ???:
                         // block->back()->statement_type = StatementType::deleted;
                         return simplify(definition);

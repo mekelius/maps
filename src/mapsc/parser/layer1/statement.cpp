@@ -20,7 +20,7 @@ Statement* ParserLayer1::parse_statement() {
 
     switch (current_token().token_type) {
         case TokenType::eof:
-            return create_statement(StatementType::empty, location);
+            return create_empty_statement(*ast_store_, location);
 
         case TokenType::identifier:
             if (peek().token_type == TokenType::operator_t && peek().string_value() == "=") {
@@ -44,12 +44,12 @@ Statement* ParserLayer1::parse_statement() {
 
         case TokenType::semicolon:
             get_token(); // eat the semicolon
-            return create_statement(StatementType::empty, location);
+            return create_empty_statement(*ast_store_, location);
 
         // ----- ignored -----
         case TokenType::dummy:
             get_token(); // eat the dummy
-            return create_statement(StatementType::empty, location);
+            return create_empty_statement(*ast_store_, location);
 
         case TokenType::indent_block_end:
             assert(false && "parse_statement called at indent_block_end");
@@ -101,8 +101,7 @@ Statement* ParserLayer1::parse_expression_statement() {
     auto location = current_token().location;
 
     Expression* expression = parse_expression();
-    Statement* statement = create_statement(StatementType::expression_statement, location);
-    statement->value = expression;
+    Statement* statement = create_expression_statement(*ast_store_, expression, location);
 
     if(!is_block_starter(current_token()) && !is_statement_separator(current_token()))
         return fail_statement("statement didn't end in a statement separator", 
@@ -117,11 +116,12 @@ Statement* ParserLayer1::parse_expression_statement() {
 
 Statement* ParserLayer1::parse_assignment_statement() {
     auto location = current_token().location;
+    bool is_top_level = in_top_level_context();
 
     assert(current_token().token_type == TokenType::identifier 
         && "parse_assignment_statement called with current_token that was not an identifier");
 
-    std::string name = current_token().string_value();
+    auto identifier = handle_identifier();
 
     get_token();
     // TODO: change '=' to it's own TokenType
@@ -132,8 +132,8 @@ Statement* ParserLayer1::parse_assignment_statement() {
     get_token(); // eat '='
 
     Statement* inner_statement = parse_statement();
-    Statement* statement = create_statement(StatementType::assignment, location);
-    statement->value = Assignment{name, inner_statement};
+    Statement* statement = create_assignment_statement(*ast_store_, identifier, 
+        create_definition(inner_statement, is_top_level, inner_statement->location), location);
 
     log("finished parsing assignment statement from " + statement->location.to_string(), 
         LogLevel::debug_extra);
@@ -169,7 +169,7 @@ Statement* ParserLayer1::parse_block_statement() {
 
     get_token(); // eat start token
 
-    Statement* statement = create_statement(StatementType::block, location);
+    Statement* statement = create_block(*ast_store_, {}, location);
     // fetch the substatements vector
     std::vector<Statement*>* substatements = &std::get<Block>(statement->value);
 
@@ -219,8 +219,7 @@ Statement* ParserLayer1::parse_return_statement() {
 
     get_token(); //eat return
     Expression* expression = parse_expression();
-    Statement* statement = create_statement(StatementType::return_, location);
-    statement->value = expression;
+    Statement* statement = create_return_statement(*ast_store_, expression, location);
 
     assert(is_statement_separator(current_token()) 
         && "return statement didn't end in statement separator");

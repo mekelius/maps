@@ -291,10 +291,14 @@ bool IR_Generator::handle_statement(const Statement& statement) {
             return builder_->CreateRet(*value);
         }
 
+        case StatementType::guard:
+        case StatementType::switch_s:
         case StatementType::assignment:
+        case StatementType::loop:
+        case StatementType::if_chain:
             assert(false && "not implemented");
             return false;
-
+            
         case IGNORED_STATEMENT_TYPE:
             return false;
 

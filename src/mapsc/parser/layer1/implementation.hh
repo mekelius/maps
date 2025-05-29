@@ -52,6 +52,7 @@ protected:
     void push_context(RT_Definition* context);
     std::optional<RT_Definition*> pop_context();
     std::optional<RT_Definition*> current_context() const;
+    bool in_top_level_context() const { return context_stack_.size() == 0 || (force_top_level_eval_ && context_stack_.size()) == 1; }
     
     void fail(const std::string& message, SourceLocation location, bool compiler_error = false);
     Expression* fail_expression(const std::string& message, SourceLocation location, 
@@ -83,8 +84,6 @@ protected:
         SourceLocation location);
     RT_Definition* create_definition(DefinitionBody body, bool is_top_level, 
         SourceLocation location);
-    // creates an expression using ast_, marking the location as the expression_location_stack_
-    Statement* create_statement(StatementType statement_type, SourceLocation location);
 
     // #################################### layer1/pragma.cpp #####################################
 

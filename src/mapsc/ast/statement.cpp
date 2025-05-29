@@ -2,44 +2,18 @@
 
 #include <cassert>
 
+#include "mapsc/log_format.hh"
 #include "mapsc/ast/expression.hh"
+#include "mapsc/ast/ast_store.hh"
 
 namespace Maps {
 
-Statement::Statement(StatementType statement_type, SourceLocation location)
-:statement_type(statement_type), location(location) {
-    switch (statement_type) {
-        case StatementType::compiler_error:
-        case StatementType::user_error:
-            value = static_cast<std::string>("");
-            break;
-        case StatementType::deleted:
-            assert(false && "why are we creating statements pre-deleted?");
-            value = Undefined{};
-            break;
-        case StatementType::empty:
-            value = Undefined{};
-            break;               
+// Statement::Statement(StatementType statement_type, const SourceLocation& location)
+// :statement_type(statement_type), location(location), value(Undefined{}) {}
 
-        case StatementType::expression_statement:
-            break;
-        case StatementType::block:
-            value = Block{};
-            break;  
-        case StatementType::assignment:
-            break;          
-        case StatementType::return_:
-            break;             
-        //case StatementType::if:break;
-        //case StatementType::else:break;
-        //case StatementType::for:break;
-        //case StatementType::for_id:break;
-        //case StatementType::do_while:break;
-        //case StatementType::do_for:break;
-        //case StatementType::while/until: break;
-        //case StatementType::switch:break;
-    }
-}
+Statement::Statement(StatementType statement_type, const StatementValue& value, 
+    const SourceLocation& location)
+:statement_type(statement_type), location(location), value(value) {}
 
 std::string Statement::log_message_string() const {
     switch (statement_type) {
@@ -58,22 +32,15 @@ std::string Statement::log_message_string() const {
             return "block";
 
         case StatementType::assignment:
-            return "assignment to " + std::get<Assignment>(value).identifier;
+            return "assignment to " + std::get<Assignment>(value).identifier_or_reference->log_message_string();
 
         case StatementType::return_:
             return "return statement";
 
-        // case StatementType::if,
-        // case StatementType::else,
-            // return "conditional";
-        // case StatementType::for,
-        // case StatementType::for_in,
-        // case StatementType::do_while,
-        // case StatementType::do_for,
-        // case StatementType::while/until,
-            // return "loop";
-        // case StatementType::switch:
-            // return "switch statement";
+        case StatementType::guard: return "guard statement";
+        case StatementType::if_chain: return "if-else statement";
+        case StatementType::switch_s: return "switch statement";
+        case StatementType::loop: return "loop";
     }
 }
 
@@ -85,6 +52,10 @@ bool Statement::is_illegal_as_single_statement_block() const {
         case StatementType::compiler_error:
         case StatementType::empty:
         case StatementType::block:
+        case StatementType::switch_s:
+        case StatementType::if_chain:
+        case StatementType::guard:
+        case StatementType::loop:
             return false;
 
         case StatementType::assignment:
@@ -110,26 +81,57 @@ bool Statement::is_definition() const {
     }
 }
 
-std::string_view Statement::statement_type_string() const {
-    switch (statement_type) {
-            case StatementType::user_error: return "user_error";
-            case StatementType::compiler_error: return "compiler_error";
-            case StatementType::deleted: return "deleted";
-            case StatementType::empty: return "empty";
-            case StatementType::expression_statement: return "expression_statement";
-            case StatementType::block: return "block";
-            case StatementType::assignment: return "assignment";
-            case StatementType::return_: return "return_";
-            // case StatementType::if: return "if";
-            // case StatementType::else: return "else";
-            // case StatementType::for: return "for";
-            // case StatementType::for_in: return "for_in";
-            // case StatementType::do_while: return "do_while";
-            // case StatementType::do_for: return "do_for";
-            // case StatementType::while: return "while";
-            // case StatementType::until: return "until";
-            // case StatementType::switch: return "switch";
-    }
+Statement* create_empty_statement(AST_Store& ast_store, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::empty, Undefined{}, location});
+}
+Statement* create_assignment_statement(AST_Store& ast_store, Expression* identifier_or_reference, RT_Definition* definition, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::assignment, identifier_or_reference, location});
+}
+Statement* create_return_statement(AST_Store& ast_store, Expression* expression, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::return_, expression, location});
+}
+Statement* create_block(AST_Store& ast_store, const Block& block, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::block, Block{block}, location});
+}
+Statement* create_expression_statement(AST_Store& ast_store, Expression* expression, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::expression_statement, expression, location});
+}
+Statement* create_user_error_statement(AST_Store& ast_store, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::user_error, Undefined{}, location});
+}
+Statement* create_compiler_error_statement(AST_Store& ast_store, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::compiler_error, Undefined{}, location});
+}
+Statement* create_if(AST_Store& ast_store, Expression* condition, Statement* body, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::if_chain, IfChainValue{{IfBranch{condition, body}}}, location});
+}
+Statement* create_if_else_chain(AST_Store& ast_store, const IfChain& chain, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::if_chain, IfChainValue{chain}, location});
+}
+Statement* create_guard(AST_Store& ast_store, Expression* condition, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::guard, condition, location});
+}
+Statement* create_switch(AST_Store& ast_store, Expression* key, const std::vector<CaseBlock>& cases, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::switch_s, SwitchStatementValue{key, cases}, location});
+}
+Statement* create_while(AST_Store& ast_store, Expression* condition, Block block, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::loop, LoopStatementValue{condition, block}, location});
+}
+Statement* create_for(AST_Store& ast_store, Statement* initializer, Expression* condition, const Block& block, const SourceLocation& location) {
+    return ast_store.allocate_statement(
+        Statement{StatementType::loop, LoopStatementValue{condition, block, initializer}, location});
 }
 
 } // namespace AST

@@ -98,6 +98,59 @@ ReverseParser& ReverseParser::print_statement(const Statement& statement) {
             *this << "return" 
                     << *std::get<Expression*>(statement.value);
             break;
+
+        case StatementType::guard:
+            *this << "guard " << *statement.get_value<GuardValue>();
+            break;
+
+        case StatementType::if_chain: {
+            auto [chain, final_else] = statement.get_value<IfChainValue>();
+            bool first = true;
+            for (auto [condition, body]: chain) {
+                if (!first) {
+                    *this << "} else";
+                }
+
+                *this << "if (" << *condition << ") {";
+                indent_stack_++;
+                *this << *body;
+                indent_stack_--;
+                *this << linebreak();
+
+                first = false;
+            }
+
+            if (final_else) {
+                *this << "{";
+                indent_stack_++;
+                *this << **final_else;
+                indent_stack_--;
+                *this << "}";
+            }
+        }
+        case StatementType::switch_s: {
+            auto [key, cases] = statement.get_value<SwitchStatementValue>();
+            *this << "switch (" << *key << ") {";
+            indent_stack_++;
+
+            for (auto [case_expression, case_body]: cases)
+                *this << linebreak() << "case " << *case_expression << ": " << *case_body;
+
+            indent_stack_--;
+            *this << linebreak() << '}';
+            break;
+        }
+        case StatementType::loop: {
+            auto [condition, body, initializer] = statement.get_value<LoopStatementValue>();
+
+            if (!initializer) {
+                *this << "while (" << *condition << ") " << "body";
+                break;
+            }
+
+            *this << "for (" << **initializer << "; " << *condition << "; " << "body";
+            break;
+        }
     }
 
     return *this << ';';
