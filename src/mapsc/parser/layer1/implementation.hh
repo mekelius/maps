@@ -108,8 +108,8 @@ protected:
     Statement* parse_block_statement();
 
     Statement* parse_if_statement();
-    std::pair<Expression*, Statement*> parse_if_branch();
     Statement* parse_conditional_body();
+    Statement* parse_else_branch(uint initial_indent);
 
     Statement* parse_while_loop();
     Statement* parse_for_loop();

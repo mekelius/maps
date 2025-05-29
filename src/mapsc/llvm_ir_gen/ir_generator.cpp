@@ -296,7 +296,7 @@ bool IR_Generator::handle_statement(const Statement& statement) {
         case StatementType::switch_s:
         case StatementType::assignment:
         case StatementType::loop:
-        case StatementType::if_chain:
+        case StatementType::conditional:
             assert(false && "not implemented");
             return false;
             
