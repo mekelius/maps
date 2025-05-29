@@ -11,9 +11,9 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Value.h"
 
-#include "mapsc/llvm/type_mapping.hh"
-#include "mapsc/llvm/function_store.hh"
 #include "mapsc/ast/scope.hh"
+#include "mapsc/llvm_ir_gen/type_mapping.hh"
+#include "mapsc/llvm_ir_gen/function_store.hh"
 
 namespace llvm {
 

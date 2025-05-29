@@ -110,10 +110,10 @@ target_link_libraries(dsir mapsc_frontend)
 # ------------------------ IR_GEN -------------------------
 
 add_library(ir_gen OBJECT
-    src/mapsc/llvm/ir_generator.cpp
-    src/mapsc/llvm/ir_builtins.cpp
-    src/mapsc/llvm/type_mapping.cpp
-    src/mapsc/llvm/function_store.cpp
+    src/mapsc/llvm_ir_gen/ir_generator.cpp
+    src/mapsc/llvm_ir_gen/ir_builtins.cpp
+    src/mapsc/llvm_ir_gen/type_mapping.cpp
+    src/mapsc/llvm_ir_gen/function_store.cpp
 )
 
 target_link_libraries(ir_gen mapsc_frontend -lLLVM-19)

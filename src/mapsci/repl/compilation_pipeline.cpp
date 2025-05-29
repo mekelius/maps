@@ -26,8 +26,8 @@
 #include "mapsc/procedures/cleanup.hh"
 #include "mapsc/procedures/concretize.hh"
 
-#include "mapsc/llvm/ir_generator.hh"
-#include "mapsc/llvm/ir_builtins.hh"
+#include "mapsc/llvm_ir_gen/ir_generator.hh"
+#include "mapsc/llvm_ir_gen/ir_builtins.hh"
 
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple, std::optional, std::nullopt;
 using Maps::CompilationState, Maps::Layer1Result, Maps::run_layer1_eval, 

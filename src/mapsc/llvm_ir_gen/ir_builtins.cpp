@@ -22,8 +22,8 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/types/type_store.hh"
 
-#include "mapsc/llvm/ir_generator.hh"
-#include "mapsc/llvm/type_mapping.hh"
+#include "mapsc/llvm_ir_gen/ir_generator.hh"
+#include "mapsc/llvm_ir_gen/type_mapping.hh"
 
 using std::optional;
 using Maps::COMPILER_INIT_SOURCE_LOCATION;
