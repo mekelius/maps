@@ -3,9 +3,7 @@
 #include "mapsc/logging.hh"
 #include "mapsc/logging_options.hh"
 
-using Maps::LogInContext, Maps::LogOptions, Maps::LogLevel, Maps::LogContext;
-using Maps::CompilationState;
-
+namespace Maps {
 
 constexpr std::string_view USAGE = "\
 !!! NOT UP TO DATE !!!!\n\
@@ -228,3 +226,5 @@ std::tuple<bool, int, REPL_Options> process_cl_options(int argc, char* argv[],
 
     return {SHOULD_RUN, EXIT_SUCCESS, repl_options};
 }
+
+} // namespace Maps

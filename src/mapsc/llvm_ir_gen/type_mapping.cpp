@@ -15,13 +15,13 @@
 namespace llvm { class LLVMContext; }
 
 using std::optional, std::nullopt, std::vector;
-using Maps::COMPILER_INIT_SOURCE_LOCATION;
 
-using Log = Maps::LogInContext<Maps::LogContext::ir_gen_init>;
 
+namespace Maps {
 namespace LLVM_IR {
 
-// TODO: store these somewhere
+using Log = LogInContext<LogContext::ir_gen_init>;
+
 TypeMap::TypeMap(llvm::LLVMContext& context) {
     // get some types
     char_t = llvm::Type::getInt8Ty(context);
@@ -45,17 +45,17 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
 
     cmain_signature = llvm::FunctionType::get(int_t, {int_t, char_array_ptr_t}, false);
 
-    if (!insert(&Maps::Void,       void_t          ) ||
-        !insert(&Maps::Boolean,    boolean_t       ) ||
-        !insert(&Maps::Int,        int_t           ) ||
-        !insert(&Maps::Float,      double_t        ) ||
-        !insert(&Maps::String,     char_array_ptr_t) ||
-        !insert(&Maps::IO_Void,    void_t          ) ||
-        !insert(&Maps::IO_Boolean, boolean_t       ) ||
-        !insert(&Maps::IO_Int,     int_t           ) ||
-        !insert(&Maps::IO_Float,   double_t        ) ||
-        !insert(&Maps::IO_String,  char_array_ptr_t) ||
-        !insert(&Maps::MutString,  mutstring_t     )
+    if (!insert(&Void,       void_t          ) ||
+        !insert(&Boolean,    boolean_t       ) ||
+        !insert(&Int,        int_t           ) ||
+        !insert(&Float,      double_t        ) ||
+        !insert(&String,     char_array_ptr_t) ||
+        !insert(&IO_Void,    void_t          ) ||
+        !insert(&IO_Boolean, boolean_t       ) ||
+        !insert(&IO_Int,     int_t           ) ||
+        !insert(&IO_Float,   double_t        ) ||
+        !insert(&IO_String,  char_array_ptr_t) ||
+        !insert(&MutString,  mutstring_t     )
     ) {
         Log::compiler_error("Inserting primitive types into TypeMap failed", 
             COMPILER_INIT_SOURCE_LOCATION);
@@ -63,12 +63,12 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
     }
 }
 
-bool TypeMap::contains(const Maps::Type& maps_type) const {
+bool TypeMap::contains(const Type& maps_type) const {
     auto signature = maps_type.name_string();
     return type_map_.contains(signature);
 }
 
-bool TypeMap::insert(const Maps::Type* maps_type, llvm::Type* llvm_type) {
+bool TypeMap::insert(const Type* maps_type, llvm::Type* llvm_type) {
     auto signature = maps_type->name_string();
     
     if (contains(*maps_type)) {
@@ -83,7 +83,7 @@ bool TypeMap::insert(const Maps::Type* maps_type, llvm::Type* llvm_type) {
 }
 
 // TODO: Would be faster to use type id:s since only primitives have to be covered here
-std::optional<llvm::Type*> TypeMap::convert_type(const Maps::Type& type) const {
+std::optional<llvm::Type*> TypeMap::convert_type(const Type& type) const {
     auto it = type_map_.find(type.name_string());
     if (it == type_map_.end())
         return std::nullopt;
@@ -91,8 +91,8 @@ std::optional<llvm::Type*> TypeMap::convert_type(const Maps::Type& type) const {
     return it->second;
 }
 
-std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Type& return_type, 
-    std::span<const Maps::Type* const> arg_types) const {
+std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Type& return_type, 
+    std::span<const Type* const> arg_types) const {
     
     optional<llvm::Type*> llvm_return_type = convert_type(return_type);
     
@@ -106,7 +106,7 @@ std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Ty
 
     for (auto arg_type: arg_types) {
         // ignore void args
-        if (*arg_type == Maps::Void)
+        if (*arg_type == Void)
             continue;
 
         optional<llvm::Type*> llvm_arg_type = convert_type(*arg_type);
@@ -119,7 +119,7 @@ std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Ty
     return llvm::FunctionType::get(*llvm_return_type, llvm_arg_types, false);
 }
 
-std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::FunctionType& type) const {
+std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const FunctionType& type) const {
     if (!type.is_function())
         return nullopt;
 
@@ -127,3 +127,4 @@ std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Fu
 }
 
 } // namespace LLVM_IR
+} // nameespace Maps

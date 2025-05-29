@@ -10,8 +10,11 @@
 #include "llvm/IR/Type.h"
 
 namespace llvm { class LLVMContext; }
-namespace Maps { class FunctionType; class Type; }
 
+namespace Maps { 
+    
+class FunctionType; 
+class Type;
 
 namespace LLVM_IR {
 
@@ -49,5 +52,6 @@ private:
 };
 
 } // namespace LLVM_IR
+} // nameespace Maps
 
 #endif

@@ -60,7 +60,8 @@ using Maps::Helpers::capitalize;
 
 
 using Log = Maps::LogInContext<Maps::LogContext::ir_gen>;
-                          
+
+namespace Maps {
 namespace LLVM_IR {
 
 // ----- IR GENERATOR -----
@@ -558,3 +559,4 @@ optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& e
 }
 
 } // namespace LLVM_IR
+} // nameespace Maps

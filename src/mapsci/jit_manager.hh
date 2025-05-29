@@ -16,6 +16,8 @@ namespace orc { class ThreadSafeContext; }
 } // namespace llvm
 
 
+namespace Maps {
+
 class JIT_Manager {
 public:
     JIT_Manager(llvm::orc::ThreadSafeContext* context, llvm::raw_ostream* error_stream);
@@ -36,5 +38,6 @@ private:
     std::unique_ptr<llvm::orc::LLJIT> jit_;
 };
 
+} // namespace Maps
 
 #endif

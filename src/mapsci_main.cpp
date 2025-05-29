@@ -18,6 +18,7 @@
 using std::unique_ptr, std::make_unique;
 using Maps::LogInContext, Maps::LogOptions, Maps::LogLevel, Maps::LogContext;
 using Maps::CompilationState;
+using Maps::JIT_Manager, Maps::SHOULD_EXIT;
 
 int main(int argc, char* argv[]) {
     llvm::raw_os_ostream error_stream{std::cerr};

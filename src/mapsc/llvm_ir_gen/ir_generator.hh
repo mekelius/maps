@@ -34,9 +34,6 @@ class TypeStore;
 class PragmaStore;
 class CompilationState;
 
-} // namespace Maps
-
-
 namespace LLVM_IR {
 
 constexpr std::string_view REPL_WRAPPER_NAME = "repl_wrapper";
@@ -146,5 +143,6 @@ public:
 };
 
 } // namespace LLVM_IR
+} // nameespace Maps
 
 #endif

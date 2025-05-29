@@ -8,6 +8,7 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
 
+namespace Maps {
 
 JIT_Manager::JIT_Manager(llvm::orc::ThreadSafeContext* context, llvm::raw_ostream* error_stream)
     : error_stream_(error_stream), context_(context) {
@@ -57,3 +58,4 @@ void JIT_Manager::reset() {
     }
 }
     
+} // namespace Maps

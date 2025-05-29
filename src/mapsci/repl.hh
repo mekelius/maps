@@ -7,9 +7,11 @@
 #include "mapsc/compilation_state.hh"
 #include "mapsc/procedures/reverse_parse.hh"
 
-class JIT_Manager;
-
 namespace llvm { class LLVMContext; class raw_ostream; }
+
+namespace Maps {
+
+class JIT_Manager;
 
 static constexpr std::string_view REPL_DEFAULT_MODULE_NAME = "ir_module";
 static constexpr std::string_view REPL_DEFAULT_PROMPT = "mapsci> ";
@@ -59,4 +61,6 @@ struct REPL_Options {
 bool run_repl(JIT_Manager& jit, llvm::LLVMContext& context, llvm::raw_ostream& error_stream, 
     const REPL_Options& options);
     
+} // namespace Maps
+
 #endif

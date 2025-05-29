@@ -23,8 +23,8 @@
 
 using std::optional, std::nullopt;
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple;
-using Maps::ReverseParser;
-using Maps::TypeStore, Maps::CompilationState;
+
+namespace Maps {
 
 // ----- PUBLIC METHODS -----
 
@@ -161,3 +161,5 @@ bool REPL::save_history() {
 
     return true;
 }
+
+} // namespace Maps

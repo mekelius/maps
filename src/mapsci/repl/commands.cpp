@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+namespace Maps {
+
 void REPL::run_command(Maps::CompilationState& state, const std::string& input) {
     std::stringstream input_stream{input};
     std::string command;
@@ -87,3 +89,5 @@ void REPL::run_command(Maps::CompilationState& state, const std::string& input) 
     std::cout << "\"" << command << "\" is not a command" << std::endl;
     return;
 }
+
+} // namespace Maps

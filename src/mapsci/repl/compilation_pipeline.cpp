@@ -30,10 +30,8 @@
 #include "mapsc/llvm_ir_gen/ir_builtins.hh"
 
 using std::unique_ptr, std::make_unique, std::make_optional, std::tuple, std::optional, std::nullopt;
-using Maps::CompilationState, Maps::Layer1Result, Maps::run_layer1_eval, 
-    Maps::Definition, Maps::RT_Definition, Maps::CT_Definition, Maps::Expression,
-    Maps::CT_Scope, Maps::RT_Scope, Maps::Scopes, Maps::ReverseParser,
-    Maps::resolve_identifiers, Maps::NO_SOURCE_LOCATION;
+
+namespace Maps {
 
 optional<Definition*> REPL::create_repl_wrapper(CompilationState& state, 
     RT_Definition* top_level_definition) {
@@ -274,3 +272,5 @@ bool REPL::insert_global_cleanup(Maps::CompilationState& state,
 
     return Maps::insert_cleanup(state, scope, entry_point);
 }
+
+} // namespace Maps

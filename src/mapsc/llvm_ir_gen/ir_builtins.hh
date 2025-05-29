@@ -7,18 +7,20 @@ class Function;
 
 } // namespace llvm
 
+namespace Maps {
 namespace LLVM_IR {
 
 class IR_Generator;
 
 struct Builtins {
     // builtin functions
-    llvm::Function* print;
+    ::llvm::Function* print;
 };
 
 // declares builtins and external functions used by them
 bool insert_builtins(IR_Generator& generator);
 
 } // namespace LLVM_IR
+} // nameespace Maps
 
 #endif

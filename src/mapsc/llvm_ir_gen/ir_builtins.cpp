@@ -26,20 +26,23 @@
 #include "mapsc/llvm_ir_gen/type_mapping.hh"
 
 using std::optional;
-using Maps::COMPILER_INIT_SOURCE_LOCATION;
-using Log = Maps::LogInContext<Maps::LogContext::ir_gen_init>;
 
 namespace llvm { class Type; }
-namespace Maps { class FunctionType; }
+
+namespace Maps { 
+
+using Log = LogInContext<LogContext::ir_gen_init>;
+    
+class FunctionType;
 
 namespace LLVM_IR {
 
-bool forward_declare_libmaps(LLVM_IR::IR_Generator& denerator);
-bool insert_arithmetic_functions(LLVM_IR::IR_Generator& denerator);
+bool forward_declare_libmaps(IR_Generator& denerator);
+bool insert_arithmetic_functions(IR_Generator& denerator);
 
 // TODO: parse header file
 // TODO: memoize this somehow
-bool insert_builtins(LLVM_IR::IR_Generator& generator) {
+bool insert_builtins(IR_Generator& generator) {
     forward_declare_libmaps(generator);
     insert_arithmetic_functions(generator);
 
@@ -63,7 +66,7 @@ bool insert_builtins(LLVM_IR::IR_Generator& generator) {
     return true;
 }
 
-bool forward_declare_libmaps(LLVM_IR::IR_Generator& generator) {
+bool forward_declare_libmaps(IR_Generator& generator) {
     // ----- declare print types -----
     // const std::array<std::pair<const Maps::Type*, llvm::Type*>, 5> PRINTABLE_TYPES{
     //    std::pair{&Maps::String, generator.types_.char_array_ptr_t}, 
@@ -87,7 +90,7 @@ bool forward_declare_libmaps(LLVM_IR::IR_Generator& generator) {
 
     if (!generator.overloaded_forward_declaration("prints", 
             *generator.maps_types_->get_function_type(
-                &Maps::IO_Void, {&Maps::String}, false),
+                &IO_Void, {&String}, false),
                 llvm::FunctionType::get(generator.types_.void_t, 
                     {generator.types_.char_array_ptr_t}, false))) {
 
@@ -98,7 +101,7 @@ bool forward_declare_libmaps(LLVM_IR::IR_Generator& generator) {
 
     if (!generator.overloaded_forward_declaration("printms", 
             *generator.maps_types_->get_function_type(
-                &Maps::IO_Void, {&Maps::MutString}, false),
+                &IO_Void, {&MutString}, false),
                 llvm::FunctionType::get(generator.types_.void_t, 
                     {generator.types_.mutstring_ptr_t}, false))) {
 
@@ -154,7 +157,7 @@ bool forward_declare_libmaps(LLVM_IR::IR_Generator& generator) {
     // ----- declare string functions -----
 
     auto concat = generator.forward_declaration("concat",
-        llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {
+        ::llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {
             generator.types_.mutstring_ptr_t, generator.types_.mutstring_ptr_t}, false));
 
     if (!concat) {
@@ -169,7 +172,7 @@ bool forward_declare_libmaps(LLVM_IR::IR_Generator& generator) {
     return true;
 }
 
-bool insert_arithmetic_functions(LLVM_IR::IR_Generator& generator) {
+bool insert_arithmetic_functions(IR_Generator& generator) {
     // arithmetic function types
     const Maps::FunctionType* IntInt = generator.maps_types_->get_function_type(
         &Maps::Int, {&Maps::Int}, true);
@@ -311,3 +314,4 @@ bool insert_arithmetic_functions(LLVM_IR::IR_Generator& generator) {
 }
 
 } // namespace LLVM_IR
+} // nameespace Maps

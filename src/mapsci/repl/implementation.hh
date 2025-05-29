@@ -17,6 +17,8 @@
 #include "mapsci/jit_manager.hh"
 #include "mapsc/parser/layer1.hh"
 
+namespace Maps {
+
 class REPL {
 public:
     REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* error_stream, 
@@ -59,36 +61,36 @@ private:
     bool save_history();
     std::optional<std::string> get_input();
     
-    void debug_print(REPL_Stage stage, const Maps::RT_Scope& scope, 
-        std::span<const Maps::Definition* const> extra_definitions);
-    void debug_print(REPL_Stage stage, const Maps::RT_Scope& scope, const Maps::Definition*);
-    void debug_print(REPL_Stage stage, const Maps::RT_Scope& scope);
+    void debug_print(REPL_Stage stage, const RT_Scope& scope, 
+        std::span<const Definition* const> extra_definitions);
+    void debug_print(REPL_Stage stage, const RT_Scope& scope, const Definition*);
+    void debug_print(REPL_Stage stage, const RT_Scope& scope);
     void debug_print(REPL_Stage stage, const llvm::Module& module);
 
 
-    void run_command(Maps::CompilationState& state, const std::string& command);
+    void run_command(CompilationState& state, const std::string& command);
 
-    std::optional<Maps::Definition*> create_repl_wrapper(Maps::CompilationState& state, 
-        Maps::RT_Definition* top_level_definition);
+    std::optional<Definition*> create_repl_wrapper(CompilationState& state, 
+        RT_Definition* top_level_definition);
     bool compile_and_run(std::unique_ptr<llvm::Module> module_, const std::string& entry_point);
     
-    bool run_compilation_pipeline(Maps::CompilationState& state, Maps::RT_Scope& global_scope, 
+    bool run_compilation_pipeline(CompilationState& state, RT_Scope& global_scope, 
         std::istream& istream);
     std::string eval_type(std::istream& input_stream);
     
-    Maps::Layer1Result run_layer1(Maps::CompilationState& state, 
-        Maps::RT_Scope& global_scope, std::istream& source);
-    bool run_layer2(Maps::CompilationState& state, 
-        std::vector<Maps::Expression*> unparsed_termed_expressions);
+    Layer1Result run_layer1(CompilationState& state, 
+        RT_Scope& global_scope, std::istream& source);
+    bool run_layer2(CompilationState& state, 
+        std::vector<Expression*> unparsed_termed_expressions);
 
-    bool run_transforms(Maps::CompilationState& state, 
-        Maps::RT_Scope& scope, std::optional<Maps::RT_Definition* const> definition);
+    bool run_transforms(CompilationState& state, 
+        RT_Scope& scope, std::optional<RT_Definition* const> definition);
 
-    bool insert_global_cleanup(Maps::CompilationState& state, 
-        Maps::RT_Scope& scope, Maps::RT_Definition& entry_point);
+    bool insert_global_cleanup(CompilationState& state, 
+        RT_Scope& scope, RT_Definition& entry_point);
 
-    std::unique_ptr<llvm::Module> run_ir_gen(Maps::CompilationState& state, 
-        Maps::Definition* definition);
+    std::unique_ptr<llvm::Module> run_ir_gen(CompilationState& state, 
+        Definition* definition);
 
     // ----- PRIVATE FIELDS -----
     bool running_ = true;
@@ -97,7 +99,9 @@ private:
     JIT_Manager* jit_;
     llvm::raw_ostream* error_stream_;
     REPL_Options options_ = {};
-    Maps::ReverseParser reverse_parser_;
+    ReverseParser reverse_parser_;
 };
+
+} // namespace Maps
     
 #endif

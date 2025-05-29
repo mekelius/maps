@@ -12,7 +12,11 @@
 #include "mapsc/types/function_type.hh"
 #include "mapsc/ast/definition.hh"
 
-namespace Maps { class Type; class FunctionType; class Definition; }
+namespace Maps { 
+    
+class Type; 
+class FunctionType; 
+class Definition;
 
 namespace LLVM_IR {
 
@@ -79,5 +83,6 @@ public:
 };
 
 } // namespace LLVM_IR
+} // nameespace Maps
 
 #endif
