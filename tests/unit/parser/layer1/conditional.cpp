@@ -25,7 +25,6 @@ inline std::tuple<CompilationState, RT_Scope, stringstream> setup(const std::str
 
 #define IF_CASE(source_string)\
 TEST_CASE(source_string) {\
-    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
     LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     auto [state, scope, source] = setup(source_string);\
     \
@@ -109,6 +108,7 @@ then\n\
 
 #define IF_ELSE_CASE(source_string)\
 TEST_CASE(source_string) {\
+    auto lock = LogOptions::set_global(LogLevel::debug_extra);\
     LogInContext<LogContext::layer1>::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
     \
     auto [state, scope, source] = setup(source_string);\
@@ -169,6 +169,14 @@ IF_ELSE_CASE("\n\
         return 2\n\
     }\n\
 ")
+
+// IF_ELSE_CASE("\n\
+//     if (condition) then {\n\
+//             return 1\n\
+//         } else {\n\
+//             return 2\n\
+//     }\n\
+// ")
 
 IF_ELSE_CASE("\n\
     if condition\n\

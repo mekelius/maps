@@ -113,6 +113,60 @@ TEST_CASE(source_string) {\
 
 WHILE_ELSE_CASE("while (condition) then {f} else {else_branch}")
 
+WHILE_ELSE_CASE("\n\
+    while (condition) \n\
+        {\n\
+            f\n\
+        } \n\
+    else { else_branch }")
+
+
+WHILE_ELSE_CASE("\n\
+    while (condition) {\n\
+        f\n\
+    } else {\n\
+        else_branch\n\
+    }")
+
+// WHILE_ELSE_CASE("\n\
+//     while (condition) {\n\
+//             f\n\
+//         } else\n\
+//             else_branch")
+
+// WHILE_ELSE_CASE("\n\
+//     while (condition) {\n\
+//             f\n\
+//         } else {\n\
+//             else_branch }")
+
+// WHILE_ELSE_CASE("\n\
+//     while (condition) \n\
+//         {\n\
+//             f\n\
+//         } \n\
+//     else\n\
+//                 else_branch\n\
+// ")
+
+WHILE_ELSE_CASE("\n\
+    while condition\n\
+    then\n\
+        f\n\
+    else\n\
+        else_branch\n\
+")
+
+WHILE_ELSE_CASE("\n\
+    while\n\
+        condition\n\
+    then\n\
+        f\n\
+    else\n\
+        else_branch\n\
+")
+
+
 // TEST_CASE("for") {
 //     auto [state, scope, source] = setup("\
 //         if condition\
