@@ -32,14 +32,14 @@ using Log = Maps::LogInContext<Maps::LogContext::ir_gen_init>;
 namespace llvm { class Type; }
 namespace Maps { class FunctionType; }
 
-namespace IR {
+namespace LLVM_IR {
 
-bool forward_declare_libmaps(IR::IR_Generator& denerator);
-bool insert_arithmetic_functions(IR::IR_Generator& denerator);
+bool forward_declare_libmaps(LLVM_IR::IR_Generator& denerator);
+bool insert_arithmetic_functions(LLVM_IR::IR_Generator& denerator);
 
 // TODO: parse header file
 // TODO: memoize this somehow
-bool insert_builtins(IR::IR_Generator& generator) {
+bool insert_builtins(LLVM_IR::IR_Generator& generator) {
     forward_declare_libmaps(generator);
     insert_arithmetic_functions(generator);
 
@@ -63,7 +63,7 @@ bool insert_builtins(IR::IR_Generator& generator) {
     return true;
 }
 
-bool forward_declare_libmaps(IR::IR_Generator& generator) {
+bool forward_declare_libmaps(LLVM_IR::IR_Generator& generator) {
     // ----- declare print types -----
     // const std::array<std::pair<const Maps::Type*, llvm::Type*>, 5> PRINTABLE_TYPES{
     //    std::pair{&Maps::String, generator.types_.char_array_ptr_t}, 
@@ -169,7 +169,7 @@ bool forward_declare_libmaps(IR::IR_Generator& generator) {
     return true;
 }
 
-bool insert_arithmetic_functions(IR::IR_Generator& generator) {
+bool insert_arithmetic_functions(LLVM_IR::IR_Generator& generator) {
     // arithmetic function types
     const Maps::FunctionType* IntInt = generator.maps_types_->get_function_type(
         &Maps::Int, {&Maps::Int}, true);
@@ -310,4 +310,4 @@ bool insert_arithmetic_functions(IR::IR_Generator& generator) {
     return true;
 }
 
-} // namespace IR
+} // namespace LLVM_IR

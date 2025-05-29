@@ -213,9 +213,9 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     // ------------------------------------ IR GEN ---------------------------------------
 
     unique_ptr<llvm::Module> module_ = make_unique<llvm::Module>(options_.module_name, *context_);
-    IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
+    LLVM_IR::IR_Generator generator{context_, module_.get(), &state, error_stream_};
 
-    if (!IR::insert_builtins(generator)) {
+    if (!LLVM_IR::insert_builtins(generator)) {
         std::cout << "Inserting IR builtins failed\n";
         return false;
     }

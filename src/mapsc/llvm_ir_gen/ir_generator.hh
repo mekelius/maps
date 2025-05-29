@@ -37,7 +37,7 @@ class CompilationState;
 } // namespace Maps
 
 
-namespace IR {
+namespace LLVM_IR {
 
 constexpr std::string_view REPL_WRAPPER_NAME = "repl_wrapper";
 
@@ -145,6 +145,6 @@ public:
     // friend bool insert_builtins(IR::IR_Generator& generator);
 };
 
-} // namespace IR
+} // namespace LLVM_IR
 
 #endif

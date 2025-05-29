@@ -19,7 +19,7 @@ using Maps::COMPILER_INIT_SOURCE_LOCATION;
 
 using Log = Maps::LogInContext<Maps::LogContext::ir_gen_init>;
 
-namespace IR {
+namespace LLVM_IR {
 
 // TODO: store these somewhere
 TypeMap::TypeMap(llvm::LLVMContext& context) {
@@ -126,4 +126,4 @@ std::optional<llvm::FunctionType*> TypeMap::convert_function_type(const Maps::Fu
     return convert_function_type(*type.return_type(), type.param_types());
 }
 
-} // namespace IR
+} // namespace LLVM_IR

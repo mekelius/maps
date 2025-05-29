@@ -13,7 +13,7 @@ namespace llvm { class LLVMContext; }
 namespace Maps { class FunctionType; class Type; }
 
 
-namespace IR {
+namespace LLVM_IR {
 
 class TypeMap {
 public:
@@ -48,6 +48,6 @@ private:
     std::unordered_map<std::string, llvm::Type*> type_map_;
 };
 
-} // namespace IR
+} // namespace LLVM_IR
 
 #endif

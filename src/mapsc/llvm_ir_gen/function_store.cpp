@@ -14,7 +14,7 @@ using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_i
 
 using Maps::LogInContext, Maps::LogContext, Maps::NO_SOURCE_LOCATION, Maps::COMPILER_INIT_SOURCE_LOCATION;
 
-namespace IR {
+namespace LLVM_IR {
 
 std::optional<llvm::FunctionCallee> FunctionStore::get(const Maps::Definition& definition) const {
     using Log = LogInContext<LogContext::ir_gen>;

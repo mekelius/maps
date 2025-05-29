@@ -7,7 +7,7 @@ class Function;
 
 } // namespace llvm
 
-namespace IR {
+namespace LLVM_IR {
 
 class IR_Generator;
 
@@ -19,6 +19,6 @@ struct Builtins {
 // declares builtins and external functions used by them
 bool insert_builtins(IR_Generator& generator);
 
-} // namespace IR
+} // namespace LLVM_IR
 
 #endif

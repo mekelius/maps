@@ -14,7 +14,7 @@
 
 namespace Maps { class Type; class FunctionType; class Definition; }
 
-namespace IR {
+namespace LLVM_IR {
 
 class FunctionStore {
 public:
@@ -78,6 +78,6 @@ public:
         functions_ = std::map<std::string, std::unique_ptr<InnerMapType>>();
 };
 
-} // namespace IR
+} // namespace LLVM_IR
 
 #endif

@@ -61,7 +61,7 @@ using Maps::Helpers::capitalize;
 
 using Log = Maps::LogInContext<Maps::LogContext::ir_gen>;
                           
-namespace IR {
+namespace LLVM_IR {
 
 // ----- IR GENERATOR -----
 
@@ -557,4 +557,4 @@ optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& e
     return llvm::ConstantFP::get(*context_, llvm::APFloat(num_value));
 }
 
-} // namespace IR
+} // namespace LLVM_IR
