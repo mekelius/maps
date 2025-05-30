@@ -31,7 +31,7 @@ enum class REPL_Stage {
 constexpr static auto REPL_STAGE_COUNT = __LINE__ - REPL_STAGES_START_LINE - 3;
 
 struct REPL_Options {
-    std::array<bool, REPL_STAGE_COUNT> debug_prints;
+    std::array<bool, REPL_STAGE_COUNT> debug_prints{};
     
     bool eval = true;
 

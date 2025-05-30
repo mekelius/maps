@@ -96,6 +96,8 @@ public:
         const Maps::FunctionType& maps_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
+    bool block_has_terminated() const;
+
     // Runs llvm::verify_module (flips the result so that true means passed)
     // If options.verify_module = false, always returns true
     bool verify_module();
@@ -115,7 +117,12 @@ public:
     // for the appropriate print function
     bool handle_block(const Maps::Statement& statement);
     std::optional<llvm::Value*> handle_expression_statement(const Maps::Statement& statement);
-    
+
+    bool handle_conditional(const Statement& statement);
+    bool handle_switch(const Statement& statement);
+    bool handle_loop(const Statement& statement);
+    bool handle_guard(const Statement& statement);
+
     // ----- EXPRESSION HANDLERS -----
     std::optional<llvm::Value*> handle_expression(const Maps::Expression& expression);
     llvm::Value* handle_call(const Maps::Expression& call);

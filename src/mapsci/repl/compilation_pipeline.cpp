@@ -95,6 +95,11 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
     if (!eval_and_print && top_level_type->is_impure()) {
         auto eval = create_call(state, top_level_definition, {}, location);
 
+        if (!eval) {
+            std::cout << "creating REPL wrapper failed" << std::endl;
+            return nullopt;
+        }
+
         return state.ast_store_->allocate_definition(
             RT_Definition{options_.repl_wrapper_name, *eval, true, location});
     }

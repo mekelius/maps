@@ -51,20 +51,20 @@ bool Statement::is_illegal_as_single_statement_block() const {
     switch (statement_type) {
         case StatementType::expression_statement:
         case StatementType::return_:
-        case StatementType::user_error:
-        case StatementType::compiler_error:
         case StatementType::empty:
         case StatementType::block:
         case StatementType::switch_s:
-        case StatementType::guard:
         case StatementType::loop:
         case StatementType::conditional:
             return false;
-
+        
         case StatementType::assignment:
             // ???
             return true;
-
+        
+        case StatementType::user_error:
+        case StatementType::compiler_error:
+        case StatementType::guard:
         case StatementType::deleted:
             return true;
     }

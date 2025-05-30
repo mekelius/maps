@@ -186,6 +186,10 @@ optional<llvm::Function*> IR_Generator::overloaded_forward_declaration(const std
     return function;
 }
 
+bool IR_Generator::block_has_terminated() const {
+    return builder_->GetInsertBlock()->getTerminator() != nullptr;
+}
+
 bool IR_Generator::verify_module() {
     if (!options_.verify_module)
         return true;
@@ -205,6 +209,8 @@ bool IR_Generator::handle_global_functions(const Maps::RT_Scope& scope) {
 std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
     const Maps::Definition& definition) {
     
+    Log::debug_extra("Generating ir for " + definition.name_string(), definition.location());
+
     if (definition.get_type()->is_function())
         return handle_function(definition);
 
@@ -272,6 +278,32 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
     if (!function)
         return nullopt;
     
+    bool success = std::visit(overloaded{
+        [this](const Expression* expression) {
+            auto value = handle_expression(*expression);
+            if (!value)
+                return false;
+
+            builder_->CreateRet(*value);
+            return true;
+        },
+        [this](const Statement* statement) {
+            return handle_statement(*statement);
+        },
+        [this, &definition](auto) {
+            Log::compiler_error("Unhandled definition body encountered during ir gen", 
+                definition.location());
+            fail("IR gen for " + definition.name_string() + " failed");
+            return false;
+        }
+    }, definition.const_body());
+
+    if (!success)
+        return nullopt;
+
+    if (!builder_->GetInsertBlock()->getTerminator())
+        builder_->CreateRetVoid();
+
     return function;
 }
 
@@ -292,11 +324,19 @@ bool IR_Generator::handle_statement(const Statement& statement) {
             return builder_->CreateRet(*value);
         }
 
-        case StatementType::guard:
-        case StatementType::switch_s:
-        case StatementType::assignment:
-        case StatementType::loop:
         case StatementType::conditional:
+            return handle_conditional(statement);
+
+        case StatementType::switch_s:
+            return handle_switch(statement);
+
+        case StatementType::loop:
+            return handle_loop(statement);
+        
+        case StatementType::guard:
+            return handle_guard(statement);
+        
+        case StatementType::assignment:
             assert(false && "not implemented");
             return false;
             
@@ -337,13 +377,99 @@ bool IR_Generator::handle_block(const Statement& statement) {
     return true;
 }
 
+bool IR_Generator::handle_conditional(const Statement& statement) {
+    auto [condition, then_statement, else_statement] = statement.get_value<ConditionalValue>();
+
+    bool both_terminated = true;
+
+    auto condition_value = handle_expression(*condition);
+
+    if (!condition_value) {
+        fail("Handling conditional statement condition failed");
+        return false;
+    }
+
+    auto trunc_condition = 
+        builder_->CreateTrunc(*condition_value, llvm::Type::getInt1Ty(*context_));
+
+    auto current_function = builder_->GetInsertBlock()->getParent();
+
+    llvm::BasicBlock* then_branch = llvm::BasicBlock::Create(*context_, "then", current_function);
+    llvm::BasicBlock* onward_branch = llvm::BasicBlock::Create(*context_, "onward", current_function);
+
+    if (!else_statement) {
+        builder_->CreateCondBr(trunc_condition, then_branch, onward_branch);
+        builder_->SetInsertPoint(then_branch);
+        
+        if (!handle_statement(*then_statement)) {
+            fail("Handling conditional statement then branch failed");
+            return false;
+        }
+
+        if (!block_has_terminated())
+            builder_->CreateBr(onward_branch);
+
+        builder_->SetInsertPoint(onward_branch);
+        return true;
+    }
+
+    llvm::BasicBlock* else_branch = llvm::BasicBlock::Create(*context_, "else", current_function);
+
+    builder_->CreateCondBr(trunc_condition, then_branch, else_branch);
+    builder_->SetInsertPoint(then_branch);
+
+    if (!handle_statement(*then_statement)) {
+        fail("Handling conditional statement then branch failed");
+        return false;
+    }
+
+    if (!block_has_terminated()) {
+        both_terminated = false;
+        builder_->CreateBr(onward_branch);
+    }
+
+    builder_->SetInsertPoint(else_branch);
+    if (!handle_statement(**else_statement)) {
+        fail("Handling conditional statement else branch failed");
+        return false;
+    }
+
+    if (!block_has_terminated()) {
+        both_terminated = false;
+        builder_->CreateBr(onward_branch);
+    }
+
+    if (both_terminated) {
+        onward_branch->eraseFromParent();
+        return true;
+    }
+
+    builder_->SetInsertPoint(onward_branch);
+    return true;
+}
+
+bool IR_Generator::handle_switch(const Statement& statement) {
+    assert(false && "not implemented");
+    return true;
+}
+
+bool IR_Generator::handle_loop(const Statement& statement) {
+    assert(false && "not implemented");
+    return true;
+}
+
+bool IR_Generator::handle_guard(const Statement& statement) {
+    assert(false && "not implemented");
+    return true;
+}
+
 std::optional<llvm::Value*> IR_Generator::handle_expression_statement(
-    const Maps::Statement& statement) {
+    const Statement& statement) {
     
     assert(statement.statement_type == StatementType::expression_statement && 
         "IR_Generator::handle_expression_statement called with non-expression statement");
 
-    Maps::Expression* expression = get<Expression*>(statement.value);
+    Expression* expression = get<Expression*>(statement.value);
     optional<llvm::Value*> value = handle_expression(*expression);
 
     if (!*value)
