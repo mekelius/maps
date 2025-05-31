@@ -51,19 +51,7 @@ public:
 
     static Operator create_binary(const std::string& name, DefinitionHeader* value, 
         Operator::Precedence precedence, Operator::Associativity associativity, 
-        SourceLocation location) {
-
-        return Operator { 
-            name, 
-            value, 
-            Properties {
-                Fixity::binary, 
-                precedence, 
-                associativity 
-            }, 
-            location 
-        };
-    }
+        SourceLocation location);
 
     // ---------- CONSTRUCTORS ETC. ----------
 
@@ -97,12 +85,22 @@ public:
     };
 
     std::string name_;
-    DefinitionHeader* header_;
     DefinitionHeader* value_;
     Operator::Properties operator_props_;
 
 private:
 };
+
+Operator* create_binary_operator(AST_Store& ast_store, const std::string& name, DefinitionHeader* value, 
+    Operator::Precedence precedence, Operator::Associativity associativity, 
+    SourceLocation location);
+
+Operator* create_testing_binary_operator(AST_Store& ast_store, const std::string& name, 
+    const Type* type, Operator::Precedence precedence, Operator::Associativity associativity, 
+    SourceLocation location);
+
+Operator* create_testing_binary_operator(AST_Store& ast_store, const std::string& name, 
+    const Type* type, Operator::Precedence precedence, SourceLocation location);
 
 } // namespace Maps
 

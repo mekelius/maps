@@ -17,6 +17,7 @@
 namespace Maps {
 
 class Type;
+class TypeStore;
 struct Expression;
 struct Statement;
 class AST_Store;
@@ -52,6 +53,9 @@ DefinitionBody* function_definition(CompilationState& state,
 DefinitionBody* function_definition(CompilationState& state, 
     const ParameterList& parameter_list, Scope* inner_scope, bool is_top_level, 
     const SourceLocation& location);
+
+DefinitionBody* create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
+    Expression* value, bool is_pure, const SourceLocation& location);
 
 } // namespace Maps
 

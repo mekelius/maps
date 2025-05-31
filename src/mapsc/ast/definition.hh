@@ -63,9 +63,10 @@ public:
 
     std::optional<LetDefinitionValue> get_body_value() const;
 
-    // bool operator==(const ReferableNode& other) const {
-    //     return this == &other;
-    // };
+    bool operator==(const DefinitionHeader& other) const {
+        return this == &other;
+    };
+
     std::string name_;
     const Type* type_;
     bool is_top_level_;
@@ -73,16 +74,6 @@ public:
     std::optional<Scope*> outer_scope_;
     std::optional<DefinitionBody*> body_ = std::nullopt;
     bool is_deleted_ = false;
-};
-
-class External: public DefinitionHeader {
-public:
-    virtual std::string node_type_string() const { return "external"; };
-    virtual std::string name_string() const { return name_; };
-    virtual const Type* get_type() const {return type_; };
-
-    std::string name_;
-    const Type* type_;
 };
 
 struct BTD_Binding {

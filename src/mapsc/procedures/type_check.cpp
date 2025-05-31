@@ -57,10 +57,8 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
 bool SimpleTypeChecker::visit_definition(DefinitionBody* definition) {
     return std::visit(overloaded{
         [](Error) { return false; },
-        [](External) { return true; },
         [](Undefined) { return true; },
         [](Expression*) { return true; },
-        [](BTD_Binding) { return true; },
         [definition](Statement* statement) {                        
             auto type = definition->get_type();
             auto declared_type = definition->get_declared_type();

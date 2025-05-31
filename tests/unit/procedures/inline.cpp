@@ -1,41 +1,50 @@
-// #include "doctest.h"
+#include "doctest.h"
 
-// #include <array>
+#include <array>
 
-// #include "mapsc/ast/definition.hh"
-// #include "mapsc/ast/expression.hh"
-// #include "mapsc/procedures/inline.hh"
-// #include "mapsc/types/type_store.hh"
+#include "mapsc/ast/definition.hh"
+#include "mapsc/ast/function_definition.hh"
+#include "mapsc/ast/expression.hh"
+#include "mapsc/procedures/inline.hh"
+#include "mapsc/types/type_store.hh"
+#include "mapsc/ast/ast_store.hh"
 
-// using namespace Maps;
-// using namespace std;
+using namespace Maps;
+using namespace std;
 
-// #define COMMON_TESTS(function)\
-// \
-// REQUIRE(ref != value);\
-// \
-// SUBCASE("Both are Hole type") {\
-//     CHECK(function(ref, definition));\
-//     CHECK(ref == value);\
-// }\
-// \
-// SUBCASE("Should fail if declared types are incompatible") {\
-//     value.declared_type = &Int;\
-//     ref.declared_type = &Boolean;\
-//     \
-//     CHECK(!function(ref, definition));\
-//     CHECK(ref != value);\
-// }\
-// \
-// SUBCASE("Should pass if declared types and de facto types are all the same") {\
-//     value.declared_type = &Int;\
-//     ref.declared_type = &Int;\
-//     value.type = &Int;\
-//     ref.type = &Int;\
-//     \
-//     CHECK(function(ref, definition));\
-//     CHECK(ref == value);\
-// }
+inline std::tuple<AST_Store, TypeStore> setup() {
+    return {
+        AST_Store{},
+        TypeStore{}
+    };
+}
+
+#define COMMON_TESTS(function)\
+\
+REQUIRE(ref != value);\
+\
+SUBCASE("Both are Hole type") {\
+    CHECK(function(ref, *def_body));\
+    CHECK(ref == value);\
+}\
+\
+SUBCASE("Should fail if declared types are incompatible") {\
+    value.declared_type = &Int;\
+    ref.declared_type = &Boolean;\
+    \
+    CHECK(!function(ref, *def_body));\
+    CHECK(ref != value);\
+}\
+\
+SUBCASE("Should pass if declared types and de facto types are all the same") {\
+    value.declared_type = &Int;\
+    ref.declared_type = &Int;\
+    value.type = &Int;\
+    ref.type = &Int;\
+    \
+    CHECK(function(ref, *def_body));\
+    CHECK(ref == value);\
+}
 
 // TEST_CASE("Should be able to substitute a reference to a value") {
 //     Expression value{ExpressionType::known_value, 1, TSL};
@@ -53,20 +62,21 @@
 //     COMMON_TESTS(inline_call);
 // }
 
-// TEST_CASE("Should be able to inline a nullary call to a nullary pure function definition as if a reference") {
-//     TypeStore types{};
+TEST_CASE("Should be able to inline a nullary call to a nullary pure function definition as if a reference") {
+    AST_Store ast_store{};
+    TypeStore types{};
     
-//     Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, array<const Type*, 0>{}, true), TSL};
-//     DefinitionBody definition{&value, true, TSL};
-//     Expression ref{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
+    Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, {}, true), TSL};
+    auto def_body = create_nullary_function_definition(ast_store, types, &value, true, TSL);
+    Expression ref{ExpressionType::call, CallExpressionValue{def_body->header_, {}}, TSL};
 
-//     COMMON_TESTS(inline_call);
-// }
+    COMMON_TESTS(inline_call);
+}
 
 // TEST_CASE("Should not be able to inline a nullary call to a nullary pure function definition as an expression") {
 //     TypeStore types{};
 
-//     Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, array<const Type*, 0>{}, false), TSL};
+//     Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, {}, false), TSL};
 //     DefinitionBody definition{&value, true, TSL};
 //     Expression ref{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
 

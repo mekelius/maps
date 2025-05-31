@@ -838,58 +838,57 @@ void TermedExpressionParser::partially_applied_minus_state() {
 
 // Basically we just unwrap it
 void TermedExpressionParser::partial_binop_call_right_state() {
-    assert(false && "not updated");
+    if (at_expression_end())
+        return;
 
-    // if (at_expression_end())
-    //     return;
+    auto location = current_term()->location;
+    auto [callee, args] = current_term()->call_value();
+    assert(callee->is_operator() 
+        && "initial_partial_binop_call_right_state called with not an operator call");
+    assert(dynamic_cast<Operator*>(callee)->is_binary() && 
+        "initial_partial_binop_call_right_state called with not a binary operator call");
 
-    // auto location = current_term()->location;
-    // auto [callee, args] = current_term()->call_value();
-    // assert(callee->is_operator() 
-    //     && "initial_partial_binop_call_right_state called with not an operator call");
-    // assert(dynamic_cast<Operator*>(callee)->is_binary() && 
-    //     "initial_partial_binop_call_right_state called with not a binary operator call");
+    assert(((args.size() == 2 && args.at(1)->expression_type == ExpressionType::missing_arg) || 
+            args.size()) == 1 && 
+                "initial_partial_binop_call_right_state called with invalid args");
 
-    // assert(((args.size() == 2 && args.at(1)->expression_type == ExpressionType::missing_arg) || 
-    //         args.size()) == 1 && 
-    //             "initial_partial_binop_call_right_state called with invalid args");
+    // auto precedence = dynamic_cast<Operator*>(callee)->precedence();
 
-    // // auto precedence = dynamic_cast<Operator*>(callee)->precedence();
+    switch (peek()->expression_type) {
+        case ExpressionType::binary_operator_reference:
+            convert_to_partial_call(*current_term()); // treat it as a value
+            shift();
+            return post_binary_operator_state();
 
-    // switch (peek()->expression_type) {
-    //     case ExpressionType::binary_operator_reference:
-    //         convert_to_partial_call(*current_term()); // treat it as a value
-    //         shift();
-    //         return post_binary_operator_state();
+        case ExpressionType::postfix_operator_reference:
+            convert_to_partial_call(*current_term());
+            shift();
+            return reduce_postfix_operator(); // It could be an operator that can act on this partial call
 
-    //     case ExpressionType::postfix_operator_reference:
-    //         convert_to_partial_call(*current_term());
-    //         shift();
-    //         return reduce_postfix_operator(); // It could be an operator that can act on this partial call
+        case ExpressionType::partial_binop_call_left:
+            return partial_binop_call_standoff_state();
 
-    //     case ExpressionType::partial_binop_call_left:
-    //         return partial_binop_call_standoff_state();
+        case GUARANTEED_VALUE:
+        case ExpressionType::call:
+        case ExpressionType::reference:
+        case ExpressionType::partially_applied_minus:
+        case ExpressionType::prefix_operator_reference:
+        case ExpressionType::minus_sign:
+            break;
 
-    //     case GUARANTEED_VALUE:
-    //     case ExpressionType::call:
-    //     case ExpressionType::reference:
-    //     case ExpressionType::partially_applied_minus:
-    //     case ExpressionType::prefix_operator_reference:
-    //     case ExpressionType::minus_sign:
-    //         break;
+        case TYPE_DECLARATION_TERM:
+            assert(false && "type declarations not implemented here");
+        case NOT_ALLOWED_IN_LAYER2:
+        default:
+            return fail("Unexpected " + peek()->log_message_string() + ", expected a value",
+            peek()->location);
+    }
 
-    //     case TYPE_DECLARATION_TERM:
-    //         assert(false && "type declarations not implemented here");
-    //     case NOT_ALLOWED_IN_LAYER2:
-    //     default:
-    //         return fail("Unexpected " + peek()->log_message_string() + ", expected a value",
-    //         peek()->location);
-    // }
-
-    // pop_term();
-    // parse_stack_.push_back(args.at(0));
-    // parse_stack_.push_back(create_operator_reference(*ast_store_, callee, location));
-    // return post_binary_operator_state();
+    pop_term();
+    parse_stack_.push_back(args.at(0));
+    parse_stack_.push_back(create_operator_reference(*ast_store_, dynamic_cast<Operator*>(callee), 
+        location));
+    return post_binary_operator_state();
 }
 
 void TermedExpressionParser::partial_binop_call_left_state() {
@@ -1456,16 +1455,13 @@ Expression* TermedExpressionParser::handle_arg_state(
 }
 
 Expression* TermedExpressionParser::binary_minus_ref(SourceLocation location) {
-    assert(false && "not updated");
-    // return create_operator_reference(
-    //     *ast_store_, compilation_state_->special_definitions_.binary_minus, location);
+    return create_operator_reference(
+        *ast_store_, compilation_state_->special_definitions_.binary_minus, location);
 }
 
 Expression* TermedExpressionParser::unary_minus_ref(SourceLocation location) {
-    assert(false && "not updated");
-
-    // return create_operator_reference(
-    //     *ast_store_, compilation_state_->special_definitions_.unary_minus, location);
+    return create_operator_reference(
+        *ast_store_, compilation_state_->special_definitions_.unary_minus, location);
 }
 
 } // namespace Maps

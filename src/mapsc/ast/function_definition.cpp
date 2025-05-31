@@ -66,5 +66,12 @@ Parameter* create_discarded_parameter(AST_Store& ast_store, const SourceLocation
     return create_discarded_parameter(ast_store, &Hole, location);
 }
 
+DefinitionBody* create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
+    Expression* value, bool is_pure, const SourceLocation& location) {
+
+    return *ast_store.allocate_definition(
+        DefinitionHeader{"testing_nullary_function", types.get_function_type(value->type, {}, is_pure), 
+        location}, value)->body_;
+}
 
 } // namespace Maps

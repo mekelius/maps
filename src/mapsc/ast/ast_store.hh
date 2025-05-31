@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/external.hh"
 #include "mapsc/ast/definition_body.hh"
 #include "mapsc/ast/function_definition.hh"
 #include "mapsc/ast/expression.hh"

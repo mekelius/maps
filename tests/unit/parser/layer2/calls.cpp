@@ -95,20 +95,19 @@
 
 // TEST_CASE("Should set the type on a \"operator expression\" to the return type") {
 //     auto [state, _0, types] = CompilationState::create_test_state();
-//     AST_Store& ast = *state.ast_store_;
+//     AST_Store& ast_store = *state.ast_store_;
 
 //     const FunctionType* IntString = types->get_function_type(&String, std::array{&Int, &Int}, false);
 
 //     auto test_op_expr = Expression{ExpressionType::known_value, "jii", IntString, TSL};
-//     auto test_op = Operator::create_binary(">=?", &test_op_expr, 5, 
-//         Operator::Associativity::left, true, TSL);
+//     auto test_op = create_testing_binary_operator(ast_store, ">=?", &test_op_expr, 5, TSL);
 
-//     auto lhs = create_numeric_literal(ast, "3", TSL);
-//     auto rhs = create_numeric_literal(ast, "7", TSL);
+//     auto lhs = create_numeric_literal(ast_store, "3", TSL);
+//     auto rhs = create_numeric_literal(ast_store, "7", TSL);
 
-//     auto reference = create_operator_reference(ast, &test_op, TSL);
+//     auto reference = create_operator_reference(ast_store, &test_op, TSL);
 
-//     auto expr = create_layer2_expression_testing(ast, {lhs, reference, rhs}, TSL);
+//     auto expr = create_layer2_expression_testing(ast_store, {lhs, reference, rhs}, TSL);
 
 //     run_layer2(state, expr);
 
