@@ -89,6 +89,18 @@ private:
     std::optional<Scope*> inner_scope_ = std::nullopt;
 };
 
+DefinitionBody* create_let_definition(AST_Store& ast_store, const std::string& name, 
+    LetDefinitionValue value, const SourceLocation& location);
+
+DefinitionBody* create_let_definition(AST_Store& ast_store, 
+    LetDefinitionValue value, const SourceLocation& location);
+
+DefinitionBody* create_let_definition(AST_Store& ast_store, const std::string& name, 
+    Expression* value, const SourceLocation& location);
+
+DefinitionBody* create_let_definition(AST_Store& ast_store,
+    Expression* value, const SourceLocation& location);
+
 } // namespace Maps
 
 #endif

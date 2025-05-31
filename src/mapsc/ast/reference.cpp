@@ -2,6 +2,7 @@
 
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/definition_body.hh"
 #include "mapsc/procedures/evaluate.hh"
 
 namespace Maps {
@@ -55,11 +56,17 @@ Expression* create_reference(AST_Store& store, DefinitionHeader* definition,
     // }, definition->const_body());
 }
 
+Expression* create_reference(AST_Store& store, DefinitionBody* definition, 
+    const SourceLocation& location) {
+    
+    return create_reference(store, definition->header_, location);
+}
+
 std::optional<Expression*> create_reference(AST_Store& store, const Scope* scope, 
     const std::string& name, const SourceLocation& location){
 
-    if (auto ReferableNode = scope->get_identifier(name))
-        return create_reference(store, *ReferableNode, location);
+    if (auto definition = scope->get_identifier(name))
+        return create_reference(store, *definition, location);
 
     return std::nullopt;
 }

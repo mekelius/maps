@@ -12,12 +12,16 @@
 using namespace Maps;
 using namespace std;
 
-inline std::tuple<AST_Store, TypeStore> setup() {
+namespace {
+
+std::tuple<AST_Store, TypeStore> setup() {
     return {
         AST_Store{},
         TypeStore{}
     };
 }
+
+} // namespace
 
 #define COMMON_TESTS(function)\
 \
@@ -46,25 +50,28 @@ SUBCASE("Should pass if declared types and de facto types are all the same") {\
     CHECK(ref == value);\
 }
 
-// TEST_CASE("Should be able to substitute a reference to a value") {
-//     Expression value{ExpressionType::known_value, 1, TSL};
-//     DefinitionBody definition{&value, true, TSL};
-//     Expression ref{ExpressionType::reference, &definition, TSL};
+TEST_CASE("Should be able to substitute a reference to a value") {
+    auto [ast_store, types] = setup();
+    Expression value{ExpressionType::known_value, 1, TSL};
+    auto def_body = create_nullary_function_definition(ast_store, types, &value, true, TSL);
 
-//     COMMON_TESTS(substitute_value_reference);
-// }
+    Expression ref{ExpressionType::reference, def_body->header_, TSL};
 
-// TEST_CASE("Should be able to inline a nullary call to a value definition as if a reference") {
-//     Expression value{ExpressionType::known_value, 1, TSL};
-//     DefinitionBody definition{&value, true, TSL};
-//     Expression ref{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
+    COMMON_TESTS(substitute_value_reference);
+}
 
-//     COMMON_TESTS(inline_call);
-// }
+TEST_CASE("Should be able to inline a nullary call to a value definition as if a reference") {
+    auto [ast_store, types] = setup();
+    Expression value{ExpressionType::known_value, 1, TSL};
+    auto def_body = create_nullary_function_definition(ast_store, types, &value, true, TSL);
+
+    Expression ref{ExpressionType::call, CallExpressionValue{def_body->header_, {}}, TSL};
+
+    COMMON_TESTS(inline_call);
+}
 
 TEST_CASE("Should be able to inline a nullary call to a nullary pure function definition as if a reference") {
-    AST_Store ast_store{};
-    TypeStore types{};
+    auto [ast_store, types] = setup();
     
     Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, {}, true), TSL};
     auto def_body = create_nullary_function_definition(ast_store, types, &value, true, TSL);
@@ -73,13 +80,14 @@ TEST_CASE("Should be able to inline a nullary call to a nullary pure function de
     COMMON_TESTS(inline_call);
 }
 
-// TEST_CASE("Should not be able to inline a nullary call to a nullary pure function definition as an expression") {
-//     TypeStore types{};
+TEST_CASE("Should not be able to inline a nullary call to a nullary impure function definition as an expression") {
+    auto [ast_store, types] = setup();
 
-//     Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, {}, false), TSL};
-//     DefinitionBody definition{&value, true, TSL};
-//     Expression ref{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
+    Expression value{ExpressionType::known_value, 1, types.get_function_type(&Hole, {}, true), TSL};
+    auto definition = create_nullary_function_definition(ast_store, types, &value, false, TSL);
 
-//     CHECK(!inline_call(ref, definition));
-//     CHECK(ref != value);
-// }
+    Expression ref{ExpressionType::call, CallExpressionValue{definition->header_, {}}, TSL};
+
+    CHECK(!inline_call(ref, *definition));
+    CHECK(ref != value);
+}

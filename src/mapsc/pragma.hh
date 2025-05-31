@@ -7,7 +7,6 @@
 #include <map>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 
 #include "mapsc/source.hh"
 
@@ -47,7 +46,7 @@ class PragmaStore {
     bool empty() const;
     size_t size() const;
   private:
-    std::unordered_map<
+    std::map<
         std::string_view,
         // The locations are stored in reverse order so that we can easily find the
         // current value of the flag using std::map::lower_bound

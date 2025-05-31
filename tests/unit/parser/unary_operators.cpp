@@ -1,14 +1,14 @@
-// #include "doctest.h"
+#include "doctest.h"
 
-// #include "mapsc/ast/expression.hh"
-// #include "mapsc/compilation_state.hh"
+#include "mapsc/ast/expression.hh"
+#include "mapsc/compilation_state.hh"
 
-// #include "mapsc/ast/layer2_expression.hh"
-// #include "mapsc/source.hh"
-// #include "mapsc/parser/layer2.hh"
+#include "mapsc/ast/layer2_expression.hh"
+#include "mapsc/source.hh"
+#include "mapsc/parser/layer2.hh"
 
-// using namespace std;
-// using namespace Maps;
+using namespace std;
+using namespace Maps;
 
 // TEST_CASE("prefix purely unary operator") {
 //     auto [state, _0, types] = CompilationState::create_test_state();

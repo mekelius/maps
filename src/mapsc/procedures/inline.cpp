@@ -72,10 +72,12 @@ bool substitute_value_reference(Expression& expression) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
 
-    assert(false && "not updated");
-
     auto callee = expression.reference_value();
-    // return substitute_value_reference(expression, *callee);
+
+    if (!callee->body_)
+        return false;
+
+    return substitute_value_reference(expression, **callee->body_);
 }
 
 bool substitute_value_reference(Expression& expression, const DefinitionBody& callee) {

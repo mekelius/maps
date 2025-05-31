@@ -17,8 +17,7 @@ CallExpressionValue& Expression::call_value() {
 }
 
 Expression* Expression::partially_applied_minus_arg_value() const {
-    assert(false && "not implemented");
-    return nullptr;
+    return nullptr; // !!!
     // return std::get<>(value);
 }
 

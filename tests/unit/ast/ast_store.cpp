@@ -4,6 +4,7 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/lambda.hh"
+#include "mapsc/ast/value.hh"
 #include "mapsc/compilation_state.hh"
 
 using namespace Maps;
@@ -51,4 +52,17 @@ TEST_CASE("Expression_const_lambda should produce a reference") {
         std::array<const Type*, 1>{&Int}, TSL);
 
     CHECK(lambda_expr->expression_type == ExpressionType::reference);
+}
+
+
+TEST_CASE("Should allocate definitions correctly") {
+    auto [state, ast_store, _3, _4] = setup();
+
+    auto value = create_known_value(state, 123, TSL);
+    auto definition = ast_store->allocate_definition(DefinitionHeader{"test", TSL}, value);
+
+    CHECK(definition->body_);
+    CHECK(definition->get_body_value());
+    CHECK(std::holds_alternative<Expression*>(*definition->get_body_value()));
+    CHECK(*std::get<Expression*>(*definition->get_body_value()) == *value);
 }

@@ -44,7 +44,9 @@ DefinitionHeader* AST_Store::allocate_definition(const DefinitionHeader&& defini
     return definition_headers_.back().get();
 }
 
-DefinitionHeader* AST_Store::allocate_definition(const DefinitionHeader&& header, const LetDefinitionValue& body) {
+DefinitionHeader* AST_Store::allocate_definition(const DefinitionHeader&& header, 
+    const LetDefinitionValue& body) {
+    
     auto allocated_header = allocate_definition(std::move(header));
 
     definition_bodies_.push_back(std::make_unique<DefinitionBody>(allocated_header, body));

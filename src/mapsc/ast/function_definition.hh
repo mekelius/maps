@@ -3,6 +3,7 @@
 
 #include <optional>
 #include <string_view>
+#include <string>
 #include <variant>
 
 #include "common/maps_datatypes.h"
@@ -38,24 +39,29 @@ public:
     bool is_discarded_ = false;
 };
 
+using ParameterList = std::vector<Parameter*>;
+
+DefinitionBody* function_definition(CompilationState& state, 
+    const ParameterList& parameter_list, Scope* inner_scope, LetDefinitionValue value, 
+    bool is_top_level, const SourceLocation& location);
+
+DefinitionBody* function_definition(CompilationState& state, 
+    const ParameterList& parameter_list, Scope* inner_scope, bool is_top_level, 
+    const SourceLocation& location);
+
+DefinitionBody* function_definition(CompilationState& state, const std::string& name, 
+    Expression* value, const SourceLocation& location);
+
+DefinitionBody* create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
+    Expression* value, bool is_pure, const SourceLocation& location);
+
+
 Parameter* create_parameter(AST_Store& ast_store, const std::string& name, const Type* type, 
     const SourceLocation& location);
 Parameter* create_parameter(AST_Store& ast_store, const std::string& name, 
     const SourceLocation& location);
 Parameter* create_discarded_parameter(AST_Store& ast_store, const Type* type, const SourceLocation& location);
 Parameter* create_discarded_parameter(AST_Store& ast_store, const SourceLocation& location);
-
-using ParameterList = std::vector<Parameter*>;
-
-DefinitionBody* function_definition(CompilationState& state, 
-    const ParameterList& parameter_list, Scope* inner_scope, LetDefinitionValue value, 
-    bool is_top_level, const SourceLocation& location);
-DefinitionBody* function_definition(CompilationState& state, 
-    const ParameterList& parameter_list, Scope* inner_scope, bool is_top_level, 
-    const SourceLocation& location);
-
-DefinitionBody* create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
-    Expression* value, bool is_pure, const SourceLocation& location);
 
 } // namespace Maps
 

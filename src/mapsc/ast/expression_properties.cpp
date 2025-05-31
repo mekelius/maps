@@ -60,10 +60,6 @@ bool is_reference(Expression& expression) {
 
 bool is_constant_value(const Expression& expression) {
     switch (expression.expression_type) {
-            assert(holds_alternative<std::string>(expression.value) && 
-                "Encountered an expression with literal expressiontype but wrong type of body");
-            return true;
-
         case ExpressionType::known_value:
             assert((!holds_alternative<CallExpressionValue>(expression.value)) && 
                 "Encountered an expression with expressiontype known value but wrong type of body");

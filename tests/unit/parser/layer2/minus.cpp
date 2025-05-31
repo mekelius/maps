@@ -39,11 +39,11 @@ TEST_CASE("Unary minus by itself should result in a partially applied minus") {
 //     auto& ast_store = *state.ast_store_;
 
 //     auto value = create_numeric_literal(ast_store, "456", TSL);
-//     auto value_def = ast_store.allocate_definition(RT_Definition{"x", value, true, TSL});
+//     auto value_def = ast_store.allocate_definition(DefinitionHeader{"x", TSL}, value);
 //     auto value_ref = create_reference(ast_store, value_def, TSL);
 //     auto minus = create_minus_sign(ast_store, TSL);
 
-//     auto expr = create_termed_testing(ast_store, {minus, value_ref}, TSL);    
+//     auto expr = create_layer2_expression_testing(ast_store, {minus, value_ref}, TSL);    
 
 //     bool success = run_layer2(state, expr);
 

@@ -76,6 +76,9 @@ public:
     bool is_deleted_ = false;
 };
 
+DefinitionHeader* create_definition(AST_Store& ast_store, const Type* type, 
+    const SourceLocation& location);
+
 struct BTD_Binding {
     enum class Type {
         parameter,

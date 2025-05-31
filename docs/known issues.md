@@ -3,6 +3,7 @@
 ## Critical
 
 - every runtime created string leaks
+- anonymous definition names are clashing
 - concretizer should copy/runtime cast the values instead of changing the original
 - repl only takes a shallow copy of the definitions
 - 8* reduces to 8

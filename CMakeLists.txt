@@ -181,7 +181,10 @@ add_executable(unit_tests
     tests/unit/tests_main.cpp
 
     tests/unit/pragmas.cpp
-    tests/unit/ast/ast.cpp
+
+    tests/unit/ast/ast_store.cpp
+    tests/unit/ast/definition.cpp
+    tests/unit/ast/value_and_reference.cpp
 
     tests/unit/parser/lexer.cpp
     tests/unit/parser/unary_minus.cpp

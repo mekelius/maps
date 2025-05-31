@@ -9,6 +9,7 @@
 namespace Maps {
 
 class DefinitionHeader;
+class DefinitionBody;
 struct SourceLocation;
 class Type;
 class AST_Store;
@@ -18,6 +19,9 @@ std::optional<Expression*> create_reference(AST_Store& store, const Scope* scope
     const std::string& name, const SourceLocation& location);
 Expression* create_reference(AST_Store& store, 
     DefinitionHeader* callee, const SourceLocation& location);
+Expression* create_reference(AST_Store& store, 
+    DefinitionBody* callee, const SourceLocation& location);
+
 Expression* create_type_reference(AST_Store& store, 
     const Type* type, const SourceLocation& location);
 Expression create_operator_reference(

@@ -44,6 +44,21 @@ DefinitionBody* function_definition(CompilationState& state,
     return function_definition(state, parameter_list, inner_scope, Undefined{}, is_top_level, location);
 }
 
+DefinitionBody* function_definition(CompilationState& state, const std::string& name, 
+    Expression* value, const SourceLocation& location) {
+    
+    return *state.ast_store_->allocate_definition(DefinitionHeader{name, value->type, location}, 
+        value)->body_;
+}
+
+DefinitionBody* create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
+    Expression* value, bool is_pure, const SourceLocation& location) {
+
+    return *ast_store.allocate_definition(
+        DefinitionHeader{"testing_nullary_function", types.get_function_type(value->type, {}, is_pure), 
+            location}, value)->body_;
+}
+
 Parameter* create_parameter(AST_Store& ast_store, const std::string& name, const Type* type, 
     const SourceLocation& location) {
 
@@ -64,14 +79,6 @@ Parameter* create_discarded_parameter(AST_Store& ast_store, const Type* type,
 
 Parameter* create_discarded_parameter(AST_Store& ast_store, const SourceLocation& location) {
     return create_discarded_parameter(ast_store, &Hole, location);
-}
-
-DefinitionBody* create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
-    Expression* value, bool is_pure, const SourceLocation& location) {
-
-    return *ast_store.allocate_definition(
-        DefinitionHeader{"testing_nullary_function", types.get_function_type(value->type, {}, is_pure), 
-        location}, value)->body_;
 }
 
 } // namespace Maps

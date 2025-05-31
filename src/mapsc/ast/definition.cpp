@@ -57,6 +57,14 @@ std::optional<LetDefinitionValue> DefinitionHeader::get_body_value() const {
 
 // ------------------------------------- FACTORY FUNTIONS -----------------------------------------
 
+
+DefinitionHeader* create_definition(AST_Store& ast_store, const Type* type, 
+    const SourceLocation& location) {
+
+    return ast_store.allocate_definition({"anonymous_definition", type, location});
+}
+
+
 // DefinitionHeader DefinitionHeader::testing_definition(const Type* type, bool is_top_level) {
 //     return DefinitionHeader{"DUMMY_DEFINITION", {}, type, is_top_level, TSL};
 // }
@@ -166,7 +174,7 @@ bool DefinitionHeader::is_known_scalar_value() const {
         return false;
 
     return std::visit(overloaded {
-        [](const Expression* expression) { 
+        [](Expression* expression) { 
             return (
                 !(expression->type->is_function()) && 
                     is_constant_value(*expression));
