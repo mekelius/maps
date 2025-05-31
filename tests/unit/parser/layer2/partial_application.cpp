@@ -18,12 +18,12 @@ using namespace std;
 
 namespace {
 
-inline tuple<Expression*, Definition*> create_operator_helper(CompilationState& state, 
+inline tuple<Expression*, DefinitionHeader*> create_operator_helper(CompilationState& state, 
     const string& op_string, unsigned int precedence = 500) {
 
     const Type* type = state.types_->get_function_type(
         &NumberLiteral, {&NumberLiteral, &NumberLiteral}, true);
-    Definition* op_definition = state.ast_store_->allocate_operator(
+    DefinitionHeader* op_definition = state.ast_store_->allocate_operator(
         RT_Operator::create_binary(op_string, External{}, type, precedence, 
             RT_Operator::Associativity::left, true, TSL));
 

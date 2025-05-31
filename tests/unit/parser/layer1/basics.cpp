@@ -9,19 +9,19 @@
 using namespace Maps;
 using namespace std;
 
-tuple<CompilationState, RT_Scope, stringstream> setup(const string& source_str) { 
+tuple<CompilationState, Scope, stringstream> setup(const string& source_str) { 
     auto [state, _1, _2] = CompilationState::create_test_state();
 
     return {
         std::move(state), 
-        RT_Scope{}, 
+        Scope{}, 
         stringstream{source_str}
     };
 }
 
 TEST_CASE("Should handle various cases") {
     TypeStore types{};
-    RT_Scope scope{};
+    Scope scope{};
     CompilationState state{get_builtins(), &types};
 
     REQUIRE(state.ast_store_->empty());
@@ -32,8 +32,8 @@ TEST_CASE("Should handle various cases") {
     
         CHECK(success);
         CHECK(definition);
-        CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
-        auto expression = std::get<const Expression*>((*definition)->const_body());
+        CHECK(std::holds_alternative<const Expression*>((*definition)->value_));
+        auto expression = std::get<const Expression*>((*definition)->value_);
         CHECK(expression->expression_type == ExpressionType::known_value);
         CHECK(expression->string_value() == "asd");
     }
@@ -44,8 +44,8 @@ TEST_CASE("Should handle various cases") {
         
         CHECK(success);
         CHECK(definition);
-        CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
-        auto expression = std::get<const Expression*>((*definition)->const_body());
+        CHECK(std::holds_alternative<const Expression*>((*definition)->value_));
+        auto expression = std::get<const Expression*>((*definition)->value_);
         
         CHECK(expression->expression_type == ExpressionType::layer2_expression);
         
@@ -69,8 +69,8 @@ TEST_CASE("Should handle various cases") {
 
         CHECK(success);
         CHECK(definition);
-        CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
-        auto expression = std::get<const Expression*>((*definition)->const_body());
+        CHECK(std::holds_alternative<const Expression*>((*definition)->value_));
+        auto expression = std::get<const Expression*>((*definition)->value_);
 
         CHECK(expression->expression_type == ExpressionType::layer2_expression);
         
@@ -94,8 +94,8 @@ TEST_CASE("Should handle various cases") {
 
         CHECK(success);
         CHECK(definition);
-        CHECK(std::holds_alternative<const Expression*>((*definition)->const_body()));
-        auto expression = std::get<const Expression*>((*definition)->const_body());
+        CHECK(std::holds_alternative<const Expression*>((*definition)->value_));
+        auto expression = std::get<const Expression*>((*definition)->value_);
 
         CHECK(expression->expression_type == ExpressionType::layer2_expression);
         
@@ -116,7 +116,7 @@ TEST_CASE("Should handle various cases") {
 
 TEST_CASE("layer1 eval should not put top level let statements into the root") {
     auto [state, types, builtins] = CompilationState::create_test_state();
-    RT_Scope scope{};
+    Scope scope{};
 
     std::stringstream source{"let x = 5"};
     auto [success, top_level_definition, _2, _3, _4, _5] = run_layer1_eval(state, scope, source);
@@ -127,14 +127,14 @@ TEST_CASE("layer1 eval should not put top level let statements into the root") {
 
     CHECK(scope.identifier_exists("x"));
     auto x = *scope.get_identifier("x");
-    CHECK(std::holds_alternative<const Expression*>(x->const_body()));
-    auto expression = std::get<const Expression*>(x->const_body());
+    CHECK(std::holds_alternative<const Expression*>((*x->body_)->value_));
+    auto expression = std::get<const Expression*>((*x->body_)->value_);
     CHECK(expression->string_value() == "5");
 }
 
 TEST_CASE("Should correctly produce empty results") {
     auto [state, _1, _2] = CompilationState::create_test_state();
-    RT_Scope scope;
+    Scope scope;
     REQUIRE(scope.empty());
 
     SUBCASE("control") {
@@ -172,10 +172,11 @@ TEST_CASE("Should mark context on termed expressions") {
 
     auto f = *scope.get_identifier("f");
 
-    auto expr = std::get<const Expression*>((f)->const_body());
+    auto expr = std::get<const Expression*>(*f->get_body_value());
     CHECK(expr->expression_type == ExpressionType::layer2_expression);
 
-    CHECK(*expr->termed_context() == *f);
+    CHECK(false);
+    // CHECK(*expr->termed_context() == *f);
 }
 
 TEST_CASE("Should mark context on top level termed expressions") {
@@ -186,7 +187,9 @@ TEST_CASE("Should mark context on top level termed expressions") {
     CHECK(result.success);
     CHECK(result.top_level_definition);
 
-    auto expr = std::get<const Expression*>((*result.top_level_definition)->const_body());
+    auto expr = std::get<const Expression*>((*result.top_level_definition)->value_);
     CHECK(expr->expression_type == ExpressionType::layer2_expression);
-    CHECK(*expr->termed_context() == **result.top_level_definition);
+
+    CHECK(false);
+    // CHECK(*expr->termed_context() == **result.top_level_definition);
 }

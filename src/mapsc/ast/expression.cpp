@@ -36,7 +36,7 @@ std::string value_to_string(const ExpressionValue& value) {
     return std::visit(overloaded{
         [](std::monostate)->std::string { return "@Undefined expression value@"; },
         [](Expression* expression) { return "@reference to@ " + expression->log_message_string(); },
-        [](Definition* target)->std::string { return "@reference to " + target->name_string() + "@"; },                       
+        [](DefinitionHeader* target)->std::string { return "@reference to " + target->name_string() + "@"; },                       
         [](const Type* type)->std::string { return "@type: " + type->name_string() + "@"; },
         [](TermedExpressionValue value) { 
             return "@unparsed termed expression of length " + to_string(value.terms.size()) + "@"; },
@@ -54,9 +54,9 @@ std::string value_to_string(const ExpressionValue& value) {
 // ----- EXPRESSION -----
 
 std::string Expression::string_value() const {
-    if (std::holds_alternative<Definition*>(value)) {
+    if (std::holds_alternative<DefinitionHeader*>(value)) {
         // !!! this will cause crashes when lambdas come in
-        return std::get<Definition*>(value)->name_string();
+        return std::get<DefinitionHeader*>(value)->name_string();
     }
     return std::get<std::string>(value);
 }

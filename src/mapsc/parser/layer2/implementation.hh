@@ -17,9 +17,9 @@
 namespace Maps {
 
 struct Expression;
-class Definition;
 class CompilationState;
 class AST_Store;
+class Scope;
 
 class TermedExpressionParser {
 public:
@@ -118,7 +118,7 @@ private:
     void initial_type_constructor_state();
 
     // calls/access operations
-    bool is_acceptable_next_arg(Definition* callee, 
+    bool is_acceptable_next_arg(DefinitionHeader* callee, 
       const std::vector<Expression*>& args/*, Expression* next_arg*/);
 
     // mainly checks that the expression type is correct
@@ -128,7 +128,7 @@ private:
     void partial_call_state();
     void deferred_call_state();
 
-    Expression* handle_arg_state(Definition* callee, const std::vector<Expression*>& args);
+    Expression* handle_arg_state(DefinitionHeader* callee, const std::vector<Expression*>& args);
 
     // creating minus refs
     Expression* binary_minus_ref(SourceLocation location);
@@ -136,7 +136,7 @@ private:
 
     Expression* const expression_;
     std::vector<Expression*>* expression_terms_;
-    RT_Definition* expression_context_;
+    Scope* expression_context_;
     std::vector<Expression*>::iterator next_term_it_;
     CompilationState* const compilation_state_;
     AST_Store* const ast_store_;

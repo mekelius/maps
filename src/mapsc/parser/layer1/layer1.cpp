@@ -27,7 +27,7 @@ using Log = LogInContext<LogContext::layer1>;
 
 // ----- PUBLIC METHODS -----
 
-ParserLayer1::ParserLayer1(CompilationState* const state, RT_Scope* scope)
+ParserLayer1::ParserLayer1(CompilationState* const state, Scope* scope)
 :compilation_state_(state), 
  parse_scope_(scope),
  ast_store_(state->ast_store_.get()),
@@ -43,13 +43,11 @@ Layer1Result ParserLayer1::run_eval(std::istream& source_is) {
     run_parse(source_is);
     force_top_level_eval_ = false;
 
-    if (result_.top_level_definition)
-        simplify(**result_.top_level_definition);
+    if ((*result_.top_level_definition))
+        simplify(*(*result_.top_level_definition));
 
-    if (!result_.top_level_definition                   || 
-        (*result_.top_level_definition)->is_undefined() ||
-        (*result_.top_level_definition)->is_empty()
-    ) result_.top_level_definition = nullopt;
+    if (!result_.top_level_definition) 
+        result_.top_level_definition = nullopt;
 
     return result_;
 }
@@ -63,10 +61,10 @@ void ParserLayer1::run_parse(std::istream& source_is) {
 
     auto location = current_token().location;
     Statement* root_statement = create_block(*ast_store_, {}, location);
-    result_.top_level_definition = ast_store_->allocate_definition(RT_Definition{
-        "root", root_statement, true, location});
+    result_.top_level_definition = *ast_store_->allocate_definition(DefinitionHeader{
+        "root", &Hole, parse_scope_, true, location}, root_statement)->body_;
 
-    context_stack_.push_back(*result_.top_level_definition);
+    context_stack_.push_back(parse_scope_);
 
     while (current_token().token_type != TokenType::eof) {
         #ifndef NDEBUG
@@ -163,11 +161,13 @@ Expression* ParserLayer1::fail_expression(const std::string& message, SourceLoca
         create_user_error(*ast_store_, location);
 }
  
-Definition* ParserLayer1::fail_definition(const std::string& message, SourceLocation location, 
+DefinitionHeader* ParserLayer1::fail_definition(const std::string& message, SourceLocation location, 
     bool compiler_error) {
+
+    assert(false && "not updated");
     
-    fail(message, location, compiler_error);
-    return create_definition(Error{compiler_error}, true, location);
+    // fail(message, location, compiler_error);
+    // return create_definition(Error{compiler_error}, true, location);
 }
 
 Statement* ParserLayer1::fail_statement(const std::string& message, SourceLocation location, 
@@ -213,20 +213,26 @@ void ParserLayer1::reset_to_top_level() {
     get_token();
 }
 
-void ParserLayer1::push_context(RT_Definition* context) {
+void ParserLayer1::push_context(Scope* context) {
     context_stack_.push_back(context);
 }
 
-std::optional<RT_Definition*> ParserLayer1::pop_context() {
-    if (context_stack_.empty())
+std::optional<Scope*> ParserLayer1::pop_context() {
+    if (context_stack_.empty()) {
+        Log::compiler_error("context stack shouldn't be empty", NO_SOURCE_LOCATION);
+        assert(false && "context stack shouldn't be empty");
         return nullopt;
+    }
+
+    if (context_stack_.size() == 1)
+        return context_stack_.back();
 
     auto context = context_stack_.back();
     context_stack_.pop_back();
     return context;
 }
 
-std::optional<RT_Definition*> ParserLayer1::current_context() const {
+std::optional<Scope*> ParserLayer1::current_context() const {
     if (context_stack_.empty())
         return nullopt;
 
@@ -268,38 +274,40 @@ bool ParserLayer1::identifier_exists(const std::string& identifier) const {
     return false;
 }
 
-optional<RT_Definition*> ParserLayer1::create_undefined_identifier(const std::string& name, bool is_top_level, SourceLocation location) {
+optional<DefinitionHeader*> ParserLayer1::create_undefined_identifier(const std::string& name, bool is_top_level, SourceLocation location) {
     return parse_scope_->create_identifier(
-        ast_store_->allocate_definition(RT_Definition{name, Undefined{}, is_top_level, location})
+        ast_store_->allocate_definition(DefinitionHeader{name, &Hole, parse_scope_, is_top_level, location})
     );
 }
 
-optional<RT_Definition*> ParserLayer1::create_identifier(RT_Definition* definition) {
+optional<DefinitionHeader*> ParserLayer1::create_identifier(DefinitionHeader* definition) {
     return parse_scope_->create_identifier(definition);
 }
 
-std::optional<Definition*> ParserLayer1::lookup_identifier(const std::string& identifier) {
+std::optional<DefinitionHeader*> ParserLayer1::lookup_identifier(const std::string& identifier) {
     return parse_scope_->get_identifier(identifier);
 }
 
 // ----- CREATION HELPERS -----
 
-RT_Definition* ParserLayer1::create_definition(const std::string& name, DefinitionBody body, 
-    bool is_top_level, SourceLocation location) {
+DefinitionHeader* ParserLayer1::create_definition(const std::string& name, 
+    const LetDefinitionValue& body_value, bool is_top_level, SourceLocation location) {
     
-    return ast_store_->allocate_definition(RT_Definition{name, body, is_top_level, location});
+    return ast_store_->allocate_definition(
+        DefinitionHeader{name, &Hole, parse_scope_, is_top_level, location}, body_value);
 }
 
-RT_Definition* ParserLayer1::create_definition(const std::string& name, bool is_top_level, 
+DefinitionHeader* ParserLayer1::create_definition(const std::string& name, bool is_top_level, 
     SourceLocation location) {
 
-    return ast_store_->allocate_definition(RT_Definition{name, Undefined{}, is_top_level, location}); 
+    return ast_store_->allocate_definition(DefinitionHeader{name, &Hole, parse_scope_, is_top_level, location}); 
 }
 
-RT_Definition* ParserLayer1::create_definition(DefinitionBody body, bool is_top_level, 
+DefinitionHeader* ParserLayer1::create_definition(LetDefinitionValue body, bool is_top_level, 
     SourceLocation location) {
     
-    return ast_store_->allocate_definition(RT_Definition{body, is_top_level, location});
+    assert(false && "not updated");
+    // return ast_store_->allocate_definition(DefinitionHeader{is_top_level, location});
 }
 
 } // namespace Maps

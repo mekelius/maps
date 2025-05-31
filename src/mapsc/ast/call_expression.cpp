@@ -30,7 +30,7 @@ Expression* create_missing_argument(AST_Store& store, const Type* type,
 }
 
 optional<Expression*> create_call(CompilationState& state, 
-    Definition* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
+    DefinitionHeader* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
 
     for (auto arg: args)
         assert(is_allowed_as_arg(*arg) && "invalid arg passed to Expression::call");
@@ -72,16 +72,23 @@ optional<Expression*> create_call(CompilationState& state,
             return_type, location});
 }
 
+std::optional<Expression*> create_call(CompilationState& state, 
+    DefinitionBody* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
+
+    return create_call(state, callee->header_, std::move(args), location);
+}
+
+
 optional<Expression*> create_partial_binop_call(CompilationState& state, 
-    Definition* definition, Expression* lhs, Expression* rhs, const SourceLocation& location) {
+    Operator* op, Expression* lhs, Expression* rhs, const SourceLocation& location) {
 
     auto& store = *state.ast_store_;
-    auto callee_type = definition->get_type();
+    auto callee_type = op->get_type();
     
-    assert(definition->is_operator() && 
+    assert(op->is_operator() && 
         "Expression::partial_binop_call called with not an operator");
     
-    assert(dynamic_cast<Operator*>(definition)->is_binary() && 
+    assert(op->is_binary() && 
         "Expression::partial_binop_call called with not a binary operator");
 
     auto callee_f_type = dynamic_cast<const FunctionType*>(callee_type);
@@ -98,7 +105,7 @@ optional<Expression*> create_partial_binop_call(CompilationState& state,
 
         return store.allocate_expression(
             {ExpressionType::partial_binop_call_left, 
-                CallExpressionValue{definition, {lhs, rhs}}, partial_return_type, 
+                CallExpressionValue{op, {lhs, rhs}}, partial_return_type, 
                 location});
     }
     
@@ -112,12 +119,12 @@ optional<Expression*> create_partial_binop_call(CompilationState& state,
         return_type, std::array{rhs->type}, callee_f_type->is_pure());
     return store.allocate_expression(
             {ExpressionType::partial_binop_call_right, 
-                CallExpressionValue{definition, {lhs, rhs}}, partial_return_type, 
+                CallExpressionValue{op, {lhs, rhs}}, partial_return_type, 
                 location});
 }
 
 static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
-    Definition* lhs, Expression* lambda, Definition* rhs, const SourceLocation& location) {
+    DefinitionHeader* lhs, Expression* lambda, DefinitionHeader* rhs, const SourceLocation& location) {
 
     assert(false && "not implemented");
 }

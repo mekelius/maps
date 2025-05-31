@@ -22,22 +22,22 @@ public:
     };
 
     struct SpecialDefinitions {
-        CT_Operator* unary_minus;
-        CT_Operator* binary_minus;
-        CT_Definition* print_String;
-        CT_Definition* print_MutString;
+        Operator* unary_minus;
+        Operator* binary_minus;
+        DefinitionHeader* print_String;
+        DefinitionHeader* print_MutString;
     };
 
-    static std::tuple<CompilationState, std::unique_ptr<const CT_Scope>, std::unique_ptr<TypeStore>> 
+    static std::tuple<CompilationState, std::unique_ptr<Scope>, std::unique_ptr<TypeStore>> 
         create_test_state();
 
     static std::tuple<CompilationState, std::unique_ptr<TypeStore>> 
         create_test_state_with_builtins();
 
-    CompilationState(const CT_Scope* builtins, TypeStore* types, 
+    CompilationState(const Scope* builtins, TypeStore* types, 
         SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String, &print_MutString});
 
-    CompilationState(const CT_Scope* builtins, TypeStore* types, 
+    CompilationState(const Scope* builtins, TypeStore* types, 
         Options compiler_options,
         SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String, &print_MutString});
 
@@ -52,7 +52,7 @@ public:
     PragmaStore pragmas_ = {};
     
     TypeStore* types_;
-    const CT_Scope* builtins_;
+    const Scope* builtins_;
     SpecialDefinitions special_definitions_ = 
         SpecialDefinitions{&unary_minus_Int, &binary_minus_Int, &print_String, &print_MutString};
 };

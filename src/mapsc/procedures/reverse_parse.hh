@@ -7,6 +7,7 @@
 #include "common/maps_datatypes.h"
 
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/definition_body.hh"
 
 namespace Maps {
 
@@ -27,10 +28,10 @@ public:
 
     ReverseParser& operator<<(const std::string& str) { *ostream_ << str; return *this; }
     ReverseParser& operator<<(const char ch) { *ostream_ << ch; return *this; }
-    ReverseParser& operator<<(const RT_Scope& scope) { return reverse_parse(scope); }
-    ReverseParser& operator<<(const Definition& definition) { return print_definition(definition); }
-    ReverseParser& operator<<(const DefinitionBody body) { return print_definition_body(body); }
-    ReverseParser& operator<<(const const_DefinitionBody body) { return print_const_definition_body(body); }
+    ReverseParser& operator<<(const Scope& scope) { return reverse_parse(scope); }
+    ReverseParser& operator<<(const DefinitionHeader& definition) { return print_definition(definition); }
+    ReverseParser& operator<<(const DefinitionBody& body) { return print_definition(body); }
+    ReverseParser& operator<<(const LetDefinitionValue& body) { return print_definition(body); }
     ReverseParser& operator<<(const Expression& expression) { return print_expression(expression); }
     ReverseParser& operator<<(const Statement& statement) { return print_statement(statement); }
     ReverseParser& operator<<(const ParameterList& parameters) { return print_parameter_list(parameters); }
@@ -41,10 +42,10 @@ private:
     void reset();
     std::string linebreak();
 
-    ReverseParser& reverse_parse(const RT_Scope& scope);
-    ReverseParser& print_definition(const Definition& definition);
-    ReverseParser& print_const_definition_body(const const_DefinitionBody body);
-    ReverseParser& print_definition_body(const DefinitionBody body);
+    ReverseParser& reverse_parse(const Scope& scope);
+    ReverseParser& print_definition(const DefinitionHeader& definition);
+    ReverseParser& print_definition(const DefinitionBody& definition);
+    ReverseParser& print_definition(const LetDefinitionValue& definition);
     ReverseParser& print_statement(const Statement& statement);
     ReverseParser& print_expression(const Expression& expression);
     ReverseParser& print_parameter_list(const ParameterList& parameters);

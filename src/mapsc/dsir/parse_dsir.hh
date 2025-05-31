@@ -19,7 +19,7 @@ namespace DSIR {
 struct ParseResult {
     bool success = true;
     std::optional<Definition*> top_level_definition = std::nullopt;
-    RT_Scope definitions{};
+    Scope definitions{};
     std::vector<Expression*> unresolved_identifiers{};
 };
 

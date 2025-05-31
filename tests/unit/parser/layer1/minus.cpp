@@ -10,7 +10,7 @@ using namespace Maps;
 
 TEST_CASE("Should recognize minus as a special case") {
     auto types = TypeStore{};
-    RT_Scope scope{};
+    Scope scope{};
     auto state = CompilationState{get_builtins(), &types};
 
     std::stringstream source{"-5"};

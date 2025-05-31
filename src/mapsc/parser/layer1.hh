@@ -11,18 +11,19 @@ namespace Maps {
 
 class CompilationState;
 struct Expression;
+class DefinitionBody;
 
 struct Layer1Result {
     bool success = true;
-    std::optional<RT_Definition*> top_level_definition;
+    std::optional<DefinitionBody*> top_level_definition;
     std::vector<Expression*> unresolved_identifiers;
     std::vector<Expression*> unresolved_type_identifiers;
     std::vector<Expression*> unparsed_termed_expressions;
     std::vector<Expression*> possible_binding_type_declarations;
 };
 
-Layer1Result run_layer1(CompilationState& state, RT_Scope& scope, std::istream& source_is);
-Layer1Result run_layer1_eval(CompilationState& state, RT_Scope& scope, std::istream& source_is);
+Layer1Result run_layer1(CompilationState& state, Scope& scope, std::istream& source_is);
+Layer1Result run_layer1_eval(CompilationState& state, Scope& scope, std::istream& source_is);
 
 } // namespace Maps
 

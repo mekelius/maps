@@ -1,14 +1,15 @@
 #include "reference.hh"
 
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/definition.hh"
 #include "mapsc/procedures/evaluate.hh"
 
 namespace Maps {
 
-Definition* Expression::reference_value() const {
-    assert(std::holds_alternative<Definition*>(value) && 
+DefinitionHeader* Expression::reference_value() const {
+    assert(std::holds_alternative<DefinitionHeader*>(value) && 
         "Expression::reference_value called with not a reference to definition");
-    return std::get<Definition*>(value);
+    return std::get<DefinitionHeader*>(value);
 }
 
 const Type* Expression::type_reference_value() const {
@@ -17,35 +18,50 @@ const Type* Expression::type_reference_value() const {
     return std::get<const Type*>(value);
 }
 
-Definition* Expression::operator_reference_value() const {
-    return std::get<Definition*>(value);
+Operator* Expression::operator_reference_value() const {
+    return dynamic_cast<Operator*>(std::get<DefinitionHeader*>(value));
 }
 
-Expression* create_reference(AST_Store& store, Definition* definition, 
+Expression* create_reference(AST_Store& store, DefinitionHeader* definition, 
     const SourceLocation& location) {
     
-    if (definition->get_type()->is_function())
-        return store.allocate_expression(
-            {ExpressionType::reference, definition, definition->get_type(), location});
+    auto expression_type = definition->is_known_scalar_value() ?
+        ExpressionType::known_value_reference : ExpressionType::reference; 
+ 
+    return store.allocate_expression(
+        {expression_type, definition, definition->get_type(), location});
 
-    return std::visit(overloaded{
-        [&store, &definition, &location](const Expression* expression) {
-            switch (expression->expression_type) {
-                case ExpressionType::known_value:
-                    return store.allocate_expression(
-                        {ExpressionType::known_value_reference, definition, definition->get_type(), 
-                            location});
+    // if (definition->get_type()->is_function())
+    //     return store.allocate_expression(
+    //         {ExpressionType::reference, definition, definition->get_type(), location});
 
-                default:
-                    return store.allocate_expression(
-                        {ExpressionType::reference, definition, definition->get_type(), location});
-            }
-        },
-        [&store, &definition, &location](auto) {
-            return store.allocate_expression(
-                {ExpressionType::reference, definition, definition->get_type(), location});
-        }
-    }, definition->const_body());
+    // return std::visit(overloaded{
+    //     [&store, &definition, &location](const Expression* expression) {
+    //         switch (expression->expression_type) {
+    //             case ExpressionType::known_value:
+    //                 return store.allocate_expression(
+    //                     {ExpressionType::known_value_reference, definition, definition->get_type(), 
+    //                         location});
+
+    //             default:
+    //                 return store.allocate_expression(
+    //                     {ExpressionType::reference, definition, definition->get_type(), location});
+    //         }
+    //     },
+    //     [&store, &definition, &location](auto) {
+    //         return store.allocate_expression(
+    //             {ExpressionType::reference, definition, definition->get_type(), location});
+    //     }
+    // }, definition->const_body());
+}
+
+std::optional<Expression*> create_reference(AST_Store& store, const Scope* scope, 
+    const std::string& name, const SourceLocation& location){
+
+    if (auto ReferableNode = scope->get_identifier(name))
+        return create_reference(store, *ReferableNode, location);
+
+    return std::nullopt;
 }
 
 Expression* create_type_reference(AST_Store& store, const Type* type, 
@@ -54,12 +70,12 @@ Expression* create_type_reference(AST_Store& store, const Type* type,
     return store.allocate_expression({ExpressionType::type_reference, type, &Void, location});
 }
 
-Expression create_operator_reference(Definition* definition, const SourceLocation& location) {
+Expression create_operator_reference(Operator* definition, const SourceLocation& location) {
     assert(definition->is_operator() && "AST::create_operator_ref called with not an operator");
 
     ExpressionType expression_type;
     
-    switch (dynamic_cast<Operator*>(definition)->fixity()) {
+    switch (definition->fixity()) {
         case Operator::Fixity::unary_prefix:
             expression_type = ExpressionType::prefix_operator_reference;
             break;
@@ -74,24 +90,24 @@ Expression create_operator_reference(Definition* definition, const SourceLocatio
     return {expression_type, definition, definition->get_type(), location};
 }
 
-Expression* create_operator_reference(AST_Store& store, Definition* definition, 
+Expression* create_operator_reference(AST_Store& store, Operator* definition, 
     const SourceLocation& location) {
     
     return store.allocate_expression(create_operator_reference(definition, location));
 }
 
-void convert_to_reference(Expression& expression, Definition* definition) {
+void convert_to_reference(Expression& expression, DefinitionHeader* definition) {
     expression.expression_type = definition->is_known_scalar_value() ? 
         ExpressionType::known_value_reference : ExpressionType::reference;
     expression.value = definition;
     expression.type = definition->get_type();
 }
 
-void convert_to_operator_reference(Expression& expression, Definition* definition) {
+void convert_to_operator_reference(Expression& expression, Operator* definition) {
     assert(definition->is_operator() && 
         "convert_to_operator_reference called with not an operator");
 
-    auto op = dynamic_cast<Operator*>(definition);
+    auto op = definition;
 
     switch (op->fixity()) {
         case Operator::Fixity::binary:
@@ -119,7 +135,12 @@ bool convert_by_value_substitution(Expression& expression) {
 
     Log::debug_extra("Attempting to substitute " + expression.log_message_string(), expression.location);
 
-    auto new_value = evaluate(expression.reference_value());
+    if (!expression.reference_value()->body_) {
+        Log::compiler_error("Attempted to substitute a definition without a body", expression.location);
+        return false;
+    }
+
+    auto new_value = evaluate(**expression.reference_value()->body_);
     if (!new_value) {
         Log::error("Substitution failed", expression.location);
         return false;

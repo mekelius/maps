@@ -8,10 +8,11 @@
 namespace Maps {
 
 class CompilationState;
-class RT_Definition;
+class DefinitionBody;
 
-[[nodiscard]] bool run_transforms(CompilationState& state, RT_Scope& scope, RT_Definition& definition);
-[[nodiscard]] bool run_transforms(CompilationState& state, RT_Scope& scope, std::span<RT_Definition* const> definitions);
+[[nodiscard]] bool run_transforms(CompilationState& state, Scope& scope, DefinitionBody& definition);
+[[nodiscard]] bool run_transforms(CompilationState& state, Scope& scope, std::span<DefinitionBody* const> definitions);
+[[nodiscard]] bool run_transforms(CompilationState& state, Scope& scope, std::span<DefinitionHeader* const> definitions);
 
 }
 

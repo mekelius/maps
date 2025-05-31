@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/definition_body.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
 
@@ -26,9 +27,10 @@ public:
 
     Expression* allocate_expression(const Expression&& expr);
     Statement* allocate_statement(const Statement&& statement);
-    RT_Definition* allocate_definition(const RT_Definition&& definition);
-    RT_Definition* allocate_operator(const RT_Operator&& op);
-    RT_Scope* allocate_scope(const RT_Scope&& scope);
+    DefinitionHeader* allocate_definition(const DefinitionHeader&& definition);
+    DefinitionHeader* allocate_definition(const DefinitionHeader&& header, const LetDefinitionValue& body);
+    DefinitionHeader* allocate_definition_body(DefinitionHeader*, const LetDefinitionValue& body);
+    Scope* allocate_scope(const Scope&& scope);
 
 private:
 
@@ -39,8 +41,9 @@ private:
     // TODO: move from vector of unique_ptrs to unique_ptr of vectors
     std::vector<std::unique_ptr<Statement>> statements_ = {};
     std::vector<std::unique_ptr<Expression>> expressions_ = {};
-    std::vector<std::unique_ptr<RT_Definition>> definitions_ = {};
-    std::vector<std::unique_ptr<RT_Scope>> scopes_ = {};
+    std::vector<std::unique_ptr<DefinitionHeader>> definition_headers_ = {};
+    std::vector<std::unique_ptr<DefinitionBody>> definition_bodies_ = {};
+    std::vector<std::unique_ptr<Scope>> scopes_ = {};
 };
 
 } // namespace Maps

@@ -61,36 +61,36 @@ private:
     bool save_history();
     std::optional<std::string> get_input();
     
-    void debug_print(REPL_Stage stage, const RT_Scope& scope, 
-        std::span<const Definition* const> extra_definitions);
-    void debug_print(REPL_Stage stage, const RT_Scope& scope, const Definition*);
-    void debug_print(REPL_Stage stage, const RT_Scope& scope);
+    void debug_print(REPL_Stage stage, const Scope& scope, 
+        std::span<const DefinitionHeader* const> extra_definitions);
+    void debug_print(REPL_Stage stage, const Scope& scope, const DefinitionHeader*);
+    void debug_print(REPL_Stage stage, const Scope& scope);
     void debug_print(REPL_Stage stage, const llvm::Module& module);
 
 
     void run_command(CompilationState& state, const std::string& command);
 
-    std::optional<Definition*> create_repl_wrapper(CompilationState& state, 
-        RT_Definition* top_level_definition);
+    std::optional<DefinitionBody*> create_repl_wrapper(CompilationState& state, Scope& global_scope,
+        DefinitionBody* top_level_definition);
     bool compile_and_run(std::unique_ptr<llvm::Module> module_, const std::string& entry_point);
     
-    bool run_compilation_pipeline(CompilationState& state, RT_Scope& global_scope, 
+    bool run_compilation_pipeline(CompilationState& state, Scope& global_scope, 
         std::istream& istream);
     std::string eval_type(std::istream& input_stream);
     
     Layer1Result run_layer1(CompilationState& state, 
-        RT_Scope& global_scope, std::istream& source);
+        Scope& global_scope, std::istream& source);
     bool run_layer2(CompilationState& state, 
         std::vector<Expression*> unparsed_termed_expressions);
 
     bool run_transforms(CompilationState& state, 
-        RT_Scope& scope, std::optional<RT_Definition* const> definition);
+        Scope& scope, std::optional<DefinitionBody* const> definition);
 
     bool insert_global_cleanup(CompilationState& state, 
-        RT_Scope& scope, RT_Definition& entry_point);
+        Scope& scope, DefinitionBody& entry_point);
 
     std::unique_ptr<llvm::Module> run_ir_gen(CompilationState& state, 
-        Definition* definition);
+        DefinitionHeader* definition);
 
     // ----- PRIVATE FIELDS -----
     bool running_ = true;

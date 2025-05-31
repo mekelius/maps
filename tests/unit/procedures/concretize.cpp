@@ -68,7 +68,7 @@ TEST_CASE("Concretizer should run variable substitution with a concrete type") {
     auto [state, _, types] = CompilationState::create_test_state();
 
     Expression value{ExpressionType::known_value, 1, &Int, TSL};
-    RT_Definition definition{&value, true, TSL};
+    DefinitionBody definition{&value, true, TSL};
     Expression ref{ExpressionType::reference, &definition, TSL};
     ref.type = &Int;
 
@@ -80,7 +80,7 @@ TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
     auto [state, _, types] = CompilationState::create_test_state();
 
     Expression value{ExpressionType::known_value, 1, &Int, TSL};
-    RT_Definition definition{&value, true, TSL};
+    DefinitionBody definition{&value, true, TSL};
     Expression call{ExpressionType::call, CallExpressionValue{&definition, {}}, TSL};
     call.type = &Int;
 
@@ -94,7 +94,7 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the de
     
     auto IntInt = types->get_function_type(&Int, array{&Int}, false);
     Expression value{ExpressionType::known_value, 1, IntInt, TSL};
-    RT_Definition const_Int{"const_Int", &value, true, TSL};
+    DefinitionBody const_Int{"const_Int", &value, true, TSL};
 
     Expression arg{ExpressionType::known_value, "5", &NumberLiteral, TSL};
     Expression call{ExpressionType::call, CallExpressionValue{&const_Int, {&arg}}, TSL};
@@ -112,7 +112,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
     REQUIRE(types->empty());
 
     auto IntIntInt = types->get_function_type(&Int, array{&Int, &Int}, true);
-    RT_Definition dummy_definition = RT_Definition::testing_definition(IntIntInt);
+    DefinitionBody dummy_definition = DefinitionBody::testing_definition(IntIntInt);
 
     REQUIRE(*dummy_definition.get_type() == *IntIntInt);
 
@@ -170,7 +170,7 @@ TEST_CASE("Concretizer should be able to cast arguments up if needed") {
     REQUIRE(types->empty());
 
     auto IntIntInt = types->get_function_type(&Float, array{&Float, &Float}, true);
-    RT_Definition dummy_definition = RT_Definition::testing_definition(IntIntInt);
+    DefinitionBody dummy_definition = DefinitionBody::testing_definition(IntIntInt);
 
     SUBCASE("Number -> Int -> Float into Float -> Float -> Float") {
         Expression arg1{ExpressionType::known_value, "12.45", &NumberLiteral, TSL};

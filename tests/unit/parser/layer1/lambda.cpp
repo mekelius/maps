@@ -9,7 +9,7 @@ using namespace Maps;
 
 TEST_CASE("Should parse lambdas") {
     auto [state, types, _] = CompilationState::create_test_state();
-    RT_Scope scope{};
+    Scope scope{};
 
     REQUIRE(state.ast_store_->empty());
     REQUIRE(scope.empty());

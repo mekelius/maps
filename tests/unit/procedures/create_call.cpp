@@ -15,7 +15,7 @@ TEST_CASE("Basics") {
     auto [state, _, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
-    auto callee_def = RT_Definition::external(ast_store, "test", 
+    auto callee_def = DefinitionBody::external(ast_store, "test", 
         types->get_function_type(&Float, std::array<const Type* const, 2>{&Float, &Float}, false), TSL);
 
     SUBCASE ("Should do nothing if the types match") {
@@ -70,7 +70,7 @@ TEST_CASE("Creating an arg list should coerce args correctly") {
     auto [state, _, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
-    auto callee_def = RT_Definition::external(ast_store, "test", 
+    auto callee_def = DefinitionBody::external(ast_store, "test", 
         types->get_function_type(&Float, std::array<const Type* const, 2>{&Float, &Float}, false), TSL);
     auto value1 = create_known_value(state, static_cast<maps_Int>(1), TSL);
     auto value2 = create_known_value(state, static_cast<maps_Int>(2), TSL);

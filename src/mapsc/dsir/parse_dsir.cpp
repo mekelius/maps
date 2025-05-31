@@ -323,7 +323,7 @@ private:
         get_token(); // eat the =
 
         auto body = parse_expression();
-        auto definition = ast_store_->allocate_definition({name, body, true, location});
+        auto definition = ast_store_->allocate_definition({name, true, location}, body);
         if (!result_.definitions.create_identifier(definition)) {
             fail("Couldn't create identifier \"" + name + "\"");
             return nullopt;
@@ -409,7 +409,7 @@ private:
         return create_expression_statement(*ast_store_, parse_expression(), current_token_.location);
     }
 
-    Definition* parse_let_statement() {
+    DefinitionHeader* parse_let_statement() {
         assert(false && "not implemented");
     }
 

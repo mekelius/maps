@@ -5,6 +5,7 @@
 
 #include "common/std_visit_helper.hh"
 
+#include "mapsc/ast/definition_body.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/statement.hh"
 #include "mapsc/types/type.hh"
@@ -12,7 +13,7 @@
 namespace Maps {
 
 // TODO: delete the simplified nodes properly
-bool simplify(RT_Definition& definition) {
+bool simplify(DefinitionBody& definition) {
     return std::visit(overloaded {
         [](Error) { return false; },
         [](Undefined) { return true; },

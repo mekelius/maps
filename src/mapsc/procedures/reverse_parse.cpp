@@ -36,7 +36,7 @@ std::string ReverseParser::linebreak() {
     return "\n" + std::string(indent_stack_ * options_.indent_width, ' ');
 }
 
-ReverseParser& ReverseParser::reverse_parse(const RT_Scope& scope) {
+ReverseParser& ReverseParser::reverse_parse(const Scope& scope) {
     reset();
 
     for (auto definition: scope.identifiers_in_order_) {
@@ -44,6 +44,40 @@ ReverseParser& ReverseParser::reverse_parse(const RT_Scope& scope) {
     }
 
     return *this;
+}
+
+ReverseParser& ReverseParser::print_definition(const DefinitionHeader& definition) {
+    if (definition.is_operator())
+        return *this << "OPERATORS NOT IMPLEMENTED IN REVERSE PARSER\n";
+
+    *this << "let " << definition.name_string();
+
+    if (!definition.body_)
+        return *this << ";";
+
+    return *this << " = " << (*definition.body_)->value_;
+}
+
+ReverseParser& ReverseParser::print_definition(const DefinitionBody& body) {
+    return *this << *body.header_;
+}
+
+// reverse-parse expression into the stream
+ReverseParser& ReverseParser::print_definition(const LetDefinitionValue& value) {
+    return std::visit(overloaded {
+        [this](Undefined)-> ReverseParser& {
+            return *this << "@undefined@\n";
+        },
+        [this](Error)-> ReverseParser& {
+            return *this << "@error@\n";
+        },
+        [this](const Expression* expression)-> ReverseParser& {
+            return *this << *expression << "\n";
+        },
+        [this](const Statement* statement)-> ReverseParser& {
+            return *this << *statement << "\n";
+        },
+    }, value);
 }
 
 ReverseParser& ReverseParser::print_statement(const Statement& statement) {
@@ -356,63 +390,6 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");
     }
-}
-
-ReverseParser& ReverseParser::print_definition(const Definition& definition) {
-    auto name = definition.name_string();
-
-    return std::visit(overloaded {
-        [this, name](Error body) -> ReverseParser& {
-            *this << "\n";
-            return print_const_definition_body(body);
-        },
-        [this, name](External) -> ReverseParser& {
-            return *this << "\n@external " << name << "@\n";
-        },
-        [this, name](BTD_Binding body) -> ReverseParser& {
-            auto type = body.type;
-            return *this << (*type != Hole ? type->name_string() : "") << name << " ";
-        },
-        [this, name](Undefined)-> ReverseParser& {
-            return *this << "\nlet " << name << "\n";
-        },
-        [this, name](const Expression* expression)-> ReverseParser& {
-            return *this << "\nlet " << name << " = " << *expression << "\n";
-        },
-        [this, name](const Statement* statement)-> ReverseParser& {
-            return *this << "\nlet " << name << " = " << *statement << "\n";
-        },
-    }, definition.const_body());
-}
-
-// reverse-parse expression into the stream
-ReverseParser& ReverseParser::print_definition_body(DefinitionBody body) {
-    return *this << std::visit( [](auto body) { return const_DefinitionBody{body}; }, body );
-}
-
-// reverse-parse expression into the stream
-ReverseParser& ReverseParser::print_const_definition_body(const_DefinitionBody body) {
-    return std::visit(overloaded {
-        [this](Error) -> ReverseParser& {
-            return *this << "@error@";
-        },
-        [this](External) -> ReverseParser& {
-            return *this << "@external@";
-        },
-        [this](BTD_Binding body) -> ReverseParser& {
-            auto type = body.type;
-            return *this << (*type != Hole ? type->name_string() : "") << "@binding@";
-        },
-        [this](Undefined)-> ReverseParser& {
-            return *this << "@undefined@";
-        },
-        [this](const Expression* expression)-> ReverseParser& {
-            return *this << *expression;
-        },
-        [this](const Statement* statement)-> ReverseParser& {
-            return *this << *statement;
-        },
-    }, body);
 }
 
 ReverseParser& ReverseParser::print_type_declaration(const Expression& expression) {

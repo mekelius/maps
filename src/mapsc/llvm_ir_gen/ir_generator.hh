@@ -28,7 +28,6 @@ namespace Maps {
 
 struct Expression;
 struct Statement;
-class Definition;
 class FunctionType;
 class TypeStore;
 class PragmaStore;
@@ -61,7 +60,7 @@ public:
 
     // ----- RUNNING THE GENERATOR -----
     bool run(Maps::Scopes scopes);
-    bool run(Maps::Scopes, std::span<Maps::Definition* const> additional_definitions);
+    bool run(Maps::Scopes, std::span<Maps::DefinitionHeader* const> additional_definitions);
 
     // ----- PUBLIC FIELDS -----
 
@@ -103,13 +102,13 @@ public:
     bool verify_module();
 
     // ---- HIGH-LEVEL HANDLERS -----
-    bool handle_global_functions(const Maps::RT_Scope& scope);
+    bool handle_global_functions(const Maps::Scope& scope);
     std::optional<llvm::FunctionCallee> wrap_value_in_function(const std::string& name, 
         const Maps::Expression& expression);
 
     // ----- DEFINITION HANDLERS -----
-    std::optional<llvm::FunctionCallee> handle_global_definition(const Maps::Definition& definition);
-    std::optional<llvm::FunctionCallee> handle_function(const Maps::Definition& definition);
+    std::optional<llvm::FunctionCallee> handle_global_definition(const Maps::DefinitionHeader& definition);
+    std::optional<llvm::FunctionCallee> handle_function(const Maps::DefinitionHeader& definition);
 
     // ----- STATEMENT HANDLERS -----
     bool handle_statement(const Maps::Statement& statement);

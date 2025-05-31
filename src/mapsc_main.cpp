@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     std::cerr << "Parsing source file(s)...\n";
  
     Maps::TypeStore types{};
-    const Maps::CT_Scope* builtins = Maps::get_builtins();
+    const Maps::Scope* builtins = Maps::get_builtins();
     unique_ptr<Maps::CompilationState> compilation_state = 
         Maps::process_source(builtins, &types,source_is);
 

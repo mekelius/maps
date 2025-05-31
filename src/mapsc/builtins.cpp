@@ -25,69 +25,41 @@ namespace Maps {
 
 using Log = LogInContext<LogContext::compiler_init>;
 
-const_DefinitionBody CT_Definition::const_body() const {
-    if (auto external = std::get_if<External>(&builtin_body_)) {
-        return *external;
-    } else if (auto expression = std::get_if<Expression>(&builtin_body_)) {
-        return expression;
-    }
-
-    assert(false && "huh?");
-    // return std::visit(overloaded {
-    //     [](External external) { return external; },
-    //     [](Expression expression) { return &expression; }
-        // [this](Statement statement) { return &statement; }
-    // }, builtin_body_);
-}
-
-// CT_Definition::CT_Definition(std::string_view name, const Expression&& expression)
-// :CT_Definition(name, expression, *expression.type)
-// {}
-
-// CT_Definition::CT_Definition(std::string_view name, Statement&& statement, const Type& type)
-// :CT_Definition(name, statement, type) {}
-
-CT_Operator::CT_Operator(std::string_view name, const Expression&& expression, 
-    Operator::Properties operator_props)
-:CT_Definition(name, std::move(expression)),
-    operator_props_(operator_props) {
-}
-
 // ----- BUILTIN DEFINITIONS -----
 
-CT_Definition true_{"true", Expression::builtin(true, Boolean)};
-CT_Definition false_{"false", Expression::builtin(false, Boolean)};
-constinit CT_Definition print_String{"prints", External{}, String_to_IO_Void};
-constinit CT_Definition print_MutString{"printms", External{}, MutString_to_IO_Void};
+Builtin true_{"true", BuiltinValue{true}, &Boolean};
+Builtin false_{"false", BuiltinValue{false}, &Boolean};
+BuiltinExternal print_String{"prints", &String_to_IO_Void};
+BuiltinExternal print_MutString{"printms", &MutString_to_IO_Void};
 
 // ----- BUILTINS SCOPE -----
 
-static CT_Scope builtins;
+static Scope builtins;
 bool builtins_initialized = false;
 
-constinit CT_Operator unary_minus_Int{"-", External{}, Int_to_Int,
-    Operator::Properties{Operator::Fixity::unary_prefix}};
+BuiltinExternal unary_minus_Int_{"unary_minus_Int_", &Int_to_Int};
+BuiltinExternal plus_Int_{"plus_Int_", &IntInt_to_Int};
+BuiltinExternal minus_Int_{"minus_Int_", &IntInt_to_Int};
+BuiltinExternal mult_Int_{"mult_Int_", &IntInt_to_Int};
 
-constinit CT_Operator plus_Int{"+", External{}, IntInt_to_Int,
-    {Operator::Fixity::binary, 500}};
-constinit CT_Operator binary_minus_Int{"-", External{}, IntInt_to_Int,
-    {Operator::Fixity::binary,510}};
-constinit CT_Operator mult_Int{"*", External{}, IntInt_to_Int,
-    {Operator::Fixity::binary,520}};
+Operator unary_minus_Int{"-", &unary_minus_Int_, Operator::Properties{Operator::Fixity::unary_prefix}, BUILTIN_SOURCE_LOCATION};
+Operator plus_Int{"+", &plus_Int_, {Operator::Fixity::binary, 500}, BUILTIN_SOURCE_LOCATION};
+Operator binary_minus_Int{"-", &minus_Int_, {Operator::Fixity::binary, 510}, BUILTIN_SOURCE_LOCATION};
+Operator mult_Int{"*", &mult_Int_, {Operator::Fixity::binary, 520}, BUILTIN_SOURCE_LOCATION};
 
-constinit CT_Definition to_String_Boolean{"to_String_Boolean", External{}, Boolean_to_String};
-constinit CT_Definition to_String_Int{"to_String_Int", External{}, Int_to_String};
-constinit CT_Definition to_String_Float{"to_String_Float", External{}, Float_to_String};
-constinit CT_Definition to_Float_Int{"to_Float_Int", External{}, Int_to_Float};
-constinit CT_Definition to_String_MutString{"to_String_MutString", External{}, MutString_to_String};
-constinit CT_Definition to_MutString_Int{"to_MutString_Int", External{}, Int_to_MutString};
-constinit CT_Definition to_MutString_Float{"to_MutString_Float", External{}, Float_to_MutString};
+BuiltinExternal to_String_Boolean{"to_String_Boolean", &Boolean_to_String};
+BuiltinExternal to_String_Int{"to_String_Int", &Int_to_String};
+BuiltinExternal to_String_Float{"to_String_Float", &Float_to_String};
+BuiltinExternal to_Float_Int{"to_Float_Int", &Int_to_Float};
+BuiltinExternal to_String_MutString{"to_String_MutString", &MutString_to_String};
+BuiltinExternal to_MutString_Int{"to_MutString_Int", &Int_to_MutString};
+BuiltinExternal to_MutString_Float{"to_MutString_Float", &Float_to_MutString};
 
-constinit CT_Definition concat{"concat", External{}, MutString_MutString_to_MutString};
+BuiltinExternal concat{"concat", &MutString_MutString_to_MutString};
 
-bool init_builtin(CT_Scope& scope, CT_Definition& definition) {
-    if (!scope.create_identifier(&definition)) {
-        Log::compiler_error("Creating builtin " + definition.name_string() + " failed",
+bool init_builtin(Scope& scope, DefinitionHeader& node) {
+    if (!scope.create_identifier(&node)) {
+        Log::compiler_error("Creating builtin " + node.name_string() + " failed",
             COMPILER_INIT_SOURCE_LOCATION);
         return false;
     }
@@ -95,7 +67,7 @@ bool init_builtin(CT_Scope& scope, CT_Definition& definition) {
     return true;
 }
 
-bool init_builtins(CT_Scope& scope) {
+bool init_builtins(Scope& scope) {
     builtins_initialized = true;
 
     return (
@@ -116,7 +88,7 @@ bool init_builtins(CT_Scope& scope) {
     );
 }
 
-const CT_Scope* get_builtins() {
+const Scope* get_builtins() {
     if (!builtins_initialized && !init_builtins(builtins)) {
         Log::compiler_error("Initializing builtins failed", COMPILER_INIT_SOURCE_LOCATION);
         assert(false && "initializing builtins failed");
@@ -125,7 +97,7 @@ const CT_Scope* get_builtins() {
     return &builtins;
 }
 
-optional<Definition*> find_external_runtime_cast(const CT_Scope& scope, const Type* source_type, 
+optional<DefinitionHeader*> find_external_runtime_cast(const Scope& scope, const Type* source_type, 
     const Type* target_type) {
     
     std::string cast_name = "to_" + target_type->name_string() + "_" + source_type->name_string();

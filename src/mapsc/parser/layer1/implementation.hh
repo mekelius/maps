@@ -14,6 +14,7 @@
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
 
+#include "mapsc/ast/definition_body.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/parser/token.hh"
 #include "mapsc/parser/lexer.hh"
@@ -27,11 +28,12 @@ namespace Maps {
 class AST_Store;
 class CompilationState;
 class PragmaStore;
+
 enum class StatementType;
 
 class ParserLayer1 {
 public:
-    ParserLayer1(CompilationState* const state, RT_Scope* scope);
+    ParserLayer1(CompilationState* const state, Scope* scope);
 
     Layer1Result run(std::istream& source_is);
     Layer1Result run_eval(std::istream& source_is);
@@ -51,15 +53,15 @@ protected:
     void update_brace_levels(Token token);
     void reset_to_top_level();
 
-    void push_context(RT_Definition* context);
-    std::optional<RT_Definition*> pop_context();
-    std::optional<RT_Definition*> current_context() const;
-    bool in_top_level_context() const { return context_stack_.size() == 0 || (force_top_level_eval_ && context_stack_.size()) == 1; }
+    void push_context(Scope* context);
+    std::optional<Scope*> pop_context();
+    std::optional<Scope*> current_context() const;
+    bool in_top_level_context() const { return context_stack_.size() == 1; }
     
     void fail(const std::string& message, SourceLocation location, bool compiler_error = false);
     Expression* fail_expression(const std::string& message, SourceLocation location, 
         bool compiler_error = false);
-    Definition* fail_definition(const std::string& message, SourceLocation location, 
+    DefinitionHeader* fail_definition(const std::string& message, SourceLocation location, 
         bool compiler_error = false);
     Statement* fail_statement(const std::string& message, SourceLocation location, 
         bool compiler_error = false);
@@ -72,19 +74,19 @@ protected:
     // ---- IDENTIFIERS -----
     bool identifier_exists(const std::string& name) const;
 
-    [[nodiscard]] std::optional<RT_Definition*> create_undefined_identifier(const std::string& name, 
+    [[nodiscard]] std::optional<DefinitionHeader*> create_undefined_identifier(const std::string& name, 
         bool is_top_level, SourceLocation location);
-    [[nodiscard]] std::optional<RT_Definition*> create_identifier(RT_Definition* definition);
-    std::optional<Definition*> lookup_identifier(const std::string& name);
+    [[nodiscard]] std::optional<DefinitionHeader*> create_identifier(DefinitionHeader* definition);
+    std::optional<DefinitionHeader*> lookup_identifier(const std::string& name);
 
     // attempts to collapse a single statement block
     bool simplify_single_statement_block(Statement* outer);
 
-    RT_Definition* create_definition(const std::string& name, DefinitionBody body, bool is_top_level, 
+    DefinitionHeader* create_definition(const std::string& name, const LetDefinitionValue& definition, 
+        bool is_top_level, SourceLocation location);
+    DefinitionHeader* create_definition(const std::string& name, bool is_top_level, 
         SourceLocation location);
-    RT_Definition* create_definition(const std::string& name, bool is_top_level, 
-        SourceLocation location);
-    RT_Definition* create_definition(DefinitionBody body, bool is_top_level, 
+    DefinitionHeader* create_definition(LetDefinitionValue body, bool is_top_level, 
         SourceLocation location);
 
     // #################################### layer1/pragma.cpp #####################################
@@ -94,9 +96,9 @@ protected:
     // ################################## layer1/definition.cpp ###################################
 
     Chunk parse_top_level_chunk();
-    Definition* parse_top_level_let_definition();
-    Definition* parse_operator_definition();
-    DefinitionBody parse_definition_body();
+    DefinitionHeader* parse_top_level_let_definition();
+    Operator* parse_operator_definition();
+    LetDefinitionValue parse_definition_body();
     Statement* parse_inner_let_definition();
     
     // ################################## layer1/statement.cpp ####################################
@@ -127,7 +129,7 @@ protected:
     Expression* parse_lambda_expression();
     Expression* parse_condition_expression();
 
-    std::optional<ParameterList> parse_lambda_parameters(RT_Scope* lambda_scope);
+    std::optional<ParameterList> parse_lambda_parameters(Scope* lambda_scope);
     Expression* parse_binding_type_declaration();
 
     std::optional<const Type*> parse_parameter_type_declaration();
@@ -152,7 +154,7 @@ protected:
     Layer1Result result_ = {};
 
     CompilationState* const compilation_state_;
-    RT_Scope* parse_scope_;
+    Scope* parse_scope_;
     
     AST_Store* const ast_store_;
     PragmaStore* const pragma_store_;
@@ -168,7 +170,7 @@ protected:
     unsigned int curly_brace_level_ = 0;
     unsigned int angle_bracket_level_ = 0;
 
-    std::vector<RT_Definition*> context_stack_{};
+    std::vector<Scope*> context_stack_{};
 };
 
 } // namespace Maps

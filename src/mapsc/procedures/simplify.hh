@@ -3,9 +3,9 @@
 
 namespace Maps {
 
-class RT_Definition;
+class DefinitionBody;
 
-bool simplify(RT_Definition& definition);
+bool simplify(DefinitionBody& definition);
 
 } // namespace Maps
 

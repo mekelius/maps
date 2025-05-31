@@ -43,7 +43,6 @@ namespace Maps {
 
 class CompilationState;
 class AST_Store;
-class Definition;
 class Operator;
 struct Expression;
 
@@ -92,7 +91,7 @@ enum class ExpressionType {
     deleted,                    // value: std::monostate
 };
 
-using CallExpressionValue = std::tuple<Definition*, std::vector<Expression*>>;
+using CallExpressionValue = std::tuple<DefinitionHeader*, std::vector<Expression*>>;
 
 using TypeArgument = std::tuple<
     Expression*,                // type construct or type identifier
@@ -106,7 +105,7 @@ using TypeConstruct = std::tuple<
 
 struct TermedExpressionValue {
     std::vector<Expression*> terms;
-    RT_Definition* context;
+    Scope* context;
 
     DeferredBool is_type_declaration = DeferredBool::maybe_;
 
@@ -118,8 +117,8 @@ struct TermedExpressionValue {
 //         const std::vector<const Type*>& param_types, const SourceLocation& location);
 
 //     ParameterList parameters;
-//     std::optional<RT_Scope*> scope;
-//     Definition* definition;
+//     std::optional<Scope*> scope;
+//     ReferableNode* definition;
 
 //     bool operator==(const LambdaExpressionValue& other) const {
 //         return this == &other;
@@ -144,8 +143,8 @@ using ExpressionValue = std::variant<
     bool,
     std::string,
     Expression*,
-    Definition*,                       // for references to operators and functions
-    const Type*,                       // for type expressions
+    DefinitionHeader*,
+    const Type*,
     TermedExpressionValue,
     CallExpressionValue,
     // LambdaExpressionValue,
@@ -161,11 +160,6 @@ struct Expression {
     //     const Type* return_type, bool is_pure, const SourceLocation& location);
     // static Expression* lambda(CompilationState& state, const LambdaExpressionValue& value, 
     //     bool is_pure, const SourceLocation& location);
-
-
-    static Expression builtin(const ExpressionValue& value, const Type& type) {
-        return Expression{ExpressionType::known_value, value, &type, BUILTIN_SOURCE_LOCATION};
-    }
 
     // ----- CONSTRUCTORS -----
     Expression(ExpressionType expression_type, const SourceLocation& location)
@@ -186,12 +180,12 @@ struct Expression {
     // ----- GETTERS etc. -----
     std::vector<Expression*>& terms();
     const std::vector<Expression*>& terms() const;
-    RT_Definition* termed_context() const;
+    Scope* termed_context() const;
 
     CallExpressionValue& call_value();
-    Definition* reference_value() const;
+    DefinitionHeader* reference_value() const;
     const Type* type_reference_value() const;
-    Definition* operator_reference_value() const;
+    Operator* operator_reference_value() const;
     std::optional<KnownValue> known_value_value() const;
     Expression* partially_applied_minus_arg_value() const;
 

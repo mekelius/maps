@@ -108,111 +108,115 @@ Expression* ParserLayer1::parse_ternary_expression() {
 }
 
 Expression* ParserLayer1::parse_lambda_expression() {
-    auto location = current_token().location;
-    get_token(); // eat the '\'
+    assert(false && "not updated");
 
-    RT_Scope* lambda_scope = ast_store_->allocate_scope(RT_Scope{/*parse_scope_*/});
-    auto parameter_list = parse_lambda_parameters(lambda_scope);
+    // auto location = current_token().location;
+    // get_token(); // eat the '\'
 
-    if (!parameter_list)
-        return fail_expression("parsing lambda parameter list failed", location);
+    // Scope* lambda_scope = ast_store_->allocate_scope(Scope{/*parse_scope_*/});
+    // auto parameter_list = parse_lambda_parameters(lambda_scope);
 
-    if (current_token().token_type != TokenType::arrow_operator)
-        return fail_expression("Undexpected " + current_token().get_string() + 
-            " in lambda expression, expected a \"->\" or \"=>\" ", current_token().location);
+    // if (!parameter_list)
+    //     return fail_expression("parsing lambda parameter list failed", location);
 
-    bool is_pure = current_token().string_value() == "->";
-    get_token();
+    // if (current_token().token_type != TokenType::arrow_operator)
+    //     return fail_expression("Undexpected " + current_token().get_string() + 
+    //         " in lambda expression, expected a \"->\" or \"=>\" ", current_token().location);
 
-    RT_Definition* definition = RT_Definition::function_definition(*compilation_state_, 
-        *parameter_list, lambda_scope, false, location);
+    // bool is_pure = current_token().string_value() == "->";
+    // get_token();
 
-    push_context(definition);
-    DefinitionBody body = parse_definition_body();
-    auto popped_context = pop_context();
+    // DefinitionBody* definition = DefinitionBody::function_definition(*compilation_state_, 
+    //     *parameter_list, lambda_scope, false, location);
 
-    if (!popped_context || popped_context != definition)
-        return fail_expression("Parsing lambda body failed", location);
+    // push_context(definition);
+    // DefinitionBody body = parse_definition_body();
+    // auto popped_context = pop_context();
 
-    std::vector<const Type*> param_types{};
+    // if (!popped_context || popped_context != definition)
+    //     return fail_expression("Parsing lambda body failed", location);
 
-    for (auto param: *parameter_list)
-        param_types.push_back(param->get_type());
+    // std::vector<const Type*> param_types{};
 
-    definition->body() = body;
-    definition->set_type(compilation_state_->types_->get_function_type(
-        definition->get_type(), param_types, is_pure));
+    // for (auto param: *parameter_list)
+    //     param_types.push_back(param->get_type());
 
-    return create_reference(*compilation_state_->ast_store_, definition, location);
+    // definition->body() = body;
+    // definition->set_type(compilation_state_->types_->get_function_type(
+    //     definition->get_type(), param_types, is_pure));
+
+    // return create_reference(*compilation_state_->ast_store_, definition, location);
 }
 
-optional<ParameterList> ParserLayer1::parse_lambda_parameters(RT_Scope* lambda_scope) {
-    ParameterList parameter_list{};
+optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scope) {
+    assert(false && "not updated");
 
-    while (true) {
-        switch (current_token().token_type) {
-            case TokenType::arrow_operator:
-                return parameter_list;
+    // ParameterList parameter_list{};
 
-            case TokenType::eof:
-                return fail_optional(
-                    "Unexpected eof in lambda parameter list", current_token().location);
+    // while (true) {
+    //     switch (current_token().token_type) {
+    //         case TokenType::arrow_operator:
+    //             return parameter_list;
 
-            case TokenType::identifier: {
-                auto name = current_token().string_value();
-                auto location = current_token().location;
+    //         case TokenType::eof:
+    //             return fail_optional(
+    //                 "Unexpected eof in lambda parameter list", current_token().location);
 
-                auto parameter = RT_Definition::parameter(*ast_store_, name, &Hole, location);
+    //         case TokenType::identifier: {
+    //             auto name = current_token().string_value();
+    //             auto location = current_token().location;
 
-                // check if the string is already bound, in which case we exit
-                if (!lambda_scope->create_identifier(parameter))
-                    return fail_optional(
-                        "Duplicate parameter name " + name + " in lambda parameter list", location);
+    //             auto parameter = DefinitionBody::parameter(*ast_store_, name, &Hole, location);
 
-                parameter_list.push_back(parameter);
-                get_token();
-                continue;
-            }
+    //             // check if the string is already bound, in which case we exit
+    //             if (!lambda_scope->create_identifier(parameter))
+    //                 return fail_optional(
+    //                     "Duplicate parameter name " + name + " in lambda parameter list", location);
 
-            case TokenType::bracket_open:
-            case TokenType::type_identifier: {
-                auto location = current_token().location;
+    //             parameter_list.push_back(parameter);
+    //             get_token();
+    //             continue;
+    //         }
 
-                auto type = parse_parameter_type_declaration();
+    //         case TokenType::bracket_open:
+    //         case TokenType::type_identifier: {
+    //             auto location = current_token().location;
+
+    //             auto type = parse_parameter_type_declaration();
                 
-                if (!type)
-                    return fail_optional(
-                        "Parsing lambda parameter list failed, incorrect type declaration", location);
+    //             if (!type)
+    //                 return fail_optional(
+    //                     "Parsing lambda parameter list failed, incorrect type declaration", location);
 
-                if (current_token().token_type != TokenType::identifier) {
-                    assert(false && "Something unexpected happened, parse_parameter_type_declaration returned without an identifier as the current token");
-                    return fail_optional(("Something unexpected happened, parse_parameter_type_declaration returned without an identifier as the current token"), 
-                        current_token().location, true);
-                }
+    //             if (current_token().token_type != TokenType::identifier) {
+    //                 assert(false && "Something unexpected happened, parse_parameter_type_declaration returned without an identifier as the current token");
+    //                 return fail_optional(("Something unexpected happened, parse_parameter_type_declaration returned without an identifier as the current token"), 
+    //                     current_token().location, true);
+    //             }
 
-                auto name = current_token().string_value();
-                auto parameter = RT_Definition::parameter(*ast_store_, name, *type, location);
+    //             auto name = current_token().string_value();
+    //             auto parameter = DefinitionBody::parameter(*ast_store_, name, *type, location);
 
-                // check if the string is already bound, in which case we exit
-                if (!lambda_scope->create_identifier(parameter))
-                    return fail_optional(
-                        "Duplicate parameter name " + name + " in lambda parameter list", location);
-                get_token();
-                continue;
-            }
+    //             // check if the string is already bound, in which case we exit
+    //             if (!lambda_scope->create_identifier(parameter))
+    //                 return fail_optional(
+    //                     "Duplicate parameter name " + name + " in lambda parameter list", location);
+    //             get_token();
+    //             continue;
+    //         }
 
-            case TokenType::underscore:
-                parameter_list.push_back(RT_Definition::discarded_parameter(*ast_store_, &Hole, 
-                    current_token().location));
-                get_token();
-                continue;
+    //         case TokenType::underscore:
+    //             parameter_list.push_back(DefinitionBody::discarded_parameter(*ast_store_, &Hole, 
+    //                 current_token().location));
+    //             get_token();
+    //             continue;
 
-            default:
-                return fail_optional(
-                    "Unexpected " + current_token().get_string() + " in lambda parameter list",
-                    current_token().location);
-        }
-    }
+    //         default:
+    //             return fail_optional(
+    //                 "Unexpected " + current_token().get_string() + " in lambda parameter list",
+    //                 current_token().location);
+    //     }
+    // }
 }
 
 std::optional<const Type*> ParserLayer1::parse_parameter_type_declaration() {

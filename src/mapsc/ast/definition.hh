@@ -5,9 +5,12 @@
 #include <string_view>
 #include <variant>
 
+#include "common/std_visit_helper.hh"
+#include "common/maps_datatypes.h"
+
+#include "mapsc/log_format.hh"
 #include "mapsc/source.hh"
 #include "mapsc/types/type_defs.hh"
-#include "common/std_visit_helper.hh"
 #include "mapsc/ast/scope.hh"
 
 namespace Maps {
@@ -18,21 +21,79 @@ struct Statement;
 class AST_Store;
 class CompilationState;
 
-struct External {
-    template<typename T>
-    bool operator==(T&) const { return false; }
-};
 
 struct Undefined {
-    template<typename T>
-    bool operator==(T&) const { return false; }
+    bool operator==(auto) const { return false; }
 };
+
 
 struct Error {
     bool compiler_error = false;
 
     template<typename T>
     bool operator==(T&) const { return false; }
+};
+
+
+class DefinitionBody;
+using LetDefinitionValue = std::variant<Undefined, Error, Expression*, Statement*>;
+
+// Referable nodes are typed things which might have a definition
+class DefinitionHeader {
+public:
+    DefinitionHeader(const std::string& name, const Type* type, Scope* outer_scope,
+        bool is_top_level, SourceLocation location);
+    DefinitionHeader(const std::string& name, const Type* type, SourceLocation location);
+
+    const SourceLocation& location() const { return location_; }
+
+    virtual ~DefinitionHeader() = default;
+    DefinitionHeader(const DefinitionHeader&) = default;
+    DefinitionHeader& operator=(const DefinitionHeader&) = default;
+
+    virtual bool is_operator() const { return false; }
+    bool is_const() const { return false; }
+    bool is_known_scalar_value() const;
+    bool has_body() const { return body_.has_value(); }
+    bool is_empty() const { return !body_.has_value(); }
+    bool is_undefined() const { return !body_.has_value(); }
+    
+    std::string node_type_string() const { return "not implemented"; }
+    std::string name_string() const { return name_; }
+    const Type* get_type() const { return type_; }
+
+    std::optional<LetDefinitionValue> get_body_value() const;
+
+    // bool operator==(const ReferableNode& other) const {
+    //     return this == &other;
+    // };
+    std::string name_;
+    const Type* type_;
+    bool is_top_level_;
+    SourceLocation location_;
+    std::optional<Scope*> outer_scope_;
+    std::optional<DefinitionBody*> body_ = std::nullopt;
+    bool is_deleted_ = false;
+};
+
+class Parameter: public DefinitionHeader {
+public:
+    virtual std::string node_type_string() const { return "parameter"; };
+    virtual std::string name_string() const { return name_; };
+    virtual const Type* get_type() const {return type_; };
+
+    const Type* type_;
+    std::string name_;
+};
+
+class External: public DefinitionHeader {
+public:
+    virtual std::string node_type_string() const { return "external"; };
+    virtual std::string name_string() const { return name_; };
+    virtual const Type* get_type() const {return type_; };
+
+    std::string name_;
+    const Type* type_;
 };
 
 struct BTD_Binding {
@@ -48,134 +109,33 @@ struct BTD_Binding {
     bool operator==(T& t) const { return this == &t; }
 };
 
-using DefinitionBody = std::variant<Undefined, External, Error, Expression*, Statement*, BTD_Binding>;
-using const_DefinitionBody = 
-    std::variant<Undefined, External, Error, const Expression*, const Statement*, BTD_Binding>;
-
-/**
- * Definitions represent either expressions or statements, along with extra info like
- * holding types for statements. A bit convoluted but we'll see.
- * The source location is needed on every definition that is not a built-in
- * 
- * NOTE: if it's anonymous, it needs a source location
- */
-class Definition {
+class DS_Binding {
 public:
-    virtual std::string_view name() const = 0;
-    virtual std::string name_string() const { return std::string{name()}; };
-    virtual const_DefinitionBody const_body() const = 0;
-    virtual const SourceLocation& location() const = 0;
-    virtual const Type* get_type() const = 0;
-    virtual std::optional<const Type*> get_declared_type() const = 0;
 
-    bool is_undefined() const {
-        return std::holds_alternative<Undefined>(const_body());
-    }
-
-    bool is_empty() const;
-
-    virtual bool is_operator() const { return false; }
-    virtual bool is_const() const { return false; }
-    bool is_known_scalar_value() const;
-
-    std::string body_type_string() const {
-        return std::visit(overloaded{
-            [](Undefined){ return "undefined"; },
-            [](External){ return "external"; },
-            [](Error){ return "error"; },
-            [](const Expression*){ return "expression"; },
-            [](const Statement*){ return "statement"; },
-            [](BTD_Binding){ return "BTD binding"; },
-        }, const_body());
-    }
-
-    virtual bool operator==(const Definition& other) const = 0;
 };
 
-using ParameterList = std::vector<Definition*>;
+using ParameterList = std::vector<Parameter*>;
 
-class RT_Definition: public Definition {
+using BuiltinValue = std::variant<maps_Boolean, maps_String, maps_Int, maps_Float>;
+
+class Builtin: public DefinitionHeader {
 public:
-    // creates a new dummy definition suitable for unit testing
-    static RT_Definition testing_definition(const Type* type = &Hole, bool is_top_level = true); 
-
-    static RT_Definition* external(AST_Store& store, std::string_view name, const Type* type, 
-        const SourceLocation& location);
-    static RT_Definition* parameter(AST_Store& store, std::string_view name, const Type* type, 
-        const SourceLocation& location);
-    static RT_Definition* discarded_parameter(AST_Store& store, const Type* type, 
-        const SourceLocation& location);
-    static RT_Definition* function_definition(CompilationState& state, 
-        const ParameterList& parameter_list, RT_Scope* inner_scope, bool is_top_level, 
-        const SourceLocation& location);
-    static RT_Definition* function_definition(CompilationState& state, 
-        const ParameterList& parameter_list, RT_Scope* inner_scope, DefinitionBody body, 
-        bool is_top_level, const SourceLocation& location);
-
-    RT_Definition(std::string_view name, External external, const Type* type)
-    :name_(name), body_(external), location_(EXTERNAL_SOURCE_LOCATION), type_(type), 
-     is_top_level_(true) {}
-
-    RT_Definition(std::string_view name, DefinitionBody body, bool is_top_level, 
-        const SourceLocation& location);
-    RT_Definition(DefinitionBody body, bool is_top_level, 
-        const SourceLocation& location); // create anonymous definition
-
-    // anonymous definitions
-    RT_Definition(std::string_view name, DefinitionBody body, const Type* type, bool is_top_level, 
-        const SourceLocation& location);
-    RT_Definition(DefinitionBody body, const Type* type, bool is_top_level, 
-        const SourceLocation& location);
-
-    RT_Definition(const RT_Definition& other) = default;
-    RT_Definition& operator=(const RT_Definition& other) = default;
-    virtual constexpr ~RT_Definition() = default;
-
-    // ----- OVERRIDES ------
-    virtual std::string_view name() const { return name_; }
-    virtual std::string name_string() const { return name_; }
-    virtual const_DefinitionBody const_body() const;
-    virtual DefinitionBody& body() { return body_; }
-    virtual const SourceLocation& location() const { return location_; }
-
-    // since statements don't store types, we'll have to store them here
-    // if the body is an expression, the type will just mirror it's type
-    virtual const Type* get_type() const;
-    virtual std::optional<const Type*> get_declared_type() const;
-
-    void set_type(const Type* type);
-    bool set_declared_type(const Type* type);
-
-    bool is_deleted() const { return is_deleted_; }
-    void mark_deleted() { is_deleted_ = true; }
-
-    bool is_top_level_definition() const { return is_top_level_; }
-    RT_Scope* inner_scope() const {
-        return inner_scope_ ? *inner_scope_ : outer_scope_;
-    }
-
-    virtual bool operator==(const Definition& other) const {
-        if (this == &other)
-            return true;
-
-        if (const_body() == other.const_body())
-            return true;
-
-        return false;
-    }
+    // Builtin(const std::string& name, Statement&& statement, const Type& type);
+    Builtin(const std::string& name, BuiltinValue value, const Type* type)
+    :DefinitionHeader(name, type, BUILTIN_SOURCE_LOCATION), value_(value) {}
 
 private:
-    std::string name_;
-    DefinitionBody body_;
-    SourceLocation location_;
-    std::optional<const Type*> type_;
-    std::optional<const Type*> declared_type_;
+    BuiltinValue value_;
+};
 
-    RT_Scope* outer_scope_;
-    std::optional<RT_Scope*> inner_scope_ = std::nullopt;
+class BuiltinExternal: public DefinitionHeader {
+public:
+    virtual std::string node_type_string() const { return "builtin external"; };
+    virtual std::string name_string() const { return std::string{name_}; };
+    virtual const Type* get_type() const {return type_; };
 
-    bool is_top_level_;
-    bool is_deleted_ = false;
+    BuiltinExternal(const std::string& name, const Type* type)
+    :DefinitionHeader(name, type, BUILTIN_SOURCE_LOCATION) {}
 };
 
 } // namespace Maps

@@ -15,21 +15,18 @@
 
 namespace Maps {
 
-inline std::optional<KnownValue> evaluate(const Definition* definition) {
+inline std::optional<KnownValue> evaluate(const DefinitionBody& definition) {
     using std::nullopt;
     using Log = LogInContext<LogContext::eval>;
 
     return std::visit(overloaded{
-        [](Undefined)->std::optional<KnownValue> { return nullopt; },
-        [definition](External)->std::optional<KnownValue> { 
-            Log::compiler_error("Compile time evaluating externals not implemented", 
-                definition->location());
-            return nullopt;
-        },
-        [](const Expression* expression)->std::optional<KnownValue> {
+        [](Expression* expression)->std::optional<KnownValue> {
             switch (expression->expression_type) {
-                case ExpressionType::known_value_reference:
-                    return evaluate(expression->reference_value());
+                case ExpressionType::known_value_reference: {
+                    assert(expression->reference_value()->body_ && 
+                        "evaluate called on a definition without a body");
+                    return evaluate(**expression->reference_value()->body_);
+                }
 
                 case ExpressionType::known_value: {
                     Log::debug_extra("Evaluating " + expression->log_message_string(), 
@@ -55,10 +52,10 @@ inline std::optional<KnownValue> evaluate(const Definition* definition) {
         },
         [definition](auto)->std::optional<KnownValue> {
             Log::compiler_error("Compile time evaluating definitions with body type " + 
-                definition->body_type_string() + " not implemented", definition->location());
+                definition.node_type_string() + " not implemented", definition.location());
             return nullopt;
         }
-    }, definition->const_body());
+    }, definition.value_);
 }
 
 } // namespace Maps

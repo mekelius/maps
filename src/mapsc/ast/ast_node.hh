@@ -14,7 +14,7 @@ template<class T>
 concept AST_Visitor = requires(T t) {
     {t.visit_expression(std::declval<Expression*>())} -> std::convertible_to<bool>;
     {t.visit_statement(std::declval<Statement*>())} -> std::convertible_to<bool>;
-    {t.visit_definition(std::declval<RT_Definition*>())} -> std::convertible_to<bool>;
+    {t.visit_definition(std::declval<DefinitionBody*>())} -> std::convertible_to<bool>;
 };
 
 template<AST_Visitor T>
@@ -25,7 +25,7 @@ bool walk_expression(T visitor, Expression* expression);
 template<AST_Visitor T>
 bool walk_statement(T visitor, Statement* statement);
 template<AST_Visitor T>
-bool walk_definition(T visitor, RT_Definition* definition);
+bool walk_definition(T visitor, DefinitionBody* definition);
 
 template<AST_Visitor T>
 bool walk_expression(T visitor, Expression* expression) {
@@ -83,7 +83,7 @@ bool walk_statement(T visitor, Statement* statement) {
 }
 
 template<AST_Visitor T>
-bool walk_definition(T visitor, RT_Definition* definition) {
+bool walk_definition(T visitor, DefinitionBody* definition) {
     if (!visitor.visit_definition(definition))
         return false;
 

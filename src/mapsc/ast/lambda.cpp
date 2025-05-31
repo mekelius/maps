@@ -51,28 +51,30 @@ namespace Maps {
 //     return lambda(state, value, &Hole, is_pure, location);
 // }
 
-std::tuple<Expression*, RT_Definition*> create_const_lambda(CompilationState& state, 
+std::tuple<Expression*, DefinitionBody*> create_const_lambda(CompilationState& state, 
     Expression* value, std::span<const Type* const> param_types, 
     const SourceLocation& location, bool is_pure) {
 
     auto& ast_store = *state.ast_store_;
 
     ParameterList parameter_list{};
-    auto inner_scope = ast_store.allocate_scope(RT_Scope{});
+    auto inner_scope = ast_store.allocate_scope(Scope{});
 
-    for (auto param_type: param_types)
-        parameter_list.push_back(RT_Definition::discarded_parameter(ast_store, param_type, location));
+    assert(false && "not updated");
 
-    auto definition = RT_Definition::function_definition(state, parameter_list, inner_scope, value,
-        false, location);
+    // for (auto param_type: param_types)
+    //     parameter_list.push_back(LetDefinition::discarded_parameter(ast_store, param_type, location));
 
-    definition->set_type(state.types_->get_function_type(value->type, param_types, is_pure));
-    auto expression = create_reference(ast_store, definition, location);
+    // auto definition = LetDefinition::function_definition(state, parameter_list, inner_scope, value,
+    //     false, location);
 
-    return {expression, definition};
+    // definition->set_type(state.types_->get_function_type(value->type, param_types, is_pure));
+    // auto expression = create_reference(ast_store, definition, location);
+
+    // return {expression, definition};
 }
 
-std::tuple<Expression*, RT_Definition*> create_const_lambda(CompilationState& state, 
+std::tuple<Expression*, DefinitionBody*> create_const_lambda(CompilationState& state, 
     KnownValue value, std::span<const Type* const> param_types, const SourceLocation& location,
     bool is_pure) {
 

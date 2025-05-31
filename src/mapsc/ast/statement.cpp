@@ -86,9 +86,9 @@ bool Statement::is_definition() const {
 
 Statement* create_empty_statement(AST_Store& ast_store, const SourceLocation& location) {
     return ast_store.allocate_statement(
-        Statement{StatementType::empty, Undefined{}, location});
+        Statement{StatementType::empty, {}, location});
 }
-Statement* create_assignment_statement(AST_Store& ast_store, Expression* identifier_or_reference, RT_Definition* definition, const SourceLocation& location) {
+Statement* create_assignment_statement(AST_Store& ast_store, Expression* identifier_or_reference, DefinitionBody* definition, const SourceLocation& location) {
     return ast_store.allocate_statement(
         Statement{StatementType::assignment, identifier_or_reference, location});
 }
@@ -106,11 +106,11 @@ Statement* create_expression_statement(AST_Store& ast_store, Expression* express
 }
 Statement* create_user_error_statement(AST_Store& ast_store, const SourceLocation& location) {
     return ast_store.allocate_statement(
-        Statement{StatementType::user_error, Undefined{}, location});
+        Statement{StatementType::user_error, {}, location});
 }
 Statement* create_compiler_error_statement(AST_Store& ast_store, const SourceLocation& location) {
     return ast_store.allocate_statement(
-        Statement{StatementType::compiler_error, Undefined{}, location});
+        Statement{StatementType::compiler_error, {}, location});
 }
 Statement* create_if(AST_Store& ast_store, Expression* condition, Statement* body, const SourceLocation& location) {
     return ast_store.allocate_statement(

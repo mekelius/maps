@@ -57,7 +57,7 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
 bool REPL::run() {    
     auto types = TypeStore{};
     auto stored_state = CompilationState{Maps::get_builtins(), &types, options_.compiler_options};
-    auto stored_definitions = Maps::RT_Scope{};
+    auto stored_definitions = Maps::Scope{};
 
     while (running_) {        
         optional<std::string> input = get_input();
@@ -88,8 +88,8 @@ bool REPL::run() {
     return true;
 }
 
-void REPL::debug_print(REPL_Stage stage, const Maps::RT_Scope& scope, 
-    std::span<const Maps::Definition* const> extra_definitions) {
+void REPL::debug_print(REPL_Stage stage, const Maps::Scope& scope, 
+    std::span<const Maps::DefinitionHeader* const> extra_definitions) {
 
     if (!options_.has_debug_print(stage))
         return;
@@ -106,11 +106,11 @@ void REPL::debug_print(REPL_Stage stage, const Maps::RT_Scope& scope,
         reverse_parser_ << '\n' << std::string{end_separator} << "\n\n";
 }
 
-void REPL::debug_print(REPL_Stage stage, const Maps::RT_Scope& scope, const Maps::Definition* definition) {
+void REPL::debug_print(REPL_Stage stage, const Maps::Scope& scope, const Maps::DefinitionHeader* definition) {
     debug_print(stage, scope, std::array{definition});
 }
 
-void REPL::debug_print(REPL_Stage stage, const Maps::RT_Scope& scope) {
+void REPL::debug_print(REPL_Stage stage, const Maps::Scope& scope) {
     debug_print(stage, scope, {});
 }
 

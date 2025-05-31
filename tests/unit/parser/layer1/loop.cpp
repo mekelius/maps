@@ -11,12 +11,12 @@
 using namespace std;
 using namespace Maps;
 
-inline std::tuple<CompilationState, RT_Scope, stringstream> setup(const std::string& source) {
+inline std::tuple<CompilationState, Scope, stringstream> setup(const std::string& source) {
     auto [state, _1, _2] = CompilationState::create_test_state();
 
     return {
         std::move(state), 
-        RT_Scope{}, 
+        Scope{}, 
         stringstream{source}
     };
 }

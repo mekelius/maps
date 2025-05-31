@@ -10,7 +10,7 @@ using namespace std;
 
 TEST_CASE("Should parse a block") {
     auto [state, types, _] = CompilationState::create_test_state();
-    RT_Scope scope{};
+    Scope scope{};
 
     REQUIRE(state.ast_store_->empty());
     REQUIRE(scope.empty());
@@ -138,7 +138,7 @@ TEST_CASE("Should parse a block") {
 
 TEST_CASE("layer1 eval should simplify single statement blocks") {
     TypeStore types{};
-    RT_Scope scope{};
+    Scope scope{};
     CompilationState state{get_builtins(), &types};
     
     REQUIRE(state.ast_store_->empty());

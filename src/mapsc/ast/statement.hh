@@ -96,18 +96,19 @@ struct LoopStatementValue {
 
 struct Assignment {
     Expression* identifier_or_reference; 
-    RT_Definition* body;
+    DefinitionBody* body;
 
     bool operator==(const Assignment&) const = default;
 };
 
+using EmptyStatementValue = std::monostate;
 
 using StatementValue = std::variant<
     std::string,
     Expression*,
     Assignment,
     Block,
-    Undefined,
+    EmptyStatementValue,
     ConditionalValue,
     LoopStatementValue,
     SwitchStatementValue
@@ -149,7 +150,7 @@ struct Statement {
 };
 
 Statement* create_empty_statement(AST_Store& store, const SourceLocation& location);
-Statement* create_assignment_statement(AST_Store& store, Expression* identifier_or_reference, RT_Definition* definition, const SourceLocation& location);
+Statement* create_assignment_statement(AST_Store& store, Expression* identifier_or_reference, DefinitionBody* definition, const SourceLocation& location);
 Statement* create_return_statement(AST_Store& store, Expression* expression, const SourceLocation& location);
 Statement* create_block(AST_Store& store, const Block& block, const SourceLocation& location);
 Statement* create_expression_statement(AST_Store& store, Expression* expression, const SourceLocation& location);

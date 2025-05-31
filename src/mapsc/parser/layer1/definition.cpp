@@ -38,7 +38,6 @@ Chunk ParserLayer1::parse_top_level_chunk() {
 
             if (current_token().string_value() == "operator")
                 return parse_operator_definition();
-            
 
         default:
             statement = parse_statement();
@@ -53,8 +52,7 @@ Chunk ParserLayer1::parse_top_level_chunk() {
     }
 }
 
-
-Definition* ParserLayer1::parse_top_level_let_definition() {
+DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
     auto location = current_token().location;
     
     switch (get_token().token_type) {
@@ -82,27 +80,30 @@ Definition* ParserLayer1::parse_top_level_let_definition() {
                 }
 
                 if (is_assignment_operator(current_token())) {
-                    get_token(); // eat the assignment operator
+                    assert(false && "not implemented");
+                    // get_token(); // eat the assignment operator
 
-                    auto definition = create_definition(name, true, location);
-                    push_context(definition);
+                    // auto definition = create_definition(name, true, location);
 
-                    DefinitionBody body = parse_definition_body();
+                    // auto scope
+                    // push_context(definition);
 
-                    definition->body() = body;
-                    if (!create_identifier(definition))
-                        return fail_definition("Creating top level identifier failed", location, true);
+                    // LetDefinitionValue body = parse_definition_body();
+
+                    // ast_store_->allocate_definition_body(definition, body);
+                    // if (!create_identifier(definition))
+                    //     return fail_definition("Creating top level identifier failed", location, true);
                     
-                    auto popped_context = pop_context();
+                    // auto popped_context = pop_context();
 
-                    // This means a syntax error
-                    if (!popped_context)
-                        return fail_definition("Creating top level definition body failed", location);
+                    // // This means a syntax error
+                    // if (!popped_context)
+                    //     return fail_definition("Creating top level definition body failed", location);
 
-                    assert(popped_context == definition && "context stack not returned to correct state");
+                    // assert(popped_context == definition && "context stack not returned to correct state");
 
-                    log("Parsed let definition", LogLevel::debug_extra);
-                    return definition;
+                    // log("Parsed let definition", LogLevel::debug_extra);
+                    // return definition;
                 }
 
                 get_token();
@@ -120,118 +121,118 @@ Definition* ParserLayer1::parse_top_level_let_definition() {
     }
 }
 
-Definition* ParserLayer1::parse_operator_definition() {
+Operator* ParserLayer1::parse_operator_definition() {
     auto location = current_token().location;
 
     assert (false && "not implemented");
 
-    switch (get_token().token_type) {
-        case TokenType::operator_t: {
-            std::string op_string = current_token().string_value();
+    // switch (get_token().token_type) {
+    //     case TokenType::operator_t: {
+    //         std::string op_string = current_token().string_value();
 
-            if (identifier_exists(op_string)) 
-                return fail_definition(
-                    "operator: " + op_string, location);
+    //         if (identifier_exists(op_string)) 
+    //             return fail_definition(
+    //                 "operator: " + op_string, location);
 
-            get_token();
+    //         get_token();
 
-            if (!is_assignment_operator(current_token()))
-                return fail_definition(
-                    "unexpected token: " + current_token().get_string() + 
-                    " in operator statement, expected \"=\"", location);
+    //         if (!is_assignment_operator(current_token()))
+    //             return fail_definition(
+    //                 "unexpected token: " + current_token().get_string() + 
+    //                 " in operator statement, expected \"=\"", location);
 
-            get_token();
+    //         get_token();
 
-            unsigned int arity = current_token().string_value() == "binary" ? 2 : 1;
+    //         unsigned int arity = current_token().string_value() == "binary" ? 2 : 1;
 
-            switch (current_token().token_type) {
-                case TokenType::binary:
-                    arity = 2;
-                    break;
-                case TokenType::unary: {
-                    arity = 1;
-                    get_token();
+    //         switch (current_token().token_type) {
+    //             case TokenType::binary:
+    //                 arity = 2;
+    //                 break;
+    //             case TokenType::unary: {
+    //                 arity = 1;
+    //                 get_token();
 
-                    Operator::Fixity fixity;
+    //                 Operator::Fixity fixity;
 
-                    switch (current_token().token_type) {
-                        case TokenType::prefix:
-                            fixity = Operator::Fixity::unary_prefix;
-                        case TokenType::postfix:
-                            fixity = Operator::Fixity::unary_postfix;
+    //                 switch (current_token().token_type) {
+    //                     case TokenType::prefix:
+    //                         fixity = Operator::Fixity::unary_prefix;
+    //                     case TokenType::postfix:
+    //                         fixity = Operator::Fixity::unary_postfix;
 
-                        default:
-                            return fail_definition(
-                                "unexpected token: " + current_token().get_string() + 
-                                " in unary operator statement, expected \"prefix|postfix\"", 
-                                current_token().location);
-                    }
-                }
-                default:
-                    return fail_definition(
-                        "unexpected token: " + current_token().get_string() + 
-                        " in operator statement, expected \"unary|binary\"", 
-                        current_token().location);
-            }
+    //                     default:
+    //                         return fail_definition(
+    //                             "unexpected token: " + current_token().get_string() + 
+    //                             " in unary operator statement, expected \"prefix|postfix\"", 
+    //                             current_token().location);
+    //                 }
+    //             }
+    //             default:
+    //                 return fail_definition(
+    //                     "unexpected token: " + current_token().get_string() + 
+    //                     " in operator statement, expected \"unary|binary\"", 
+    //                     current_token().location);
+    //         }
 
-            get_token();
+    //         get_token();
 
-            // UNARY OPERATOR
-            if (arity == 1) {
+    //         // UNARY OPERATOR
+    //         if (arity == 1) {
 
-                get_token(); // eat the fixity specifier
+    //             get_token(); // eat the fixity specifier
 
-                DefinitionBody body;
-                if (is_block_starter(current_token())) {
-                    body = parse_block_statement();
-                } else {
-                    body = parse_expression();
-                }
+    //             DefinitionBody body;
+    //             if (is_block_starter(current_token())) {
+    //                 body = parse_block_statement();
+    //             } else {
+    //                 body = parse_expression();
+    //             }
 
-                // auto definition = ast_store_->allocate_definition(
-                //     RT_Operator{op_string, body, {fixity}, true, location});
-                // parse_scope_->create_identifier(definition);
-                // log("parsed let statement", LogLevel::debug_extra);
-                // return definition;
-            }
+    //             // auto definition = ast_store_->allocate_definition(
+    //             //     RT_Operator{op_string, body, {fixity}, true, location});
+    //             // parse_scope_->create_identifier(definition);
+    //             // log("parsed let statement", LogLevel::debug_extra);
+    //             // return definition;
+    //         }
 
-            // BINARY OPERATOR
-            if (current_token().token_type != TokenType::number)
-                return fail_definition("unexpected token: " + current_token().get_string() + 
-                    " in unary operator statement, expected precedence specifier(positive integer)", 
-                    location);
+    //         // BINARY OPERATOR
+    //         if (current_token().token_type != TokenType::number)
+    //             return fail_definition("unexpected token: " + current_token().get_string() + 
+    //                 " in unary operator statement, expected precedence specifier(positive integer)", 
+    //                 location);
 
-            unsigned int precedence = std::stoi(current_token().string_value());
-            if (precedence >= Operator::MAX_PRECEDENCE)
-                return fail_definition("max operator precedence is " + 
-                    std::to_string(Operator::MAX_PRECEDENCE), location);
+    //         unsigned int precedence = std::stoi(current_token().string_value());
+    //         if (precedence >= Operator::MAX_PRECEDENCE)
+    //             return fail_definition("max operator precedence is " + 
+    //                 std::to_string(Operator::MAX_PRECEDENCE), location);
 
-            get_token(); // eat the precedence specifier
+    //         get_token(); // eat the precedence specifier
 
-            DefinitionBody body;
-            if (is_block_starter(current_token())) {
-                body = parse_block_statement();
-            } else {
-                body = parse_expression();
-            }
+    //         DefinitionBody body;
+    //         if (is_block_starter(current_token())) {
+    //             body = parse_block_statement();
+    //         } else {
+    //             body = parse_expression();
+    //         }
 
-            auto definition = ast_store_->allocate_definition(
-                RT_Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
-                        true, location});
-            parse_scope_->create_identifier(definition);
-            log("parsed let statement", LogLevel::debug_extra);
-            return definition;
+    //         auto definition = ast_store_->allocate_definition(
+    //             Operator{op_string, body, {Operator::Fixity::binary, precedence}, 
+    //                     true, location});
+    //         parse_scope_->create_identifier(definition);
+    //         log("parsed let statement", LogLevel::debug_extra);
+    //         return definition;
 
-        }
-        default:
-            return fail_definition("unexpected token: " + current_token().get_string() + 
-                " in operator statement", location);     
-    }
+    //     }
+    //     default:
+    //         return fail_definition("unexpected token: " + current_token().get_string() + 
+    //             " in operator statement", location);     
+    // }
 }
 
-DefinitionBody ParserLayer1::parse_definition_body() {
+LetDefinitionValue ParserLayer1::parse_definition_body() {
     return is_block_starter(current_token()) ?
-        DefinitionBody{parse_block_statement()} : DefinitionBody{parse_expression()};
+        LetDefinitionValue{parse_block_statement()} : LetDefinitionValue{parse_expression()};
 }
 
 Statement* ParserLayer1::parse_inner_let_definition() {

@@ -14,8 +14,8 @@ namespace Maps {
 
 using Log = LogInContext<LogContext::transform_stage>;
 
-bool run_transforms(CompilationState& state, RT_Scope& scope, 
-    std::span<RT_Definition* const> definitions) {
+bool run_transforms(CompilationState& state, Scope& scope, 
+    std::span<DefinitionBody* const> definitions) {
 
     for (auto definition: definitions) {
         if (!run_transforms(state, scope, *definition))
@@ -43,7 +43,7 @@ bool run_transforms(CompilationState& state, RT_Scope& scope,
 //     }
 // }
 
-bool run_transforms(CompilationState& state, RT_Scope& scope, RT_Definition& definition) {
+bool run_transforms(CompilationState& state, Scope& scope, DefinitionBody& definition) {
     if (definition.is_deleted()) {
         Log::debug_extra("Skipping transforms on deleted definition " + definition.name_string(), 
             definition.location());
@@ -102,4 +102,15 @@ bool run_transforms(CompilationState& state, RT_Scope& scope, RT_Definition& def
     return true;
 }
 
+bool run_transforms(CompilationState& state, Scope& scope, 
+    std::span<DefinitionHeader* const> definitions) {
+
+    for (auto header: definitions)
+        if (header->body_)
+            if (!run_transforms(state, scope, **header->body_))
+                return false;
+
+    return true;
 }
+
+} // namespace Maps

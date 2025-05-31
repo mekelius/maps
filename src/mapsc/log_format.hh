@@ -7,6 +7,7 @@ namespace Maps {
 
 constexpr std::string_view expression_prefix = "€";
 constexpr std::string_view statement_prefix = "£";
+constexpr std::string_view referable_node_prefix = "¦";
 
 } // namespace Maps
 

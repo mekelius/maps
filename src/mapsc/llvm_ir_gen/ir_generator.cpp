@@ -48,8 +48,6 @@
 using llvm::LLVMContext;
 using std::optional, std::nullopt, std::vector, std::tuple, std::get, std::get_if;
 using std::unique_ptr, std::make_unique;
-using Maps::Expression, Maps::Statement, Maps::Definition, Maps::ExpressionType, 
-    Maps::StatementType, Maps::PragmaStore, Maps::NO_SOURCE_LOCATION;
 using Maps::Helpers::capitalize;
 
 #define BAD_STATEMENT_TYPE StatementType::user_error:\
@@ -89,7 +87,7 @@ bool IR_Generator::run(Maps::Scopes scopes) {
 }
 
 bool IR_Generator::run(Maps::Scopes scopes, 
-    std::span<Maps::Definition* const> additional_definitions) {
+    std::span<Maps::DefinitionHeader* const> additional_definitions) {
     
     // Not allowed to run if we have already failed
     if (has_failed_)
@@ -197,7 +195,7 @@ bool IR_Generator::verify_module() {
     return (!llvm::verifyModule(*module_, errs_));
 }
 
-bool IR_Generator::handle_global_functions(const Maps::RT_Scope& scope) {
+bool IR_Generator::handle_global_functions(const Maps::Scope& scope) {
     for (auto definition: scope) {
         if (!handle_global_definition(*definition))
             return false;
@@ -207,17 +205,21 @@ bool IR_Generator::handle_global_functions(const Maps::RT_Scope& scope) {
 }
 
 std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
-    const Maps::Definition& definition) {
-    
-    Log::debug_extra("Generating ir for " + definition.name_string(), definition.location());
+    const Maps::DefinitionHeader& definition) {
+
+    if (!definition.body_)
+        assert(false && "not implemented");
+
+    Log::debug_extra("Generating ir for " + definition.name_string(), 
+        definition.location());
 
     if (definition.get_type()->is_function())
         return handle_function(definition);
 
-    auto definition_body = definition.const_body();
+    auto definition_body = (*definition.body_)->value_;
 
     if (const Expression* const* expression = 
-            std::get_if<const Maps::Expression*>(&definition_body))
+            std::get_if<Maps::Expression*>(&definition_body))
         return wrap_value_in_function(definition.name_string(), **expression);
 
     fail("In IR_Generator::handle_global_definition: definition didn't have a function type but wasn't an expression");
@@ -256,7 +258,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
 }
 
 std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
-    const Maps::Definition& definition) {
+    const Maps::DefinitionHeader& definition) {
     
     assert(definition.get_type()->is_function() && 
         "IR_Generator::handle function called with a non-function definition");
@@ -296,7 +298,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
             fail("IR gen for " + definition.name_string() + " failed");
             return false;
         }
-    }, definition.const_body());
+    }, (*definition.body_)->value_);
 
     if (!success)
         return nullopt;

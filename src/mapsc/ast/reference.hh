@@ -8,34 +8,28 @@
 
 namespace Maps {
 
-class Definition;
+class DefinitionHeader;
 struct SourceLocation;
 class Type;
 class AST_Store;
+class Operator;
 
+std::optional<Expression*> create_reference(AST_Store& store, const Scope* scope, 
+    const std::string& name, const SourceLocation& location);
 Expression* create_reference(AST_Store& store, 
-    Definition* callee, const SourceLocation& location);
+    DefinitionHeader* callee, const SourceLocation& location);
 Expression* create_type_reference(AST_Store& store, 
     const Type* type, const SourceLocation& location);
 Expression create_operator_reference(
-    Definition* callee, const SourceLocation& location);
+    Operator* callee, const SourceLocation& location);
 Expression* create_operator_reference(AST_Store& store, 
-    Definition* callee, const SourceLocation& location);
-
-template <class T>
-std::optional<Expression*> create_reference(AST_Store& store, const Scope_T<T> scope, 
-    const std::string& name, const SourceLocation& location) {
-        if (auto definition = scope.get_identifier(name))
-            return create_reference(store, *definition, location);
-
-        return std::nullopt;
-    }
+    Operator* callee, const SourceLocation& location);
 
 std::optional<Expression*> create_type_operator_reference(AST_Store& store, 
     const std::string& name, const Type* type, const SourceLocation& location);
 
-void convert_to_reference(Expression& expression, Definition* callee);
-void convert_to_operator_reference(Expression& expression, Definition* callee);
+void convert_to_reference(Expression& expression, DefinitionHeader* callee);
+void convert_to_operator_reference(Expression& expression, Operator* callee);
 [[nodiscard]] bool convert_by_value_substitution(Expression& expression);
 
 } // namespace Maps

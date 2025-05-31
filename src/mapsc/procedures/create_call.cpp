@@ -16,7 +16,7 @@ namespace Maps {
 using Log = LogInContext<LogContext::type_checks>;
 
 // return values are: <bool success, bool partial, bool is done, const Type* return_type>
-std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState& state, const Definition* callee, 
+std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState& state, const DefinitionHeader* callee, 
     std::vector<Expression*>& args, const SourceLocation& location) {
 
     Log::debug_extra("Processing argument list for a call to " + callee->name_string(), location);

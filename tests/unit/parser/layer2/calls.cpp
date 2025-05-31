@@ -17,13 +17,13 @@ using namespace std;
 
 namespace {
 
-tuple<CompilationState, shared_ptr<AST_Store>, RT_Scope, unique_ptr<TypeStore>> setup() {
+tuple<CompilationState, shared_ptr<AST_Store>, Scope, unique_ptr<TypeStore>> setup() {
     auto [state, _0, types] = CompilationState::create_test_state();
 
     return {
         std::move(state),
         state.ast_store_,
-        RT_Scope{},
+        Scope{},
         std::move(types)
     };
 }
@@ -49,7 +49,7 @@ TEST_CASE("Should be able to call a lambda function") {
 
 //     auto [state, _0, types] = CompilationState::create_test_state();
 //     AST_Store& ast_store = *state.ast_store_;
-//     RT_Scope scope{};
+//     Scope scope{};
 
 //     const FunctionType* IntString = types->get_function_type(&String, {&Int}, false);
 
@@ -73,7 +73,7 @@ TEST_CASE("Should be able to call a lambda function") {
 
 //     auto [state, _0, types] = CompilationState::create_test_state();
 //     AST_Store& ast_store = *state.ast_store_;
-//     RT_Scope scope{};
+//     Scope scope{};
 
 //     const FunctionType* IntString = types->get_function_type(&String, {&Int}, false);
 

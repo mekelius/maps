@@ -233,7 +233,7 @@ void TermedExpressionParser::reduce_to_partial_binop_call_left() {
 
     auto call =
         create_partial_binop_call(*compilation_state_,
-            op->reference_value(), missing_argument, rhs, expression_->location);
+            op->operator_reference_value(), missing_argument, rhs, expression_->location);
     
     if (!call)
         return fail("Creating call expression failed", op->location);
@@ -251,7 +251,7 @@ void TermedExpressionParser::reduce_to_partial_binop_call_right() {
 
     auto call =
         create_partial_binop_call(*compilation_state_,
-            op->reference_value(), lhs, missing_argument, expression_->location);
+            op->operator_reference_value(), lhs, missing_argument, expression_->location);
     
     if (!call)
         return fail("Creating call expression failed", op->location);
@@ -838,56 +838,58 @@ void TermedExpressionParser::partially_applied_minus_state() {
 
 // Basically we just unwrap it
 void TermedExpressionParser::partial_binop_call_right_state() {
-    if (at_expression_end())
-        return;
+    assert(false && "not updated");
 
-    auto location = current_term()->location;
-    auto [callee, args] = current_term()->call_value();
-    assert(callee->is_operator() 
-        && "initial_partial_binop_call_right_state called with not an operator call");
-    assert(dynamic_cast<Operator*>(callee)->is_binary() && 
-        "initial_partial_binop_call_right_state called with not a binary operator call");
+    // if (at_expression_end())
+    //     return;
 
-    assert(((args.size() == 2 && args.at(1)->expression_type == ExpressionType::missing_arg) || 
-            args.size()) == 1 && 
-                "initial_partial_binop_call_right_state called with invalid args");
+    // auto location = current_term()->location;
+    // auto [callee, args] = current_term()->call_value();
+    // assert(callee->is_operator() 
+    //     && "initial_partial_binop_call_right_state called with not an operator call");
+    // assert(dynamic_cast<Operator*>(callee)->is_binary() && 
+    //     "initial_partial_binop_call_right_state called with not a binary operator call");
 
-    // auto precedence = dynamic_cast<Operator*>(callee)->precedence();
+    // assert(((args.size() == 2 && args.at(1)->expression_type == ExpressionType::missing_arg) || 
+    //         args.size()) == 1 && 
+    //             "initial_partial_binop_call_right_state called with invalid args");
 
-    switch (peek()->expression_type) {
-        case ExpressionType::binary_operator_reference:
-            convert_to_partial_call(*current_term()); // treat it as a value
-            shift();
-            return post_binary_operator_state();
+    // // auto precedence = dynamic_cast<Operator*>(callee)->precedence();
 
-        case ExpressionType::postfix_operator_reference:
-            convert_to_partial_call(*current_term());
-            shift();
-            return reduce_postfix_operator(); // It could be an operator that can act on this partial call
+    // switch (peek()->expression_type) {
+    //     case ExpressionType::binary_operator_reference:
+    //         convert_to_partial_call(*current_term()); // treat it as a value
+    //         shift();
+    //         return post_binary_operator_state();
 
-        case ExpressionType::partial_binop_call_left:
-            return partial_binop_call_standoff_state();
+    //     case ExpressionType::postfix_operator_reference:
+    //         convert_to_partial_call(*current_term());
+    //         shift();
+    //         return reduce_postfix_operator(); // It could be an operator that can act on this partial call
 
-        case GUARANTEED_VALUE:
-        case ExpressionType::call:
-        case ExpressionType::reference:
-        case ExpressionType::partially_applied_minus:
-        case ExpressionType::prefix_operator_reference:
-        case ExpressionType::minus_sign:
-            break;
+    //     case ExpressionType::partial_binop_call_left:
+    //         return partial_binop_call_standoff_state();
 
-        case TYPE_DECLARATION_TERM:
-            assert(false && "type declarations not implemented here");
-        case NOT_ALLOWED_IN_LAYER2:
-        default:
-            return fail("Unexpected " + peek()->log_message_string() + ", expected a value",
-            peek()->location);
-    }
+    //     case GUARANTEED_VALUE:
+    //     case ExpressionType::call:
+    //     case ExpressionType::reference:
+    //     case ExpressionType::partially_applied_minus:
+    //     case ExpressionType::prefix_operator_reference:
+    //     case ExpressionType::minus_sign:
+    //         break;
 
-    pop_term();
-    parse_stack_.push_back(args.at(0));
-    parse_stack_.push_back(create_operator_reference(*ast_store_, callee, location));
-    return post_binary_operator_state();
+    //     case TYPE_DECLARATION_TERM:
+    //         assert(false && "type declarations not implemented here");
+    //     case NOT_ALLOWED_IN_LAYER2:
+    //     default:
+    //         return fail("Unexpected " + peek()->log_message_string() + ", expected a value",
+    //         peek()->location);
+    // }
+
+    // pop_term();
+    // parse_stack_.push_back(args.at(0));
+    // parse_stack_.push_back(create_operator_reference(*ast_store_, callee, location));
+    // return post_binary_operator_state();
 }
 
 void TermedExpressionParser::partial_binop_call_left_state() {
@@ -1114,17 +1116,17 @@ void TermedExpressionParser::reduce_binop_call() {
     }
 
     // TODO: check types here
-    assert(std::holds_alternative<Definition*>(operator_->value) && 
+    assert(std::holds_alternative<DefinitionHeader*>(operator_->value) && 
         "TermedExpressionParser::reduce_operator_left called with a call stack \
 where operator didn't hold a reference to a definition");
 
     auto reduced = create_call(*compilation_state_,
-        std::get<Definition*>(operator_->value), {lhs, rhs}, lhs->location);
+        std::get<DefinitionHeader*>(operator_->value), {lhs, rhs}, lhs->location);
 
     if (!reduced)
         return fail("Creating a binary operator call failed", rhs->location);
 
-    (*reduced)->value = CallExpressionValue{std::get<Definition*>(operator_->value), 
+    (*reduced)->value = CallExpressionValue{std::get<DefinitionHeader*>(operator_->value), 
         std::vector<Expression*>{lhs, rhs}};
 
     parse_stack_.push_back(*reduced);
@@ -1310,7 +1312,7 @@ void TermedExpressionParser::substitute_known_value_reference(Expression* known_
 }
 
 
-bool TermedExpressionParser::is_acceptable_next_arg(Definition* callee, 
+bool TermedExpressionParser::is_acceptable_next_arg(DefinitionHeader* callee, 
     const std::vector<Expression*>& args/*, Expression* next_arg*/) {
     if (args.size() >= callee->get_type()->arity())
         return false;
@@ -1353,7 +1355,7 @@ void TermedExpressionParser::call_expression_state() {
     }
 
     auto call_expression = create_call(*compilation_state_,
-        std::get<Definition*>(reference->value), std::vector<Expression*>{args}, reference->location);
+        std::get<DefinitionHeader*>(reference->value), std::vector<Expression*>{args}, reference->location);
     
     if (!call_expression)
         return Log::error("Creating call expression failed", reference->location);
@@ -1424,7 +1426,7 @@ void TermedExpressionParser::deferred_call_state() {
 }
 
 Expression* TermedExpressionParser::handle_arg_state(
-    Definition* callee, const std::vector<Expression*>& args) { 
+    DefinitionHeader* callee, const std::vector<Expression*>& args) { 
     
     switch (current_term()->expression_type) {
         case ExpressionType::layer2_expression:
@@ -1454,13 +1456,16 @@ Expression* TermedExpressionParser::handle_arg_state(
 }
 
 Expression* TermedExpressionParser::binary_minus_ref(SourceLocation location) {
-    return create_operator_reference(
-        *ast_store_, compilation_state_->special_definitions_.binary_minus, location);
+    assert(false && "not updated");
+    // return create_operator_reference(
+    //     *ast_store_, compilation_state_->special_definitions_.binary_minus, location);
 }
 
 Expression* TermedExpressionParser::unary_minus_ref(SourceLocation location) {
-    return create_operator_reference(
-        *ast_store_, compilation_state_->special_definitions_.unary_minus, location);
+    assert(false && "not updated");
+
+    // return create_operator_reference(
+    //     *ast_store_, compilation_state_->special_definitions_.unary_minus, location);
 }
 
 } // namespace Maps

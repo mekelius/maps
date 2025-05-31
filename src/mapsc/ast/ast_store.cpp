@@ -9,7 +9,10 @@ bool AST_Store::empty() const {
 }
 
 size_t AST_Store::size() const {
-    return definitions_.size() + expressions_.size() + statements_.size();
+    return definition_headers_.size() + 
+        definition_bodies_.size() + 
+        expressions_.size() + 
+        statements_.size();
 }
 
 void AST_Store::delete_expression(Expression* expression) {
@@ -36,18 +39,36 @@ Statement* AST_Store::allocate_statement(const Statement&& statement) {
     return statements_.back().get();
 }
 
-RT_Definition* AST_Store::allocate_definition(const RT_Definition&& definition) {
-    definitions_.push_back(std::make_unique<RT_Definition>(definition));
-    return definitions_.back().get();
+DefinitionHeader* AST_Store::allocate_definition(const DefinitionHeader&& definition) {
+    definition_headers_.push_back(std::make_unique<DefinitionHeader>(definition));
+    return definition_headers_.back().get();
 }
 
-RT_Definition* AST_Store::allocate_operator(const RT_Operator&& op) {
-    definitions_.push_back(std::make_unique<RT_Operator>(op));
-    return definitions_.back().get();
+DefinitionHeader* AST_Store::allocate_definition(const DefinitionHeader&& header, const LetDefinitionValue& body) {
+    auto allocated_header = allocate_definition(std::move(header));
+
+    definition_bodies_.push_back(std::make_unique<DefinitionBody>(allocated_header, body));
+    auto allocated_body = definition_bodies_.back().get();
+
+    allocated_header->body_ = allocated_body;
+    allocated_body->header_ = allocated_header;
+
+    return allocated_header;
 }
 
-RT_Scope* AST_Store::allocate_scope(const RT_Scope&& scope) {
-    scopes_.push_back(std::make_unique<RT_Scope>(scope));
+DefinitionHeader* AST_Store::allocate_definition_body(DefinitionHeader* header, const LetDefinitionValue& body) {
+    definition_bodies_.push_back(std::make_unique<DefinitionBody>(header, body));
+    auto allocated_body = definition_bodies_.back().get();
+
+    allocated_body->header_ = header;
+    header->body_ = allocated_body;
+
+    return header;
+}
+
+
+Scope* AST_Store::allocate_scope(const Scope&& scope) {
+    scopes_.push_back(std::make_unique<Scope>(scope));
     return scopes_.back().get();
 }
 

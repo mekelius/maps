@@ -33,8 +33,8 @@ using std::unique_ptr, std::make_unique, std::make_optional, std::tuple, std::op
 
 namespace Maps {
 
-optional<Definition*> REPL::create_repl_wrapper(CompilationState& state, 
-    RT_Definition* top_level_definition) {
+optional<DefinitionBody*> REPL::create_repl_wrapper(CompilationState& state, Scope& global_scope, 
+    DefinitionBody* top_level_definition) {
     
     std::cout << "Creating REPL wrapper...\n";
 
@@ -100,16 +100,16 @@ optional<Definition*> REPL::create_repl_wrapper(CompilationState& state,
             return nullopt;
         }
 
-        return state.ast_store_->allocate_definition(
-            RT_Definition{options_.repl_wrapper_name, *eval, true, location});
+        return *state.ast_store_->allocate_definition(
+            DefinitionHeader{options_.repl_wrapper_name, &Hole, &global_scope, true, location}, *eval)->body_;
     }
 
     auto definition = state.ast_store_->allocate_definition(
-        RT_Definition{options_.repl_wrapper_name, *eval_and_print, true, location});
+        DefinitionHeader{options_.repl_wrapper_name, &Hole, &global_scope, true, location}, *eval_and_print);
 
     // SimpleTypeChecker{}.run(state, {}, std::array<RT_Definition* const, 1>{definition});
 
-    return definition;    
+    return *definition->body_;
 }
 
 bool REPL::compile_and_run(std::unique_ptr<llvm::Module> module_, const std::string& entry_point) {
@@ -137,7 +137,7 @@ std::string REPL::eval_type(std::istream& input_stream) {
 }
 
 bool REPL::run_compilation_pipeline(CompilationState& state, 
-    RT_Scope& global_scope, std::istream& source) {
+    Scope& global_scope, std::istream& source) {
 
     // ---------------------------------- LAYER1 ----------------------------------------
 
@@ -153,7 +153,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (!layer1_success && !options_.ignore_errors)
         return false;
 
-    debug_print(REPL_Stage::layer1, global_scope, *top_level_definition);
+    debug_print(REPL_Stage::layer1, global_scope, (*top_level_definition)->header_);
 
     if (options_.stop_after == REPL_Stage::layer1)
         return true;
@@ -165,7 +165,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
             !options_.ignore_errors)
         return false;
 
-    debug_print(REPL_Stage::type_name_resolution, global_scope, *top_level_definition);
+    debug_print(REPL_Stage::type_name_resolution, global_scope, (*top_level_definition)->header_);
 
     // if (!la(possible_binding_type_declarations) && !options_.ignore_errors)
     //     return false;
@@ -174,7 +174,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
             !options_.ignore_errors)
         return false;
 
-    debug_print(REPL_Stage::name_resolution, global_scope, *top_level_definition);
+    debug_print(REPL_Stage::name_resolution, global_scope, (*top_level_definition)->header_);
 
 
     // ----------------------------------- LAYER2 ----------------------------------------
@@ -182,7 +182,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     if (!run_layer2(state, unparsed_termed_expressions) && !options_.ignore_errors)
         return false;
 
-    debug_print(REPL_Stage::layer2, global_scope, *top_level_definition);
+    debug_print(REPL_Stage::layer2, global_scope, (*top_level_definition)->header_);
 
     if (options_.stop_after == REPL_Stage::layer2)
         return true;
@@ -195,7 +195,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         return false;
     }
 
-    debug_print(REPL_Stage::transform_stage, global_scope, *top_level_definition);
+    debug_print(REPL_Stage::transform_stage, global_scope, (*top_level_definition)->header_);
 
 
     // ----------------------------- CREATE REPL WRAPPER ---------------------------------
@@ -205,10 +205,10 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         return true;
     }
 
-    auto repl_wrapper = create_repl_wrapper(state, *top_level_definition);
+    auto repl_wrapper = create_repl_wrapper(state, global_scope, *top_level_definition);
 
     if (!repl_wrapper) {
-        debug_print(REPL_Stage::pre_ir, global_scope, *top_level_definition);
+        debug_print(REPL_Stage::pre_ir, global_scope, (*top_level_definition)->header_);
         std::cout << "ERROR: creating repl wrapper failed" << std::endl;
         if (!options_.ignore_errors)
             return false;
@@ -223,7 +223,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     }
 
     debug_print(REPL_Stage::pre_ir, global_scope, 
-        std::array<const Definition*, 2>{*top_level_definition, *repl_wrapper});
+        std::array<const DefinitionHeader*, 2>{(*top_level_definition)->header_, (*repl_wrapper)->header_});
 
     if (options_.stop_after == REPL_Stage::pre_ir || !options_.eval)
         return true;
@@ -240,7 +240,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
     }
 
     bool ir_success = generator.run({std::array{&global_scope}}, 
-        std::array<Definition*, 2>{*top_level_definition, *repl_wrapper});
+        std::array{(*top_level_definition)->header_, (*repl_wrapper)->header_});
 
     debug_print(REPL_Stage::ir, *module_);
 
@@ -260,7 +260,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
 }
 
 
-Layer1Result REPL::run_layer1(CompilationState& state, RT_Scope& global_scope, std::istream& source) {
+Layer1Result REPL::run_layer1(CompilationState& state, Scope& global_scope, std::istream& source) {
     return run_layer1_eval(state, global_scope, source);
 }
 
@@ -269,11 +269,12 @@ bool REPL::run_layer2(CompilationState& state, std::vector<Expression*> unparsed
 }
 
 bool REPL::run_transforms(CompilationState& state, 
-    RT_Scope& scope, optional<RT_Definition* const> top_level_definition) {
+    Scope& scope, optional<DefinitionBody* const> top_level_definition) {
 
     for (auto definition: scope) {
-        if (!Maps::concretize(state, *definition))
-            return false;
+        if (*definition->body_)
+            if (!Maps::concretize(state, **definition->body_))
+                return false;
     }
 
     if (!Maps::run_transforms(state, scope, scope.identifiers_in_order_))
@@ -289,7 +290,7 @@ bool REPL::run_transforms(CompilationState& state,
 }
 
 bool REPL::insert_global_cleanup(Maps::CompilationState& state, 
-    Maps::RT_Scope& scope, Maps::RT_Definition& entry_point) {
+    Maps::Scope& scope, Maps::DefinitionBody& entry_point) {
 
     return Maps::insert_cleanup(state, scope, entry_point);
 }

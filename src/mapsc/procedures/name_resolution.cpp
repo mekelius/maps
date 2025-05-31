@@ -26,7 +26,7 @@ using Log = LogInContext<LogContext::name_resolution>;
 
 namespace {
 
-optional<Definition*> lookup_identifier(std::span<const CT_Scope* const> ct_scopes, 
+optional<DefinitionHeader*> lookup_identifier(std::span<const Scope* const> ct_scopes, 
     const_Scopes rt_scopes, const std::string& name) {
     
     for (auto scope: ct_scopes) {
@@ -44,13 +44,13 @@ optional<Definition*> lookup_identifier(std::span<const CT_Scope* const> ct_scop
     return nullopt;
 }
 
-optional<Definition*> lookup_identifier(const CT_Scope& ct_scope, const_Scopes rt_scopes, 
+optional<DefinitionHeader*> lookup_identifier(const Scope& ct_scope, const_Scopes rt_scopes, 
     const std::string& name) {
 
     return lookup_identifier(std::array{&ct_scope}, rt_scopes, name);
 }
 
-optional<Definition*> lookup_identifier(CompilationState& state, const_Scopes rt_scopes, 
+optional<DefinitionHeader*> lookup_identifier(CompilationState& state, const_Scopes rt_scopes, 
     const std::string& name) {
 
     return lookup_identifier(*state.builtins_, rt_scopes, name);
@@ -85,7 +85,13 @@ bool resolve_operator(CompilationState& state, const_Scopes scopes,
         return false;
     }
 
-    convert_to_operator_reference(*expression, *definition);
+    if (!(*definition)->is_operator()) {
+        Log::compiler_error("resolve_operator called with non-operator: " + (*definition)->name_string(), 
+            expression->location);
+        return false;
+    }
+
+    convert_to_operator_reference(*expression, dynamic_cast<Operator*>(*definition));
     return true;
 }
 
@@ -144,7 +150,7 @@ bool resolve_identifiers(CompilationState& state, const_Scopes scopes,
     return true;
 }
 
-bool resolve_identifiers(CompilationState& state, const RT_Scope& scope,
+bool resolve_identifiers(CompilationState& state, const Scope& scope,
     std::vector<Expression*>& unresolved_identifiers) {
 
     return resolve_identifiers(state,

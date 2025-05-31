@@ -6,9 +6,9 @@
 namespace Maps {
 
 class CompilationState;
-class Definition;
+class DefinitionBody;
 
-bool insert_cleanup(CompilationState& state, RT_Scope& scope, Definition& definition);
+bool insert_cleanup(CompilationState& state, Scope& scope, DefinitionBody& definition);
 
 }
 

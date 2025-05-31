@@ -13,6 +13,7 @@
 #include "mapsc/types/type.hh"
 
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/definition_body.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/ast_node.hh"
 
@@ -25,7 +26,7 @@ namespace Maps {
 using Log = LogInContext<LogContext::layer4>;
 
 
-bool type_check(RT_Definition& definition) {
+bool type_check(DefinitionBody& definition) {
     return std::visit(overloaded{
         [](Expression* expression) { return SimpleTypeChecker{}.visit_expression(expression); },
         [](auto) { return true; }
@@ -53,7 +54,7 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
 
 }
 
-bool SimpleTypeChecker::visit_definition(RT_Definition* definition) {
+bool SimpleTypeChecker::visit_definition(DefinitionBody* definition) {
     return std::visit(overloaded{
         [](Error) { return false; },
         [](External) { return true; },
@@ -86,19 +87,21 @@ bool SimpleTypeChecker::visit_statement(Statement* statement) {
 }
 
 bool SimpleTypeChecker::run(CompilationState& state, Scopes scopes, 
-    std::span<RT_Definition* const> extra_definitions) {
+    std::span<DefinitionBody* const> extra_definitions) {
 
-    for (auto scope: scopes) {
-        for (auto definition: scope->identifiers_in_order_) {
-            if (!walk_definition(*this, definition))
-                return false;
-        }
-    }
+    assert(false && "not updated");
 
-    for (auto definition: extra_definitions) {
-        if (!walk_definition(*this, definition))
-            return false;
-    }
+    // for (auto scope: scopes) {
+    //     for (auto definition: scope->identifiers_in_order_) {
+    //         if (!walk_definition(*this, definition))
+    //             return false;
+    //     }
+    // }
+
+    // for (auto definition: extra_definitions) {
+    //     if (!walk_definition(*this, definition))
+    //         return false;
+    // }
 
     return true;
 }

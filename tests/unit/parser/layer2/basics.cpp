@@ -12,13 +12,13 @@
 using namespace Maps;
 using namespace std;
 
-tuple<CompilationState, shared_ptr<AST_Store>, RT_Scope> setup() {
+tuple<CompilationState, shared_ptr<AST_Store>, Scope> setup() {
     auto [state, _0, _1] = CompilationState::create_test_state();
 
     return {
         std::move(state),
         state.ast_store_,
-        RT_Scope{}
+        Scope{}
     };
 }
 
@@ -63,7 +63,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
 
 TEST_CASE("TermedExpressionParser should handle haskell-style call expressions") {
     auto [state, _0, types] = CompilationState::create_test_state();
-    RT_Scope globals{};
+    Scope globals{};
     AST_Store& ast = *state.ast_store_;
 
     Expression* expr = create_layer2_expression_testing(ast, {}, TSL);
@@ -71,7 +71,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     SUBCASE("1 arg") {    
         const Type* function_type = types->get_function_type(&Void, array{&String}, true);
 
-        RT_Definition function{"test_f", External{}, function_type, true, TSL};
+        DefinitionBody function{"test_f", External{}, function_type, true, TSL};
         globals.create_identifier(&function);
 
         Expression* id = create_reference(ast, &function, TSL);
@@ -93,7 +93,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Type* function_type = types->get_function_type(&Void, 
             array{&String, &String, &String, &String}, true);
         
-        RT_Definition function{"test_f", External{}, function_type, true, TSL};
+        DefinitionBody function{"test_f", External{}, function_type, true, TSL};
         Expression* id{create_reference(ast, &function, TSL)};
         id->type = function_type;
     
@@ -123,7 +123,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     SUBCASE("If the call is not partial, the call expression's type should be the return type") {
         const Type* function_type = types->get_function_type(&NumberLiteral, std::array{&String}, true);
         
-        RT_Definition function{"test_f", External{}, function_type, true, TSL};
+        DefinitionBody function{"test_f", External{}, function_type, true, TSL};
         Expression* ref = create_reference(ast, &function, TSL);
 
         Expression* arg1 = create_string_literal(ast, "", TSL);
@@ -141,7 +141,7 @@ TEST_CASE("Should perform known value substitution") {
     auto [state, ast_store, scope] = setup();
 
     auto known_val = create_known_value(state, 34, &Int, TSL);
-    auto known_val_def = ast_store->allocate_definition(RT_Definition{"x", *known_val, true, TSL});
+    auto known_val_def = ast_store->allocate_definition(DefinitionHeader{"x", &Hole, TSL}, {*known_val});
 
     auto known_val_ref = create_reference(*ast_store, known_val_def, TSL);
 

@@ -16,7 +16,6 @@ namespace Maps {
     
 class Type; 
 class FunctionType; 
-class Definition;
 
 namespace LLVM_IR {
 
@@ -33,7 +32,7 @@ public:
         return suffix;
     }
 
-    static constexpr std::string get_suffix(const Maps::Definition& definition) {
+    static constexpr std::string get_suffix(const Maps::DefinitionHeader& definition) {
         auto type = definition.get_type();
 
         if (!type->is_function())
@@ -43,43 +42,16 @@ public:
     }
 
     // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
-    std::optional<llvm::FunctionCallee> get(const Maps::Definition& definition) const;
+    std::optional<llvm::FunctionCallee> get(const Maps::DefinitionHeader& definition) const;
 
     bool insert(const std::string& name, llvm::FunctionCallee function_callee);
-    bool insert(const Maps::Definition&, llvm::FunctionCallee function_callee);
+    bool insert(const Maps::DefinitionHeader&, llvm::FunctionCallee function_callee);
 
     bool insert_overloaded(const std::string& name, const Maps::FunctionType& type, 
         llvm::FunctionCallee function_callee);
-    bool insert_overloaded(const Maps::Definition& definition, llvm::FunctionCallee function_callee);
+    bool insert_overloaded(const Maps::DefinitionHeader& definition, llvm::FunctionCallee function_callee);
 
     std::map<std::string, llvm::FunctionCallee> functions_{};
-};
-
-class SimpleFunctionStore {
-public:
-    // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
-    std::optional<llvm::FunctionCallee> get(const std::string& name, 
-        bool log_error_on_fail = true) const;
-    bool insert(const std::string& name, llvm::FunctionCallee function_callee);
-
-    std::map<std::string, llvm::FunctionCallee> functions_{};
-};
-
-class PolymorphicFunctionStore {
-    using Signature = std::string;
-
-public:
-    // std::optional<llvm::Function*> get_function(const std::string& name, AST::Type* function_type) const;
-    std::optional<llvm::FunctionCallee> get(const std::string& name, 
-        const Maps::FunctionType& maps_type, bool log_error_on_fail = true) const;
-    bool insert(const std::string& name, const Maps::FunctionType& maps_type, 
-        llvm::FunctionCallee function_callee);
-
-// private:
-    using InnerMapType = std::map<Signature, llvm::FunctionCallee>;
-
-    std::map<std::string, std::unique_ptr<InnerMapType>>
-        functions_ = std::map<std::string, std::unique_ptr<InnerMapType>>();
 };
 
 } // namespace LLVM_IR

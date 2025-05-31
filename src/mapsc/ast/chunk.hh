@@ -6,11 +6,11 @@
 namespace Maps {
     
 class Pragma;
-class Definition;
+class DefinitionHeader;
 struct Expression;
 struct Statement;
 
-using Chunk = std::variant<std::monostate, Definition*, Expression*, Statement*, Pragma*>;
+using Chunk = std::variant<std::monostate, DefinitionHeader*, Expression*, Statement*, Pragma*>;
 
 } // namespace Maps
 

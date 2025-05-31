@@ -13,13 +13,14 @@
 
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/definition_body.hh"
 
 
 namespace Maps {
 
 using Log = LogInContext<LogContext::inline_>;
 
-bool inline_and_substitute(RT_Definition& definition) {
+bool inline_and_substitute(DefinitionBody& definition) {
     return std::visit(overloaded{
         [](auto) { return true; }
     }, definition.body());
@@ -29,11 +30,12 @@ bool inline_call(Expression& expression) {
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
 
+    assert(false && "not updated");
     auto [callee, args] = expression.call_value();
-    return inline_call(expression, *callee);
+    // return inline_call(expression, *callee);
 }
 
-bool inline_call(Expression& expression, const Definition& definition) {
+bool inline_call(Expression& expression, const DefinitionBody& definition) {
     assert(expression.expression_type == ExpressionType::call && 
         "inline_call called with not a call");
 
@@ -54,9 +56,9 @@ bool inline_call(Expression& expression, const Definition& definition) {
 namespace {
 
 // this should be ran after all the checks are cleared
-[[nodiscard]] bool perform_substitution(Expression& expression, const Definition& callee) {
-    auto callee_body = callee.const_body();
-    if (auto inner_expression = std::get_if<const Expression*>(&callee_body)) {
+[[nodiscard]] bool perform_substitution(Expression& expression, const DefinitionBody& callee) {
+    auto callee_body = callee.body();
+    if (auto inner_expression = std::get_if<Expression*>(&callee_body)) {
         expression = **inner_expression;
         return true;   
     }
@@ -70,18 +72,20 @@ bool substitute_value_reference(Expression& expression) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
 
+    assert(false && "not updated");
+
     auto callee = expression.reference_value();
-    return substitute_value_reference(expression, *callee);
+    // return substitute_value_reference(expression, *callee);
 }
 
-bool substitute_value_reference(Expression& expression, const Definition& callee) {
+bool substitute_value_reference(Expression& expression, const DefinitionBody& callee) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
 
-    if (callee.is_undefined()) {
-        Log::error("\"" + callee.name_string() + "\" is undefined", expression.location);
-        return false;
-    }
+    // if (callee.is_undefined()) {
+    //     Log::error("\"" + callee.name_string() + "\" is undefined", expression.location);
+    //     return false;
+    // }
 
     // check that the types match, or try to cast
     auto callee_type = callee.get_type();

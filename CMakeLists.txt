@@ -55,9 +55,11 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/ast/expression_properties.cpp
     src/mapsc/ast/statement.cpp
     src/mapsc/ast/definition.cpp
+    src/mapsc/ast/definition_body.cpp
     src/mapsc/ast/ast_store.cpp
     src/mapsc/ast/identifier.cpp
     src/mapsc/ast/reference.cpp
+    src/mapsc/ast/scope.cpp
     src/mapsc/ast/value.cpp
     src/mapsc/ast/layer2_expression.cpp
     src/mapsc/ast/misc_expression.cpp
@@ -103,11 +105,11 @@ target_link_libraries(mapsc_frontend libmaps)
 
 # ------------------------- DSIR -------------------------
 
-add_library(dsir OBJECT
-    src/mapsc/dsir/parse_dsir.cpp
-)
+# add_library(dsir OBJECT
+#     src/mapsc/dsir/parse_dsir.cpp
+# )
 
-target_link_libraries(dsir mapsc_frontend)
+# target_link_libraries(dsir mapsc_frontend)
 
 # ------------------------ IR_GEN -------------------------
 
@@ -218,18 +220,17 @@ target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
 
 # --------------------- DSIR UNIT TESTS -----------------------
 
-add_executable(dsir_unit_tests
-    tests/unit/tests_main.cpp
+# add_executable(dsir_unit_tests
+#     tests/unit/tests_main.cpp
 
-    tests/unit/dsir/basics.cpp
-)
+#     tests/unit/dsir/basics.cpp
+# )
 
-set_property(TARGET dsir_unit_tests 
-    PROPERTY EXCLUDE_FROM_ALL True)
+# set_property(TARGET dsir_unit_tests 
+#     PROPERTY EXCLUDE_FROM_ALL True)
 
-target_link_libraries(dsir_unit_tests mapsc_frontend dsir)
-target_include_directories(dsir_unit_tests SYSTEM PRIVATE doctest tests)
-
+# target_link_libraries(dsir_unit_tests mapsc_frontend dsir)
+# target_include_directories(dsir_unit_tests SYSTEM PRIVATE doctest tests)
 
 # ------------------------ E2E TESTS ------------------------
 

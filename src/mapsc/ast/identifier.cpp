@@ -5,7 +5,7 @@
 
 namespace Maps {
 
-Expression* create_identifier(AST_Store& store, RT_Scope* scope, const std::string& value, 
+Expression* create_identifier(AST_Store& store, Scope* scope, const std::string& value, 
     const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
@@ -13,7 +13,7 @@ Expression* create_identifier(AST_Store& store, RT_Scope* scope, const std::stri
     return expression;
 }
 
-Expression* create_operator_identifier(AST_Store& store, RT_Scope* scope, 
+Expression* create_operator_identifier(AST_Store& store, Scope* scope, 
     const std::string& value, const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(

@@ -12,7 +12,7 @@ const std::vector<Expression*>& Expression::terms() const {
     return std::get<TermedExpressionValue>(value).terms;
 }
 
-RT_Definition* Expression::termed_context() const {
+Scope* Expression::termed_context() const {
     assert(expression_type == ExpressionType::layer2_expression && 
         "Expression::termed_context called on a non-termed expression");
 
@@ -44,7 +44,7 @@ DeferredBool Expression::is_type_declaration() {
 }
 
 Expression* create_layer2_expression(AST_Store& store, std::vector<Expression*>&& terms, 
-    RT_Definition* context, const SourceLocation& location) {
+    Scope* context, const SourceLocation& location) {
     
     return store.allocate_expression({ExpressionType::layer2_expression, 
         TermedExpressionValue{terms, context}, &Hole, location});
@@ -53,11 +53,13 @@ Expression* create_layer2_expression(AST_Store& store, std::vector<Expression*>&
 Expression* create_layer2_expression_testing(AST_Store& store, std::vector<Expression*>&& terms, 
     const SourceLocation& location, bool top_level) {
 
-    auto context = store.allocate_definition(RT_Definition{"testing_definition", Undefined{}, 
-        top_level, NO_SOURCE_LOCATION});
+    assert(false && "not fixed");
+
+    // auto context = store.allocate_definition(DefinitionBody{"testing_definition", Undefined{}, 
+    //     top_level, NO_SOURCE_LOCATION});
     
-    return store.allocate_expression({ExpressionType::layer2_expression, 
-        TermedExpressionValue{terms, context}, &Hole, location});
+    // return store.allocate_expression({ExpressionType::layer2_expression, 
+    //     TermedExpressionValue{terms, context}, &Hole, location});
 }
 
 

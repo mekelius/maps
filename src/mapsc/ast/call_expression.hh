@@ -6,16 +6,20 @@
 namespace Maps {
 
 class AST_Store;
+class DefinitionHeader;
 
 std::optional<Expression*> create_call(CompilationState& state, 
-    Definition* callee, std::vector<Expression*>&& args, const SourceLocation& location);
+    DefinitionHeader* callee, std::vector<Expression*>&& args, const SourceLocation& location);
+
+std::optional<Expression*> create_call(CompilationState& state, 
+    DefinitionBody* callee, std::vector<Expression*>&& args, const SourceLocation& location);
 
 std::optional<Expression*> create_partial_binop_call(CompilationState& state, 
-    Definition* callee, Expression* lhs, Expression* rhs, const SourceLocation& location);
+    Operator* callee, Expression* lhs, Expression* rhs, const SourceLocation& location);
 
 // not implemented
 std::optional<Expression*> create_partial_binop_call_both(CompilationState& state,
-    Definition* lhs, Expression* lambda, Definition* rhs, const SourceLocation& location);
+    Operator* lhs, Expression* lambda, Operator* rhs, const SourceLocation& location);
 
 Expression* create_partially_applied_minus(AST_Store& store, 
     Expression* rhs, const SourceLocation& location);

@@ -102,29 +102,31 @@ Statement* ParserLayer1::parse_expression_statement() {
 }
 
 Statement* ParserLayer1::parse_assignment_statement() {
-    auto location = current_token().location;
-    bool is_top_level = in_top_level_context();
+    assert(false && "not updated");
+    
+    // auto location = current_token().location;
+    // bool is_top_level = in_top_level_context();
 
-    assert(current_token().token_type == TokenType::identifier 
-        && "parse_assignment_statement called with current_token that was not an identifier");
+    // assert(current_token().token_type == TokenType::identifier 
+    //     && "parse_assignment_statement called with current_token that was not an identifier");
 
-    auto identifier = handle_identifier();
+    // auto identifier = handle_identifier();
 
-    get_token();
-    // TODO: change '=' to it's own TokenType
-    // !!! in any case assignment operators should live in their own category
-    assert(is_assignment_operator(current_token())
-        && "assignment statement second token not an assignment operator");
+    // get_token();
+    // // TODO: change '=' to it's own TokenType
+    // // !!! in any case assignment operators should live in their own category
+    // assert(is_assignment_operator(current_token())
+    //     && "assignment statement second token not an assignment operator");
    
-    get_token(); // eat '='
+    // get_token(); // eat '='
 
-    Statement* inner_statement = parse_statement();
-    Statement* statement = create_assignment_statement(*ast_store_, identifier, 
-        create_definition(inner_statement, is_top_level, inner_statement->location), location);
+    // Statement* inner_statement = parse_statement();
+    // Statement* statement = create_assignment_statement(*ast_store_, identifier, 
+    //     create_definition(inner_statement, is_top_level, inner_statement->location), location);
 
-    log("Finished parsing assignment statement from " + statement->location.to_string(), 
-        LogLevel::debug_extra);
-    return statement;
+    // log("Finished parsing assignment statement from " + statement->location.to_string(), 
+    //     LogLevel::debug_extra);
+    // return statement;
 }
 
 Statement* ParserLayer1::parse_block_statement() {
@@ -190,7 +192,7 @@ Statement* ParserLayer1::parse_block_statement() {
     // simplify empty block
     if (substatements->empty()) {
         statement->statement_type = StatementType::empty;
-        statement->value = Undefined{};
+        statement->value = EmptyStatementValue{};
         return statement;
     }
 

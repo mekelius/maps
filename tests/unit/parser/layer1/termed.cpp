@@ -11,7 +11,7 @@ using namespace Maps;
 
 TEST_CASE("Should parse parentheses and colons correctly") {
     auto [state, _, types] = CompilationState::create_test_state();
-    RT_Scope scope{};
+    Scope scope{};
     REQUIRE(scope.empty());
 
     SUBCASE("123 + (2 + 4 * 7)") {

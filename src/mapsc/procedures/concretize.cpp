@@ -95,8 +95,10 @@ bool concretize_call(CompilationState& state, Expression& call) {
 
     // attempt inline first
     Log::debug_extra("Attempting to inline " + call.log_message_string(), call.location);
-    if (inline_call(call, *callee))
-        return concretize(state, call);
+
+    if (callee->body_)
+        if (inline_call(call, **callee->body_))
+            return concretize(state, call);
 
     Log::debug_extra("Could not inline, attempting to cast arguments", call.location);
 
@@ -183,7 +185,7 @@ bool concretize_value(Expression& value) {
 
 } // namespace
 
-bool concretize(CompilationState& state, RT_Definition& definition) {
+bool concretize(CompilationState& state, DefinitionBody& definition) {
     return std::visit(overloaded{
         [definition, &state](Expression* expression) {
             Log::debug_extra("Concretizing definition body of " + definition.name_string(), 

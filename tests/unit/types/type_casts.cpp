@@ -97,7 +97,7 @@ TEST_CASE("Casting a known value into a function type with mathcing return type 
     auto lock = LogOptions::set_global(LogLevel::debug_extra);
 
     auto [state, _0, types] = CompilationState::create_test_state();
-    RT_Scope scope{};
+    Scope scope{};
 
     const FunctionType* IntString = types->get_function_type(&String, array{&Int}, false);
 

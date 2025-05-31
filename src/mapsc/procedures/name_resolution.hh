@@ -14,7 +14,7 @@ struct Expression;
 bool resolve_identifiers(CompilationState& state, const_Scopes scopes, 
     std::vector<Expression*>& unresolved_identifiers);
 
-bool resolve_identifiers(CompilationState& state, const RT_Scope& scope, 
+bool resolve_identifiers(CompilationState& state, const Scope& scope, 
     std::vector<Expression*>& unresolved_identifiers);
 
 } //namespace Maps
