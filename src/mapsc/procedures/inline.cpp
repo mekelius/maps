@@ -72,10 +72,14 @@ bool substitute_value_reference(Expression& expression) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
 
+    Log::debug_extra("Substituting " + expression.log_message_string(), expression.location);
+
     auto callee = expression.reference_value();
 
-    if (!callee->body_)
+    if (!callee->body_) {
+        Log::error("Substitution failed", expression.location);
         return false;
+    }
 
     return substitute_value_reference(expression, **callee->body_);
 }

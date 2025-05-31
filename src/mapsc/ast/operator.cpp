@@ -40,6 +40,14 @@ Operator* create_binary_operator(AST_Store& ast_store, const std::string& name, 
     });
 }
 
+Operator* create_binary_operator(AST_Store& ast_store, const std::string& name, DefinitionHeader* value, 
+    Operator::Precedence precedence, SourceLocation location) {
+
+    return create_binary_operator(
+        ast_store, name, value, precedence, Operator::Associativity::left, location);
+}
+
+
 Operator* create_testing_binary_operator(AST_Store& ast_store, const std::string& name, 
     const Type* type, Operator::Precedence precedence, Operator::Associativity associativity, 
     SourceLocation location) {

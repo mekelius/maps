@@ -93,6 +93,8 @@ bool concretize_loop(CompilationState& state, std::vector<const Type*>& potentia
 bool concretize_call(CompilationState& state, Expression& call) {
     auto [callee, args] = call.call_value();
 
+    Log::debug_extra("Concretizing a call to " + callee->name_string(), call.location);
+
     // attempt inline first
     Log::debug_extra("Attempting to inline " + call.log_message_string(), call.location);
 
@@ -224,9 +226,21 @@ bool concretize(CompilationState& state, DefinitionBody& definition) {
 }
 
 bool concretize(CompilationState& state, Expression& expression) {
+    Log::debug_extra("Concretizing " + expression.log_message_string(), 
+        expression.location);
+
     switch (expression.expression_type) {
         case ExpressionType::call:
             return concretize_call(state, expression);
+
+        case ExpressionType::known_value_reference:
+            if (!substitute_value_reference(expression)) {
+                Log::compiler_error("Substituting known value reference failed", expression.location);
+                return false;
+            }
+            assert(expression.expression_type == ExpressionType::known_value &&
+                "substitute value reference on known value reference didn't result in a known value");
+            return concretize_value(expression);
 
         case ExpressionType::known_value:
             return concretize_value(expression);
