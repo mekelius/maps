@@ -59,6 +59,7 @@ public:
     
     std::string node_type_string() const { return "not implemented"; }
     std::string name_string() const { return name_; }
+    std::string_view name_view() const { return name_; }
     const Type* get_type() const { return type_; }
 
     std::optional<LetDefinitionValue> get_body_value() const;

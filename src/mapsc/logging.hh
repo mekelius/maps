@@ -2,6 +2,7 @@
 #define __LOGGING_HH
 
 #include <array>
+#include <concepts>
 
 #include "mapsc/source.hh"
 
