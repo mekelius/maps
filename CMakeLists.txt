@@ -56,6 +56,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/ast/statement.cpp
     src/mapsc/ast/definition.cpp
     src/mapsc/ast/definition_body.cpp
+    src/mapsc/ast/function_definition.cpp
     src/mapsc/ast/ast_store.cpp
     src/mapsc/ast/identifier.cpp
     src/mapsc/ast/reference.cpp

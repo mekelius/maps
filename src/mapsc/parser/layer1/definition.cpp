@@ -80,30 +80,30 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
                 }
 
                 if (is_assignment_operator(current_token())) {
-                    assert(false && "not implemented");
-                    // get_token(); // eat the assignment operator
+                    get_token(); // eat the assignment operator
 
-                    // auto definition = create_definition(name, true, location);
+                    auto definition = create_definition(name, true, location);
 
-                    // auto scope
-                    // push_context(definition);
+                    // !!! Temporary, doesn't work
+                    auto new_scope = ast_store_->allocate_scope(Scope{});
+                    push_context(new_scope);
 
-                    // LetDefinitionValue body = parse_definition_body();
+                    LetDefinitionValue body = parse_definition_body();
 
-                    // ast_store_->allocate_definition_body(definition, body);
-                    // if (!create_identifier(definition))
-                    //     return fail_definition("Creating top level identifier failed", location, true);
+                    ast_store_->allocate_definition_body(definition, body);
+                    if (!create_identifier(definition))
+                        return fail_definition("Creating top level identifier failed", location, true);
                     
-                    // auto popped_context = pop_context();
+                    auto popped_context = pop_context();
 
-                    // // This means a syntax error
-                    // if (!popped_context)
-                    //     return fail_definition("Creating top level definition body failed", location);
+                    // This means a syntax error
+                    if (!popped_context)
+                        return fail_definition("Creating top level definition body failed", location);
 
-                    // assert(popped_context == definition && "context stack not returned to correct state");
+                    assert(popped_context == new_scope && "context stack not returned to correct state");
 
-                    // log("Parsed let definition", LogLevel::debug_extra);
-                    // return definition;
+                    log("Parsed let definition", LogLevel::debug_extra);
+                    return definition;
                 }
 
                 get_token();

@@ -7,6 +7,7 @@
 
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/definition_body.hh"
+#include "mapsc/ast/function_definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/statement.hh"
 
@@ -30,6 +31,10 @@ public:
     DefinitionHeader* allocate_definition(const DefinitionHeader&& definition);
     DefinitionHeader* allocate_definition(const DefinitionHeader&& header, const LetDefinitionValue& body);
     DefinitionHeader* allocate_definition_body(DefinitionHeader*, const LetDefinitionValue& body);
+    Operator* allocate_operator(const Operator&& definition);
+    Parameter* allocate_parameter(const Parameter&& definition);
+    External* allocate_external(const External&& definition);
+
     Scope* allocate_scope(const Scope&& scope);
 
 private:

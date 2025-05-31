@@ -21,11 +21,9 @@ struct Statement;
 class AST_Store;
 class CompilationState;
 
-
 struct Undefined {
     bool operator==(auto) const { return false; }
 };
-
 
 struct Error {
     bool compiler_error = false;
@@ -34,16 +32,17 @@ struct Error {
     bool operator==(T&) const { return false; }
 };
 
-
 class DefinitionBody;
 using LetDefinitionValue = std::variant<Undefined, Error, Expression*, Statement*>;
 
-// Referable nodes are typed things which might have a definition
 class DefinitionHeader {
 public:
     DefinitionHeader(const std::string& name, const Type* type, Scope* outer_scope,
         bool is_top_level, SourceLocation location);
+    DefinitionHeader(const std::string& name, Scope* outer_scope,
+        bool is_top_level, SourceLocation location);
     DefinitionHeader(const std::string& name, const Type* type, SourceLocation location);
+    DefinitionHeader(const std::string& name, SourceLocation location);
 
     const SourceLocation& location() const { return location_; }
 
@@ -76,16 +75,6 @@ public:
     bool is_deleted_ = false;
 };
 
-class Parameter: public DefinitionHeader {
-public:
-    virtual std::string node_type_string() const { return "parameter"; };
-    virtual std::string name_string() const { return name_; };
-    virtual const Type* get_type() const {return type_; };
-
-    const Type* type_;
-    std::string name_;
-};
-
 class External: public DefinitionHeader {
 public:
     virtual std::string node_type_string() const { return "external"; };
@@ -113,8 +102,6 @@ class DS_Binding {
 public:
 
 };
-
-using ParameterList = std::vector<Parameter*>;
 
 using BuiltinValue = std::variant<maps_Boolean, maps_String, maps_Int, maps_Float>;
 

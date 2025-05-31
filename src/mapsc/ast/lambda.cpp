@@ -3,6 +3,7 @@
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/ast/reference.hh"
+#include "mapsc/ast/function_definition.hh"
 #include "mapsc/ast/value.hh"
 
 using std::nullopt, std::optional;
@@ -60,18 +61,16 @@ std::tuple<Expression*, DefinitionBody*> create_const_lambda(CompilationState& s
     ParameterList parameter_list{};
     auto inner_scope = ast_store.allocate_scope(Scope{});
 
-    assert(false && "not updated");
+    for (auto param_type: param_types)
+        parameter_list.push_back(create_discarded_parameter(ast_store, param_type, location));
 
-    // for (auto param_type: param_types)
-    //     parameter_list.push_back(LetDefinition::discarded_parameter(ast_store, param_type, location));
+    auto definition = function_definition(state, parameter_list, inner_scope, value,
+        false, location);
 
-    // auto definition = LetDefinition::function_definition(state, parameter_list, inner_scope, value,
-    //     false, location);
+    definition->set_type(state.types_->get_function_type(value->type, param_types, is_pure));
+    auto expression = create_reference(ast_store, definition->header_, location);
 
-    // definition->set_type(state.types_->get_function_type(value->type, param_types, is_pure));
-    // auto expression = create_reference(ast_store, definition, location);
-
-    // return {expression, definition};
+    return {expression, definition};
 }
 
 std::tuple<Expression*, DefinitionBody*> create_const_lambda(CompilationState& state, 

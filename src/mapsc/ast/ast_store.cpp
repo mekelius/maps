@@ -66,6 +66,20 @@ DefinitionHeader* AST_Store::allocate_definition_body(DefinitionHeader* header, 
     return header;
 }
 
+Operator* AST_Store::allocate_operator(const Operator&& definition) {
+    definition_headers_.push_back(std::make_unique<Operator>(definition));
+    return dynamic_cast<Operator*>(definition_headers_.back().get());
+}
+
+Parameter* AST_Store::allocate_parameter(const Parameter&& definition) {
+    definition_headers_.push_back(std::make_unique<Parameter>(definition));
+    return dynamic_cast<Parameter*>(definition_headers_.back().get());
+}
+
+External* AST_Store::allocate_external(const External&& definition) {
+    definition_headers_.push_back(std::make_unique<External>(definition));
+    return dynamic_cast<External*>(definition_headers_.back().get());
+}
 
 Scope* AST_Store::allocate_scope(const Scope&& scope) {
     scopes_.push_back(std::make_unique<Scope>(scope));

@@ -36,8 +36,8 @@ TEST_CASE(source_string) {\
     CHECK(result.unresolved_identifiers.size() == 2);\
     \
     auto root = *result.top_level_definition;\
-    CHECK(std::holds_alternative<const Statement*>(root->const_body()));\
-    auto root_body = std::get<const Statement*>(root->const_body());\
+    CHECK(std::holds_alternative<Statement*>(root->value_));\
+    auto root_body = std::get<Statement*>(root->value_);\
     \
     CHECK(root_body->statement_type == StatementType::loop);\
     auto loop_value = root_body->get_value<LoopStatementValue>();\
@@ -83,8 +83,8 @@ TEST_CASE(source_string) {\
     CHECK(result.unresolved_identifiers.size() == 3);\
     \
     auto root = *result.top_level_definition;\
-    CHECK(std::holds_alternative<const Statement*>(root->const_body()));\
-    auto root_body = std::get<const Statement*>(root->const_body());\
+    CHECK(std::holds_alternative<Statement*>(root->value_));\
+    auto root_body = std::get<Statement*>(root->value_);\
     \
     auto [condition, loop_branch, else_branch] = root_body->get_value<ConditionalValue>();\
     CHECK(loop_branch->statement_type == StatementType::loop);\
@@ -180,6 +180,6 @@ WHILE_ELSE_CASE("\n\
 //     CHECK(result.unresolved_identifiers.size() == 1);
     
 //     auto root = *result.top_level_definition;
-//     CHECK(std::holds_alternative<const Statement*>(root->const_body()));
-//     auto root_body = std::get<const Statement*>(root->const_body());
+//     CHECK(std::holds_alternative<Statement*>(root->value_));
+//     auto root_body = std::get<Statement*>(root->value_);
 // }

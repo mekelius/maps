@@ -46,8 +46,17 @@ Layer1Result ParserLayer1::run_eval(std::istream& source_is) {
     if ((*result_.top_level_definition))
         simplify(*(*result_.top_level_definition));
 
-    if (!result_.top_level_definition) 
+    if (!result_.top_level_definition) {
         result_.top_level_definition = nullopt;
+
+    } else if (std::holds_alternative<Error>((*result_.top_level_definition)->value_)) {
+        Log::error("Layer1 eval failed", NO_SOURCE_LOCATION);
+        result_.top_level_definition = nullopt;
+        result_.success = false;
+        
+    } else if (std::holds_alternative<Undefined>((*result_.top_level_definition)->value_)) {
+        result_.top_level_definition = nullopt;
+    }
 
     return result_;
 }

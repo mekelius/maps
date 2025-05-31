@@ -53,13 +53,13 @@ Expression* create_layer2_expression(AST_Store& store, std::vector<Expression*>&
 Expression* create_layer2_expression_testing(AST_Store& store, std::vector<Expression*>&& terms, 
     const SourceLocation& location, bool top_level) {
 
-    assert(false && "not fixed");
-
-    // auto context = store.allocate_definition(DefinitionBody{"testing_definition", Undefined{}, 
+    // auto context = store.allocate_definition(DefinitionHeader{"testing_definition", 
     //     top_level, NO_SOURCE_LOCATION});
     
-    // return store.allocate_expression({ExpressionType::layer2_expression, 
-    //     TermedExpressionValue{terms, context}, &Hole, location});
+    auto context = store.allocate_scope({});
+
+    return store.allocate_expression({ExpressionType::layer2_expression, 
+        TermedExpressionValue{terms, context}, &Hole, location});
 }
 
 

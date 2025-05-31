@@ -8,6 +8,7 @@
 
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/definition_body.hh"
+#include "mapsc/ast/function_definition.hh"
 
 namespace Maps {
 

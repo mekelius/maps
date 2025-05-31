@@ -112,5 +112,5 @@ TEST_CASE("Casting a known value into a function type with mathcing return type 
 
     CHECK(expr->expression_type == ExpressionType::reference);
     CHECK(*expr->type == *IntString);
-    CHECK(std::get<const Expression*>(expr->reference_value()->const_body())->string_value() == "qwe");
+    CHECK(std::get<Expression*>(*expr->reference_value()->get_body_value())->string_value() == "qwe");
 }

@@ -24,6 +24,10 @@ class CompilationState;
 
 class DefinitionBody {
 public:
+    // creates a new dummy definition suitable for unit testing
+    static std::pair<DefinitionHeader, DefinitionBody> 
+        testing_definition(const Type* type = &Hole, bool is_top_level = true); 
+
     DefinitionBody(DefinitionHeader* header, LetDefinitionValue value);
 
     DefinitionBody(const std::string& name, DefinitionBody body, bool is_top_level, 
@@ -84,19 +88,6 @@ private:
 
     std::optional<Scope*> inner_scope_ = std::nullopt;
 };
-
-
-// creates a new dummy definition suitable for unit testing
-static std::pair<DefinitionHeader, DefinitionBody> 
-    testing_definition(const Type* type = &Hole, bool is_top_level = true); 
-
-static DefinitionBody* function_definition(CompilationState& state, 
-    const ParameterList& parameter_list, Scope* inner_scope, bool is_top_level, 
-    const SourceLocation& location);
-static DefinitionBody* function_definition(CompilationState& state, 
-    const ParameterList& parameter_list, Scope* inner_scope, DefinitionBody body, 
-    bool is_top_level, const SourceLocation& location);
-
 
 } // namespace Maps
 

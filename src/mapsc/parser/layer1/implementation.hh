@@ -14,8 +14,9 @@
 #include "mapsc/source.hh"
 #include "mapsc/logging.hh"
 
-#include "mapsc/ast/definition_body.hh"
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/definition_body.hh"
+#include "mapsc/ast/function_definition.hh"
 #include "mapsc/parser/token.hh"
 #include "mapsc/parser/lexer.hh"
 #include "mapsc/ast/chunk.hh"
