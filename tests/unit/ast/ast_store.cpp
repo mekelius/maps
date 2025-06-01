@@ -4,6 +4,7 @@
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/lambda.hh"
+#include "mapsc/ast/test_helpers/test_definition.hh"
 #include "mapsc/ast/value.hh"
 #include "mapsc/compilation_state.hh"
 

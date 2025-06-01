@@ -4,6 +4,7 @@
 #include "mapsc/source.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/function_definition.hh"
+#include "mapsc/ast/test_helpers/test_definition.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/types/type_store.hh"
 #include "mapsc/compilation_state.hh"

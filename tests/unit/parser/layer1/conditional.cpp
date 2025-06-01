@@ -25,7 +25,7 @@ inline std::tuple<CompilationState, Scope, stringstream> setup(const std::string
 
 #define IF_CASE(source_string)\
 TEST_CASE(source_string) {\
-    LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
+    LogNoContext::debug_extra(TSL) << "TEST_CASE:\n" << source_string;\
     auto [state, scope, source] = setup(source_string);\
     \
     auto result = run_layer1_eval(state, scope, source);\
@@ -108,7 +108,7 @@ then\n\
 
 #define IF_ELSE_CASE(source_string)\
 TEST_CASE(source_string) {\
-    LogInContext<LogContext::layer1>::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
+    LogInContext<LogContext::layer1>::debug_extra(TSL) << "TEST_CASE:\n" << source_string;\
     \
     auto [state, scope, source] = setup(source_string);\
     \
@@ -196,7 +196,7 @@ IF_ELSE_CASE("\n\
 
 #define IF_ELSE_CHAIN_CASE(source_string)\
 TEST_CASE(source_string) {\
-    LogInContext<LogContext::layer1>::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
+    LogInContext<LogContext::layer1>::debug_extra(TSL) << "TEST_CASE:\n" << source_string;\
     \
     auto [state, scope, source] = setup(source_string);\
     \

@@ -7,6 +7,7 @@
 
 #include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/ast/reference.hh"
+#include "mapsc/ast/test_helpers/test_definition.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/parser/layer2.hh"
 #include "mapsc/logging_options.hh"

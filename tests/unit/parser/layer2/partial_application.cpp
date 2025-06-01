@@ -7,6 +7,7 @@
 #include "mapsc/ast/value.hh"
 #include "mapsc/ast/reference.hh"
 #include "mapsc/ast/operator.hh"
+#include "mapsc/ast/test_helpers/test_definition.hh"
 
 #include "mapsc/ast/layer2_expression.hh"
 #include "mapsc/compilation_state.hh"
