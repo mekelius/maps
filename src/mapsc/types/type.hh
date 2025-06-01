@@ -37,6 +37,8 @@ public:
     virtual bool concretize(Expression&) const = 0;
     virtual bool operator==(const Type& other) const = 0;
     
+    std::string_view log_representation() const { return name(); }
+
 private:
     virtual bool cast_to_(const Type*, Expression&) const = 0;
 };

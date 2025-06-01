@@ -67,9 +67,10 @@ public:
     }
 
     std::string node_type_string() const { return header_->node_type_string(); }
-    std::string name_string() const { return header_->name_string(); }
     const Type* get_type() const { return header_->get_type(); }
     const SourceLocation& location() const { return header_->location(); }
+
+    std::string_view log_representation() const { return header_->log_representation(); }
 
     DefinitionHeader* header_;
     // virtual bool operator==(const Definition& other) const {
@@ -88,18 +89,6 @@ private:
 
     std::optional<Scope*> inner_scope_ = std::nullopt;
 };
-
-DefinitionBody* create_let_definition(AST_Store& ast_store, const std::string& name, 
-    LetDefinitionValue value, const SourceLocation& location);
-
-DefinitionBody* create_let_definition(AST_Store& ast_store, 
-    LetDefinitionValue value, const SourceLocation& location);
-
-DefinitionBody* create_let_definition(AST_Store& ast_store, const std::string& name, 
-    Expression* value, const SourceLocation& location);
-
-DefinitionBody* create_let_definition(AST_Store& ast_store,
-    Expression* value, const SourceLocation& location);
 
 } // namespace Maps
 

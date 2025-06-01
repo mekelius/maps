@@ -19,7 +19,7 @@ namespace Maps {
 External* create_external(AST_Store& ast_store, const std::string& name, const Type* type, 
     const SourceLocation& location) {
 
-    return ast_store.allocate_external(External{name, type, location});
+    return ast_store.allocate_external(External{DefinitionType::external, name, type, location});
 }
 
 } // namespace Maps

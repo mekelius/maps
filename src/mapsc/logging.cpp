@@ -1,68 +1,66 @@
 #include "logging.hh"
+
+#include <iomanip>
+
 #include "logging_options.hh"
 
 namespace Maps {
 
+LogStream LogStream::global{};
+
 namespace {
 
-constinit LogOptions global_options{};
 bool log_check_flag = false;
 
 } // anonymous namespace
 
-
-LogOptions::Lock LogOptions::Lock::global() {
-    return LogOptions::Lock{};
-}
-
 LogOptions::Lock::~Lock() {
-    global_options.set_loglevel(DEFAULT_LOGLEVEL);
-    global_lock_ = false;
+    options_->set_loglevel(DEFAULT_LOGLEVEL);
+    options_->locked_ = false;
 }
 
-LogOptions::Lock::Lock() {
-    options_ = &global_options;
-    global_lock_ = true;
+LogOptions::Lock::Lock(LogOptions* options): options_(options) {
+    options_->locked_ = true;
 }
 
 LogOptions::Lock LogOptions::set_global(LogContext context, LogLevel loglevel) {
-    auto lock = Lock::global();
+    auto lock = LogStream::global.lock();
     lock.options_->set_loglevel(context, loglevel);
     return lock;
 }
 
 LogOptions::Lock LogOptions::set_global(LogLevel loglevel) {
-    auto lock = Lock::global();
-    lock.options_->set_loglevel(loglevel);
+    auto lock = LogStream::global.lock();
+    lock.options_->set_loglevel(LogContext::no_context, loglevel);
     return lock;
 }
 
 LogLevel LogOptions::get_loglevel() const {
-    return loglevel_;
+    return get_loglevel(LogContext::no_context);
 }
 
 LogLevel LogOptions::get_loglevel(LogContext context) const {
-    return per_context_loglevels.at(static_cast<size_t>(context));
+    return loglevels_.at(static_cast<size_t>(context));
 }
 
 void LogOptions::set_loglevel(LogLevel loglevel) {
-    for (size_t index = 0; index < LOG_CONTEXT_COUNT; index++) {
+    for (size_t index = 0; index < LOG_CONTEXT_COUNT; index++)
         if (!per_context_loglevels_overridden_.at(index))
-            per_context_loglevels.at(index) = loglevel;
-    }    
-    loglevel_ = loglevel;
+            loglevels_.at(index) = loglevel;
 }
 
 void LogOptions::set_loglevel(LogContext context, LogLevel loglevel) {
     auto index = static_cast<size_t>(context);
     per_context_loglevels_overridden_.at(index) = true;
-    per_context_loglevels.at(index) = loglevel;
+    loglevels_.at(index) = loglevel;
 }
 
+inline uint line_col_padding(const SourceLocation& location) {
+    return 5;
 
-std::string line_col_padding(uint width) {
-    return width < global_options.LINE_COL_FORMAT_PADDING ? 
-        std::string(global_options.LINE_COL_FORMAT_PADDING - width, ' ') : " ";
+    // TODO
+    // return width < global_options.LINE_COL_FORMAT_PADDING ? 
+    //     std::string(global_options.LINE_COL_FORMAT_PADDING - width, ' ') : " ";
 }
 
 bool logs_since_last_check() {
@@ -71,41 +69,27 @@ bool logs_since_last_check() {
     return value;
 }
 
-void log_(std::string_view message, LogLevel log_level, LogContext context, 
-    std::string_view loglevel_prefix, std::string_view context_prefix, SourceLocation location) {
+LogOptions::Lock lock();
 
-    if (global_options.get_loglevel(context) < log_level)
-        return;
+LogStream& LogStream::begin(LogContext logcontext, LogLevel loglevel, const SourceLocation& location) {
+    is_open_ = options_.get_loglevel(logcontext) >= loglevel;
 
-    std::string location_string = location.to_string();
+    if (!is_open_)
+        return *this;
+
     log_check_flag = true;
-    
-    *global_options.ostream
-        << location_string 
-        << line_col_padding(location_string.size())
-        << loglevel_prefix; 
-        
-    if (global_options.print_context_prefixes)
-        *global_options.ostream << context_prefix;
 
-    *global_options.ostream << message << "\n";
+    *options_.ostream << '\n' << location.line << ':' << location.column 
+        << std::setw(line_col_padding(location))
+        << prefix(loglevel);
+                
+    // if (global_options.print_context_prefixes)
+    //     *global_options.ostream << context_prefix;
+
+    
+    return *this;
 }
 
-void log_(std::string_view message, LogLevel log_level, std::string_view loglevel_prefix, 
-    SourceLocation location) {
-
-    if (global_options.get_loglevel() < log_level)
-        return;
-
-    std::string location_string = location.to_string();
-    log_check_flag = true;
     
-    *global_options.ostream
-        << location_string 
-        << line_col_padding(location_string.size())
-        << loglevel_prefix; 
-
-    *global_options.ostream << message << "\n";
-}
 
 } //namespace Maps

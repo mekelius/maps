@@ -57,8 +57,8 @@ TypeMap::TypeMap(llvm::LLVMContext& context) {
         !insert(&IO_String,  char_array_ptr_t) ||
         !insert(&MutString,  mutstring_t     )
     ) {
-        Log::compiler_error("Inserting primitive types into TypeMap failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) <<
+            "Inserting primitive types into TypeMap failed";
         is_good_ = false;
     }
 }
@@ -72,9 +72,8 @@ bool TypeMap::insert(const Type* maps_type, llvm::Type* llvm_type) {
     auto signature = maps_type->name_string();
     
     if (contains(*maps_type)) {
-        Log::compiler_error(
-            "Attempting to store duplicate of \"" + maps_type->name_string() + "\" in TypeMap",
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) <<
+            "Attempting to store duplicate of \"" << *maps_type << "\" in TypeMap";
         return false;
     }
 

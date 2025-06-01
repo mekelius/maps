@@ -30,11 +30,13 @@ DefinitionBody* function_definition(CompilationState& state,
 
     if (std::holds_alternative<Expression*>(value)) {
         return *state.ast_store_->allocate_definition(
-            DefinitionHeader{MAPS_INTERNALS_PREFIX + "anonymous_function", location}, value)->body_;
+            DefinitionHeader{DefinitionType::let_definition, MAPS_INTERNALS_PREFIX + "anonymous_function", 
+                location}, value)->body_;
     }
 
     return *state.ast_store_->allocate_definition(
-        DefinitionHeader{MAPS_INTERNALS_PREFIX + "anonymous_function", location}, value)->body_;
+        DefinitionHeader{DefinitionType::let_definition, MAPS_INTERNALS_PREFIX + "anonymous_function", 
+            location}, value)->body_;
 }
 
 DefinitionBody* function_definition(CompilationState& state, 
@@ -47,22 +49,22 @@ DefinitionBody* function_definition(CompilationState& state,
 DefinitionBody* function_definition(CompilationState& state, const std::string& name, 
     Expression* value, const SourceLocation& location) {
     
-    return *state.ast_store_->allocate_definition(DefinitionHeader{name, value->type, location}, 
-        value)->body_;
+    return *state.ast_store_->allocate_definition(DefinitionHeader{DefinitionType::let_definition, 
+        name, value->type, location}, value)->body_;
 }
 
 DefinitionBody* create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
     Expression* value, bool is_pure, const SourceLocation& location) {
 
     return *ast_store.allocate_definition(
-        DefinitionHeader{"testing_nullary_function", types.get_function_type(value->type, {}, is_pure), 
-            location}, value)->body_;
+        DefinitionHeader{DefinitionType::let_definition, "testing_nullary_function", 
+            types.get_function_type(value->type, {}, is_pure), location}, value)->body_;
 }
 
 Parameter* create_parameter(AST_Store& ast_store, const std::string& name, const Type* type, 
     const SourceLocation& location) {
 
-    return ast_store.allocate_parameter(Parameter{name, type, location});
+    return ast_store.allocate_parameter(Parameter{DefinitionType::parameter, name, type, location});
 }
 
 Parameter* create_parameter(AST_Store& ast_store, const std::string& name, 
@@ -74,7 +76,8 @@ Parameter* create_parameter(AST_Store& ast_store, const std::string& name,
 Parameter* create_discarded_parameter(AST_Store& ast_store, const Type* type, 
     const SourceLocation& location) {
 
-    return ast_store.allocate_parameter(Parameter{type, location});
+    return ast_store.allocate_parameter(
+        Parameter{DefinitionType::discarded_parameter, "_", type, location});
 }
 
 Parameter* create_discarded_parameter(AST_Store& ast_store, const SourceLocation& location) {

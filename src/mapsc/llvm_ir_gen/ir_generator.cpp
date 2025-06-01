@@ -134,8 +134,8 @@ optional<llvm::Function*> IR_Generator::overloaded_function_definition(const std
     llvm::Function::LinkageTypes linkage) {
 
     if (!maps_type.is_function()) {
-        Log::compiler_error("IR::Generator::function_definition called with a non-function type: " + 
-            maps_type.name_string(), NO_SOURCE_LOCATION);
+        Log::compiler_error(NO_SOURCE_LOCATION) << 
+            "IR::Generator::function_definition called with a non-function type: " << maps_type;
         assert(false && "IR_Generator::function_definition called with non-function ast type");
         return nullopt;
     }
@@ -210,8 +210,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
     if (!definition.body_)
         assert(false && "not implemented");
 
-    Log::debug_extra("Generating ir for " + definition.name_string(), 
-        definition.location());
+    Log::debug_extra(definition.location()) << "Generating ir for " << definition;
 
     if (definition.get_type()->is_function())
         return handle_function(definition);
@@ -244,7 +243,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
     auto value = handle_expression(expression);
 
     if (!*value) {
-        fail("Converting " + expression.log_message_string() + " to a value failed");
+        fail("Converting " + expression.log_string() + " to a value failed");
         return nullopt;
     }
 
@@ -270,8 +269,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
         *function_type->return_type(), function_type->param_types());
 
     if (!signature) {
-        Log::error("unable to convert type signature for " + 
-            definition.name_string(), definition.location());
+        Log::error(definition.location()) << "unable to convert type signature for " << definition;
         return nullopt;
     }
 
@@ -293,8 +291,8 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
             return handle_statement(*statement);
         },
         [this, &definition](auto) {
-            Log::compiler_error("Unhandled definition body encountered during ir gen", 
-                definition.location());
+            Log::compiler_error(definition.location()) << 
+                "Unhandled definition body encountered during ir gen";
             fail("IR gen for " + definition.name_string() + " failed");
             return false;
         }
@@ -492,7 +490,7 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
 
         default:
             *errs_ << "error during codegen: unhandled: " 
-                   << expression.log_message_string() << "\n";
+                   << expression.log_string() << "\n";
             errs_->flush();
 
             has_failed_ = true;
@@ -524,7 +522,7 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     using llvm::ConstantInt, llvm::APInt;
     auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
 
-    Log::debug_extra("Creating call to " + callee->name_string(), call.location);
+    Log::debug_extra(call.location) << "Creating call to " << *callee;
 
     // auto deduced_type = deduce_function_type(*compilation_state_->types_, call);
     // Log::debug_extra("Deduced function type to be " + deduced_type->name_string(), call.location);
@@ -652,7 +650,7 @@ optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression)
 
 optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& expression) {
     if (!is_reduced_value(expression)) {
-        fail(capitalize(expression.log_message_string()) + " is not a reduced value");
+        fail(capitalize(expression.log_string()) + " is not a reduced value");
         return nullopt;
     }
 
@@ -660,7 +658,7 @@ optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& exp
         return convert_value(expression);
     }
 
-    fail("Could not create a global constant from " + expression.log_message_string());
+    fail("Could not create a global constant from " + expression.log_string());
     return nullopt;
 }
 
@@ -672,7 +670,7 @@ optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expressio
         return convert_numeric_literal(expression);
 
     assert(false && "IR_Generator::convert_literal called with a non-literal");
-    fail(capitalize(expression.log_message_string()) + " is not a literal");
+    fail(capitalize(expression.log_string()) + " is not a literal");
 
     return nullopt;
 }

@@ -12,6 +12,7 @@
 #include "mapsc/source.hh"
 
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/builtin.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"

@@ -15,7 +15,7 @@ Statement* ParserLayer1::parse_while_loop() {
     auto location = current_token().location;
     auto initial_indent = indent_level_;
 
-    Log::debug_extra("Parsing while loop", location);
+    Log::debug_extra(location) << "Parsing while loop";
 
     get_token();
 
@@ -23,26 +23,24 @@ Statement* ParserLayer1::parse_while_loop() {
     if (has_failed())
         return fail_statement("Parsing while loop failed", condition->location);
     
-    Log::debug_extra("Parsing while loop body", current_token().location);
+    Log::debug_extra(current_token().location) << "Parsing while loop body";
 
     auto body = parse_conditional_body();
     if (has_failed())
         return fail_statement("Parsing while loop failed", body->location);
 
     if (current_token().token_type != TokenType::else_t) {
-        Log::debug_extra("Finished parsing while loop from " + location.to_string(), 
-            current_token().location);
+        Log::debug_extra(current_token().location) << "Finished parsing while loop from " << location;
         return create_while(*ast_store_, condition, body, location);
     }
 
-    Log::debug_extra("Parsing else branch for a while loop", current_token().location);
+    Log::debug_extra(current_token().location) << "Parsing else branch for a while loop";
 
     auto else_branch = parse_else_branch(initial_indent);
     if (has_failed())
         return fail_statement("Parsing while loop else branch failed", body->location);
 
-    Log::debug_extra("Finished parsing while loop from " + location.to_string(), 
-        current_token().location);
+    Log::debug_extra(current_token().location) << "Finished parsing while loop from " << location;
 
     return create_while_else(*ast_store_, condition, body, else_branch, location);
 }

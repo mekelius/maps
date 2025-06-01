@@ -19,7 +19,7 @@ using Log = LogInContext<LogContext::type_checks>;
 std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState& state, const DefinitionHeader* callee, 
     std::vector<Expression*>& args, const SourceLocation& location) {
 
-    Log::debug_extra("Processing argument list for a call to " + callee->name_string(), location);
+    Log::debug_extra(location) << "Processing argument list for a call to " << *callee;
 
     bool seen_unparsed_expression = false;
 
@@ -28,8 +28,8 @@ std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState
     auto return_type = callee_f_type->return_type();
 
     if (args.size() > param_types.size()) {
-        Log::error(callee->name_string() + " takes a maximum of " + to_string(param_types.size()) + 
-            " arguments, tried giving " + to_string(args.size()), location);
+        Log::error(location) << *callee << " takes a maximum of " << param_types.size() << 
+            " arguments, tried giving " << args.size();
         return {false, false, false, return_type};
     }
 
@@ -38,10 +38,10 @@ std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState
     // check existing args
     uint i = 0;
     for (auto& arg: args) {
-        auto param_type = *callee_f_type->param_type(i);
+    auto param_type = *callee_f_type->param_type(i);
 
         if (arg->expression_type == ExpressionType::layer2_expression) {
-            Log::debug_extra("Argument " + to_string(i) + " was unparsed", location);
+            Log::debug_extra(location) << "Argument " << i << " was unparsed";
             seen_unparsed_expression = true;
             arg->type = param_type; // NOTE: not handled yet in layer2
             i++;
@@ -52,13 +52,13 @@ std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState
             missing_args = true;
 
         if (*arg->type == *param_type) {
-            Log::debug_extra("Argument " + to_string(i) + " matched parameter type", location);
+            Log::debug_extra(location) << "Argument " << i << " matched parameter type";
             i++;
             continue;
         }
 
-        Log::debug_extra("Attempting to cast argument " + to_string(i) + " to " + param_type->name_string(), 
-            location);
+        Log::debug_extra(location) << 
+            "Attempting to cast argument " << i << " to " << *param_type;
         
         auto new_arg = arg->cast_to(state, param_type);
         if (!new_arg)
@@ -75,7 +75,7 @@ std::tuple<bool, bool, bool, const Type*> check_and_coerce_args(CompilationState
         missing_args = true;
         args.push_back(create_missing_argument(*state.ast_store_, *callee_f_type->param_type(i), 
             location));
-        Log::debug_extra("Inserted missing argument placeholder as argument " + to_string(i), location);
+        Log::debug_extra(location) << "Inserted missing argument placeholder as argument " << i;
         i++;
     }
 

@@ -16,6 +16,7 @@
 #include "mapsc/types/type.hh"
 
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/let_definition.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/call_expression.hh"
 
@@ -100,16 +101,16 @@ optional<DefinitionBody*> REPL::create_repl_wrapper(CompilationState& state, Sco
             return nullopt;
         }
 
-        return *state.ast_store_->allocate_definition(
-            DefinitionHeader{options_.repl_wrapper_name, &Hole, &global_scope, true, location}, *eval)->body_;
+        return create_let_definition(*state.ast_store_, &global_scope, options_.repl_wrapper_name, 
+            *eval, true, location);
     }
 
-    auto definition = state.ast_store_->allocate_definition(
-        DefinitionHeader{options_.repl_wrapper_name, &Hole, &global_scope, true, location}, *eval_and_print);
+    auto definition = create_let_definition(*state.ast_store_, &global_scope, options_.repl_wrapper_name, 
+        *eval_and_print, true, location);
 
     // SimpleTypeChecker{}.run(state, {}, std::array<RT_Definition* const, 1>{definition});
 
-    return *definition->body_;
+    return definition;
 }
 
 bool REPL::compile_and_run(std::unique_ptr<llvm::Module> module_, const std::string& entry_point) {

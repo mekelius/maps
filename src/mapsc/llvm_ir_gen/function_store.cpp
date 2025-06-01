@@ -22,31 +22,30 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const DefinitionHeader& d
 
     auto name = definition.name_string();
 
-    Log::debug_extra("Looking up a function with name \"" + name + "\"", NO_SOURCE_LOCATION);
+    Log::debug_extra(NO_SOURCE_LOCATION) << "Looking up a function with name \"" << name << "\"";
     
     auto it = functions_.find(name);
     if (it != functions_.end()) {
-        Log::debug_extra("Found function" , NO_SOURCE_LOCATION);
+        Log::debug_extra(NO_SOURCE_LOCATION) << "Found function";
         return it->second;
     }
 
     auto overload_it = functions_.find(name + get_suffix(definition));
     if (overload_it != functions_.end()) {
-        Log::debug_extra("Found overload" , NO_SOURCE_LOCATION);
+        Log::debug_extra(NO_SOURCE_LOCATION) << "Found overload";
         return overload_it->second;
     }
 
-    Log::error("No function named \"" + name + "\" overloaded for type " + 
-        definition.get_type()->name_string() + " in function store", NO_SOURCE_LOCATION);
+    Log::error(NO_SOURCE_LOCATION) << "No function named \"" << name << "\" overloaded for type " << 
+        *definition.get_type() << " in function store";
     return nullopt;
 }
 
 bool FunctionStore::insert(const std::string& name, llvm::FunctionCallee function_callee) {    
     auto it = functions_.find(name);
     if (it != functions_.end()) {
-        LogInContext<LogContext::ir_gen_init>::compiler_error(
-            "Tried to insert a duplicate function \"" + name + "\" into function store", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        LogInContext<LogContext::ir_gen_init>::compiler_error(NO_SOURCE_LOCATION) <<
+            "Tried to insert a duplicate function \"" << name << "\" into function store";
         return false;
     }
 
@@ -67,17 +66,15 @@ bool FunctionStore::insert_overloaded(const std::string& name, const Maps::Funct
     llvm::FunctionCallee function_callee) {    
     
     if (functions_.contains(name)) {
-        LogInContext<LogContext::ir_gen_init>::compiler_error(
-            "Tried to insert a function overload for a existing non-overloaded function", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        LogInContext<LogContext::ir_gen_init>::compiler_error(NO_SOURCE_LOCATION) <<
+            "Tried to insert a function overload for a existing non-overloaded function";
         return false;
     }
 
     auto suffixed_name = name + get_suffix(type);
     if (functions_.contains(suffixed_name)) {
-        LogInContext<LogContext::ir_gen_init>::compiler_error(
-            "Tried to insert a duplicate function overload into function store", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        LogInContext<LogContext::ir_gen_init>::compiler_error(NO_SOURCE_LOCATION) <<
+            "Tried to insert a duplicate function overload into function store";
         return false;
     }
     

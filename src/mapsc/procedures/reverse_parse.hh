@@ -25,6 +25,9 @@ public:
     ReverseParser(std::ostream* ostream);
     ReverseParser(std::ostream* ostream, const Options& options);
 
+    ReverseParser(LogStream* logstream);
+    ReverseParser(LogStream* logstream, const Options& options);
+
     void set_options(const Options& options) { options_ = options; }
 
     ReverseParser& operator<<(const std::string& str) { *ostream_ << str; return *this; }

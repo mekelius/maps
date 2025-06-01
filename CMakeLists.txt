@@ -56,6 +56,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/ast/statement.cpp
     src/mapsc/ast/definition.cpp
     src/mapsc/ast/definition_body.cpp
+    src/mapsc/ast/let_definition.cpp
     src/mapsc/ast/function_definition.cpp
     src/mapsc/ast/operator.cpp
     src/mapsc/ast/external.cpp
@@ -71,6 +72,8 @@ add_library(mapsc_frontend OBJECT
 
     src/mapsc/ast/expressions/casts.cpp
     src/mapsc/ast/expressions/ternary.cpp
+
+    src/mapsc/ast/test_helpers/test_definition.cpp
 
     src/mapsc/builtins.cpp
 

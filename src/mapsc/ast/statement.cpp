@@ -18,32 +18,32 @@ Statement::Statement(StatementType statement_type, const StatementValue& value,
     const SourceLocation& location)
 :statement_type(statement_type), location(location), value(value) {}
 
-std::string Statement::log_message_string() const {
+LogStream& Statement::log_self_to(LogStream& logstream) const {
     switch (statement_type) {
         case StatementType::deleted:
-            return "deleted statement";
+            return logstream << "deleted statement";
         case StatementType::compiler_error:
-            return "compiler error";
+            return logstream << "compiler error";
         case StatementType::user_error:
-            return "broken statement";
+            return logstream << "broken statement";
         case StatementType::empty:
-            return "empty statement";
+            return logstream << "empty statement";
         case StatementType::expression_statement:
-            return std::get<Expression*>(value)->log_message_string();
+            return logstream << *std::get<Expression*>(value);
 
         case StatementType::block:
-            return "block";
+            return logstream << "block";
 
         case StatementType::assignment:
-            return "assignment to " + std::get<Assignment>(value).identifier_or_reference->log_message_string();
+            return logstream << "assignment to " << *std::get<Assignment>(value).identifier_or_reference;
 
         case StatementType::return_:
-            return "return statement";
+            return logstream << "return statement";
 
-        case StatementType::guard: return "guard statement";
-        case StatementType::switch_s: return "switch statement";
-        case StatementType::loop: return "loop";
-        case StatementType::conditional: return "conditional statement";
+        case StatementType::guard: return logstream << "guard statement";
+        case StatementType::switch_s: return logstream << "switch statement";
+        case StatementType::loop: return logstream << "loop";
+        case StatementType::conditional: return logstream << "conditional statement";
     }
 }
 

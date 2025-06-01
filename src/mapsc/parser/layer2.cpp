@@ -9,7 +9,7 @@ namespace Maps {
 using Log = LogInContext<LogContext::layer2>;
 
 bool run_layer2(CompilationState& state, Expression* expression) {    
-    Log::debug_extra("Running layer2 on " + expression->log_message_string(), expression->location);
+    Log::debug_extra("Running layer2 on " + expression->log_string(), expression->location);
     return TermedExpressionParser{&state, expression}.run();
 }
 

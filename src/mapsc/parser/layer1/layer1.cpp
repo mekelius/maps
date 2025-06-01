@@ -14,6 +14,7 @@
 #include "mapsc/ast/statement.hh"
 #include "mapsc/ast/scope.hh"
 #include "mapsc/ast/ast_store.hh"
+#include "mapsc/ast/let_definition.hh"
 
 #include "mapsc/parser/token.hh"
 #include "mapsc/procedures/simplify.hh"
@@ -50,7 +51,7 @@ Layer1Result ParserLayer1::run_eval(std::istream& source_is) {
         result_.top_level_definition = nullopt;
 
     } else if (std::holds_alternative<Error>((*result_.top_level_definition)->value_)) {
-        Log::error("Layer1 eval failed", NO_SOURCE_LOCATION);
+        Log::error(NO_SOURCE_LOCATION) << "Layer1 eval failed";
         result_.top_level_definition = nullopt;
         result_.success = false;
         
@@ -70,8 +71,8 @@ void ParserLayer1::run_parse(std::istream& source_is) {
 
     auto location = current_token().location;
     Statement* root_statement = create_block(*ast_store_, {}, location);
-    result_.top_level_definition = *ast_store_->allocate_definition(DefinitionHeader{
-        "root", &Hole, parse_scope_, true, location}, root_statement)->body_;
+    result_.top_level_definition = 
+        create_let_definition(*ast_store_, parse_scope_, "root", root_statement, true, location);
 
     context_stack_.push_back(parse_scope_);
 
@@ -148,61 +149,34 @@ void ParserLayer1::update_brace_levels(Token token) {
 
 // ----- OUTPUT HELPERS -----
 
-void ParserLayer1::fail(const std::string& message, SourceLocation location, 
-    bool compiler_error) {
-    
-    if (compiler_error) {
-        Log::compiler_error(message, location);
-    } else {
-        Log::error(message, location);
-    }
+void ParserLayer1::fail() {
     reset_to_top_level();
     result_.success = false;
 }
 
-Expression* ParserLayer1::fail_expression(const std::string& message, SourceLocation location, 
-    bool compiler_error) {
-    
-    fail(message, location, compiler_error);
+Expression* ParserLayer1::fail_expression(SourceLocation location, bool compiler_error) {
+    fail();
     get_token();
     return compiler_error ? 
         create_compiler_error(*ast_store_, location) : 
         create_user_error(*ast_store_, location);
 }
  
-DefinitionHeader* ParserLayer1::fail_definition(const std::string& message, SourceLocation location, 
-    bool compiler_error) {
-
-    assert(false && "not updated");
-    
-    // fail(message, location, compiler_error);
-    // return create_definition(Error{compiler_error}, true, location);
+DefinitionHeader* ParserLayer1::fail_definition(SourceLocation location, bool compiler_error) {    
+    fail();
+    return create_definition(Error{compiler_error}, true, location);
 }
 
-Statement* ParserLayer1::fail_statement(const std::string& message, SourceLocation location, 
-    bool compiler_error) {
-    
-    fail(message, location, compiler_error);
+Statement* ParserLayer1::fail_statement(SourceLocation location, bool compiler_error) {
+    fail();
     return compiler_error ? 
         create_compiler_error_statement(*ast_store_, location)
         : create_user_error_statement(*ast_store_, location);
 }
 
-std::nullopt_t ParserLayer1::fail_optional(const std::string& message, SourceLocation location, 
-    bool compiler_error) {
-
-    fail(message, location, compiler_error);
+std::nullopt_t ParserLayer1::fail_optional() {
+    fail();
     return nullopt;
-}
-
-void ParserLayer1::log(const std::string& message, LogLevel loglevel) const {
-    Log::on_level(message, loglevel, current_token().location);
-}
-
-void ParserLayer1::log(const std::string& message, LogLevel loglevel, 
-    SourceLocation location) const {
-    
-    Log::on_level(message, loglevel, location);
 }
 
 void ParserLayer1::reset_to_top_level() {
@@ -228,7 +202,7 @@ void ParserLayer1::push_context(Scope* context) {
 
 std::optional<Scope*> ParserLayer1::pop_context() {
     if (context_stack_.empty()) {
-        Log::compiler_error("context stack shouldn't be empty", NO_SOURCE_LOCATION);
+        Log::compiler_error(NO_SOURCE_LOCATION) << "context stack shouldn't be empty";
         assert(false && "context stack shouldn't be empty");
         return nullopt;
     }
@@ -262,7 +236,8 @@ bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
     auto inner = block.back();
 
     if (inner->is_illegal_as_single_statement_block()) {
-        fail("A block cannot be a single " + inner->log_message_string(), inner->location);
+        fail();
+        Log::error(inner->location) << "A block cannot be a single " << *inner;
         return false;
     }
 
@@ -285,7 +260,7 @@ bool ParserLayer1::identifier_exists(const std::string& identifier) const {
 
 optional<DefinitionHeader*> ParserLayer1::create_undefined_identifier(const std::string& name, bool is_top_level, SourceLocation location) {
     return parse_scope_->create_identifier(
-        ast_store_->allocate_definition(DefinitionHeader{name, &Hole, parse_scope_, is_top_level, location})
+        create_let_definition(*ast_store_, parse_scope_, name, &Hole, is_top_level, location)->header_
     );
 }
 
@@ -302,14 +277,14 @@ std::optional<DefinitionHeader*> ParserLayer1::lookup_identifier(const std::stri
 DefinitionHeader* ParserLayer1::create_definition(const std::string& name, 
     const LetDefinitionValue& body_value, bool is_top_level, SourceLocation location) {
     
-    return ast_store_->allocate_definition(
-        DefinitionHeader{name, &Hole, parse_scope_, is_top_level, location}, body_value);
+    return create_let_definition(*ast_store_, parse_scope_, name, body_value, is_top_level, 
+        location)->header_;
 }
 
 DefinitionHeader* ParserLayer1::create_definition(const std::string& name, bool is_top_level, 
     SourceLocation location) {
 
-    return ast_store_->allocate_definition(DefinitionHeader{name, &Hole, parse_scope_, is_top_level, location}); 
+    return create_let_definition(*ast_store_, parse_scope_, name, &Hole, is_top_level, location)->header_; 
 }
 
 DefinitionHeader* ParserLayer1::create_definition(LetDefinitionValue body, bool is_top_level, 

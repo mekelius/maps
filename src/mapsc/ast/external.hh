@@ -22,13 +22,15 @@ struct Statement;
 class AST_Store;
 class CompilationState;
 
-class External: public DefinitionHeader {
-public:
-    External(const std::string& name, const Type* type, const SourceLocation& location)
-    :DefinitionHeader(name, type, location) {}
+using External = DefinitionHeader;
 
-    virtual std::string node_type_string() const { return "external"; };
-};
+// class External: public DefinitionHeader {
+// public:
+//     External(const std::string& name, const Type* type, const SourceLocation& location)
+//     :DefinitionHeader(name, type, location) {}
+
+//     virtual std::string node_type_string() const { return "external"; };
+// };
 
 External* create_external(AST_Store& ast_store, const std::string& name, const Type* type, 
     const SourceLocation& location);

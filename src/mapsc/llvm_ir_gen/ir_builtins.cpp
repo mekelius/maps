@@ -94,8 +94,7 @@ bool forward_declare_libmaps(IR_Generator& generator) {
                 llvm::FunctionType::get(generator.types_.void_t, 
                     {generator.types_.char_array_ptr_t}, false))) {
 
-        Log::compiler_error("Declaring builtin prints function failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Declaring builtin prints function failed";
         return false;
     }
 
@@ -105,8 +104,7 @@ bool forward_declare_libmaps(IR_Generator& generator) {
                 llvm::FunctionType::get(generator.types_.void_t, 
                     {generator.types_.mutstring_ptr_t}, false))) {
 
-        Log::compiler_error("Declaring builtin prints function failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Declaring builtin prints function failed";
         return false;
     }
 
@@ -114,40 +112,35 @@ bool forward_declare_libmaps(IR_Generator& generator) {
     if (!generator.overloaded_forward_declaration("to", Maps::Int_to_Float, 
         llvm::FunctionType::get(generator.types_.double_t, {generator.types_.int_t}, false))) {
 
-        Log::compiler_error("Declaring runtime cast to_Float_Int failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Declaring runtime cast to_Float_Int failed";
         return false;
     }
 
     if (!generator.overloaded_forward_declaration("to", Maps::Boolean_to_String,
         llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.boolean_t}, false))) {
 
-        Log::compiler_error("Declaring runtime cast to_String_Boolean failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Declaring runtime cast to_String_Boolean failed";
         return false;
     }
 
     if (!generator.overloaded_forward_declaration("to", Maps::MutString_to_String,
         llvm::FunctionType::get(generator.types_.char_array_ptr_t, {generator.types_.mutstring_ptr_t}, false))) {
 
-        Log::compiler_error("Declaring runtime cast to_String_MutString failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Declaring runtime cast to_String_MutString failed";
         return false;
     }
 
     if (!generator.overloaded_forward_declaration("to", Maps::Int_to_MutString,
         llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {generator.types_.int_t}, false))) {
 
-        Log::compiler_error("Declaring runtime cast to_MutString_Int failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Declaring runtime cast to_MutString_Int failed";
         return false;
     }
 
     if (!generator.overloaded_forward_declaration("to", Maps::Float_to_MutString,
         llvm::FunctionType::get(generator.types_.mutstring_ptr_t, {generator.types_.double_t}, false))) {
 
-        Log::compiler_error("Declaring runtime cast to_String_MutString failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Declaring runtime cast to_String_MutString failed";
         return false;
     }
 
@@ -161,8 +154,7 @@ bool forward_declare_libmaps(IR_Generator& generator) {
             generator.types_.mutstring_ptr_t, generator.types_.mutstring_ptr_t}, false));
 
     if (!concat) {
-        Log::compiler_error("Declaring concat failed", 
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Declaring concat failed";
         return false;
     }
 
@@ -197,7 +189,7 @@ bool insert_arithmetic_functions(IR_Generator& generator) {
         "-", *IntInt, llvm_IntInt);
 
     if (!negate_int) {
-        Log::compiler_error("creating builtin unary - failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "creating builtin unary - failed";
         return false;
     }
 
@@ -210,7 +202,7 @@ bool insert_arithmetic_functions(IR_Generator& generator) {
         "+", *IntIntInt, llvm_IntIntInt);
 
     if (!int_add) {
-        Log::compiler_error("creating builtin + failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "creating builtin + failed";
         return false;
     }
 
@@ -225,7 +217,7 @@ bool insert_arithmetic_functions(IR_Generator& generator) {
         "*", *IntIntInt, llvm_IntIntInt);
 
     if (!int_mul) {
-        Log::error("creating builtin * failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "creating builtin * failed";
         return false;
     }
 
@@ -240,7 +232,7 @@ bool insert_arithmetic_functions(IR_Generator& generator) {
         "-", *IntIntInt, llvm_IntIntInt);
 
     if (!int_sub) {
-        Log::error("creating builtin - failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "creating builtin - failed";
         return false;
     }
 
@@ -255,7 +247,7 @@ bool insert_arithmetic_functions(IR_Generator& generator) {
         "+", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_add) {
-        Log::error("creating builtin + failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "creating builtin + failed";
         return false;
     }
 
@@ -270,7 +262,7 @@ bool insert_arithmetic_functions(IR_Generator& generator) {
         "*", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_mul) {
-        Log::error("creating builtin * failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "creating builtin * failed";
         return false;
     }
 
@@ -285,7 +277,7 @@ bool insert_arithmetic_functions(IR_Generator& generator) {
         "-", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_sub) {
-        Log::error("creating builtin - failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "creating builtin - failed";
         return false;
     }
 
@@ -300,7 +292,7 @@ bool insert_arithmetic_functions(IR_Generator& generator) {
         "/", *maps_FloatFloatFloat, llvm_FloatFloatFloat);
 
     if (!float_div) {
-        Log::error("creating builtin - failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "creating builtin - failed";
         return false;
     }
 

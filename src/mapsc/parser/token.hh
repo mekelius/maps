@@ -13,6 +13,8 @@
 
 namespace Maps {
 
+class LogStream;
+
 enum class TokenType: int {
     eof,
     identifier, type_identifier, 
@@ -47,7 +49,7 @@ struct Token {
     }
 
     // a formatted representation of the token
-    std::string get_string() const;
+    LogStream& log_self_to(LogStream&) const;
 
     static const Token dummy_token;
 };

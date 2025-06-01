@@ -140,24 +140,24 @@ bool convert_by_value_substitution(Expression& expression) {
     assert(*expression.type == *expression.reference_value()->get_type() && 
         "attempting to substitute a value of a different type");
 
-    Log::debug_extra("Attempting to substitute " + expression.log_message_string(), expression.location);
+    Log::debug_extra(expression.location) << "Attempting to substitute " << expression;
 
     if (!expression.reference_value()->body_) {
-        Log::compiler_error("Attempted to substitute a definition without a body", expression.location);
+        Log::compiler_error(expression.location) << 
+            "Attempted to substitute a definition without a body";
         return false;
     }
 
     auto new_value = evaluate(**expression.reference_value()->body_);
     if (!new_value) {
-        Log::error("Substitution failed", expression.location);
+        Log::error(expression.location) << "Substitution failed";
         return false;
     }
 
     expression.expression_type = ExpressionType::known_value;
     expression.value = std::visit([](auto value)->ExpressionValue { return {value}; }, *new_value);
 
-    Log::debug_extra("Succesfully substituted, new expression: " + expression.log_message_string(), 
-        expression.location);
+    Log::debug_extra(expression.location) << "Succesfully substituted, new expression: " << expression;
 
     return true;
 }

@@ -22,6 +22,14 @@ ReverseParser::ReverseParser(std::ostream* ostream, const Options& options)
     :ostream_(ostream), options_(options) {
 }
 
+ReverseParser::ReverseParser(LogStream* logstream) {
+    assert(false && "not implemented");
+}
+
+ReverseParser::ReverseParser(LogStream* logstream, const Options& options) {
+    assert(false && "not implemented");
+}
+
 void ReverseParser::reset() {
     skipped_initial_linebreak_doubling_ = false;
     indent_stack_ = 0;

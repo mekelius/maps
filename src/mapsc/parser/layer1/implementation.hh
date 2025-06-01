@@ -59,15 +59,16 @@ protected:
     std::optional<Scope*> current_context() const;
     bool in_top_level_context() const { return context_stack_.size() == 1; }
     
-    void fail(const std::string& message, SourceLocation location, bool compiler_error = false);
-    Expression* fail_expression(const std::string& message, SourceLocation location, 
-        bool compiler_error = false);
-    DefinitionHeader* fail_definition(const std::string& message, SourceLocation location, 
-        bool compiler_error = false);
-    Statement* fail_statement(const std::string& message, SourceLocation location, 
-        bool compiler_error = false);
-    std::nullopt_t fail_optional(const std::string& message, SourceLocation location, 
-        bool compiler_error = false);
+    void fail();
+    void fail(std::string_view message, const SourceLocation& location);
+    Expression* fail_expression(SourceLocation location, bool compiler_error = false);
+    Expression* fail_expression(std::string_view message, SourceLocation location, bool compiler_error = false);
+    DefinitionHeader* fail_definition(SourceLocation location, bool compiler_error = false);
+    DefinitionHeader* fail_definition(std::string_view message, SourceLocation location, bool compiler_error = false);
+    Statement* fail_statement(SourceLocation location, bool compiler_error = false);
+    Statement* fail_statement(std::string_view message, SourceLocation location, bool compiler_error = false);
+    std::nullopt_t fail_optional();
+    std::nullopt_t fail_optional(std::string_view message, const SourceLocation& location, bool compiler_error = false);
     
     void log(const std::string& message, LogLevel loglevel) const;
     void log(const std::string& message, LogLevel loglevel, SourceLocation location) const;

@@ -72,16 +72,16 @@ optional<Expression*> create_known_value(CompilationState& state, KnownValue val
         return expression;
 
     // try to cast
-    Log::debug_extra("While creating known value expression: de-facto type didn't match given type, attempting to cast...", 
-        location);
+    Log::debug_extra(location) << "While creating known value expression: " << 
+        "de-facto type didn't match given type, attempting to cast...";
 
     if (!expression->cast_to(state, type)) {
-        Log::error("Couldn't create a known value of type " + type->name_string() + 
-            " from value:" + value_to_string(value), location);
+        Log::error(location) << "Couldn't create a known value of type " << *type << 
+            " from value:" << value_to_string(value);
         return nullopt;
     }
 
-    Log::debug_extra("Succesfully casted to " + type->name_string(), location);
+    Log::debug_extra(location) << "Succesfully casted to " << *type;
 
     return expression;
 }
@@ -102,9 +102,8 @@ optional<KnownValue> Expression::known_value_value() const {
         [](maps_MutString value)->optional<KnownValue>
             { return {value}; },
         [this](auto)->optional<KnownValue> {
+            LogNoContext::compiler_error(location) << *this << " held an incorrect value type";
             assert(false && "known_value expression didn't have a correct value type");
-            LogNoContext::compiler_error(log_message_string() + " held an incorrect value type", 
-                location);
             return nullopt;
         }
     }, value);

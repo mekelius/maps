@@ -38,9 +38,8 @@ optional<Expression*> create_call(CompilationState& state,
     auto callee_type = callee->get_type();
     
     if (!callee_type->is_function() && args.size() > 0) {
-        Log::error(callee->name_string() + 
-            " cannot take arguments, tried giving " + to_string(args.size()), 
-            callee->location());
+        Log::error(callee->location()) << *callee << " cannot take arguments, tried giving " << 
+            args.size();
         return nullopt;
     }
 
@@ -55,8 +54,8 @@ optional<Expression*> create_call(CompilationState& state,
         "Something went wrong while creating placeholders for missing args");
 
     if (!types_ok) {
-        Log::error("Creating function call to " + callee->name_string() + 
-            " failed due to illegal arguments", location);
+        Log::error(location) << "Creating function call to " << *callee << 
+            " failed due to illegal arguments";
         return nullopt;
     }
 
@@ -134,9 +133,8 @@ bool convert_to_partial_binop_minus_call_left(CompilationState& state, Expressio
         assert(false && 
            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus");
 
-        Log::compiler_error(
-            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus", 
-            expression.location);
+        Log::compiler_error(expression.location) <<
+            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus";
 
         expression.expression_type = ExpressionType::compiler_error;
         return false;
@@ -169,9 +167,8 @@ bool convert_to_unary_minus_call(CompilationState& state, Expression& expression
         assert(false && 
            "Expression::convert_to_unary_minus_call called on a not partially applied minus");
 
-        Log::compiler_error(
-            "Expression::convert_to_unary_minus_call called on a not partially applied minus", 
-            expression.location);
+        Log::compiler_error(expression.location) <<
+            "Expression::convert_to_unary_minus_call called on a not partially applied minus";
 
         expression.expression_type = ExpressionType::compiler_error;
         return false;

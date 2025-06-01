@@ -122,7 +122,7 @@ struct Statement {
     SourceLocation location;
     StatementValue value;
 
-    std::string log_message_string() const;
+    LogStream& log_self_to(LogStream& logstream) const;
 
     bool is_illegal_as_single_statement_block() const;
     bool is_empty() const;

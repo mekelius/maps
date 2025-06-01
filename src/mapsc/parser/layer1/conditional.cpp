@@ -15,37 +15,38 @@ Statement* ParserLayer1::parse_if_statement() {
     auto location = current_token().location;
     auto initial_if_indent = indent_level_;
 
-    Log::debug_extra("Parsing if statement", current_token().location);
+    Log::debug_extra(current_token().location) << "Parsing if statement";
 
     get_token(); // eat the if
 
     auto condition = parse_condition_expression();
-    if (!result_.success)
-        return fail_statement("Parsing if statement condition failed", condition->location);
-
-    Log::debug_extra("Parsed if statement condition: " + condition->log_message_string(), 
-        current_token().location);
+    if (!result_.success) {
+            Log::error(condition->location) << "Parsing if statement condition failed";
+            return fail_statement(condition->location);
+    }
+    Log::debug_extra(current_token().location) << "Parsed if statement condition: " << *condition;
 
     auto body = parse_conditional_body();
-    if (!result_.success)
-        return fail_statement("Parsing if statement body failed", body->location);
+    if (!result_.success) {
+        Log::error(body->location) << "Parsing if statement body failed";
+        return fail_statement(body->location);
+    }
 
-    Log::debug_extra("Parsed if statement body: " + body->log_message_string(), 
-        current_token().location);
+    Log::debug_extra(current_token().location) << "Parsed if statement body: " << *body;
 
     if (current_token().token_type != TokenType::else_t) {
-        Log::debug_extra("Finished parsing if statement from " + location.to_string(), 
-            current_token().location);
+        Log::debug_extra(current_token().location) << "Finished parsing if statement from " << location;
         return create_if(*ast_store_, condition, body, location);
     }
 
     // handle else(s)
     auto else_branch = parse_else_branch(initial_if_indent);
-    if (has_failed())
-        return fail_statement("Parsing if statement else branch failed", body->location);
+    if (has_failed()) {
+        Log::error(body->location) << "Parsing if statement else branch failed";
+        return fail_statement(body->location);
+    }
 
-    Log::debug_extra("Finished parsing if statement from " + location.to_string(), 
-        current_token().location);
+    Log::debug_extra(current_token().location) << "Finished parsing if statement from " << location;
 
     return create_if_else(*ast_store_, condition, body, else_branch, location);
 }
@@ -53,7 +54,7 @@ Statement* ParserLayer1::parse_if_statement() {
 Statement* ParserLayer1::parse_else_branch(uint initial_indent) {
     get_token(); // eat the else
 
-    Log::debug_extra("Parsing else statement", current_token().location);
+    Log::debug_extra(current_token().location) << "Parsing else statement";
 
     bool indented = indent_level_ > initial_indent;
 
@@ -67,12 +68,10 @@ Statement* ParserLayer1::parse_else_branch(uint initial_indent) {
 
     if (indent_level_ < initial_indent && !eof()) {
         auto location = current_token().location;
-        Log::debug_extra("Mismatched indents: " + to_string(indent_level_) + 
-            " and " + to_string(initial_indent), 
-            location);
+        Log::error(location) <<
+            "Mismatched indents: " << indent_level_ << " and " << initial_indent;
 
-        return fail_statement("Mismatched indents at the end of else statement", 
-            location);
+        return fail_statement(location);
     }
 
     return else_branch;
@@ -120,8 +119,8 @@ Statement* ParserLayer1::parse_conditional_body() {
                 case TokenType::else_t:
                     break;
                 default:
-                    return fail_statement("Mismatched indents in if statement body", 
-                        current_token().location);
+                    Log::error(current_token().location) << "Mismatched indents in if statement body";
+                    return fail_statement(current_token().location);
             }
 
             return body;
@@ -136,8 +135,10 @@ Statement* ParserLayer1::parse_guard_statement() {
     get_token();
 
     auto condition = parse_expression();
-    if (has_failed())
-        return fail_statement("Parsing guard statement failed", condition->location);
+    if (has_failed()) {
+        Log::error(condition->location) << "Parsing guard statement failed";
+        return fail_statement(condition->location);
+    }
 
     return create_guard(*ast_store_, condition, location);
 }

@@ -24,20 +24,22 @@ struct Statement;
 class AST_Store;
 class CompilationState;
 
-class Parameter: public DefinitionHeader {
-public:
-    Parameter(const std::string& name, const Type* type, const SourceLocation& location)
-    :DefinitionHeader(name, type, location) {}
+// class Parameter: public DefinitionHeader {
+// public:
+//     Parameter(const std::string& name, const Type* type, const SourceLocation& location)
+//     :DefinitionHeader(name, type, location) {}
 
-    Parameter(const Type* type, const SourceLocation& location)
-    :DefinitionHeader("_", type, location), is_discarded_(true) {}
+//     Parameter(const Type* type, const SourceLocation& location)
+//     :DefinitionHeader("_", type, location), is_discarded_(true) {}
 
-    virtual std::string node_type_string() const { return "parameter"; };
-    virtual std::string name_string() const { return name_; };
-    virtual const Type* get_type() const {return type_; };
+//     virtual std::string node_type_string() const { return "parameter"; };
+//     virtual std::string name_string() const { return name_; };
+//     virtual const Type* get_type() const {return type_; };
 
-    bool is_discarded_ = false;
-};
+//     bool is_discarded_ = false;
+// };
+
+using Parameter = DefinitionHeader;
 
 using ParameterList = std::vector<Parameter*>;
 

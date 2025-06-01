@@ -29,30 +29,26 @@ inline std::optional<KnownValue> evaluate(const DefinitionBody& definition) {
                 }
 
                 case ExpressionType::known_value: {
-                    Log::debug_extra("Evaluating " + expression->log_message_string(), 
-                        expression->location);
+                    Log::debug_extra(expression->location) << "Evaluating " << *expression;
                     auto value = expression->known_value_value();
 
                     if (!value) {
-                        Log::error("Evaluating " + expression->log_message_string() + " failed", 
-                            expression->location);
+                        Log::error(expression->location) << "Evaluating " << *expression << " failed";
                         return nullopt;
                     }
 
-                    Log::debug_extra("Evaluated to " + value_to_string(*value), 
-                        expression->location);
+                    Log::debug_extra(expression->location) << "Evaluated to " << value_to_string(*value);
                     return value;
                 }
                 default:
-                    Log::compiler_error("Compile-time evaluating " + 
-                        expression->expression_type_string() + 
-                        " not implemented", expression->location);
+                    Log::compiler_error(expression->location) << "Compile-time evaluating " << 
+                        expression->expression_type_string() << " not implemented";
                     return nullopt;
             }
         },
         [definition](auto)->std::optional<KnownValue> {
-            Log::compiler_error("Compile time evaluating definitions with body type " + 
-                definition.node_type_string() + " not implemented", definition.location());
+            Log::compiler_error(definition.location()) << "Compile time evaluating definitions with body type " << 
+                definition.node_type_string() << " not implemented";
             return nullopt;
         }
     }, definition.value_);

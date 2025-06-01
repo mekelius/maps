@@ -22,14 +22,12 @@ bool PragmaStore::set_flag(const std::string& flag_name, bool value, const Sourc
     auto flag_declarations_it = declarations_.find(flag_name);
     
     if (flag_declarations_it == declarations_.end()) {
-        Log::error("tried to set unkown pragma: " + std::string{flag_name}, location);
+        Log::error(location) << "tried to set unkown pragma: " << flag_name;
         return false;
     }
 
     flag_declarations_it->second.insert({location, value});
-    Log::debug(
-        "set pragma: " + std::string(value ? "enable " : "disable ") + std::string{flag_name}, 
-        location);
+    Log::debug(location) << "set pragma: " << (value ? "enable " : "disable ") << flag_name;
     return true;
 }
 

@@ -45,20 +45,19 @@ bool run_transforms(CompilationState& state, Scope& scope,
 
 bool run_transforms(CompilationState& state, Scope& scope, DefinitionBody& definition) {
     if (definition.is_deleted()) {
-        Log::debug_extra("Skipping transforms on deleted definition " + definition.name_string(), 
-            definition.location());
+        Log::debug_extra(definition.location()) << 
+            "Skipping transforms on deleted definition " << definition;
         return true;
     }
 
     if (!definition.is_top_level_definition()) {
-        Log::compiler_error(
-            "run_transforms called on not a top level definition", definition.location());
+        Log::compiler_error(definition.location()) <<
+            "run_transforms called on not a top level definition";
         assert(false && "run_transforms called on not a top level definition");
         return false;
     }
 
-    Log::debug_extra("Running transforms on definition " + definition.name_string() + "...", 
-        definition.location());
+    Log::debug_extra(definition.location()) << "Running transforms on definition " << definition << "...";
 
     // Log::debug_extra("Simplify " + definition.to_string() + "...", 
     //     definition.location());
@@ -80,14 +79,12 @@ bool run_transforms(CompilationState& state, Scope& scope, DefinitionBody& defin
     //     definition.location());
 
 
-    Log::debug_extra("Concretize " + definition.name_string() + "...", 
-        definition.location());
+    Log::debug_extra(definition.location()) << "Concretize " << definition << "...";
     if (!concretize(state, definition)) {
-        Log::error("Concretizing " + definition.name_string() + " failed", definition.location());
+        Log::error(definition.location()) << "Concretizing " << definition << " failed";
         return false;
     }
-    Log::debug_extra("Concretize ok", 
-        definition.location());
+    Log::debug_extra(definition.location()) << "Concretize ok";
 
     
     // Log::debug_extra("Type checking " + definition.to_string() + "...", 

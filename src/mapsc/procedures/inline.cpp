@@ -45,7 +45,7 @@ bool inline_call(Expression& expression, const DefinitionBody& definition) {
         return false;
 
     if (args.empty()) {
-        Log::debug_extra("Changed nullary call back to a reference", expression.location);
+        Log::debug_extra(expression.location) << "Changed nullary call back to a reference";
         expression.expression_type = ExpressionType::reference;
         return substitute_value_reference(expression, definition);
     }
@@ -72,12 +72,12 @@ bool substitute_value_reference(Expression& expression) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
 
-    Log::debug_extra("Substituting " + expression.log_message_string(), expression.location);
+    Log::debug_extra(expression.location) << "Substituting " << expression;
 
     auto callee = expression.reference_value();
 
     if (!callee->body_) {
-        Log::error("Substitution failed", expression.location);
+        Log::error(expression.location) << "Substitution failed";
         return false;
     }
 
@@ -89,7 +89,7 @@ bool substitute_value_reference(Expression& expression, const DefinitionBody& ca
         "substitute_value_reference called with not a reference");
 
     // if (callee.is_undefined()) {
-    //     Log::error("\"" + callee.name_string() + "\" is undefined", expression.location);
+    //     Log::error("\"" << callee.name_string() << "\" is undefined", expression.location);
     //     return false;
     // }
 
@@ -99,10 +99,8 @@ bool substitute_value_reference(Expression& expression, const DefinitionBody& ca
 
     if (callee_declared_type && expression.declared_type) {
         if (**callee_declared_type != **expression.declared_type) {
-            Log::warning("Attempting substitution, declared types don't match: " + 
-                (*expression.declared_type)->name_string() + " != " + 
-                (*callee_declared_type)->name_string(), 
-                expression.location);
+            Log::warning(expression.location) << "Attempting substitution, declared types don't match: " <<
+                **expression.declared_type << " != " << **callee_declared_type;
             return false;
         }
     }
@@ -123,15 +121,15 @@ bool substitute_value_reference(Expression& expression, const DefinitionBody& ca
 
     // reject impure functions (maybe we can get llvm to inline them?)
     if (callee_type->is_impure_function()) {
-        Log::warning("Impure functions aren't yet inlinable", expression.location);
+        Log::warning(expression.location) << "Impure functions aren't yet inlinable";
         return false;
     }
 
     if (*callee_type != *expression.type) {
         // try to cast
-        Log::debug_extra("Cannot inline " + expression.log_message_string() + 
-            " due to incompatible types: " + callee_type->name_string() + " and " + 
-            expression.type->name_string(), expression.location);
+        Log::debug_extra(expression.location) << 
+            "Cannot inline " << expression << " due to incompatible types: " << *callee_type << 
+                " and " << *expression.type;
         return false;
     }
 

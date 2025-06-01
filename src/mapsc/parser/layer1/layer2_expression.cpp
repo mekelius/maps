@@ -221,7 +221,7 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return parse_lambda_expression();
 
         default:
-            return fail_expression("In parse_term: unhandled token type: " + current_token().get_string(), 
+            return fail_expression(std::string{"In parse_term: unhandled token type: " + current_token().get_string()}, 
                 current_token().location, true);
     }
 }

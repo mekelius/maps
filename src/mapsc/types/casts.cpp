@@ -125,7 +125,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
         return true;
     }
 
-    Log::error("Cannot convert String to " + target_type->name_string(), expression.location);
+    Log::error(expression.location) << "Cannot convert String to " << *target_type;
     return false;
 }
 
@@ -165,9 +165,8 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
             return cast_from_Int(&MutString, expression);
         }
 
-        Log::warning(
-            "Casts from NumberLiteral to MutString only implemented for integral values", 
-            NO_SOURCE_LOCATION);
+        Log::warning(NO_SOURCE_LOCATION) <<
+            "Casts from NumberLiteral to MutString only implemented for integral values";
         return false;
     }
 
@@ -192,7 +191,7 @@ bool cast_from_MutString(const Type* target_type, Expression& expression) {
         return true;
     }
 
-    Log::compiler_error("Mut string casts not implemented", expression.location);
+    Log::compiler_error(expression.location) << "Mut string casts not implemented";
     return false;
 }
 

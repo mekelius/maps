@@ -57,7 +57,7 @@ public:
 
     Operator(const std::string& name, DefinitionHeader* value,
         Operator::Properties operator_props, SourceLocation location)
-    :DefinitionHeader(name, value->get_type(), location), 
+    :DefinitionHeader(DefinitionType::operator_def, name, value->get_type(), location), 
      value_(value), 
      operator_props_(operator_props) {}
 
@@ -97,13 +97,6 @@ Operator* create_binary_operator(AST_Store& ast_store, const std::string& name, 
 
 Operator* create_binary_operator(AST_Store& ast_store, const std::string& name, DefinitionHeader* value, 
     Operator::Precedence precedence, SourceLocation location);
-
-Operator* create_testing_binary_operator(AST_Store& ast_store, const std::string& name, 
-    const Type* type, Operator::Precedence precedence, Operator::Associativity associativity, 
-    SourceLocation location);
-
-Operator* create_testing_binary_operator(AST_Store& ast_store, const std::string& name, 
-    const Type* type, Operator::Precedence precedence, SourceLocation location);
 
 } // namespace Maps
 

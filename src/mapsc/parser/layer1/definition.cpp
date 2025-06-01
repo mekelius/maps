@@ -61,7 +61,8 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
                 
                 // check if name already exists
                 if (identifier_exists(name))
-                    return fail_definition("Attempting to redefine identifier " + name, location);
+                    Log::error(location) << "Attempting to redefine identifier " << name;
+                    return fail_definition(location);
 
                 get_token(); // eat the identifier
 
@@ -73,8 +74,10 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
 
                     // create an unitialized identifier
                     auto definition = create_undefined_identifier(name, true, location);
-                    if (!definition)
-                        return fail_definition("Creating undefined identifier failed", location, true);
+                    if (!definition) {
+                        Log::compiler_error(location) << "Creating undefined identifier failed"; 
+                        return fail_definition(location, true);
+                    }
 
                     return *definition; //!!!
                 }
@@ -91,14 +94,19 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
                     LetDefinitionValue body = parse_definition_body();
 
                     ast_store_->allocate_definition_body(definition, body);
-                    if (!create_identifier(definition))
-                        return fail_definition("Creating top level identifier failed", location, true);
+                    if (!create_identifier(definition)) {
+                        Log::compiler_error(location) << "Creating top level identifier failed";
+                        return fail_definition(location, true);
+                    }
                     
                     auto popped_context = pop_context();
 
                     // This means a syntax error
-                    if (!popped_context)
-                        return fail_definition("Creating top level definition body failed", location);
+                    if (!popped_context) {
+                        Log::error(location) << "Creating top level definition body failed"; 
+                        return fail_definition(location);
+                    }
+
 
                     assert(popped_context == new_scope && "context stack not returned to correct state");
 
@@ -107,17 +115,17 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
                 }
 
                 get_token();
-                return fail_definition(
-                    "Unexpected " + current_token().get_string() + ", in let-definition", location);
+                Log::error(location) << "Unexpected " << current_token() << ", in let-definition";
+                return fail_definition(location);
             }
 
         case TokenType::operator_t:
-            return fail_definition(
-                "operator overloading not yet implemented, ignoring", location);
+            Log::error(location) << "Operator overloading not yet implemented, ignoring";
+            return fail_definition(location);
 
         default:
-            return fail_definition(
-                "unexpected token: " + current_token().get_string() + " in let definition", location);
+            Log::error(location) << "unexpected token: " << current_token() << " in let definition";
+            return fail_definition(location);
     }
 }
 

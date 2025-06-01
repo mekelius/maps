@@ -8,31 +8,52 @@ namespace Maps {
 DefinitionBody::DefinitionBody(DefinitionHeader* header, LetDefinitionValue value)
 :header_(header), value_(value) {}
 
+void DefinitionBody::set_type(const Type* type) {
+    this->header_->type_ = type;
 
-DefinitionBody* create_let_definition(AST_Store& ast_store, const std::string& name, 
-    LetDefinitionValue value, const SourceLocation& location) {
-
-    return *ast_store.allocate_definition({name, location}, value)->body_;
+    std::visit(overloaded {
+        [](Error) {},
+        [](Undefined) {},
+        [&type](Expression* expression) { expression->type = type; },
+        [&type](Statement* statement) {
+            if (statement->statement_type == StatementType::expression_statement)
+                std::get<Expression*>(statement->value)->type = type;
+        },
+    }, value_);
 }
 
-DefinitionBody* create_let_definition(AST_Store& ast_store, 
-    LetDefinitionValue value, const SourceLocation& location) {
+std::optional<const Type*> DefinitionBody::get_declared_type() const {
+    if (Expression* const* expression = std::get_if<Expression*>(&value_)) {
+        return (*expression)->declared_type;
 
-    // !!! names will clash
-    return create_let_definition(ast_store, "anonymous_definition", value, location);
+    } else if (Statement* const* statement = std::get_if<Statement*>(&value_)) {
+        if ((*statement)->statement_type == StatementType::expression_statement)
+            return std::get<Expression*>((*statement)->value)->declared_type;
+
+        return declared_type_;
+    }
+
+    assert(false && "unhandled definition type in Definition::get_declared_type");
+    return std::nullopt;
 }
 
-DefinitionBody* create_let_definition(AST_Store& ast_store, const std::string& name, 
-    Expression* value, const SourceLocation& location) {
+bool DefinitionBody::set_declared_type(const Type* type) {
+    if (Expression* const* expression = std::get_if<Expression*>(&value_)) {
+        (*expression)->declared_type = type;
+        return true;
 
-    return *ast_store.allocate_definition({name, value->type, location}, value)->body_;
-}
+    } else if (Statement* const* statement = std::get_if<Statement*>(&value_)) {
+        if ((*statement)->statement_type == StatementType::expression_statement) {
+            auto expression = std::get<Expression*>((*statement)->value);
+            expression->declared_type = type;
+            return true;
+        }
 
-DefinitionBody* create_let_definition(AST_Store& ast_store, Expression* value, 
-    const SourceLocation& location) {
+        declared_type_ = type;
+        return true;
+    }
 
-    // !!! names will clash
-    return *ast_store.allocate_definition({"anonymous_definition", value->type, location}, value)->body_;
+    return false;
 }
 
 } // namespace Maps

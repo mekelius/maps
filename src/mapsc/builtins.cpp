@@ -13,6 +13,7 @@
 #include "mapsc/types/type_defs.hh"
 
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/builtin.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/operator.hh"
 #include "mapsc/ast/scope.hh"
@@ -27,8 +28,8 @@ using Log = LogInContext<LogContext::compiler_init>;
 
 // ----- BUILTIN DEFINITIONS -----
 
-Builtin true_{"true", BuiltinValue{true}, &Boolean};
-Builtin false_{"false", BuiltinValue{false}, &Boolean};
+Builtin true_ = create_builtin("true", BuiltinValue{true}, &Boolean);
+Builtin false_ = create_builtin("false", BuiltinValue{false}, &Boolean);
 BuiltinExternal print_String{"prints", &String_to_IO_Void};
 BuiltinExternal print_MutString{"printms", &MutString_to_IO_Void};
 
@@ -59,8 +60,7 @@ BuiltinExternal concat{"concat", &MutString_MutString_to_MutString};
 
 bool init_builtin(Scope& scope, DefinitionHeader& node) {
     if (!scope.create_identifier(&node)) {
-        Log::compiler_error("Creating builtin " + node.name_string() + " failed",
-            COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Creating builtin " << node << " failed";
         return false;
     }
 
@@ -90,7 +90,7 @@ bool init_builtins(Scope& scope) {
 
 const Scope* get_builtins() {
     if (!builtins_initialized && !init_builtins(builtins)) {
-        Log::compiler_error("Initializing builtins failed", COMPILER_INIT_SOURCE_LOCATION);
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Initializing builtins failed";
         assert(false && "initializing builtins failed");
     }
 
@@ -102,11 +102,11 @@ optional<DefinitionHeader*> find_external_runtime_cast(const Scope& scope, const
     
     std::string cast_name = "to_" + target_type->name_string() + "_" + source_type->name_string();
     
-    Log::debug_extra("Trying to find runtime cast " + cast_name, NO_SOURCE_LOCATION);
+    Log::debug_extra(NO_SOURCE_LOCATION) << "Trying to find runtime cast " << cast_name;
 
     auto cast = scope.get_identifier(cast_name);
     if (!cast)
-        LogNoContext::debug("Could not find runtime cast " + cast_name, NO_SOURCE_LOCATION);
+        LogNoContext::debug(NO_SOURCE_LOCATION) << "Could not find runtime cast " << cast_name;
 
     return cast;
 }
