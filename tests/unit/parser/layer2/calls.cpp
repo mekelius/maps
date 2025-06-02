@@ -3,7 +3,6 @@
 #include <sstream>
 #include <memory>
 
-#include "mapsc/logging_options.hh"
 #include "mapsc/compilation_state.hh"
 
 #include "mapsc/types/type_defs.hh"

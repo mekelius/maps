@@ -41,6 +41,7 @@ set_property(TARGET libmaps PROPERTY OUTPUT_NAME maps)
 # -------------------- MAPSC FRONTEND --------------------
 
 add_library(mapsc_frontend OBJECT
+    src/mapsc/source.cpp
     src/mapsc/logging.cpp
     src/mapsc/pragma.cpp
     src/mapsc/compilation_state.cpp

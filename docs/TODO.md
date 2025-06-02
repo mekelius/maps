@@ -4,20 +4,15 @@
 
 #### Short term
 
-- clear pure expression statements in blocks etc
-- split declarations/definitions off from statements
-- finish dsir
-    - definitions
-    - calls
-    - type casts
-- do the ifs in dsir
-- do like loops an stuff in dsir
-- then:
-    - look into conditionals
-    - look into runtime casts
-        - runtime casts in our design require both mutable strings and optionals
-            - optionals require conditionals
-            - optionals require some form of contexts to unwrap
+- definitions and builtin values
+    - fix true and false
+    - maybe subclass definition header for builtins once more
+
+- do functions
+- do loops
+- get rid of MutString
+
+- clear pure expression statements in blocks etc??
 - make compiler know whether we are currently in a generic or not
     - encountering abstract types in generics is always ok, but in concrete functions it depends on stage?
 

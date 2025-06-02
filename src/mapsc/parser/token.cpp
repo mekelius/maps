@@ -15,104 +15,104 @@ Token::Token(TokenType token_type, const std::string& value, SourceLocation loca
 Token::Token(TokenType token_type, SourceLocation location)
 :Token(token_type, "", location) {}
 
-LogStream& Token::log_self_to(LogStream& logstream) const {
+LogStream::InnerStream& Token::log_self_to(LogStream::InnerStream& ostream) const {
     switch (token_type) {
         case TokenType::eof:
-            return logstream << "EOF";
+            return ostream << "EOF";
         case TokenType::dummy:
-            return logstream << "DUMMY TOKEN";
+            return ostream << "DUMMY TOKEN";
 
         case TokenType::identifier:
-            return logstream << "identifier \"" << string_value() << '"';
+            return ostream << "identifier \"" << string_value() << '"';
         case TokenType::type_identifier:
-            return logstream << "type identifier \"" + string_value() << '"';
+            return ostream << "type identifier \"" + string_value() << '"';
         case TokenType::operator_t:
-            return logstream << "operator \"" << string_value() << '"';
+            return ostream << "operator \"" << string_value() << '"';
         case TokenType::arrow_operator:
-            return logstream << "arrow operator \"" << string_value() << '"';    
+            return ostream << "arrow operator \"" << string_value() << '"';    
     
         case TokenType::number:
-            return logstream << "numeric literal " << string_value();
+            return ostream << "numeric literal " << string_value();
         case TokenType::string_literal:
-            return logstream << "string literal \"" << string_value() << "\"";
+            return ostream << "string literal \"" << string_value() << "\"";
 
         case TokenType::indent_block_start:
-            return logstream << "indent block start";
+            return ostream << "indent block start";
         case TokenType::indent_block_end:
-            return logstream << "indent block end";
+            return ostream << "indent block end";
         case TokenType::indent_error_fatal:
-            return logstream << "indent error fatal";
+            return ostream << "indent error fatal";
 
         case TokenType::curly_brace_open:
-            return logstream << "{";
+            return ostream << "{";
         case TokenType::curly_brace_close:
-            return logstream << "}";
+            return ostream << "}";
         case TokenType::parenthesis_open:
-            return logstream << "(";
+            return ostream << "(";
         case TokenType::parenthesis_close:
-            return logstream << ")";
+            return ostream << ")";
         case TokenType::bracket_open:
-            return logstream << "[";
+            return ostream << "[";
         case TokenType::bracket_close:
-            return logstream << "]";
+            return ostream << "]";
         case TokenType::semicolon:
-            return logstream << ";";
+            return ostream << ";";
         case TokenType::question_mark:
-            return logstream << "?";
+            return ostream << "?";
         case TokenType::colon:
-            return logstream << ":";
+            return ostream << ":";
         case TokenType::double_colon:
-            return logstream << "::";
+            return ostream << "::";
         case TokenType::comma:
-            return logstream << ",";
+            return ostream << ",";
         case TokenType::lambda:
-            return logstream << "\\";
+            return ostream << "\\";
         case TokenType::underscore:
-            return logstream << "_";
+            return ostream << "_";
             
         case TokenType::if_t:
-            return logstream << "if";
+            return ostream << "if";
         case TokenType::then:
-            return logstream << "then";
+            return ostream << "then";
         case TokenType::else_t:
-            return logstream << "else";
+            return ostream << "else";
         case TokenType::while_t:
-            return logstream << "while";
+            return ostream << "while";
         case TokenType::for_t:
-            return logstream << "for";
+            return ostream << "for";
         case TokenType::do_t:
-            return logstream << "do";
+            return ostream << "do";
         case TokenType::guard:
-            return logstream << "guard";
+            return ostream << "guard";
         case TokenType::switch_t:
-            return logstream << "switch";
+            return ostream << "switch";
         case TokenType::case_t:
-            return logstream << "case";
+            return ostream << "case";
         case TokenType::yield_t:
-            return logstream << "yield";
+            return ostream << "yield";
         case TokenType::let:
-            return logstream << "let";
+            return ostream << "let";
         case TokenType::return_t:
-            return logstream << "return";
+            return ostream << "return";
         case TokenType::operator_rwt:
-            return logstream << "operator";         
+            return ostream << "operator";         
         case TokenType::unary:
-            return logstream << "unary";     
+            return ostream << "unary";     
         case TokenType::binary:
-            return logstream << "binary";             
+            return ostream << "binary";             
         case TokenType::prefix:
-            return logstream << "prefix";             
+            return ostream << "prefix";             
         case TokenType::postfix:
-            return logstream << "postfix";  
+            return ostream << "postfix";  
 
         case TokenType::tie:
-            return logstream << "tie";
+            return ostream << "tie";
 
         case TokenType::pragma:
-            return logstream << "pragma: " << string_value();
+            return ostream << "pragma: " << string_value();
 
         case TokenType::syntax_error:
-            return logstream << "syntax error: " << string_value();
+            return ostream << "syntax error: " << string_value();
     }
 }
 

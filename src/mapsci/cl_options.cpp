@@ -1,7 +1,6 @@
 #include "cl_options.hh"
 
 #include "mapsc/logging.hh"
-#include "mapsc/logging_options.hh"
 
 namespace Maps {
 
@@ -63,7 +62,7 @@ std::optional<std::filesystem::path> get_default_history_file_path() {
 }
 
 std::tuple<bool, int, REPL_Options> process_cl_options(int argc, char* argv[], 
-    Maps::LogOptions& log_options) {
+    Maps::LogStream::Options& log_options) {
 
     std::vector<std::string> args = {argv + 1, argc + argv};
     std::vector<std::string> source_filenames{};

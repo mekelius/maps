@@ -3,7 +3,6 @@
 #include <sstream>
 
 #include "mapsc/compilation_state.hh"
-#include "mapsc/logging_options.hh"
 
 #include "mapsc/types/type_defs.hh"
 
@@ -19,7 +18,6 @@
 
 using namespace Maps;
 using namespace std;
-
 
 TEST_CASE("Layer2 should handle type specifiers") {
     auto [state, _0, types] = CompilationState::create_test_state();

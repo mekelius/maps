@@ -5,7 +5,6 @@
 
 #include "mapsc/ast/statement.hh"
 #include "mapsc/parser/layer1.hh"
-#include "mapsc/logging_options.hh"
 #include "mapsc/compilation_state.hh"
 
 using namespace std;

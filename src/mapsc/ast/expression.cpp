@@ -61,55 +61,55 @@ std::string Expression::string_value() const {
     return std::get<std::string>(value);
 }
 
-LogStream& Expression::log_self_to(LogStream& logstream) const {
+LogStream::InnerStream& Expression::log_self_to(LogStream::InnerStream& ostream) const {
     switch (expression_type) {
         case ExpressionType::type_construct:
-            return logstream << "type argument (TODO pretty print)";
+            return ostream << "type argument (TODO pretty print)";
             // TOOD:
             // return type_argument_value().to_string();
 
         case ExpressionType::type_argument:
-            return logstream << "type argument (TODO pretty print)";
+            return ostream << "type argument (TODO pretty print)";
             // TOOD:
             // return type_argument_value().to_string();
 
         case ExpressionType::layer2_expression:
-            return logstream << value_to_string(value);
+            return ostream << value_to_string(value);
 
         case ExpressionType::known_value:
-            return logstream << "value expression " << value_to_string(value);
+            return ostream << "value expression " << value_to_string(value);
         
         case ExpressionType::identifier:
-            return logstream << "identifier " << string_value();
+            return ostream << "identifier " << string_value();
 
         case ExpressionType::operator_identifier:
-            return logstream << "operator " << string_value();
+            return ostream << "operator " << string_value();
         case ExpressionType::type_operator_identifier:
-            return logstream << "type operator " << string_value();
+            return ostream << "type operator " << string_value();
         case ExpressionType::type_identifier:
-            return logstream << "type identifier " << string_value();
+            return ostream << "type identifier " << string_value();
 
         case ExpressionType::known_value_reference:
-            return logstream << "reference to known value " << *reference_value();
+            ostream << "reference to known value: " << reference_value()->log_representation();
         case ExpressionType::reference:
-            return logstream << "reference to " << *reference_value();
+            return ostream << "reference to: " << reference_value()->log_representation();
         case ExpressionType::type_reference:
-            return logstream << "reference to type " << *type_reference_value();
+            return ostream << "reference to type: " << type_reference_value()->log_representation();
         case ExpressionType::binary_operator_reference:
         case ExpressionType::prefix_operator_reference:
         case ExpressionType::postfix_operator_reference:
-            return logstream << "reference to operator " << *reference_value();
+            return ostream << "reference to operator: " << reference_value()->log_representation();
         case ExpressionType::type_operator_reference:
-            return logstream << "type operator " << *reference_value();
+            return ostream << "type operator: " << reference_value()->log_representation();
         case ExpressionType::type_constructor_reference:
-            return logstream << "reference to type constructor " << *reference_value();
+            return ostream << "reference to type constructor: " << reference_value()->log_representation();
         case ExpressionType::type_field_name:
-            return logstream << "named field" << string_value();
+            return ostream << "named field" << string_value();
 
         case ExpressionType::user_error:
-            return logstream << "broken expession (syntax error)";
+            return ostream << "broken expession (syntax error)";
         case ExpressionType::compiler_error:
-            return logstream << "broken expression (compiler error)";
+            return ostream << "broken expression (compiler error)";
 
         case ExpressionType::partial_binop_call_both:
             assert(false && "not implemented");
@@ -118,27 +118,27 @@ LogStream& Expression::log_self_to(LogStream& logstream) const {
         case ExpressionType::partial_call:
         case ExpressionType::call:
             // ReverseParser{&logstream} << "Call expression " << *this;
-            return logstream;
+            return ostream;
 
         // case ExpressionType::lambda:
         //     return "lambda expression";
 
         case ExpressionType::ternary_expression:
-            return logstream << "ternary expression";
+            return ostream << "ternary expression";
 
         case ExpressionType::missing_arg:
-            return logstream << "incomplete partial application missing argument of type " << *type;
+            return ostream << "incomplete partial application missing argument of type: " << type->log_representation();
 
         case ExpressionType::deleted:
-            return logstream << "deleted expession";
+            return ostream << "deleted expession";
 
         case ExpressionType::minus_sign:
-            return logstream << "-";
+            return ostream << "-";
 
         case ExpressionType::partially_applied_minus:
             // logstream << "minus sign partially applied to "; 
             // std::get<Expression*>(value)->log_self_to(logstream); 
-            return logstream;
+            return ostream;
     }
 }
 

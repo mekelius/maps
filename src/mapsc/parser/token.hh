@@ -9,6 +9,7 @@
 #include <string_view>
 #include <map>
 
+#include "mapsc/logging.hh"
 #include "mapsc/source.hh"
 
 namespace Maps {
@@ -49,7 +50,7 @@ struct Token {
     }
 
     // a formatted representation of the token
-    LogStream& log_self_to(LogStream&) const;
+    LogStream::InnerStream& log_self_to(LogStream::InnerStream&) const;
 
     static const Token dummy_token;
 };

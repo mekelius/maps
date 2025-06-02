@@ -5,6 +5,8 @@
 #include <string>
 #include <string_view>
 
+#include "mapsc/logging.hh"
+
 namespace Maps {
 
 using SourceFileID = int;
@@ -27,15 +29,9 @@ struct SourceLocation {
     
     auto operator<=>(const SourceLocation&) const = default;
 
-    std::string to_string() const {
-        if (line < 0)
-            return "-:-";
-        return std::to_string(line) + ":" + std::to_string(column);
-    };
-
-    std::string log_representation() const {
-        return to_string();
-    }
+    LogStream::InnerStream& log_self_to(LogStream::InnerStream& ostream) const;
+    LogStream::InnerStream& log_self_to_with_padding(LogStream::InnerStream& ostream, 
+        uint line_padding, uint col_padding) const;
 };
 
 #define TSL SourceLocation{__LINE__, 0, NULL_SOURCE_FILE}

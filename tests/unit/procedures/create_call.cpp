@@ -6,7 +6,6 @@
 #include "mapsc/ast/external.hh"
 #include "mapsc/ast/value.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/logging_options.hh"
 
 using namespace Maps;
 using namespace std;

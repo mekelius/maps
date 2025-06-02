@@ -7,7 +7,6 @@
 #include "llvm/Support/raw_os_ostream.h"
 
 #include "mapsc/logging.hh"
-#include "mapsc/logging_options.hh"
 
 #include "mapsci/cl_options.hh"
 #include "mapsci/init_llvm.hh"
@@ -16,7 +15,7 @@
 
 
 using std::unique_ptr, std::make_unique;
-using Maps::LogInContext, Maps::LogOptions, Maps::LogLevel, Maps::LogContext, Maps::LogStream;
+using Maps::LogInContext, Maps::LogStream, Maps::LogLevel, Maps::LogContext, Maps::LogStream;
 using Maps::CompilationState;
 using Maps::JIT_Manager, Maps::SHOULD_EXIT;
 

@@ -199,7 +199,7 @@ struct Expression {
     DeferredBool is_type_declaration();
 
     std::string string_value() const;
-    LogStream& log_self_to(LogStream& logstream) const;
+    LogStream::InnerStream& log_self_to(LogStream::InnerStream& ostream) const;
     
     std::optional<Expression*> cast_to(CompilationState& state, const Type* type, 
         const SourceLocation& type_declaration_location);

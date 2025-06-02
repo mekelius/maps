@@ -18,32 +18,35 @@ Statement::Statement(StatementType statement_type, const StatementValue& value,
     const SourceLocation& location)
 :statement_type(statement_type), location(location), value(value) {}
 
-LogStream& Statement::log_self_to(LogStream& logstream) const {
+LogStream::InnerStream& Statement::log_self_to(LogStream::InnerStream& ostream) const {
     switch (statement_type) {
         case StatementType::deleted:
-            return logstream << "deleted statement";
+            return ostream << "deleted statement";
         case StatementType::compiler_error:
-            return logstream << "compiler error";
+            return ostream << "compiler error";
         case StatementType::user_error:
-            return logstream << "broken statement";
+            return ostream << "broken statement";
         case StatementType::empty:
-            return logstream << "empty statement";
+            return ostream << "empty statement";
         case StatementType::expression_statement:
-            return logstream << *std::get<Expression*>(value);
+            ostream << "expression statement: ";
+            return std::get<Expression*>(value)->log_self_to(ostream);
 
         case StatementType::block:
-            return logstream << "block";
+            return ostream << "block";
 
         case StatementType::assignment:
-            return logstream << "assignment to " << *std::get<Assignment>(value).identifier_or_reference;
+            ostream << "assignment to: ";
+            return std::get<Assignment>(value).identifier_or_reference->log_self_to(ostream);
 
         case StatementType::return_:
-            return logstream << "return statement";
+            ostream << "return statement: ";
+            return std::get<Expression*>(value)->log_self_to(ostream);
 
-        case StatementType::guard: return logstream << "guard statement";
-        case StatementType::switch_s: return logstream << "switch statement";
-        case StatementType::loop: return logstream << "loop";
-        case StatementType::conditional: return logstream << "conditional statement";
+        case StatementType::guard: return ostream << "guard statement";
+        case StatementType::switch_s: return ostream << "switch statement";
+        case StatementType::loop: return ostream << "loop";
+        case StatementType::conditional: return ostream << "conditional statement";
     }
 }
 

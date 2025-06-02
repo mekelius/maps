@@ -6,11 +6,13 @@
 #include <concepts>
 #include <string_view>
 #include <iostream>
+#include <optional>
 
 #include "common/array_helpers.hh"
-#include "mapsc/source.hh"
 
 namespace Maps {
+
+struct SourceLocation;
 
 constexpr auto LOG_CONTEXTS_START_LINE = __LINE__;
 enum class LogContext {
@@ -52,131 +54,136 @@ constexpr LogLevels set_all(LogLevel log_level) {
     return log_levels;
 }
 
-class LogOptions {
-public:
-    static constexpr LogLevel DEFAULT_LOGLEVEL = LogLevel::info;
-    using OStream = std::ostream;
-
-    class Lock {
-    public:
-        LogOptions* options_;
-
-        ~Lock();
-        Lock(Lock&) = delete;
-        Lock& operator=(const Lock&) = delete;
-        Lock(Lock&&) = default;
-        Lock& operator=(Lock&&) = default;
-
-    private:
-        Lock(LogOptions* options);
-        friend LogOptions;
-    };
-
-    bool is_locked() const { return locked_; };
-
-    LogLevel get_loglevel() const;
-    LogLevel get_loglevel(LogContext context) const;
-
-    // sets the loglevel for all components
-    void set_loglevel(LogLevel loglevel);
-    void set_loglevel(LogContext context, LogLevel loglevel);
-
-    LogLevels loglevels_ = set_all(DEFAULT_LOGLEVEL);
-    OStream* ostream = &std::cout;
-    uint LINE_COL_FORMAT_PADDING = 8;
-    bool print_context_prefixes = false;
-    
-    [[nodiscard]] std::optional<std::unique_ptr<Lock>> get_lock();
-
-private:
-    std::array<bool, LOG_CONTEXT_COUNT> per_context_loglevels_overridden_ = 
-        init_array<bool, LOG_CONTEXT_COUNT>(false);
-    
-    bool locked_ = false;
-};
-
 class LogStream;
 
-template<typename T>
-concept LogsSelf = requires (T t) { t.log_self_to(std::declval<LogStream&>()); };
+template<typename Stream, typename T>
+concept LogsSelf = requires (Stream stream, T t) { t.log_self_to(stream); };
 
-template<typename T>
-concept Loggable = requires (T t) { {t.log_representation()} -> std::convertible_to<std::string_view>; };
+template<typename Stream, typename T>
+concept Loggable = requires (Stream stream, T t) { {stream << t.log_representation()}; };
 
 template<typename Stream, typename T>
 concept Printable = requires (Stream stream, T t) { {stream << t}; };
 
-constexpr char Endl = '\n';
-static_assert(Printable<LogOptions::OStream, typeof(Endl)>);
-
 class LogStream {
 public:
+    using InnerStream = std::ostream;
+
+    class Options {
+    public:
+        static constexpr LogLevel DEFAULT_LOGLEVEL = LogLevel::info;
+        static constexpr uint LINE_PADDING = 3;
+        static constexpr uint COL_PADDING = 3;
+        static constexpr uint LOGLEVEL_PREFIX_PADDING = 10;
+
+        class Lock {
+        public:
+            Options* options_;
+
+            ~Lock();
+            Lock(Lock&) = delete;
+            Lock& operator=(const Lock&) = delete;
+            Lock(Lock&&) = default;
+            Lock& operator=(Lock&&) = default;
+
+        private:
+            Lock(Options* options);
+            friend Options;
+        };
+
+        bool is_locked() const { return locked_; };
+
+        LogLevel get_loglevel() const;
+        LogLevel get_loglevel(LogContext context) const;
+
+        // sets the loglevel for all components
+        void set_loglevel(LogLevel loglevel);
+        void set_loglevel(LogContext context, LogLevel loglevel);
+
+        LogLevels loglevels_ = set_all(DEFAULT_LOGLEVEL);
+        InnerStream* inner_stream = &std::cout;
+        bool print_context_prefixes = false;
+        
+        [[nodiscard]] std::optional<std::unique_ptr<Lock>> get_lock();
+
+    private:
+        std::array<bool, LOG_CONTEXT_COUNT> per_context_loglevels_overridden_ = 
+            init_array<bool, LOG_CONTEXT_COUNT>(false);
+        
+        bool locked_ = false;
+    };
+
     static LogStream global;
 
     LogStream() = default;
-    LogStream(LogOptions options): options_(options) {}
+    LogStream(Options options): options_(options) {}
 
-    template<class L>
-        requires LogsSelf<L>
-    LogStream& operator<<(const L& logs_self) {
+    template<typename T>
+        requires LogsSelf<InnerStream, T>
+    LogStream& operator<<(const T& logs_self) {
         if (!is_open_)
             return *this;
 
-        logs_self.log_self_to(*this);
-        return *this;
-    }
-
-    template<typename L>
-        requires Loggable<L>
-    LogStream& operator<<(const L& loggable) {
-        if (!is_open_)
-            return *this;
-
-        *options_.ostream << loggable.log_representation();
+        logs_self.log_self_to(*options_.inner_stream);
         return *this;
     }
 
     template<typename T>
-        requires Printable<LogOptions::OStream, T>
+        requires Loggable<InnerStream, T>
+    LogStream& operator<<(const T& loggable) {
+        if (!is_open_)
+            return *this;
+
+        *options_.inner_stream << loggable.log_representation();
+        return *this;
+    }
+
+    template<typename T>
+        requires Printable<InnerStream, T>
     LogStream& operator<<(T t) {
         if (!is_open_)
             return *this;
 
-        *options_.ostream << t;
+        *options_.inner_stream << t;
         return *this;
     }
 
     LogStream& begin(LogContext logcontext, LogLevel loglevel, const SourceLocation& location);
 
-    [[nodiscard]] std::optional<std::unique_ptr<LogOptions::Lock>> lock();
-    [[nodiscard]] std::optional<std::unique_ptr<LogOptions::Lock>> set_loglevel(LogLevel level);
-    [[nodiscard]] std::optional<std::unique_ptr<LogOptions::Lock>> set_loglevel(LogContext context, LogLevel loglevel);
+    [[nodiscard]] std::optional<std::unique_ptr<Options::Lock>> lock();
+    [[nodiscard]] std::optional<std::unique_ptr<Options::Lock>> set_loglevel(LogLevel level);
+    [[nodiscard]] std::optional<std::unique_ptr<Options::Lock>> set_loglevel(LogContext context, LogLevel loglevel);
 
 private:
-    LogOptions options_ = {};
+    Options options_ = {};
     
     bool is_open_ = true;
 };
 
+constexpr char Endl = '\n';
+
+static_assert(Printable<LogStream::InnerStream, typeof(Endl)>);
+
+
 template <LogContext context>
 class LogInContext {
 public:
-    static LogStream& compiler_error(SourceLocation location) {
+    static LogStream& compiler_error(const SourceLocation& location) {
         return LogStream::global.begin(context, LogLevel::compiler_error, location);
     }
-    static LogStream& error(SourceLocation location) {
+    static LogStream& error(const SourceLocation& location) {
         return LogStream::global.begin(context, LogLevel::error, location);
     }
-    static LogStream& warning(SourceLocation location) {
+    static LogStream& warning(const SourceLocation& location) {
         return LogStream::global.begin(context, LogLevel::warning, location);
     }
-    static LogStream& info(SourceLocation location) {
+    static LogStream& info(const SourceLocation& location) {
         return LogStream::global.begin(context, LogLevel::info, location);
     }
-    static LogStream& debug(SourceLocation location) {
+    static LogStream& debug(const SourceLocation& location) {
         return LogStream::global.begin(context, LogLevel::debug, location);
     }
-    static LogStream& debug_extra(SourceLocation location) {
+    static LogStream& debug_extra(const SourceLocation& location) {
         return LogStream::global.begin(context, LogLevel::debug_extra, location);
     }
 
