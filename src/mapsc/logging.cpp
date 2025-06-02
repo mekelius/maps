@@ -1,6 +1,8 @@
 #include "logging.hh"
 
 #include <iomanip>
+#include <cassert>
+#include <optional>
 
 #include "logging_options.hh"
 
@@ -23,18 +25,6 @@ LogOptions::Lock::Lock(LogOptions* options): options_(options) {
     options_->locked_ = true;
 }
 
-// LogOptions::Lock LogOptions::set_global(LogContext context, LogLevel loglevel) {
-//     auto lock = LogStream::global.lock();
-//     lock.options_->set_loglevel(context, loglevel);
-//     return lock;
-// }
-
-// LogOptions::Lock LogOptions::set_global(LogLevel loglevel) {
-//     auto lock = LogStream::global.lock();
-//     lock.options_->set_loglevel(LogContext::no_context, loglevel);
-//     return lock;
-// }
-
 LogLevel LogOptions::get_loglevel() const {
     return get_loglevel(LogContext::no_context);
 }
@@ -55,10 +45,14 @@ void LogOptions::set_loglevel(LogContext context, LogLevel loglevel) {
     loglevels_.at(index) = loglevel;
 }
 
-LogOptions::Lock LogOptions::get_lock() {
-    return Lock(this);
+std::optional<std::unique_ptr<LogOptions::Lock>> LogOptions::get_lock() {
+    assert(!locked_);
+    if (locked_)
+        return std::nullopt;
+    
+    std::optional<std::unique_ptr<Lock>> lock{};
+    return std::unique_ptr<Lock>{new Lock{this}};
 }
-
 
 inline uint line_col_padding(const SourceLocation& location) {
     return 5;
@@ -74,7 +68,29 @@ bool logs_since_last_check() {
     return value;
 }
 
-LogOptions::Lock LogStream::lock() {
+std::optional<std::unique_ptr<LogOptions::Lock>> LogStream::lock() {
+    return std::move(*options_.get_lock());
+}
+
+std::optional<std::unique_ptr<LogOptions::Lock>> LogStream::set_loglevel(LogLevel loglevel) {
+    if (options_.is_locked()) {
+        LogNoContext::compiler_error(NO_SOURCE_LOCATION) << 
+            "Trying to set logoptions while locked, ignoring";
+        return std::nullopt;
+    }
+    options_.set_loglevel(loglevel);
+
+    return options_.get_lock();
+}
+
+std::optional<std::unique_ptr<LogOptions::Lock>> LogStream::set_loglevel(LogContext context, LogLevel loglevel) {
+    if (options_.is_locked()) {        
+        LogNoContext::compiler_error(NO_SOURCE_LOCATION) << 
+            "Trying to set logoptions while locked, ignoring";
+        return std::nullopt;
+    }
+    options_.set_loglevel(context, loglevel);
+
     return options_.get_lock();
 }
 

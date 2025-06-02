@@ -39,33 +39,28 @@ Statement* AST_Store::allocate_statement(const Statement&& statement) {
     return statements_.back().get();
 }
 
-DefinitionHeader* AST_Store::allocate_definition(const DefinitionHeader&& definition) {
+DefinitionHeader* AST_Store::allocate_definition_header(const DefinitionHeader&& definition) {
     definition_headers_.push_back(std::make_unique<DefinitionHeader>(definition));
     return definition_headers_.back().get();
 }
 
-DefinitionHeader* AST_Store::allocate_definition(const DefinitionHeader&& header, 
+std::pair<DefinitionHeader*, DefinitionBody*> AST_Store::allocate_definition(const DefinitionHeader&& header, 
     const LetDefinitionValue& body) {
     
-    auto allocated_header = allocate_definition(std::move(header));
+    auto allocated_header = allocate_definition_header(std::move(header));
+    auto allocated_body = allocate_definition_body(allocated_header, body);
 
-    definition_bodies_.push_back(std::make_unique<DefinitionBody>(allocated_header, body));
-    auto allocated_body = definition_bodies_.back().get();
-
-    allocated_header->body_ = allocated_body;
-    allocated_body->header_ = allocated_header;
-
-    return allocated_header;
+    return {allocated_header, allocated_body};
 }
 
-DefinitionHeader* AST_Store::allocate_definition_body(DefinitionHeader* header, const LetDefinitionValue& body) {
+DefinitionBody* AST_Store::allocate_definition_body(DefinitionHeader* header, const LetDefinitionValue& body) {
     definition_bodies_.push_back(std::make_unique<DefinitionBody>(header, body));
     auto allocated_body = definition_bodies_.back().get();
 
     allocated_body->header_ = header;
     header->body_ = allocated_body;
 
-    return header;
+    return allocated_body;
 }
 
 Operator* AST_Store::allocate_operator(const Operator&& definition) {

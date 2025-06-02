@@ -48,14 +48,15 @@ Layer1Result ParserLayer1::run_eval(std::istream& source_is) {
         simplify(*(*result_.top_level_definition));
 
     if (!result_.top_level_definition) {
+        Log::debug(NO_SOURCE_LOCATION) << "Layer1 eval didn't produce a top level definition" << Endl;
         result_.top_level_definition = nullopt;
 
-    } else if (std::holds_alternative<Error>((*result_.top_level_definition)->value_)) {
+    } else if (std::holds_alternative<Error>((*result_.top_level_definition)->get_value())) {
         Log::error(NO_SOURCE_LOCATION) << "Layer1 eval failed" << Endl;
         result_.top_level_definition = nullopt;
         result_.success = false;
         
-    } else if (std::holds_alternative<Undefined>((*result_.top_level_definition)->value_)) {
+    } else if (std::holds_alternative<Undefined>((*result_.top_level_definition)->get_value())) {
         result_.top_level_definition = nullopt;
     }
 
@@ -72,7 +73,7 @@ void ParserLayer1::run_parse(std::istream& source_is) {
     auto location = current_token().location;
     Statement* root_statement = create_block(*ast_store_, {}, location);
     result_.top_level_definition = 
-        create_let_definition(*ast_store_, parse_scope_, "root", root_statement, true, location);
+        create_let_definition(*ast_store_, parse_scope_, "root", root_statement, true, location).second;
 
     context_stack_.push_back(parse_scope_);
 
@@ -180,7 +181,7 @@ std::nullopt_t ParserLayer1::fail_optional() {
 }
 
 void ParserLayer1::reset_to_top_level() {
-    Log::debug(current_token().location) << "resetting to global scope" << Endl;
+    Log::debug(current_token().location) << "Resetting to global scope" << Endl;
 
     context_stack_ = {};
 
@@ -240,8 +241,11 @@ bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
         Log::error(inner->location) << "A block cannot be a single " << *inner << Endl;
         return false;
     }
-
+    
     *outer = *inner;
+
+    Log::debug_extra(outer->location) << "Resulted in: " << *outer << Endl;
+
     ast_store_->delete_statement(inner);
     return true;
 }
@@ -260,7 +264,7 @@ bool ParserLayer1::identifier_exists(const std::string& identifier) const {
 
 optional<DefinitionHeader*> ParserLayer1::create_undefined_identifier(const std::string& name, bool is_top_level, SourceLocation location) {
     return parse_scope_->create_identifier(
-        create_let_definition(*ast_store_, parse_scope_, name, &Hole, is_top_level, location)->header_
+        create_let_definition(*ast_store_, parse_scope_, name, &Hole, is_top_level, location).first
     );
 }
 
@@ -278,13 +282,13 @@ DefinitionHeader* ParserLayer1::create_definition(const std::string& name,
     const LetDefinitionValue& body_value, bool is_top_level, SourceLocation location) {
     
     return create_let_definition(*ast_store_, parse_scope_, name, body_value, is_top_level, 
-        location)->header_;
+        location).first;
 }
 
 DefinitionHeader* ParserLayer1::create_definition(const std::string& name, bool is_top_level, 
     SourceLocation location) {
 
-    return create_let_definition(*ast_store_, parse_scope_, name, &Hole, is_top_level, location)->header_; 
+    return create_let_definition(*ast_store_, parse_scope_, name, &Hole, is_top_level, location).first;
 }
 
 DefinitionHeader* ParserLayer1::create_definition(LetDefinitionValue body, bool is_top_level, 

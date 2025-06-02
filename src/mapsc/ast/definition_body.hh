@@ -53,6 +53,9 @@ public:
     // if the body is an expression, the type will just mirror it's type
     std::optional<const Type*> get_declared_type() const;
 
+    LetDefinitionValue get_value() const;
+    void set_value(LetDefinitionValue);
+
     void set_type(const Type* type);
     bool set_declared_type(const Type* type);
 
@@ -83,8 +86,8 @@ public:
     //     return false;
     // }
 
-    LetDefinitionValue value_;
 private:
+    LetDefinitionValue value_;
     std::optional<const Type*> declared_type_;
 
     std::optional<Scope*> inner_scope_ = std::nullopt;

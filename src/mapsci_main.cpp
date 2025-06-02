@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     llvm::raw_os_ostream error_stream{std::cerr};
 
     auto log_options_lock = LogStream::global.lock();
-    auto [action, exit_code, repl_options] = process_cl_options(argc, argv, *log_options_lock.options_);
+    auto [action, exit_code, repl_options] = process_cl_options(argc, argv, *(*log_options_lock)->options_);
 
     if (action == SHOULD_EXIT)
         return exit_code;

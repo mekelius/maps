@@ -566,7 +566,7 @@ void TermedExpressionParser::value_state() {
         case ExpressionType::call:
         case GUARANTEED_VALUE:
             Log::error(peek()->location) << "unexpected " << *peek() <<
-                " in termed expression, expected an operator";
+                " in termed expression, expected an operator" << Endl;
             return fail();
 
         case ExpressionType::partially_applied_minus:

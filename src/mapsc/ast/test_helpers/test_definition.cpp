@@ -10,7 +10,7 @@ DefinitionHeader* create_testing_let_definition(AST_Store& ast_store, const std:
     const Type* type, const SourceLocation& location) {
 
     return ast_store.allocate_definition(
-        DefinitionHeader{DefinitionType::let_definition, name, type, location}, Undefined{});
+        DefinitionHeader{DefinitionType::let_definition, name, type, location}, Undefined{}).first;
 }
 
 

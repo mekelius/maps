@@ -57,7 +57,7 @@ TEST_CASE("Should be able to call via known value reference to a function") {
 
     auto test_f_expr = create_known_value(state, "qwe", IntString, TSL);
     CHECK(test_f_expr);    
-    auto test_f = function_definition(state, "test_f", *test_f_expr, TSL);
+    auto [test_f, _] = function_definition(state, "test_f", *test_f_expr, TSL);
 
     auto arg = Expression{ExpressionType::known_value, "3", &NumberLiteral, TSL};
     auto reference = create_reference(ast_store, test_f, TSL);
@@ -70,7 +70,7 @@ TEST_CASE("Should be able to call via known value reference to a function") {
     
     auto [callee, args] = expr->call_value();
 
-    CHECK(*callee == *test_f->header_);
+    CHECK(*callee == *test_f);
     CHECK(args.size() == 1);
     CHECK(*args.at(0) == arg);
 }
@@ -84,7 +84,7 @@ TEST_CASE("Should set the type of a call expression to the callee return type") 
 
     auto test_f_expr = create_known_value(state, "qwe", IntString, TSL);
     CHECK(test_f_expr);
-    auto test_f = function_definition(state, "test_f", *test_f_expr, TSL);
+    auto [test_f, _] = function_definition(state, "test_f", *test_f_expr, TSL);
 
     auto arg = Expression{ExpressionType::known_value, "3", &NumberLiteral, TSL};
     auto reference = create_reference(ast_store, test_f, TSL);
@@ -104,8 +104,8 @@ TEST_CASE("Should set the type on a \"operator expression\" to the return type")
     const FunctionType* IntString = types->get_function_type(&String, std::array{&Int, &Int}, false);
 
     auto test_op_expr = Expression{ExpressionType::known_value, "jii", IntString, TSL};
-    auto test_op_f = function_definition(state, ">=?_f", &test_op_expr, TSL);
-    auto test_op = create_binary_operator(ast_store, ">=?", test_op_f->header_, 5, TSL);
+    auto [test_op_f, _] = function_definition(state, ">=?_f", &test_op_expr, TSL);
+    auto test_op = create_binary_operator(ast_store, ">=?", test_op_f, 5, TSL);
 
     auto lhs = create_numeric_literal(ast_store, "3", TSL);
     auto rhs = create_numeric_literal(ast_store, "7", TSL);

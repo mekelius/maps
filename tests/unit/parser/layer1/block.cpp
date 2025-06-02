@@ -23,10 +23,10 @@ TEST_CASE("Should parse a block") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto body = (*result.top_level_definition)->value_;
+        auto body = (*result.top_level_definition)->get_value();
         CHECK(std::holds_alternative<Statement*>(body));
         
-        auto statement = std::get<Statement*>((*result.top_level_definition)->value_);
+        auto statement = std::get<Statement*>((*result.top_level_definition)->get_value());
         CHECK(statement->statement_type == StatementType::block);
 
         auto block = std::get<Block>(statement->value);
@@ -43,10 +43,10 @@ TEST_CASE("Should parse a block") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto body = (*result.top_level_definition)->value_;
+        auto body = (*result.top_level_definition)->get_value();
         CHECK(std::holds_alternative<Statement*>(body));
         
-        auto statement = std::get<Statement*>((*result.top_level_definition)->value_);
+        auto statement = std::get<Statement*>((*result.top_level_definition)->get_value());
         CHECK(statement->statement_type == StatementType::block);
 
         auto block = std::get<Block>(statement->value);
@@ -63,10 +63,10 @@ TEST_CASE("Should parse a block") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto body = (*result.top_level_definition)->value_;
+        auto body = (*result.top_level_definition)->get_value();
         CHECK(std::holds_alternative<Statement*>(body));
         
-        auto statement = std::get<Statement*>((*result.top_level_definition)->value_);
+        auto statement = std::get<Statement*>((*result.top_level_definition)->get_value());
         CHECK(statement->statement_type == StatementType::block);
 
         auto block = std::get<Block>(statement->value);
@@ -83,10 +83,10 @@ TEST_CASE("Should parse a block") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto body = (*result.top_level_definition)->value_;
+        auto body = (*result.top_level_definition)->get_value();
         CHECK(std::holds_alternative<Statement*>(body));
 
-        auto statement = std::get<Statement*>((*result.top_level_definition)->value_);
+        auto statement = std::get<Statement*>((*result.top_level_definition)->get_value());
         CHECK(statement->statement_type == StatementType::block);
 
         auto block = std::get<Block>(statement->value);
@@ -103,10 +103,10 @@ TEST_CASE("Should parse a block") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto body = (*result.top_level_definition)->value_;
+        auto body = (*result.top_level_definition)->get_value();
         CHECK(std::holds_alternative<Statement*>(body));
 
-        auto statement = std::get<Statement*>((*result.top_level_definition)->value_);
+        auto statement = std::get<Statement*>((*result.top_level_definition)->get_value());
         CHECK(statement->statement_type == StatementType::block);
 
         auto block = std::get<Block>(statement->value);
@@ -123,10 +123,10 @@ TEST_CASE("Should parse a block") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto body = (*result.top_level_definition)->value_;
+        auto body = (*result.top_level_definition)->get_value();
         CHECK(std::holds_alternative<Statement*>(body));
 
-        auto statement = std::get<Statement*>((*result.top_level_definition)->value_);
+        auto statement = std::get<Statement*>((*result.top_level_definition)->get_value());
         CHECK(statement->statement_type == StatementType::block);
 
         auto block = std::get<Block>(statement->value);
@@ -152,9 +152,9 @@ TEST_CASE("layer1 eval should simplify single statement blocks") {
             \
             CHECK(success);\
             CHECK(definition);\
-            CHECK(std::holds_alternative<Expression*>((*definition)->value_));\
+            CHECK(std::holds_alternative<Expression*>((*definition)->get_value()));\
             \
-            auto expression = std::get<Expression*>((*definition)->value_);\
+            auto expression = std::get<Expression*>((*definition)->get_value());\
             \
             CHECK(expression->expression_type == ExpressionType::known_value);\
             CHECK(expression->string_value() == "4");\

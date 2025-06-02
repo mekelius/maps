@@ -19,7 +19,7 @@
 
 namespace Maps {
 
-DefinitionBody* function_definition(CompilationState& state, 
+std::pair<DefinitionHeader*, DefinitionBody*> function_definition(CompilationState& state, 
     const ParameterList& parameter_list, Scope* inner_scope, LetDefinitionValue value, 
     bool is_top_level, const SourceLocation& location) {
 
@@ -29,36 +29,36 @@ DefinitionBody* function_definition(CompilationState& state,
         param_types.push_back(param->get_type());
 
     if (std::holds_alternative<Expression*>(value)) {
-        return *state.ast_store_->allocate_definition(
+        return state.ast_store_->allocate_definition(
             DefinitionHeader{DefinitionType::let_definition, MAPS_INTERNALS_PREFIX + "anonymous_function", 
-                location}, value)->body_;
+                location}, value);
     }
 
-    return *state.ast_store_->allocate_definition(
+    return state.ast_store_->allocate_definition(
         DefinitionHeader{DefinitionType::let_definition, MAPS_INTERNALS_PREFIX + "anonymous_function", 
-            location}, value)->body_;
+            location}, value);
 }
 
-DefinitionBody* function_definition(CompilationState& state, 
+std::pair<DefinitionHeader*, DefinitionBody*> function_definition(CompilationState& state, 
     const ParameterList& parameter_list, Scope* inner_scope, bool is_top_level, 
     const SourceLocation& location) {
     
     return function_definition(state, parameter_list, inner_scope, Undefined{}, is_top_level, location);
 }
 
-DefinitionBody* function_definition(CompilationState& state, const std::string& name, 
+std::pair<DefinitionHeader*, DefinitionBody*> function_definition(CompilationState& state, const std::string& name, 
     Expression* value, const SourceLocation& location) {
     
-    return *state.ast_store_->allocate_definition(DefinitionHeader{DefinitionType::let_definition, 
-        name, value->type, location}, value)->body_;
+    return state.ast_store_->allocate_definition(DefinitionHeader{DefinitionType::let_definition, 
+        name, value->type, location}, value);
 }
 
-DefinitionBody* create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
+std::pair<DefinitionHeader*, DefinitionBody*> create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
     Expression* value, bool is_pure, const SourceLocation& location) {
 
-    return *ast_store.allocate_definition(
+    return ast_store.allocate_definition(
         DefinitionHeader{DefinitionType::let_definition, "testing_nullary_function", 
-            types.get_function_type(value->type, {}, is_pure), location}, value)->body_;
+            types.get_function_type(value->type, {}, is_pure), location}, value);
 }
 
 Parameter* create_parameter(AST_Store& ast_store, const std::string& name, const Type* type, 

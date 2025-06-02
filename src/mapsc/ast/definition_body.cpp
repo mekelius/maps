@@ -1,12 +1,41 @@
 #include "definition_body.hh"
 
+#include <variant>
+
 #include "mapsc/compilation_state.hh"
 #include "mapsc/ast/ast_store.hh"
 
 namespace Maps {
 
 DefinitionBody::DefinitionBody(DefinitionHeader* header, LetDefinitionValue value)
-:header_(header), value_(value) {}
+:header_(header) {
+    set_value(value);
+}
+
+LetDefinitionValue DefinitionBody::get_value() const {
+    return value_;
+}
+
+void DefinitionBody::set_value(LetDefinitionValue value) {
+    value_ = value;
+
+    std::visit(overloaded {
+        [this](Expression* expression) {
+            set_type(expression->type);
+        },
+        [this](Statement* statement) {
+            switch (statement->statement_type) {
+                case StatementType::return_:
+                case StatementType::expression_statement:
+                    set_type(statement->get_value<Expression*>()->type);
+                    return;
+                default:
+                    return;
+            }
+        },
+        [](auto) { return; }
+    }, value);
+}
 
 void DefinitionBody::set_type(const Type* type) {
     this->header_->type_ = type;

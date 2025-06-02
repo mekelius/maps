@@ -64,13 +64,13 @@ std::tuple<Expression*, DefinitionBody*> create_const_lambda(CompilationState& s
     for (auto param_type: param_types)
         parameter_list.push_back(create_discarded_parameter(ast_store, param_type, location));
 
-    auto definition = function_definition(state, parameter_list, inner_scope, value,
+    auto [def_header, def_body] = function_definition(state, parameter_list, inner_scope, value,
         false, location);
 
-    definition->set_type(state.types_->get_function_type(value->type, param_types, is_pure));
-    auto expression = create_reference(ast_store, definition->header_, location);
+    def_body->set_type(state.types_->get_function_type(value->type, param_types, is_pure));
+    auto expression = create_reference(ast_store, def_header, location);
 
-    return {expression, definition};
+    return {expression, def_body};
 }
 
 std::tuple<Expression*, DefinitionBody*> create_const_lambda(CompilationState& state, 

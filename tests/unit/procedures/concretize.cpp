@@ -71,8 +71,8 @@ TEST_CASE("Concretizer should run variable substitution with a concrete type") {
     auto [state, _, types] = CompilationState::create_test_state();
 
     Expression value{ExpressionType::known_value, 1, &Int, TSL};
-    auto definition = create_let_definition(*state.ast_store_, &value, TSL);
-    Expression ref{ExpressionType::reference, definition->header_, TSL};
+    auto definition = create_let_definition(*state.ast_store_, &value, TSL).first;
+    Expression ref{ExpressionType::reference, definition, TSL};
     ref.type = &Int;
 
     CHECK(concretize(state, ref));
@@ -83,8 +83,8 @@ TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
     auto [state, _, types] = CompilationState::create_test_state();
 
     Expression value{ExpressionType::known_value, 1, &Int, TSL};
-    auto definition = create_nullary_function_definition(*state.ast_store_, *types, &value, true, TSL);
-    Expression call{ExpressionType::call, CallExpressionValue{definition->header_, {}}, TSL};
+    auto definition = create_nullary_function_definition(*state.ast_store_, *types, &value, true, TSL).first;
+    Expression call{ExpressionType::call, CallExpressionValue{definition, {}}, TSL};
     call.type = &Int;
 
     CHECK(concretize(state, call));
@@ -98,10 +98,10 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the de
     auto IntInt = types->get_function_type(&Int, array{&Int}, false);
     Expression value{ExpressionType::known_value, 1, IntInt, TSL};
 
-    auto const_Int = function_definition(state, "const_Int", &value, TSL);
+    auto const_Int = function_definition(state, "const_Int", &value, TSL).first;
 
     Expression arg{ExpressionType::known_value, "5", &NumberLiteral, TSL};
-    Expression call{ExpressionType::call, CallExpressionValue{const_Int->header_, {&arg}}, TSL};
+    Expression call{ExpressionType::call, CallExpressionValue{const_Int, {&arg}}, TSL};
     call.type = dynamic_cast<const FunctionType*>(const_Int->get_type())->return_type();
 
     CHECK(concretize(state, call));
@@ -115,8 +115,8 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
     auto [state, _, types] = CompilationState::create_test_state();
     REQUIRE(types->empty());
 
-    auto IntIntInt = types->get_function_type(&Int, array{&Int, &Int}, true);
-    auto dummy_definition = create_let_definition(*state.ast_store_, IntIntInt, TSL)->header_;
+    auto IntIntInt = types->get_function_type(&Int, {&Int, &Int}, true);
+    auto dummy_definition = create_let_definition(*state.ast_store_, IntIntInt, TSL).first;
 
     REQUIRE(*dummy_definition->get_type() == *IntIntInt);
 
@@ -174,7 +174,7 @@ TEST_CASE("Concretizer should be able to cast arguments up if needed") {
     REQUIRE(types->empty());
 
     auto IntIntInt = types->get_function_type(&Float, array{&Float, &Float}, true);
-    auto dummy_definition = create_let_definition(*state.ast_store_, IntIntInt, TSL)->header_;
+    auto dummy_definition = create_let_definition(*state.ast_store_, IntIntInt, TSL).first;
 
     SUBCASE("Number -> Int -> Float into Float -> Float -> Float") {
         Expression arg1{ExpressionType::known_value, "12.45", &NumberLiteral, TSL};

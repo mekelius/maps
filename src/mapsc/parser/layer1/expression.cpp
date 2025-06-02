@@ -131,7 +131,7 @@ Expression* ParserLayer1::parse_lambda_expression() {
     bool is_pure = current_token().string_value() == "->";
     get_token();
 
-    DefinitionBody* definition = function_definition(*compilation_state_, 
+    auto [definition_header, definition_body] = function_definition(*compilation_state_, 
         *parameter_list, lambda_scope, false, location);
 
     auto new_scope = ast_store_->allocate_scope(Scope{});
@@ -149,11 +149,11 @@ Expression* ParserLayer1::parse_lambda_expression() {
     for (auto param: *parameter_list)
         param_types.push_back(param->get_type());
 
-    definition->body() = body;
-    definition->set_type(compilation_state_->types_->get_function_type(
-        definition->get_type(), param_types, is_pure));
+    definition_body->set_value(body);
+    definition_body->set_type(compilation_state_->types_->get_function_type(
+        definition_header->get_type(), param_types, is_pure));
 
-    return create_reference(*compilation_state_->ast_store_, definition->header_, location);
+    return create_reference(*compilation_state_->ast_store_, definition_header, location);
 }
 
 optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scope) {

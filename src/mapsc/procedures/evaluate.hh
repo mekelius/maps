@@ -54,7 +54,7 @@ inline std::optional<KnownValue> evaluate(const DefinitionBody& definition) {
                 definition.node_type_string() << " not implemented" << Endl;
             return nullopt;
         }
-    }, definition.value_);
+    }, definition.get_value());
 }
 
 } // namespace Maps

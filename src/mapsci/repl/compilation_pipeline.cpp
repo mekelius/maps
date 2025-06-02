@@ -102,15 +102,15 @@ optional<DefinitionBody*> REPL::create_repl_wrapper(CompilationState& state, Sco
         }
 
         return create_let_definition(*state.ast_store_, &global_scope, options_.repl_wrapper_name, 
-            *eval, true, location);
+            *eval, true, location).second;
     }
 
-    auto definition = create_let_definition(*state.ast_store_, &global_scope, options_.repl_wrapper_name, 
+    auto [header, body] = create_let_definition(*state.ast_store_, &global_scope, options_.repl_wrapper_name, 
         *eval_and_print, true, location);
 
     // SimpleTypeChecker{}.run(state, {}, std::array<RT_Definition* const, 1>{definition});
 
-    return definition;
+    return body;
 }
 
 bool REPL::compile_and_run(std::unique_ptr<llvm::Module> module_, const std::string& entry_point) {

@@ -191,8 +191,8 @@ Statement* ParserLayer1::parse_block_statement() {
         // attempt to simplify
         if (!simplify_single_statement_block(statement)) {
             Log::compiler_error(statement->location) << "Simplification failed" << Endl;
-        }
             return fail_statement(statement->location, true);
+        }
     }
 
     // simplify empty block

@@ -1,6 +1,7 @@
 #ifndef __LOGGING_HH
 #define __LOGGING_HH
 
+#include <memory>
 #include <array>
 #include <concepts>
 #include <string_view>
@@ -118,13 +119,20 @@ public:
 
     class Lock {
     public:
-        ~Lock();
         LogOptions* options_;
+
+        ~Lock();
+        Lock(Lock&) = delete;
+        Lock& operator=(const Lock&) = delete;
+        Lock(Lock&&) = default;
+        Lock& operator=(Lock&&) = default;
 
     private:
         Lock(LogOptions* options);
         friend LogOptions;
     };
+
+    bool is_locked() const { return locked_; };
 
     LogLevel get_loglevel() const;
     LogLevel get_loglevel(LogContext context) const;
@@ -138,7 +146,7 @@ public:
     uint LINE_COL_FORMAT_PADDING = 8;
     bool print_context_prefixes = false;
     
-    Lock get_lock();
+    [[nodiscard]] std::optional<std::unique_ptr<Lock>> get_lock();
 
 private:
     std::array<bool, LOG_CONTEXT_COUNT> per_context_loglevels_overridden_ = 
@@ -200,7 +208,9 @@ public:
 
     LogStream& begin(LogContext logcontext, LogLevel loglevel, const SourceLocation& location);
 
-    LogOptions::Lock lock();
+    [[nodiscard]] std::optional<std::unique_ptr<LogOptions::Lock>> lock();
+    [[nodiscard]] std::optional<std::unique_ptr<LogOptions::Lock>> set_loglevel(LogLevel level);
+    [[nodiscard]] std::optional<std::unique_ptr<LogOptions::Lock>> set_loglevel(LogContext context, LogLevel loglevel);
 
 private:
     LogOptions options_ = {};

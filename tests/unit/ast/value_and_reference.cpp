@@ -27,10 +27,10 @@ TEST_CASE("create_reference should create a known value reference if called with
     auto [state, ast_store] = setup();
     
     auto value = create_known_value(state, 24, TSL);
-    auto def = create_let_definition(ast_store, value, TSL);
+    auto [def, _] = create_let_definition(ast_store, value, TSL);
 
     auto ref = create_reference(ast_store, def, TSL);
     CHECK(ref->expression_type == ExpressionType::known_value_reference);
-    CHECK(ref->reference_value() == def->header_);
+    CHECK(ref->reference_value() == def);
 }
 

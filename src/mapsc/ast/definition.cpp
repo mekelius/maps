@@ -54,7 +54,7 @@ std::optional<LetDefinitionValue> DefinitionHeader::get_body_value() const {
     if (!body_)
         return nullopt;
 
-    return (*body_)->value_;
+    return (*body_)->get_value();
 }
 
 // ------------------------------------- FACTORY FUNTIONS -----------------------------------------
@@ -120,7 +120,7 @@ bool DefinitionHeader::is_known_scalar_value() const {
                     is_constant_value(*expression));
         },
         [](auto) { return false; }
-    }, (*body_)->value_);
+    }, (*body_)->get_value());
 }
 
 } // namespace Maps

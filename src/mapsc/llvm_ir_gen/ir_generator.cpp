@@ -224,7 +224,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
     if (definition.get_type()->is_function())
         return handle_function(definition);
 
-    auto definition_body = (*definition.body_)->value_;
+    auto definition_body = (*definition.body_)->get_value();
 
     if (const Expression* const* expression = 
             std::get_if<Maps::Expression*>(&definition_body))
@@ -308,7 +308,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
             fail();
             return false;
         }
-    }, (*definition.body_)->value_);
+    }, (*definition.body_)->get_value());
 
     if (!success)
         return nullopt;

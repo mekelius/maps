@@ -228,6 +228,18 @@ target_link_libraries(unit_tests mapsc_frontend)
 target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
 
 
+# --------------------- LOGGING UNIT TESTS -----------------------
+
+add_executable(logging_unit_tests
+    tests/unit/tests_main.cpp
+    tests/unit/logging.cpp
+    src/mapsc/logging.cpp
+)
+
+set_property(TARGET logging_unit_tests 
+    PROPERTY EXCLUDE_FROM_ALL True)
+target_include_directories(logging_unit_tests SYSTEM PRIVATE doctest tests)
+
 # --------------------- DSIR UNIT TESTS -----------------------
 
 # add_executable(dsir_unit_tests
@@ -247,4 +259,5 @@ target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
 configure_file(tests/e2e/lit.site.cfg.py.in lit.site.cfg.py @ONLY)
 
 add_test(NAME unit_tests COMMAND unit_tests)
+add_test(NAME logging_unit_tests COMMAND logging_unit_tests)
 add_test(NAME e2e_tests COMMAND lit "${CMAKE_CURRENT_BINARY_DIR}" -v)

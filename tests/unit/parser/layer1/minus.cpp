@@ -19,8 +19,8 @@ TEST_CASE("Should recognize minus as a special case") {
     CHECK(success);
     CHECK(definition);
 
-    CHECK(std::holds_alternative<Expression*>((*definition)->value_));
-    auto expression = std::get<Expression*>((*definition)->value_);
+    CHECK(std::holds_alternative<Expression*>((*definition)->get_value()));
+    auto expression = std::get<Expression*>((*definition)->get_value());
 
     CHECK(expression->expression_type == ExpressionType::layer2_expression);
     auto terms = expression->terms();

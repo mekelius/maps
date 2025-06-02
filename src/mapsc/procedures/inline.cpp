@@ -100,7 +100,7 @@ bool substitute_value_reference(Expression& expression, const DefinitionBody& ca
     if (callee_declared_type && expression.declared_type) {
         if (**callee_declared_type != **expression.declared_type) {
             Log::warning(expression.location) << "Attempting substitution, declared types don't match: " <<
-                **expression.declared_type << " != " << **callee_declared_type;
+                **expression.declared_type << " != " << **callee_declared_type << Endl;
             return false;
         }
     }

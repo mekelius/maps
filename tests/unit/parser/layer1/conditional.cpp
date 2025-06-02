@@ -35,8 +35,8 @@ TEST_CASE(source_string) {\
     CHECK(result.unresolved_identifiers.size() == 1);\
     \
     auto root = *result.top_level_definition;\
-    CHECK(std::holds_alternative<Statement*>(root->value_));\
-    auto root_body = std::get<Statement*>(root->value_);\
+    CHECK(std::holds_alternative<Statement*>(root->get_value()));\
+    auto root_body = std::get<Statement*>(root->get_value());\
     \
     CHECK(root_body->statement_type == StatementType::conditional);\
     auto [condition, body, else_branch] = root_body->get_value<ConditionalValue>();\
@@ -119,8 +119,8 @@ TEST_CASE(source_string) {\
     CHECK(result.unresolved_identifiers.size() == 1);\
     \
     auto root = *result.top_level_definition;\
-    CHECK(std::holds_alternative<Statement*>(root->value_));\
-    auto root_body = std::get<Statement*>(root->value_);\
+    CHECK(std::holds_alternative<Statement*>(root->get_value()));\
+    auto root_body = std::get<Statement*>(root->get_value());\
     \
     CHECK(root_body->statement_type == StatementType::conditional);\
     auto [condition, body, else_branch] = root_body->get_value<ConditionalValue>();\
@@ -207,8 +207,8 @@ TEST_CASE(source_string) {\
     CHECK(result.unresolved_identifiers.size() == 3);\
     \
     auto root = *result.top_level_definition;\
-    CHECK(std::holds_alternative<Statement*>(root->value_));\
-    auto root_body = std::get<Statement*>(root->value_);\
+    CHECK(std::holds_alternative<Statement*>(root->get_value()));\
+    auto root_body = std::get<Statement*>(root->get_value());\
     \
     CHECK(root_body->statement_type == StatementType::conditional);\
     auto [condition1, branch1, else_branch1] = root_body->get_value<ConditionalValue>();\
@@ -312,8 +312,8 @@ TEST_CASE("Simple guard") {
     CHECK(result.unresolved_identifiers.size() == 1);
     
     auto root = *result.top_level_definition;
-    CHECK(std::holds_alternative<Statement*>(root->value_));
-    auto root_body = std::get<Statement*>(root->value_);
+    CHECK(std::holds_alternative<Statement*>(root->get_value()));
+    auto root_body = std::get<Statement*>(root->get_value());
 
     CHECK(root_body->statement_type == StatementType::guard);
     auto condition_expression = root_body->get_value<Expression*>();
@@ -336,6 +336,6 @@ TEST_CASE("Simple guard") {
 //     CHECK(result.unresolved_identifiers.size() == 1);
     
 //     auto root = *result.top_level_definition;
-//     CHECK(std::holds_alternative<Statement*>(root->value_));
-//     auto root_body = std::get<Statement*>(root->value_);
+//     CHECK(std::holds_alternative<Statement*>(root->get_value()));
+//     auto root_body = std::get<Statement*>(root->get_value());
 // }

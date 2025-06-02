@@ -63,7 +63,7 @@ ReverseParser& ReverseParser::print_definition(const DefinitionHeader& definitio
     if (!definition.body_)
         return *this << ";";
 
-    return *this << " = " << (*definition.body_)->value_;
+    return *this << " = " << (*definition.body_)->get_value();
 }
 
 ReverseParser& ReverseParser::print_definition(const DefinitionBody& body) {

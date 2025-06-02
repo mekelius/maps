@@ -22,7 +22,7 @@ TEST_CASE("Should parse lambdas") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto expression = std::get<Expression*>((*result.top_level_definition)->value_);
+        auto expression = std::get<Expression*>((*result.top_level_definition)->get_value());
         CHECK(expression->expression_type == ExpressionType::reference);
         CHECK(expression->type->is_function());
         CHECK(expression->type->is_pure());
@@ -37,7 +37,7 @@ TEST_CASE("Should parse lambdas") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto expression = std::get<Expression*>((*result.top_level_definition)->value_);
+        auto expression = std::get<Expression*>((*result.top_level_definition)->get_value());
         CHECK(expression->expression_type == ExpressionType::reference);
         CHECK(expression->type->is_function());
         CHECK(!expression->type->is_pure());
@@ -52,7 +52,7 @@ TEST_CASE("Should parse lambdas") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto expression = std::get<Expression*>((*result.top_level_definition)->value_);
+        auto expression = std::get<Expression*>((*result.top_level_definition)->get_value());
         CHECK(expression->expression_type == ExpressionType::reference);
         CHECK(expression->type->is_function());
         CHECK(expression->type->is_pure());
@@ -77,7 +77,7 @@ TEST_CASE("Should parse lambdas") {
         CHECK(result.success);
         CHECK(result.top_level_definition);
 
-        auto expression = std::get<Expression*>((*result.top_level_definition)->value_);
+        auto expression = std::get<Expression*>((*result.top_level_definition)->get_value());
         CHECK(expression->expression_type == ExpressionType::reference);
         CHECK(expression->type->is_function());
         CHECK(!expression->type->is_pure());
