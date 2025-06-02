@@ -31,7 +31,8 @@ TEST_CASE("Definitions should know if they are a known value") {
     // auto& ast_store = *state.ast_store_;
 
     auto value = create_known_value(state, 123, TSL);
-    auto definition = ast_store->allocate_definition(DefinitionHeader{"test", TSL}, value);
+    auto definition = ast_store->allocate_definition(
+        DefinitionHeader{DefinitionType::let_definition, "test", TSL}, value);
 
     CHECK(definition->is_known_scalar_value());
 }

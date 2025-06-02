@@ -25,7 +25,7 @@ inline std::tuple<CompilationState, Scope, stringstream> setup(const std::string
 
 #define WHILE_CASE(source_string)\
 TEST_CASE(source_string) {\
-    LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
+    LogNoContext::debug_extra(TSL) << "TEST_CASE:\n" << source_string;\
     \
     auto [state, scope, source] = setup(source_string);\
     \
@@ -72,7 +72,7 @@ WHILE_CASE("\n\
 
 #define WHILE_ELSE_CASE(source_string)\
 TEST_CASE(source_string) {\
-    LogNoContext::debug_extra("TEST_CASE:\n" + std::string{source_string}, TSL);\
+    LogNoContext::debug_extra(TSL) << "TEST_CASE:\n" << source_string;\
     \
     auto [state, scope, source] = setup(source_string);\
     \

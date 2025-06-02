@@ -94,8 +94,6 @@ TEST_CASE("Should be able to cast a known value into a constant function yieldin
 }
 
 TEST_CASE("Casting a known value into a function type with mathcing return type should produce a const lambda") {
-    auto lock = LogOptions::set_global(LogLevel::debug_extra);
-
     auto [state, _0, types] = CompilationState::create_test_state();
     Scope scope{};
 

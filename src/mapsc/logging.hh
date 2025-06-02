@@ -122,10 +122,8 @@ public:
 
     private:
         Lock(LogOptions* options);
+        friend LogOptions;
     };
-
-    static Lock set_global(LogContext context, LogLevel loglevel);
-    static Lock set_global(LogLevel loglevel);
 
     LogLevel get_loglevel() const;
     LogLevel get_loglevel(LogContext context) const;
@@ -158,8 +156,6 @@ concept Loggable = requires (T t) { {t.log_representation()} -> std::convertible
 
 class LogStream {
 public:
-    struct BR {};
-    
     static LogStream global;
 
     LogStream() = default;
@@ -201,9 +197,6 @@ public:
         *options_.ostream << std::to_string(t);
         return *this;
     }
-
-    LogStream& operator<<(const SourceLocation&);
-    LogStream& operator<<(BR);
 
     LogStream& begin(LogContext logcontext, LogLevel loglevel, const SourceLocation& location);
 

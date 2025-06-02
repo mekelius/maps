@@ -46,7 +46,7 @@ private:
     // pops an expression from the parse stack, returns nullopt if parse stack empty
     std::optional<Expression*> pop_term();
 
-    void fail(const std::string& message, SourceLocation location);
+    void fail();
 
     bool at_expression_end() const;
     bool parse_stack_reduced() const;

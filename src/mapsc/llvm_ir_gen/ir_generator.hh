@@ -74,7 +74,8 @@ public:
     TypeMap types_;
 
 // private:
-    void fail(const std::string& message);
+    void fail();
+    std::nullopt_t fail_optional();
 
     std::optional<llvm::Function*> function_definition(const std::string& name, 
         llvm::FunctionType* llvm_type, 

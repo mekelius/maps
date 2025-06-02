@@ -81,9 +81,11 @@ Expression* ParserLayer1::parse_expression() {
             if (eof())
                 return expression;
 
-            if (current_token().token_type != TokenType::indent_block_end)
-                return fail_expression("Unexpected token " + current_token().get_string() + 
-                    " at end of indent block, expected indent block end token", current_token().location);
+            if (current_token().token_type != TokenType::indent_block_end) {
+                Log::error(current_token().location) << "Unexpected token " << current_token() << 
+                    " at end of indent block, expected indent block end token";
+                return fail_expression(current_token().location);
+            }
 
             get_token(); // eat the ending indent
             assert(indent_level_ < starting_indent_level && "Mismatched indents");
@@ -94,9 +96,9 @@ Expression* ParserLayer1::parse_expression() {
             assert(false && "not implemented");            
             
         default:
-            return fail_expression(
-                "unexpected " + current_token().get_string() + ", at the start of an expression",
-                current_token().location);
+            Log::error(current_token().location) << "unexpected " << current_token() << 
+                ", at the start of an expression";
+            return fail_expression(current_token().location);
     }
 }
 
@@ -115,12 +117,16 @@ Expression* ParserLayer1::parse_lambda_expression() {
     Scope* lambda_scope = ast_store_->allocate_scope(Scope{/*parse_scope_*/});
     auto parameter_list = parse_lambda_parameters(lambda_scope);
 
-    if (!parameter_list)
-        return fail_expression("parsing lambda parameter list failed", location);
+    if (!parameter_list) {
+        Log::error(location) << "parsing lambda parameter list failed";
+        return fail_expression(location);
+    }
 
-    if (current_token().token_type != TokenType::arrow_operator)
-        return fail_expression("Undexpected " + current_token().get_string() + 
-            " in lambda expression, expected a \"->\" or \"=>\" ", current_token().location);
+    if (current_token().token_type != TokenType::arrow_operator) {
+        Log::error(current_token().location) << "Undexpected " << current_token() << 
+            " in lambda expression, expected a \"->\" or \"=>\" ";
+        return fail_expression(current_token().location);
+    }
 
     bool is_pure = current_token().string_value() == "->";
     get_token();
@@ -133,8 +139,10 @@ Expression* ParserLayer1::parse_lambda_expression() {
     LetDefinitionValue body = parse_definition_body();
     auto popped_context = pop_context();
 
-    if (!popped_context || popped_context != new_scope)
-        return fail_expression("Parsing lambda body failed", location);
+    if (!popped_context || popped_context != new_scope) {
+        Log::error(location) << "Parsing lambda body failed";
+        return fail_expression(location);
+    }
 
     std::vector<const Type*> param_types{};
 
@@ -157,8 +165,8 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scop
                 return parameter_list;
 
             case TokenType::eof:
-                return fail_optional(
-                    "Unexpected eof in lambda parameter list", current_token().location);
+                Log::error(current_token().location) << "Unexpected eof in lambda parameter list";
+                return fail_optional();
 
             case TokenType::identifier: {
                 auto name = current_token().string_value();
@@ -167,9 +175,11 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scop
                 auto parameter = create_parameter(*ast_store_, name, location);
 
                 // check if the string is already bound, in which case we exit
-                if (!lambda_scope->create_identifier(parameter))
-                    return fail_optional(
-                        "Duplicate parameter name " + name + " in lambda parameter list", location);
+                if (!lambda_scope->create_identifier(parameter)) {
+                    Log::error(location) << 
+                        "Duplicate parameter name " << name << " in lambda parameter list";
+                    return fail_optional();
+                }
 
                 parameter_list.push_back(parameter);
                 get_token();
@@ -182,23 +192,29 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scop
 
                 auto type = parse_parameter_type_declaration();
                 
-                if (!type)
-                    return fail_optional(
-                        "Parsing lambda parameter list failed, incorrect type declaration", location);
+                if (!type) {
+                    Log::error(location) << 
+                        "Parsing lambda parameter list failed, incorrect type declaration";
+                    return fail_optional();
+                }
 
                 if (current_token().token_type != TokenType::identifier) {
                     assert(false && "Something unexpected happened, parse_parameter_type_declaration returned without an identifier as the current token");
-                    return fail_optional(("Something unexpected happened, parse_parameter_type_declaration returned without an identifier as the current token"), 
-                        current_token().location, true);
+                    Log::compiler_error(current_token().location) << "Something unexpected happened, " << 
+                        "parse_parameter_type_declaration returned without an identifier as the current token";
+                    return fail_optional();
                 }
 
                 auto name = current_token().string_value();
                 auto parameter = create_parameter(*ast_store_, name, *type, location);
 
                 // check if the string is already bound, in which case we exit
-                if (!lambda_scope->create_identifier(parameter))
-                    return fail_optional(
-                        "Duplicate parameter name " + name + " in lambda parameter list", location);
+                if (!lambda_scope->create_identifier(parameter)) {
+
+                    Log::error(location) <<
+                        "Duplicate parameter name " << name << " in lambda parameter list";
+                    return fail_optional();
+                }
                 get_token();
                 continue;
             }
@@ -210,9 +226,9 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scop
                 continue;
 
             default:
-                return fail_optional(
-                    "Unexpected " + current_token().get_string() + " in lambda parameter list",
-                    current_token().location);
+                Log::error(current_token().location) << 
+                    "Unexpected " << current_token() << " in lambda parameter list";
+                return fail_optional();
         }
     }
 }
@@ -233,12 +249,13 @@ std::optional<const Type*> ParserLayer1::parse_parameter_type_declaration() {
                     get_token();
 
                 case TokenType::eof:
-                    fail("Unexpected eof in parameter type declaration", current_token().location);
-                    return nullopt;
+                    Log::error(current_token().location) << "Unexpected eof in parameter type declaration";
+                    return fail_optional();
 
                 default:
-                    fail("Unexpected " + current_token().get_string() + 
-                        " in parameter type declaration, expected an identifier or an arrow", location);
+                    Log::error(location) << "Unexpected " << current_token() << 
+                        " in parameter type declaration, expected an identifier or an arrow";
+                    return fail_optional();
             }
         }
 
@@ -249,9 +266,9 @@ std::optional<const Type*> ParserLayer1::parse_parameter_type_declaration() {
             assert(false && "not implemented");
 
         default:
-            fail("Unexpected " + current_token().get_string() + 
-                " in parameter type declaration, expected a type expression", location);
-            return nullopt;
+            Log::error(location) << "Unexpected " << current_token() << 
+                " in parameter type declaration, expected a type expression";
+            return fail_optional();
     }
 
 }
@@ -269,12 +286,15 @@ Expression* ParserLayer1::parse_parenthesized_expression() {
     if (current_token().token_type == TokenType::parenthesis_close) {
         auto location = current_token().location;
         get_token();
-        return fail_expression("Empty parentheses in an expression", location);
+        Log::error(location) << "Empty parentheses in an expression";
+        return fail_expression(location);
     }
 
     Expression* expression = parse_expression();
-    if (current_token().token_type != TokenType::parenthesis_close)
-        return fail_expression("Mismatched parentheses", current_token().location);
+    if (current_token().token_type != TokenType::parenthesis_close) {
+        Log::error(current_token().location) << "Mismatched parentheses";
+        return fail_expression(current_token().location);
+    }
 
     get_token(); // eat ')'
     return expression;

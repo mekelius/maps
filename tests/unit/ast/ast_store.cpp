@@ -37,7 +37,7 @@ TEST_CASE("Operator::create_binary should create an operator") {
     auto& ast_store = *state.ast_store_;
 
     DefinitionHeader* op_definition = create_testing_binary_operator(ast_store,
-        "+", &Hole, 2, Operator::Associativity::left, TSL);
+        "+", &IntInt_to_Int, 2, Operator::Associativity::left, TSL);
 
     CHECK(op_definition->is_operator());
     auto op = dynamic_cast<Operator*>(op_definition);
@@ -60,7 +60,8 @@ TEST_CASE("Should allocate definitions correctly") {
     auto [state, ast_store, _3, _4] = setup();
 
     auto value = create_known_value(state, 123, TSL);
-    auto definition = ast_store->allocate_definition(DefinitionHeader{"test", TSL}, value);
+    auto definition = ast_store->allocate_definition(
+        DefinitionHeader{DefinitionType::let_definition, "test", TSL}, value);
 
     CHECK(definition->body_);
     CHECK(definition->get_body_value());

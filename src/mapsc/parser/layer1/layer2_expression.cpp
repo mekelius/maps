@@ -27,14 +27,15 @@ using Log = LogInContext<LogContext::layer1>;
 Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     auto context = current_context();
 
-    if (!context)
-        return fail_expression("Termed expressions require a context", current_token().location, true);
+    if (!context) {
+        Log::compiler_error(current_token().location) << "Termed expressions require a context";
+        return fail_expression(current_token().location, true);
+    }
 
     Expression* expression = create_layer2_expression(*ast_store_, {}, *context, current_token().location);
 
-    log(
-        in_tied_expression ? "start parsing tied expression" : "start parsing termed expression", 
-        LogLevel::debug_extra);
+    Log::debug_extra(current_token().location) <<
+        (in_tied_expression ? "start parsing tied expression" : "start parsing termed expression");
 
     expression->terms().push_back(parse_term(in_tied_expression));
     
@@ -119,14 +120,14 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
                 break;
 
             default:
-                return fail_expression(
-                    "Unexpected: " + current_token().get_string() + ", in termed expression",
-                    current_token().location);
+                Log::error(current_token().location) << 
+                    "Unexpected: " << current_token() << ", in termed expression";
+                return fail_expression(current_token().location);
         }
     }
 
-    log("Finished parsing termed expression from " + expression->location.to_string(), 
-        LogLevel::debug_extra);
+    Log::debug_extra(current_token().location) << 
+        "Finished parsing termed expression from " << expression->location;
     return close_termed_expression(expression);
 }
 
@@ -139,8 +140,8 @@ Expression* ParserLayer1::close_termed_expression(Expression* expression) {
         auto term = expression->terms().at(0);
         ast_store_->delete_expression(expression);
 
-        log("removed \"parentheses\" from " + expression->location.to_string(), 
-            LogLevel::debug_extra);
+        Log::debug_extra(current_token().location) << 
+            "removed \"parentheses\" from " << expression->location;
         return term;
     }
 
@@ -175,10 +176,10 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return handle_numeric_literal();
 
         case TokenType::colon:
-            fail("unhandled token type: " + current_token().get_string() + 
-                ", reached ParserLayer1::parse_term", current_token().location);
+            Log::error(current_token().location) << 
+                "unhandled token type: " << current_token() << ", reached ParserLayer1::parse_term";
             assert(false && "colons should be handled by parse_termed expression");
-            return create_user_error(*ast_store_, current_token().location);
+            return fail_expression(current_token().location);
 
         case TokenType::parenthesis_open: 
             return parse_parenthesized_expression();
@@ -221,8 +222,9 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
             return parse_lambda_expression();
 
         default:
-            return fail_expression(std::string{"In parse_term: unhandled token type: " + current_token().get_string()}, 
-                current_token().location, true);
+            Log::compiler_error(current_token().location) << 
+                "In parse_term: unhandled token type: " << current_token();
+            return fail_expression(current_token().location, true);
     }
 }
 

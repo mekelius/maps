@@ -22,8 +22,6 @@ namespace Maps {
 using Log = LogInContext<LogContext::layer1>;
 
 Chunk ParserLayer1::parse_top_level_chunk() {
-    Statement* statement;
-
     switch (current_token().token_type) {
         case TokenType::pragma:
             handle_pragma();
@@ -33,14 +31,14 @@ Chunk ParserLayer1::parse_top_level_chunk() {
             return std::monostate{};
 
         case TokenType::let:
-            log("Scoping not yet implemented", LogLevel::warning);
+            Log::warning(current_token().location) << "Scoping not yet implemented";
                 return parse_top_level_let_definition();
 
             if (current_token().string_value() == "operator")
                 return parse_operator_definition();
 
         default:
-            statement = parse_statement();
+            auto statement = parse_statement();
             if (statement->statement_type != StatementType::empty && !statement->is_definition() &&
                 (pragma_store_->check_flag_value("top-level evaluation", statement->location) || 
                     force_top_level_eval_)) {            
@@ -60,15 +58,16 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
                 std::string name = current_token().string_value();
                 
                 // check if name already exists
-                if (identifier_exists(name))
+                if (identifier_exists(name)) {
                     Log::error(location) << "Attempting to redefine identifier " << name;
                     return fail_definition(location);
+                }
 
                 get_token(); // eat the identifier
 
                 if (is_statement_separator(current_token())) {
-                    log("parsed let definition declaring \"" + name + "\" with no definition", 
-                        LogLevel::debug_extra);
+                    Log::debug_extra(location) << 
+                        "parsed let definition declaring \"" << name << "\" with no definition";
                     
                     get_token(); // eat the semicolon
 
@@ -110,7 +109,7 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
 
                     assert(popped_context == new_scope && "context stack not returned to correct state");
 
-                    log("Parsed let definition", LogLevel::debug_extra);
+                    Log::debug_extra(definition->location()) << "Parsed let definition";
                     return definition;
                 }
 

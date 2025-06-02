@@ -23,17 +23,17 @@ LogOptions::Lock::Lock(LogOptions* options): options_(options) {
     options_->locked_ = true;
 }
 
-LogOptions::Lock LogOptions::set_global(LogContext context, LogLevel loglevel) {
-    auto lock = LogStream::global.lock();
-    lock.options_->set_loglevel(context, loglevel);
-    return lock;
-}
+// LogOptions::Lock LogOptions::set_global(LogContext context, LogLevel loglevel) {
+//     auto lock = LogStream::global.lock();
+//     lock.options_->set_loglevel(context, loglevel);
+//     return lock;
+// }
 
-LogOptions::Lock LogOptions::set_global(LogLevel loglevel) {
-    auto lock = LogStream::global.lock();
-    lock.options_->set_loglevel(LogContext::no_context, loglevel);
-    return lock;
-}
+// LogOptions::Lock LogOptions::set_global(LogLevel loglevel) {
+//     auto lock = LogStream::global.lock();
+//     lock.options_->set_loglevel(LogContext::no_context, loglevel);
+//     return lock;
+// }
 
 LogLevel LogOptions::get_loglevel() const {
     return get_loglevel(LogContext::no_context);
@@ -55,6 +55,11 @@ void LogOptions::set_loglevel(LogContext context, LogLevel loglevel) {
     loglevels_.at(index) = loglevel;
 }
 
+LogOptions::Lock LogOptions::get_lock() {
+    return Lock(this);
+}
+
+
 inline uint line_col_padding(const SourceLocation& location) {
     return 5;
 
@@ -69,7 +74,9 @@ bool logs_since_last_check() {
     return value;
 }
 
-LogOptions::Lock lock();
+LogOptions::Lock LogStream::lock() {
+    return options_.get_lock();
+}
 
 LogStream& LogStream::begin(LogContext logcontext, LogLevel loglevel, const SourceLocation& location) {
     is_open_ = options_.get_loglevel(logcontext) >= loglevel;

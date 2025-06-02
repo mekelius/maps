@@ -76,8 +76,11 @@ IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module,
  pragmas_(&compilation_state->pragmas_),
  maps_types_(compilation_state->types_) {
 
-    if (!types_.is_good_)
-        fail("Initializing type map failed");
+    if (!types_.is_good_) {
+        LogInContext<LogContext::compiler_init>::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << 
+            "Initializing type map failed";
+        fail();
+    }
 
     builder_ = std::make_unique<llvm::IRBuilder<>>(*context_);
 }
@@ -100,23 +103,29 @@ bool IR_Generator::run(Maps::Scopes scopes,
 
     for (auto definition: additional_definitions) {
         if (!handle_global_definition(*definition)) {
-            fail("Couldn't generate ir for " + definition->name_string());
+            Log::compiler_error(definition->location()) << 
+                "Couldn't generate ir for " << *definition;
+            fail();
             return false;
         }
     }
 
     if (!verify_module()) {
-        fail("Module verification failed");
+        Log::compiler_error(NO_SOURCE_LOCATION) << "Module verification failed";
+        fail();
         return false;
     }
 
     return !has_failed_;
 }
 
-void IR_Generator::fail(const std::string& message) {
+void IR_Generator::fail() {
     has_failed_ = true;
-    *errs_ << "error during codegen: " << message << "\n";
-    errs_->flush();
+}
+
+std::nullopt_t IR_Generator::fail_optional() {
+    fail();
+    return std::nullopt;
 }
 
 optional<llvm::Function*> IR_Generator::function_definition(const std::string& name, 
@@ -221,8 +230,9 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
             std::get_if<Maps::Expression*>(&definition_body))
         return wrap_value_in_function(definition.name_string(), **expression);
 
-    fail("In IR_Generator::handle_global_definition: definition didn't have a function type but wasn't an expression");
-    return nullopt;
+    Log::compiler_error(definition.location()) << "In IR_Generator::handle_global_definition:" <<
+        " definition didn't have a function type but wasn't an expression";
+    return fail_optional();
 }
 
 std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
@@ -235,16 +245,17 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
         *maps_type->return_type(), maps_type->param_types());
 
     if (!llvm_type) {
-        fail("Converting \"Void => " + maps_type->name_string() + "\" into an llvm type failed");
-        return nullopt;
+        Log::compiler_error(expression.location) << 
+            "Converting " << *maps_type << "\" into an llvm type failed";
+        return fail_optional();
     }
     
     auto wrapper = function_definition(name, *llvm_type);
     auto value = handle_expression(expression);
 
     if (!*value) {
-        fail("Converting " + expression.log_string() + " to a value failed");
-        return nullopt;
+        Log::compiler_error(expression.location) << "Converting " << expression << " to a value failed";
+        return fail_optional();
     }
 
     if ((*value)->getType() != types_.void_t) {
@@ -293,7 +304,8 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
         [this, &definition](auto) {
             Log::compiler_error(definition.location()) << 
                 "Unhandled definition body encountered during ir gen";
-            fail("IR gen for " + definition.name_string() + " failed");
+            Log::compiler_error(definition.location()) << "IR gen for " << definition << " failed";
+            fail();
             return false;
         }
     }, (*definition.body_)->value_);
@@ -319,8 +331,12 @@ bool IR_Generator::handle_statement(const Statement& statement) {
 
         case StatementType::return_: {
             optional<llvm::Value*> value = handle_expression(*get<Expression*>(statement.value));
-            if (!*value)
-                fail("Missing value while creating return statement");
+            if (!*value) {
+                Log::compiler_error(statement.location) << 
+                    "Missing value while creating return statement";
+                fail();
+                return false;
+            }
             return builder_->CreateRet(*value);
         }
 
@@ -344,8 +360,9 @@ bool IR_Generator::handle_statement(const Statement& statement) {
             return false;
 
         case BAD_STATEMENT_TYPE:
-            // TODO: print statements nice
-            fail("Bad statement in handle_statement: ");
+            Log::compiler_error(statement.location) << 
+                "Bad statement " << statement << " in handle_statement";
+            fail();
             assert(false && "bad statement got through to IR_Generator");
             return false;
     }
@@ -385,7 +402,8 @@ bool IR_Generator::handle_conditional(const Statement& statement) {
     auto condition_value = handle_expression(*condition);
 
     if (!condition_value) {
-        fail("Handling conditional statement condition failed");
+        Log::compiler_error(statement.location) << "Handling conditional condition failed";
+        fail();
         return false;
     }
 
@@ -402,7 +420,9 @@ bool IR_Generator::handle_conditional(const Statement& statement) {
         builder_->SetInsertPoint(then_branch);
         
         if (!handle_statement(*then_statement)) {
-            fail("Handling conditional statement then branch failed");
+            Log::compiler_error(statement.location) << 
+                "Handling conditional statement then branch failed";
+            fail();
             return false;
         }
 
@@ -419,7 +439,8 @@ bool IR_Generator::handle_conditional(const Statement& statement) {
     builder_->SetInsertPoint(then_branch);
 
     if (!handle_statement(*then_statement)) {
-        fail("Handling conditional statement then branch failed");
+        Log::compiler_error(statement.location) << "Handling conditional statement then branch failed";
+        fail();
         return false;
     }
 
@@ -430,7 +451,8 @@ bool IR_Generator::handle_conditional(const Statement& statement) {
 
     builder_->SetInsertPoint(else_branch);
     if (!handle_statement(**else_statement)) {
-        fail("Handling conditional statement else branch failed");
+        Log::compiler_error(statement.location) << "Handling conditional statement else branch failed";
+        fail();
         return false;
     }
 
@@ -489,9 +511,8 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
             return handle_value(expression);
 
         default:
-            *errs_ << "error during codegen: unhandled: " 
-                   << expression.log_string() << "\n";
-            errs_->flush();
+            Log::error(expression.location) << "error during codegen: unhandled: " 
+                   << expression << "\n";
 
             has_failed_ = true;
             return nullopt;
@@ -530,7 +551,8 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     std::optional<llvm::FunctionCallee> function = function_store_->get(*callee);
 
     if (!function) {
-        fail("Attempt to call unknown function: \"" + callee->name_string() + "\"");
+        Log::compiler_error(call.location) << "Attempt to call unknown function: \"" << *callee << "\"";
+        fail();
         return nullptr;
     }
 
@@ -643,23 +665,24 @@ optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression)
                 llvm::APInt(8, std::get<bool>(expression.value)));
 
         default:
-            fail("Unable to create a value from type " + expression.type->name_string());
-            return nullopt;
+            Log::compiler_error(expression.location) << 
+                "Unable to create a value from type " << *expression.type;
+            return fail_optional();
     }
 }
 
 optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& expression) {
     if (!is_reduced_value(expression)) {
-        fail(capitalize(expression.log_string()) + " is not a reduced value");
-        return nullopt;
+        Log::compiler_error(expression.location) << expression << " is not a reduced value";
+        return fail_optional();
     }
 
     if (expression.expression_type == ExpressionType::known_value) {
         return convert_value(expression);
     }
 
-    fail("Could not create a global constant from " + expression.log_string());
-    return nullopt;
+    Log::compiler_error(expression.location) << "Could not create a global constant from " << expression;
+    return fail_optional();
 }
 
 optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expression) {
@@ -669,10 +692,10 @@ optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expressio
     if (*expression.type == Maps::NumberLiteral)
         return convert_numeric_literal(expression);
 
+    Log::compiler_error(expression.location) << expression << " is not a literal";
     assert(false && "IR_Generator::convert_literal called with a non-literal");
-    fail(capitalize(expression.log_string()) + " is not a literal");
 
-    return nullopt;
+    return fail_optional();
 }
 
 // ??? shouldn;t this have been done earlier

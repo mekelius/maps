@@ -130,9 +130,8 @@ std::optional<Expression*> TermedExpressionParser::pop_term() {
     return expression;
 }
 
-void TermedExpressionParser::fail(const std::string& message, SourceLocation location) {
-    Log::error(location) << message;
-    parse_stack_ = {create_user_error(*ast_store_, location)};
+void TermedExpressionParser::fail() {
+    parse_stack_ = {create_user_error(*ast_store_, NO_SOURCE_LOCATION)};
     next_term_it_ = expression_terms_->end();
     success_ = false;
 }
@@ -149,7 +148,8 @@ bool TermedExpressionParser::parse_stack_reduced() const {
 
 optional<Expression*> TermedExpressionParser::parse_termed_expression() {
     if (at_expression_end()) {
-        fail("Layer2 tried to parse an empty expression", expression_->location);
+        Log::compiler_error(expression_->location) << "Layer2 tried to parse an empty expression";
+        fail();
         return create_user_error(*ast_store_, expression_->location);
     }
 
@@ -163,14 +163,17 @@ optional<Expression*> TermedExpressionParser::parse_termed_expression() {
     }
 
     if (!at_expression_end()) {
+        Log::error(expression_->location) << 
+            "Parse_termed_expression didn't parse the whole expression";
         assert(false && "parse_termed_expression didn't parse the whole expression");
-        fail("Parse_termed_expression didn't parse the whole expression", expression_->location);
+        fail();
         return expression_;
     }
     
     if (!parse_stack_reduced()) {
+        Log::error(expression_->location) << "Parse_termed_expression failed to reduce the stack";
         assert(false && "parse_termed_expression failed to reduce completely");
-        fail("Parse_termed_expression failed to reduce the stack", expression_->location);
+        fail();
         return expression_;
     }
 
@@ -235,8 +238,10 @@ void TermedExpressionParser::reduce_to_partial_binop_call_left() {
         create_partial_binop_call(*compilation_state_,
             op->operator_reference_value(), missing_argument, rhs, expression_->location);
     
-    if (!call)
-        return fail("Creating call expression failed", op->location);
+    if (!call) {
+        Log::error(op->location) << "Creating call expression failed";
+        return fail();
+    }
 
     parse_stack_.push_back(*call);
 }
@@ -253,8 +258,10 @@ void TermedExpressionParser::reduce_to_partial_binop_call_right() {
         create_partial_binop_call(*compilation_state_,
             op->operator_reference_value(), lhs, missing_argument, expression_->location);
     
-    if (!call)
-        return fail("Creating call expression failed", op->location);
+    if (!call) {
+        Log::error(op->location) << "Creating call expression failed";
+        return fail();
+    }
 
     parse_stack_.push_back(*call);
 }
@@ -278,9 +285,11 @@ void TermedExpressionParser::reduce_prefix_operator() {
     auto expression = create_call(*compilation_state_, op->reference_value(), 
         {value}, op->location);
 
-    if (!expression)
-        return fail("Applying unary prefix " + op->log_string() + " to " + 
-            value->log_string() + " failed", op->location);
+    if (!expression) {
+        Log::error(op->location) << "Applying unary prefix " << *op << " to " << 
+            *value << " failed";
+        return fail();
+    }
 
     parse_stack_.push_back(*expression);
 }
@@ -295,9 +304,11 @@ void TermedExpressionParser::reduce_postfix_operator() {
     auto expression = create_call(*compilation_state_, op->reference_value(), 
         {value}, op->location);
 
-    if (!expression)
-        return fail("Applying unary postfix " + op->log_string() + " to " + 
-            value->log_string() + " failed", op->location);
+    if (!expression) {
+        Log::error(op->location) << "Applying unary postfix " << *op << " to " << 
+            *value << " failed";
+        return fail();
+    }
 
     parse_stack_.push_back(*expression);
 }
@@ -310,8 +321,10 @@ void TermedExpressionParser::reduce_partially_applied_minus() {
     auto location = (*pop_term())->location;
 
     if (arg->expression_type == ExpressionType::partially_applied_minus)
-        if (!convert_to_unary_minus_call(*compilation_state_, *arg))
-            return fail("Creating umary minus call failed", current_term()->location);
+        if (!convert_to_unary_minus_call(*compilation_state_, *arg)) {
+            Log::error(current_term()->location) << "Creating umary minus call failed";
+            return fail();
+        }
 
     auto expression = create_partially_applied_minus(
         *ast_store_, arg, location);
@@ -387,9 +400,9 @@ void TermedExpressionParser::initial_goto() {
         case ExpressionType::type_construct:
         case ExpressionType::type_constructor_reference:
         case NOT_ALLOWED_IN_LAYER2:
-            fail("bad term type: " + current_term()->expression_type_string(), 
-                expression_->location);
-            return;
+            Log::error(expression_->location) << 
+                "bad term type: " << current_term()->expression_type_string();
+            return fail();
     }
 }
 
@@ -416,8 +429,9 @@ void TermedExpressionParser::initial_postfix_operator_state() {
             *ast_store_, op->operator_reference_value(), op->location));
     }
 
-    return fail("Unexpected postfix operator " + current_term()->log_string() + 
-        "at the start of an expression", current_term()->location);
+    Log::error(current_term()->location) << "Unexpected postfix operator " << *current_term() << 
+        "at the start of an expression";
+    return fail();
 }
 
 void TermedExpressionParser::initial_minus_sign_state() {
@@ -429,8 +443,10 @@ void TermedExpressionParser::initial_partially_applied_minus_state() {
     if (at_expression_end())
         return;
 
-    if (!convert_to_unary_minus_call(*compilation_state_, *current_term()))
-        return fail("Converting to unary minus failed", current_term()->location);
+    if (!convert_to_unary_minus_call(*compilation_state_, *current_term())) {
+        Log::error(current_term()->location) << "Converting to unary minus failed";
+        return fail();
+    }
 
     return initial_call_state();
 }
@@ -549,12 +565,15 @@ void TermedExpressionParser::value_state() {
         case ExpressionType::reference:
         case ExpressionType::call:
         case GUARANTEED_VALUE:
-            return fail("unexpected " + peek()->log_string() +
-                " in termed expression, expected an operator", peek()->location);
+            Log::error(peek()->location) << "unexpected " << *peek() <<
+                " in termed expression, expected an operator";
+            return fail();
 
         case ExpressionType::partially_applied_minus:
-            if (!convert_to_partial_binop_minus_call_left(*compilation_state_, *peek()))
-                return fail("Converting to partial binop minus failed", current_term()->location);
+            if (!convert_to_partial_binop_minus_call_left(*compilation_state_, *peek())) {
+                Log::error(current_term()->location) << "Converting to partial binop minus failed";
+                return fail();
+            }
 
             // intentional fall-through
         case ExpressionType::partial_binop_call_left: {
@@ -564,7 +583,8 @@ void TermedExpressionParser::value_state() {
         }
         case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_call:
-            return fail("Unexpected partial call, expected an operator", peek()->location);
+            Log::error(peek()->location) << "Unexpected partial call, expected an operator";
+            return fail();
 
         case ExpressionType::type_reference:
         case ExpressionType::type_argument:
@@ -575,9 +595,8 @@ void TermedExpressionParser::value_state() {
         case ExpressionType::type_field_name:
         case NOT_ALLOWED_IN_LAYER2:
             // TODO: make expression to_str
-            fail("bad term "+ peek()->log_string() + 
-                " in initial value state", peek()->location);
-            return;
+            Log::error(peek()->location) << "bad term "<< *peek() << " in initial value state";
+            return fail();
     }
 }
 
@@ -608,8 +627,9 @@ void TermedExpressionParser::prefix_operator_state() {
 
         case ExpressionType::postfix_operator_reference:
         case NOT_ALLOWED_IN_LAYER2:
-            return fail("Unexpected " + peek()->log_string() + " in termed expression", 
-                peek()->location);
+            Log::compiler_error(peek()->location) << 
+                "Unexpected " << *peek() << " in termed expression";
+            return fail();
             
         case ExpressionType::reference:
         case ExpressionType::call:
@@ -619,11 +639,13 @@ void TermedExpressionParser::prefix_operator_state() {
             return;
 
         default:
-            return fail("Unexpected " + current_term()->log_string() + 
-            " after an unary operator", current_term()->location);
+            Log::compiler_error(current_term()->location) << 
+                "Unexpected " << *current_term() << " after an unary operator";
+            return fail();
     }
-    return fail("Unexpected " + current_term()->log_string() + 
-    " after an unary operator", current_term()->location);
+    Log::error(current_term()->location) << 
+        "Unexpected " << *current_term() << " after an unary operator";
+    return fail();
 }
 
 void TermedExpressionParser::binary_operator_state() {
@@ -663,8 +685,9 @@ void TermedExpressionParser::binary_operator_state() {
                     return partial_binop_call_both_state();
 
                 default:
-                    return fail("Unexpected " + current_term()->log_string() + 
-                        ", expected a value", current_term()->location);
+                    Log::error(current_term()->location) << 
+                        "Unexpected " << *current_term() << ", expected a value";
+                    return fail();
             }
 
         case ExpressionType::minus_sign:{
@@ -699,13 +722,14 @@ void TermedExpressionParser::binary_operator_state() {
                 return push_partial_call(*pop_term(), 
                     {create_missing_argument(*ast_store_, *missing_arg_type, location), *value});
             }
-            return fail("unary operator failed to produce a value", location);
+            Log::error(location) << "unary operator failed to produce a value";
+            return fail();
         }
 
         case ExpressionType::postfix_operator_reference:
-            return fail("Postfix unary operator " + peek()->log_string() + 
-                " not allowed to operate on " + current_term()->log_string(), 
-                peek()->location);
+            Log::error(peek()->location) << "Postfix unary operator " << *peek() << 
+                " not allowed to operate on " << *current_term();
+            return fail(); 
 
         case ExpressionType::reference:
             shift();
@@ -717,8 +741,9 @@ void TermedExpressionParser::binary_operator_state() {
                     return reduce_to_partial_binop_call_left();
                 
                 default:
-                    fail("Unexpected " + current_term()->log_string() + 
-                        " as right side of binary operator, expected a value", current_term()->location);
+                    Log::error(current_term()->location) << "Unexpected " << 
+                        *current_term() << " as right side of binary operator, expected a value";
+                    return fail();
             }
 
         case ExpressionType::call:
@@ -731,8 +756,9 @@ void TermedExpressionParser::binary_operator_state() {
                     return reduce_to_partial_binop_call_left();
 
                 default:
-                    fail("Unexpected " + current_term()->log_string() + 
-                        " as right side of binary operator, expected a value", current_term()->location);
+                    Log::error(current_term()->location) << "Unexpected " << *current_term() << 
+                        " as right side of binary operator, expected a value";
+                    return fail();
             }
 
         case TYPE_DECLARATION_TERM:
@@ -747,9 +773,11 @@ void TermedExpressionParser::minus_sign_state() {
     if (at_expression_end()) {
         auto declared_type = current_term()->declared_type;
 
-        if (!declared_type)
-            return fail("minus sign without arguments or declared type is ambiguous", 
-                current_term()->location);
+        if (!declared_type) {
+            Log::error(current_term()->location) << 
+                "minus sign without arguments or declared type is ambiguous";
+            return fail();
+        }
 
         if (declared_type == &Int_to_Int)
             return reduce_to_unary_minus_ref();
@@ -757,9 +785,9 @@ void TermedExpressionParser::minus_sign_state() {
         if (declared_type == &IntInt_to_Int)
             return parse_stack_.push_back(binary_minus_ref(current_term()->location));
 
-        return fail(
-            "Type " + (*declared_type)->name_string() + " is not allowed with \"-\"", 
-            current_term()->location);
+        Log::error(current_term()->location) << "Type " << **declared_type << 
+            " is not allowed with \"-\"";
+        return fail();
     }
 
     switch (peek()->expression_type) {
@@ -795,8 +823,9 @@ void TermedExpressionParser::minus_sign_state() {
                     assert(false && "Type declaration after a minus term not implemented");
 
                 default:
-                    return fail("Unexpected " + peek()->log_string() + 
-                    " after a value, expected an operator", peek()->location);
+                    Log::error(peek()->location) << 
+                        "Unexpected " << *peek() << " after a value, expected an operator";
+                    return fail(); 
             }
 
             return value_state();
@@ -809,8 +838,10 @@ void TermedExpressionParser::minus_sign_state() {
 
         case ExpressionType::partially_applied_minus:
             shift();
-            if (!convert_to_unary_minus_call(*compilation_state_, *current_term()))
-                return fail("Converting to unary minus failed", current_term()->location);
+            if (!convert_to_unary_minus_call(*compilation_state_, *current_term())) {
+                Log::error(current_term()->location) << "Converting to unary minus failed";
+                return fail(); 
+            }
             return reduce_partially_applied_minus();
 
         case ExpressionType::reference:
@@ -821,8 +852,8 @@ void TermedExpressionParser::minus_sign_state() {
 
         case TYPE_DECLARATION_TERM:
         default:
-            return fail("Initial minus sign not allowed with " + peek()->log_string(), 
-                current_term()->location);
+            Log::error(current_term()->location) << "Initial minus sign not allowed with " << *peek();
+            return fail(); 
     }
 }
 
@@ -830,8 +861,11 @@ void TermedExpressionParser::partially_applied_minus_state() {
     if (at_expression_end())
         return;
 
-    if(!convert_to_unary_minus_call(*compilation_state_, *current_term()))
-        return fail("Converting to unary minus failed", current_term()->location);
+    if(!convert_to_unary_minus_call(*compilation_state_, *current_term())) {
+        Log::error(current_term()->location) << "Converting to unary minus failed";
+        return fail(); 
+    }
+
     return call_state();
 }
 
@@ -880,8 +914,8 @@ void TermedExpressionParser::partial_binop_call_right_state() {
             assert(false && "type declarations not implemented here");
         case NOT_ALLOWED_IN_LAYER2:
         default:
-            return fail("Unexpected " + peek()->log_string() + ", expected a value",
-            peek()->location);
+            Log::error(peek()->location) << "Unexpected " << *peek() << ", expected a value";
+            return fail(); 
     }
 
     pop_term();
@@ -978,8 +1012,11 @@ void TermedExpressionParser::post_binary_operator_state() {
 
         case ExpressionType::partially_applied_minus:
             shift();
-            if (!convert_to_unary_minus_call(*compilation_state_, *current_term()))
-                return fail("Converting to unary minus failed", current_term()->location);
+
+            if (!convert_to_unary_minus_call(*compilation_state_, *current_term())) {
+                Log::error(current_term()->location) << "Converting to unary minus failed";
+                return fail(); 
+            }
 
             return compare_precedence_state();
 
@@ -1111,7 +1148,8 @@ void TermedExpressionParser::reduce_binop_call() {
     if (!ensure_proper_argument_expression_type(lhs, *function_type->param_type(0)) || 
         !ensure_proper_argument_expression_type(rhs, *function_type->param_type(1))
     ) {
-        return fail("Invalid args for binary expression", lhs->location);
+        Log::error(lhs->location) << "Invalid args for binary expression";
+        return fail(); 
     }
 
     // TODO: check types here
@@ -1122,8 +1160,10 @@ where operator didn't hold a reference to a definition");
     auto reduced = create_call(*compilation_state_,
         std::get<DefinitionHeader*>(operator_->value), {lhs, rhs}, lhs->location);
 
-    if (!reduced)
-        return fail("Creating a binary operator call failed", rhs->location);
+    if (!reduced) {
+        Log::error(rhs->location) << "Creating a binary operator call failed";
+        return fail(); 
+    }
 
     (*reduced)->value = CallExpressionValue{std::get<DefinitionHeader*>(operator_->value), 
         std::vector<Expression*>{lhs, rhs}};
@@ -1140,8 +1180,10 @@ void TermedExpressionParser::reduce_minus_sign_to_unary_minus_call() {
     auto location = (*pop_term())->location; // eat the minus
 
     auto call = create_call(*compilation_state_, &unary_minus_Int, {*arg}, location);
-    if (!call)
-        return fail("Creating unary call to - failed", location);
+    if (!call) {
+        Log::error(location) << "Creating unary call to - failed";
+        return fail(); 
+    }
 
     parse_stack_.push_back(*call);
 }
@@ -1149,7 +1191,8 @@ void TermedExpressionParser::reduce_minus_sign_to_unary_minus_call() {
 void TermedExpressionParser::type_reference_state() {
     if (at_expression_end()) {
         if (!possibly_type_expression_) {
-            fail("Unexpected type expression at expression end", current_term()->location);
+            Log::error(current_term()->location) << "Unexpected type expression at expression end";
+            return fail();
         }
         return;
     }
@@ -1210,14 +1253,15 @@ void TermedExpressionParser::type_reference_state() {
         }
         case ExpressionType::type_reference:
         default:
-            fail("Unexpected " + peek()->log_string() + 
-                " after a type reference, expected an expression", peek()->location);
-            return;
+            Log::error(peek()->location) << 
+                "Unexpected " << *peek() << " after a type reference, expected an expression";
+            return fail();
 
         case NOT_ALLOWED_IN_LAYER2:
-            fail("bad term encountered in TermedExpressoinParser", current_term()->location);
+            Log::compiler_error(current_term()->location) << 
+                "bad term encountered in TermedExpressoinParser";
             assert(false && "bad term encountered in TermedExpressoinParser");
-            return;
+            return fail();
     }
 }
 
@@ -1232,8 +1276,10 @@ void TermedExpressionParser::push_partial_call(Expression* callee_ref,
     auto call = create_call(*compilation_state_, 
         callee_ref->reference_value(), std::vector<Expression*>{args}, location);
     
-    if (!call)
-        return fail("During layer2: Creating partial call failed", location);
+    if (!call) {
+        Log::error(location) << "During layer2: Creating partial call failed";
+        return fail(); 
+    }
         
     parse_stack_.push_back(*call);
 }
@@ -1261,8 +1307,10 @@ void TermedExpressionParser::add_to_partial_call_and_push(Expression* partial_ca
     auto expression = create_call(*compilation_state_, callee, std::move(new_args), 
         location);
 
-    if (!expression)
-        return fail("Creating partial call to " + callee->name_string() + " failed", location);
+    if (!expression) {
+        Log::error(location) << "Creating partial call to " << *callee << " failed";
+        return fail(); 
+    }
 
     return parse_stack_.push_back(*expression);
 }
@@ -1275,8 +1323,10 @@ void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, 
     auto call = create_call(*compilation_state_, 
         operator_ref->reference_value(), { value }, location);
             
-    if (!call)
-        return fail("Creating a call to unary operator failed", location);
+    if (!call) {
+        Log::error(location) << "Creating a call to unary operator failed";
+        return fail(); 
+    }
 
     parse_stack_.push_back(*call);
 
@@ -1284,14 +1334,15 @@ void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, 
 }
 
 void TermedExpressionParser::apply_type_declaration_and_push(Expression* type_declaration, Expression* value) {
-    Log::debug_extra("Applying type declaration " + type_declaration->log_string() + " to " + 
-        value->log_string(), type_declaration->location);
+    Log::debug_extra(type_declaration->location) << 
+        "Applying type declaration " << *type_declaration << " to " << *value;
 
     auto new_expression = value->cast_to(*compilation_state_, type_declaration->type_reference_value());
 
     if (!new_expression) {
         parse_stack_.push_back(create_user_error(*ast_store_, type_declaration->location));
-        return fail("Applying type declaration failed", type_declaration->location);
+        Log::error(type_declaration->location) << "Applying type declaration failed";
+        return fail(); 
     }
 
     assert(*(*new_expression)->type == *type_declaration->type_reference_value() &&
@@ -1305,9 +1356,11 @@ void TermedExpressionParser::substitute_known_value_reference(Expression* known_
 
     Log::debug_extra(known_value_reference->location) << "Substituting known value reference term";
 
-    if (!convert_by_value_substitution(*known_value_reference))
-        fail("Value substitution of " + known_value_reference->log_string() + "failed", 
-            known_value_reference->location);
+    if (!convert_by_value_substitution(*known_value_reference)) {
+        Log::error(known_value_reference->location) << 
+            "Value substitution of " << *known_value_reference << "failed";
+        return fail();
+    }
 }
 
 
@@ -1421,9 +1474,9 @@ void TermedExpressionParser::deferred_call_state() {
             break;
     }
 
-    return fail("Unexpected " + peek()->log_string() + 
-        ", expected an argument, operator or a type declaration", 
-        peek()->location);
+    Log::error(peek()->location) << "Unexpected " << *peek() << 
+        ", expected an argument, operator or a type declaration";
+    return fail();
 }
 
 Expression* TermedExpressionParser::handle_arg_state(
@@ -1444,7 +1497,8 @@ Expression* TermedExpressionParser::handle_arg_state(
         case ExpressionType::call:
             if (!is_acceptable_next_arg(callee, args/*, current_term()*/)) {
                 // TODO: try all kinds of partial application
-                fail("possible type-error", current_term()->location);
+                Log::error(current_term()->location) << "possible type-error";
+                fail();
                 return *pop_term();
             }
 

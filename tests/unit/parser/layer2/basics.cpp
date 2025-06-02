@@ -71,7 +71,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     SUBCASE("1 arg") {    
         const Type* function_type = types->get_function_type(&Void, array{&String}, true);
 
-        DefinitionHeader function{"test_f", function_type, TSL};
+        DefinitionHeader function{DefinitionType::let_definition, "test_f", function_type, TSL};
         globals.create_identifier(&function);
 
         Expression* id = create_reference(ast, &function, TSL);
@@ -93,7 +93,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
         const Type* function_type = types->get_function_type(&Void, 
             array{&String, &String, &String, &String}, true);
         
-        DefinitionHeader function{"test_f", function_type, TSL};
+        DefinitionHeader function{DefinitionType::let_definition, "test_f", function_type, TSL};
         Expression* id{create_reference(ast, &function, TSL)};
         id->type = function_type;
     
@@ -123,7 +123,7 @@ TEST_CASE("TermedExpressionParser should handle haskell-style call expressions")
     SUBCASE("If the call is not partial, the call expression's type should be the return type") {
         const Type* function_type = types->get_function_type(&NumberLiteral, std::array{&String}, true);
         
-        DefinitionHeader function{"test_f", function_type, TSL};
+        DefinitionHeader function{DefinitionType::let_definition, "test_f", function_type, TSL};
         Expression* ref = create_reference(ast, &function, TSL);
 
         Expression* arg1 = create_string_literal(ast, "", TSL);
@@ -144,7 +144,8 @@ TEST_CASE("Should perform known value substitution") {
     REQUIRE(known_val);
     REQUIRE((*known_val)->expression_type == ExpressionType::known_value);
 
-    auto known_val_def = ast_store->allocate_definition(DefinitionHeader{"x", &Hole, TSL}, {*known_val});
+    auto known_val_def = ast_store->allocate_definition(
+        DefinitionHeader{DefinitionType::let_definition, "x", &Hole, TSL}, {*known_val});
 
     auto known_val_ref = create_reference(*ast_store, known_val_def, TSL);
 

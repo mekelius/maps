@@ -14,11 +14,29 @@
 
 namespace Maps {
 
-DefinitionHeader* create_let_definition(AST_Store& ast_store, const Type* type, 
+DefinitionBody* create_let_definition(AST_Store& ast_store, Scope* outer_scope, const std::string& name,
+    LetDefinitionValue body_value, bool is_top_level, const SourceLocation& location) {
+
+    const Type* type = &Hole;
+
+    return *ast_store.allocate_definition(
+        {DefinitionType::let_definition, name, type, location}, 
+        body_value)->body_;
+}
+
+DefinitionBody* create_let_definition(AST_Store& ast_store, Scope* outer_scope, const std::string& name, 
+    const Type* type, bool is_top_level, const SourceLocation& location) {
+
+    return *ast_store.allocate_definition(
+        DefinitionHeader{DefinitionType::let_definition, name, type, location}, 
+        LetDefinitionValue{Undefined{}})->body_;
+}
+
+DefinitionBody* create_let_definition(AST_Store& ast_store, const Type* type, 
     const SourceLocation& location) {
 
-    return ast_store.allocate_definition(
-        {DefinitionType::let_definition, "anonymous_definition", type, location});
+    return *ast_store.allocate_definition(
+        {DefinitionType::let_definition, "anonymous_definition", type, location})->body_;
 }
 
 DefinitionBody* create_let_definition(AST_Store& ast_store, const std::string& name, 
@@ -42,12 +60,20 @@ DefinitionBody* create_let_definition(AST_Store& ast_store, const std::string& n
         {DefinitionType::let_definition, name, value->type, location}, value)->body_;
 }
 
-DefinitionBody* create_let_definition(AST_Store& ast_store, Expression* value, 
-    const SourceLocation& location) {
+// DefinitionBody* create_let_definition(AST_Store& ast_store, Expression* value, 
+//     const SourceLocation& location) {
 
-    // !!! names will clash
+//     // !!! names will clash
+//     return *ast_store.allocate_definition(
+//         {DefinitionType::let_definition, "anonymous_definition", value->type, location}, value)->body_;
+// }
+
+DefinitionBody* create_let_definition(AST_Store& ast_store,
+    Expression* value, const SourceLocation& location) {
+ 
     return *ast_store.allocate_definition(
-        {DefinitionType::let_definition, "anonymous_definition", value->type, location}, value)->body_;
+        {DefinitionType::let_definition, "anonymous definition", value->type, location},
+        value)->body_;
 }
 
 } // namespace Maps

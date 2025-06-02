@@ -35,17 +35,19 @@ void ParserLayer1::handle_pragma() {
     } else if (value_string == "disable") {
         value = false;
     } else {
-        fail("invalid pragma declaration", location);
+        Log::error(location) << "invalid pragma declaration";
         get_token();
-        return;
+        return fail();
     }
 
     // the rest should be the flag name
     bool succeeded = pragma_store_->set_flag(
         flag_name, value, current_token().location);
     
-    if (!succeeded) 
-        fail("handling pragma failed", location);
+    if (!succeeded) {
+        Log::error(location) << "handling pragma failed";
+        return fail();
+    }
 
     get_token();
 }

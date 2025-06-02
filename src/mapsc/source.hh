@@ -32,6 +32,10 @@ struct SourceLocation {
             return "-:-";
         return std::to_string(line) + ":" + std::to_string(column);
     };
+
+    std::string log_representation() const {
+        return to_string();
+    }
 };
 
 #define TSL SourceLocation{__LINE__, 0, NULL_SOURCE_FILE}

@@ -49,8 +49,6 @@ TEST_CASE("Should be able to call a lambda function") {
 }
 
 TEST_CASE("Should be able to call via known value reference to a function") {
-    auto lock = LogOptions::set_global(LogLevel::debug_extra);
-
     auto [state, _0, types] = CompilationState::create_test_state();
     AST_Store& ast_store = *state.ast_store_;
     Scope scope{};
@@ -78,8 +76,6 @@ TEST_CASE("Should be able to call via known value reference to a function") {
 }
 
 TEST_CASE("Should set the type of a call expression to the callee return type") {
-    auto lock = LogOptions::set_global(LogLevel::debug_extra);
-
     auto [state, _0, types] = CompilationState::create_test_state();
     AST_Store& ast_store = *state.ast_store_;
     Scope scope{};

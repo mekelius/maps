@@ -44,7 +44,7 @@ Layer1Result ParserLayer1::run_eval(std::istream& source_is) {
     run_parse(source_is);
     force_top_level_eval_ = false;
 
-    if ((*result_.top_level_definition))
+    if (*result_.top_level_definition)
         simplify(*(*result_.top_level_definition));
 
     if (!result_.top_level_definition) {
@@ -180,7 +180,7 @@ std::nullopt_t ParserLayer1::fail_optional() {
 }
 
 void ParserLayer1::reset_to_top_level() {
-    log("resetting to global scope", LogLevel::debug);
+    Log::debug(current_token().location) << "resetting to global scope";
 
     context_stack_ = {};
 
@@ -202,7 +202,7 @@ void ParserLayer1::push_context(Scope* context) {
 
 std::optional<Scope*> ParserLayer1::pop_context() {
     if (context_stack_.empty()) {
-        Log::compiler_error(NO_SOURCE_LOCATION) << "context stack shouldn't be empty";
+        Log::compiler_error(NO_SOURCE_LOCATION) << "Context stack shouldn't be empty";
         assert(false && "context stack shouldn't be empty");
         return nullopt;
     }
@@ -223,7 +223,7 @@ std::optional<Scope*> ParserLayer1::current_context() const {
 }
 
 bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
-    log("simplifying single statement block", LogLevel::debug_extra, outer->location);
+    Log::debug_extra(outer->location) << "Simplifying single statement block";
 
     assert(outer->statement_type == StatementType::block && 
         "ParserLayer1::collapse_single_statement_block called with a statement that's not a block");

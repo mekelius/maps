@@ -53,10 +53,12 @@ Statement* ParserLayer1::parse_statement() {
 
         case TokenType::indent_block_end:
             assert(false && "parse_statement called at indent_block_end");
-            return fail_statement("Parse_statement called at indent_block_end", location, true);
+            Log::compiler_error(location) << "Parse_statement called at indent_block_end";
+            return fail_statement(location, true);
         
         case TokenType::indent_error_fatal:
-            return fail_statement("Indent error", location);
+            Log::error(location) << "Indent error";
+            return fail_statement(location);
 
         case TokenType::return_t:
             return parse_return_statement();
@@ -79,8 +81,8 @@ Statement* ParserLayer1::parse_statement() {
 
         // ---- errors -----
         default:
-            return fail_statement(
-                "Unexpected "+ current_token().get_string() + ", expected a statement", location);
+            Log::error(location) << "Unexpected " << current_token() << ", expected a statement"; 
+            return fail_statement(location);
     }
 }
 
@@ -90,14 +92,15 @@ Statement* ParserLayer1::parse_expression_statement() {
     Expression* expression = parse_expression();
     Statement* statement = create_expression_statement(*ast_store_, expression, location);
 
-    if(!is_block_starter(current_token()) && !is_statement_separator(current_token()))
-        return fail_statement("Statement didn't end in a statement separator", 
-            current_token().location, true);
+    if(!is_block_starter(current_token()) && !is_statement_separator(current_token())) {
+        Log::compiler_error(current_token().location) << "Statement didn't end in a statement separator";
+        return fail_statement(current_token().location, true);
+    }
 
     if (current_token().token_type == TokenType::semicolon)
         get_token(); // eat trailing semicolon
-    log("Finished parsing expression statement from " + statement->location.to_string(), 
-        LogLevel::debug_extra);
+    Log::debug_extra(current_token().location) << 
+        "Finished parsing expression statement from " << statement->location;
     return statement;
 }
 
@@ -138,7 +141,7 @@ Statement* ParserLayer1::parse_block_statement() {
     unsigned int indent_at_start = indent_level_;
     unsigned int curly_brace_at_start = curly_brace_level_;
 
-    log("Start parsing block statement", LogLevel::debug_extra);
+    Log::debug_extra(location) << "Start parsing block statement";
     
     // determine the block type, i.e. curly-brace or indent
     // must trust the assertion above that other types of tokens won't end up here
@@ -152,8 +155,9 @@ Statement* ParserLayer1::parse_block_statement() {
             block_ending_token = TokenType::indent_block_end;
             break;
         default:
-            return fail_statement("Something went wrong: " + current_token().get_string() + 
-                " is not a block starter", current_token().location, true);
+            Log::compiler_error(current_token().location) << "Something went wrong: " <<
+                 current_token() << " is not a block starter";
+            return fail_statement(current_token().location, true);
     }
 
     get_token(); // eat start token
@@ -180,13 +184,15 @@ Statement* ParserLayer1::parse_block_statement() {
     if (current_token().token_type == TokenType::semicolon)
         get_token(); // eat possible trailing semicolon
 
-    log("Finished parsing block statement from " + statement->location.to_string(), 
-        LogLevel::debug_extra);
+    Log::debug_extra(current_token().location) << 
+        "Finished parsing block statement from " << statement->location;
 
     if (substatements->size() == 1) {
         // attempt to simplify
-        if (!simplify_single_statement_block(statement))
-            return fail_statement("Simplification failed", statement->location, true);
+        if (!simplify_single_statement_block(statement)) {
+            Log::compiler_error(statement->location) << "Simplification failed";
+        }
+            return fail_statement(statement->location, true);
     }
 
     // simplify empty block
@@ -215,7 +221,7 @@ Statement* ParserLayer1::parse_return_statement() {
     if (current_token().token_type == TokenType::semicolon)
         get_token(); //eat statement separator
 
-    log("Parsed return statement", LogLevel::debug_extra);
+    Log::debug_extra(current_token().location) << "Parsed return statement";
     return statement;
 }
 

@@ -16,14 +16,14 @@
 
 
 using std::unique_ptr, std::make_unique;
-using Maps::LogInContext, Maps::LogOptions, Maps::LogLevel, Maps::LogContext;
+using Maps::LogInContext, Maps::LogOptions, Maps::LogLevel, Maps::LogContext, Maps::LogStream;
 using Maps::CompilationState;
 using Maps::JIT_Manager, Maps::SHOULD_EXIT;
 
 int main(int argc, char* argv[]) {
     llvm::raw_os_ostream error_stream{std::cerr};
 
-    auto log_options_lock = LogOptions::Lock::global();
+    auto log_options_lock = LogStream::global.lock();
     auto [action, exit_code, repl_options] = process_cl_options(argc, argv, *log_options_lock.options_);
 
     if (action == SHOULD_EXIT)

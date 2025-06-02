@@ -2,6 +2,7 @@
 
 #include "mapsc/ast/value.hh"
 #include "mapsc/ast/definition_body.hh"
+#include "mapsc/ast/let_definition.hh"
 #include "mapsc/ast/test_helpers/test_definition.hh"
 #include "mapsc/ast/reference.hh"
 #include "mapsc/compilation_state.hh"

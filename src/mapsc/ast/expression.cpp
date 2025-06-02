@@ -35,7 +35,7 @@ std::string known_value_to_string(const KnownValue& value) {
 std::string value_to_string(const ExpressionValue& value) {
     return std::visit(overloaded{
         [](std::monostate)->std::string { return "@Undefined expression value@"; },
-        [](Expression*) { return "@reference to expression@"; },
+        [](Expression*)->std::string { return "@reference to expression@"; },
         [](DefinitionHeader* target)->std::string { return "@reference to " + target->name_string() + "@"; },                       
         [](const Type* type)->std::string { return "@type: " + type->name_string() + "@"; },
         [](TermedExpressionValue value) { 

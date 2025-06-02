@@ -6,6 +6,7 @@
 #include "mapsc/ast/function_definition.hh"
 #include "mapsc/ast/test_helpers/test_definition.hh"
 #include "mapsc/ast/definition.hh"
+#include "mapsc/ast/let_definition.hh"
 #include "mapsc/types/type_store.hh"
 #include "mapsc/compilation_state.hh"
 
@@ -115,7 +116,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
     REQUIRE(types->empty());
 
     auto IntIntInt = types->get_function_type(&Int, array{&Int, &Int}, true);
-    auto dummy_definition = create_definition(*state.ast_store_, IntIntInt, TSL);
+    auto dummy_definition = create_let_definition(*state.ast_store_, IntIntInt, TSL)->header_;
 
     REQUIRE(*dummy_definition->get_type() == *IntIntInt);
 
@@ -173,7 +174,7 @@ TEST_CASE("Concretizer should be able to cast arguments up if needed") {
     REQUIRE(types->empty());
 
     auto IntIntInt = types->get_function_type(&Float, array{&Float, &Float}, true);
-    auto dummy_definition = create_definition(*state.ast_store_, IntIntInt, TSL);
+    auto dummy_definition = create_let_definition(*state.ast_store_, IntIntInt, TSL)->header_;
 
     SUBCASE("Number -> Int -> Float into Float -> Float -> Float") {
         Expression arg1{ExpressionType::known_value, "12.45", &NumberLiteral, TSL};
