@@ -62,7 +62,7 @@ bool resolve_identifier(CompilationState& state, const_Scopes scopes,
     auto definition = lookup_identifier(state, scopes, expression->string_value());
 
     if (!definition) {
-        Log::error(expression->location) << "Unknown identifier: " << expression->string_value();
+        Log::error(expression->location) << "Unknown identifier: " << expression->string_value() << Endl;
         return false;
     }
 
@@ -81,7 +81,7 @@ bool resolve_operator(CompilationState& state, const_Scopes scopes,
     auto definition = lookup_identifier(state, scopes, expression->string_value());
 
     if (!definition) {
-        Log::error(expression->location) << "Unknown operator: " << expression->string_value();
+        Log::error(expression->location) << "Unknown operator: " << expression->string_value() << Endl;
         return false;
     }
 
@@ -96,15 +96,16 @@ bool resolve_operator(CompilationState& state, const_Scopes scopes,
 }
 
 bool resolve_type_identifier(CompilationState& state, Expression* expression) {
-    Log::debug_extra(expression->location) << "Attempting to resolve " << *expression;
+    Log::debug_extra(expression->location) << "Attempting to resolve " << *expression << Endl;
     
     // check builtins
     std::optional<const Type*> type = state.types_->get(expression->string_value());
     if (!type) {
-        Log::error(expression->location) << "Unkown type identifier: " << expression->string_value();
+        Log::error(expression->location) << 
+            "Unkown type identifier: " << expression->string_value() << Endl;
         return false;
     }
-    Log::debug_extra(expression->location) << "Found type " << **type;
+    Log::debug_extra(expression->location) << "Found type " << **type << Endl;
     
     expression->expression_type = ExpressionType::type_reference;
     expression->value = *type;
@@ -118,7 +119,7 @@ bool resolve_type_identifier(CompilationState& state, Expression* expression) {
 bool resolve_identifiers(CompilationState& state, const_Scopes scopes, 
     std::vector<Expression*>& unresolved_identifiers) {
 
-    Log::debug_extra(NO_SOURCE_LOCATION) << "Resolving identifiers";
+    Log::debug_extra(NO_SOURCE_LOCATION) << "Resolving identifiers" << Endl;
 
     for (Expression* expression: unresolved_identifiers) {
         switch (expression->expression_type) {

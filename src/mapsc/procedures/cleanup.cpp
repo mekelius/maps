@@ -7,7 +7,7 @@ namespace Maps {
 using Log = LogNoContext;
 
 bool insert_cleanup(CompilationState& state, Scope& scope, DefinitionBody& definition) {
-    Log::warning(NO_SOURCE_LOCATION) << "Cleanup not implemented, all String':s will leak";
+    Log::warning(NO_SOURCE_LOCATION) << "Cleanup not implemented, all String':s will leak" << Endl;
     return true;
 }
 

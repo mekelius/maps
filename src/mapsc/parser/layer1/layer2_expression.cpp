@@ -28,7 +28,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     auto context = current_context();
 
     if (!context) {
-        Log::compiler_error(current_token().location) << "Termed expressions require a context";
+        Log::compiler_error(current_token().location) << "Termed expressions require a context" << Endl;
         return fail_expression(current_token().location, true);
     }
 
@@ -223,7 +223,7 @@ Expression* ParserLayer1::parse_term(bool is_tied) {
 
         default:
             Log::compiler_error(current_token().location) << 
-                "In parse_term: unhandled token type: " << current_token();
+                "In parse_term: unhandled token type: " << current_token() << Endl;
             return fail_expression(current_token().location, true);
     }
 }

@@ -13,25 +13,25 @@ namespace Maps {
 
 constexpr auto LOG_CONTEXTS_START_LINE = __LINE__;
 enum class LogContext {
-    no_context           = -1,
-    compiler_init       = 0,
-    lexer               = 1,
-    layer1              = 2,
-    name_resolution     = 3,
-    layer2              = 4,
-    layer3              = 5,
-    layer4              = 6,
-    inline_             = 7,
-    concretize          = 8,
-    ir_gen_init         = 9,
-    ir_gen              = 10,
-    REPL                = 11,
-    dsir_parser         = 12,
-    identifier_creation = 13,
-    transform_stage     = 14,
-    type_checks         = 15,
-    type_casts          = 16,
-    eval                = 17,
+    no_context           = 0,
+    compiler_init       = 1,
+    lexer               = 2,
+    layer1              = 3,
+    name_resolution     = 4,
+    layer2              = 5,
+    layer3              = 6,
+    layer4              = 7,
+    inline_             = 8,
+    concretize          = 9,
+    ir_gen_init         = 10,
+    ir_gen              = 11,
+    REPL                = 12,
+    dsir_parser         = 13,
+    identifier_creation = 14,
+    transform_stage     = 15,
+    type_checks         = 16,
+    type_casts          = 17,
+    eval                = 18,
 };
 constexpr auto LOG_CONTEXT_COUNT = __LINE__ - LOG_CONTEXTS_START_LINE - 3;
 
@@ -114,6 +114,7 @@ constexpr std::string_view prefix(LogLevel loglevel) {
 class LogOptions {
 public:
     static constexpr LogLevel DEFAULT_LOGLEVEL = LogLevel::info;
+    using OStream = std::ostream;
 
     class Lock {
     public:
@@ -133,7 +134,7 @@ public:
     void set_loglevel(LogContext context, LogLevel loglevel);
 
     LogLevels loglevels_ = set_all(DEFAULT_LOGLEVEL);
-    std::ostream* ostream = &std::cout;
+    OStream* ostream = &std::cout;
     uint LINE_COL_FORMAT_PADDING = 8;
     bool print_context_prefixes = false;
     
@@ -148,11 +149,17 @@ private:
 
 class LogStream;
 
-template<class T>
+template<typename T>
 concept LogsSelf = requires (T t) { t.log_self_to(std::declval<LogStream&>()); };
 
-template<class T>
+template<typename T>
 concept Loggable = requires (T t) { {t.log_representation()} -> std::convertible_to<std::string_view>; };
+
+template<typename Stream, typename T>
+concept Printable = requires (Stream stream, T t) { {stream << t}; };
+
+constexpr char Endl = '\n';
+static_assert(Printable<LogOptions::OStream, typeof(Endl)>);
 
 class LogStream {
 public:
@@ -160,16 +167,6 @@ public:
 
     LogStream() = default;
     LogStream(LogOptions options): options_(options) {}
-
-    template<typename M>
-        requires std::convertible_to<M, std::string_view>
-    LogStream& operator<<(M message) {
-        if (!is_open_)
-            return *this;
-
-        *options_.ostream << message;
-        return *this;
-    }
 
     template<class L>
         requires LogsSelf<L>
@@ -181,7 +178,7 @@ public:
         return *this;
     }
 
-    template<class L>
+    template<typename L>
         requires Loggable<L>
     LogStream& operator<<(const L& loggable) {
         if (!is_open_)
@@ -192,9 +189,12 @@ public:
     }
 
     template<typename T>
-        requires requires (T t) { std::to_string(t); }
+        requires Printable<LogOptions::OStream, T>
     LogStream& operator<<(T t) {
-        *options_.ostream << std::to_string(t);
+        if (!is_open_)
+            return *this;
+
+        *options_.ostream << t;
         return *this;
     }
 

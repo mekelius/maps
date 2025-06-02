@@ -39,7 +39,7 @@ optional<Expression*> create_call(CompilationState& state,
     
     if (!callee_type->is_function() && args.size() > 0) {
         Log::error(callee->location()) << *callee << " cannot take arguments, tried giving " << 
-            args.size();
+            args.size() << Endl;
         return nullopt;
     }
 
@@ -55,7 +55,7 @@ optional<Expression*> create_call(CompilationState& state,
 
     if (!types_ok) {
         Log::error(location) << "Creating function call to " << *callee << 
-            " failed due to illegal arguments";
+            " failed due to illegal arguments" << Endl;
         return nullopt;
     }
 
@@ -134,7 +134,7 @@ bool convert_to_partial_binop_minus_call_left(CompilationState& state, Expressio
            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus");
 
         Log::compiler_error(expression.location) <<
-            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus";
+            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus" << Endl;
 
         expression.expression_type = ExpressionType::compiler_error;
         return false;
@@ -168,7 +168,7 @@ bool convert_to_unary_minus_call(CompilationState& state, Expression& expression
            "Expression::convert_to_unary_minus_call called on a not partially applied minus");
 
         Log::compiler_error(expression.location) <<
-            "Expression::convert_to_unary_minus_call called on a not partially applied minus";
+            "Expression::convert_to_unary_minus_call called on a not partially applied minus" << Endl;
 
         expression.expression_type = ExpressionType::compiler_error;
         return false;

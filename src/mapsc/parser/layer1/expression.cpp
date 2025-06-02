@@ -118,7 +118,7 @@ Expression* ParserLayer1::parse_lambda_expression() {
     auto parameter_list = parse_lambda_parameters(lambda_scope);
 
     if (!parameter_list) {
-        Log::error(location) << "parsing lambda parameter list failed";
+        Log::error(location) << "parsing lambda parameter list failed" << Endl;
         return fail_expression(location);
     }
 
@@ -140,7 +140,7 @@ Expression* ParserLayer1::parse_lambda_expression() {
     auto popped_context = pop_context();
 
     if (!popped_context || popped_context != new_scope) {
-        Log::error(location) << "Parsing lambda body failed";
+        Log::error(location) << "Parsing lambda body failed" << Endl;
         return fail_expression(location);
     }
 
@@ -165,7 +165,7 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scop
                 return parameter_list;
 
             case TokenType::eof:
-                Log::error(current_token().location) << "Unexpected eof in lambda parameter list";
+                Log::error(current_token().location) << "Unexpected eof in lambda parameter list" << Endl;
                 return fail_optional();
 
             case TokenType::identifier: {
@@ -177,7 +177,7 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scop
                 // check if the string is already bound, in which case we exit
                 if (!lambda_scope->create_identifier(parameter)) {
                     Log::error(location) << 
-                        "Duplicate parameter name " << name << " in lambda parameter list";
+                        "Duplicate parameter name " << name << " in lambda parameter list" << Endl;
                     return fail_optional();
                 }
 
@@ -212,7 +212,7 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scop
                 if (!lambda_scope->create_identifier(parameter)) {
 
                     Log::error(location) <<
-                        "Duplicate parameter name " << name << " in lambda parameter list";
+                        "Duplicate parameter name " << name << " in lambda parameter list" << Endl;
                     return fail_optional();
                 }
                 get_token();
@@ -227,7 +227,7 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scop
 
             default:
                 Log::error(current_token().location) << 
-                    "Unexpected " << current_token() << " in lambda parameter list";
+                    "Unexpected " << current_token() << " in lambda parameter list" << Endl;
                 return fail_optional();
         }
     }
@@ -249,7 +249,7 @@ std::optional<const Type*> ParserLayer1::parse_parameter_type_declaration() {
                     get_token();
 
                 case TokenType::eof:
-                    Log::error(current_token().location) << "Unexpected eof in parameter type declaration";
+                    Log::error(current_token().location) << "Unexpected eof in parameter type declaration" << Endl;
                     return fail_optional();
 
                 default:
@@ -286,13 +286,13 @@ Expression* ParserLayer1::parse_parenthesized_expression() {
     if (current_token().token_type == TokenType::parenthesis_close) {
         auto location = current_token().location;
         get_token();
-        Log::error(location) << "Empty parentheses in an expression";
+        Log::error(location) << "Empty parentheses in an expression" << Endl;
         return fail_expression(location);
     }
 
     Expression* expression = parse_expression();
     if (current_token().token_type != TokenType::parenthesis_close) {
-        Log::error(current_token().location) << "Mismatched parentheses";
+        Log::error(current_token().location) << "Mismatched parentheses" << Endl;
         return fail_expression(current_token().location);
     }
 

@@ -51,7 +51,7 @@ Layer1Result ParserLayer1::run_eval(std::istream& source_is) {
         result_.top_level_definition = nullopt;
 
     } else if (std::holds_alternative<Error>((*result_.top_level_definition)->value_)) {
-        Log::error(NO_SOURCE_LOCATION) << "Layer1 eval failed";
+        Log::error(NO_SOURCE_LOCATION) << "Layer1 eval failed" << Endl;
         result_.top_level_definition = nullopt;
         result_.success = false;
         
@@ -180,7 +180,7 @@ std::nullopt_t ParserLayer1::fail_optional() {
 }
 
 void ParserLayer1::reset_to_top_level() {
-    Log::debug(current_token().location) << "resetting to global scope";
+    Log::debug(current_token().location) << "resetting to global scope" << Endl;
 
     context_stack_ = {};
 
@@ -202,7 +202,7 @@ void ParserLayer1::push_context(Scope* context) {
 
 std::optional<Scope*> ParserLayer1::pop_context() {
     if (context_stack_.empty()) {
-        Log::compiler_error(NO_SOURCE_LOCATION) << "Context stack shouldn't be empty";
+        Log::compiler_error(NO_SOURCE_LOCATION) << "Context stack shouldn't be empty" << Endl;
         assert(false && "context stack shouldn't be empty");
         return nullopt;
     }
@@ -223,7 +223,7 @@ std::optional<Scope*> ParserLayer1::current_context() const {
 }
 
 bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
-    Log::debug_extra(outer->location) << "Simplifying single statement block";
+    Log::debug_extra(outer->location) << "Simplifying single statement block" << Endl;
 
     assert(outer->statement_type == StatementType::block && 
         "ParserLayer1::collapse_single_statement_block called with a statement that's not a block");
@@ -237,7 +237,7 @@ bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
 
     if (inner->is_illegal_as_single_statement_block()) {
         fail();
-        Log::error(inner->location) << "A block cannot be a single " << *inner;
+        Log::error(inner->location) << "A block cannot be a single " << *inner << Endl;
         return false;
     }
 

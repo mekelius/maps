@@ -86,8 +86,9 @@ LogStream& LogStream::begin(LogContext logcontext, LogLevel loglevel, const Sour
 
     log_check_flag = true;
 
-    *options_.ostream << '\n' << location.line << ':' << location.column 
+    *options_.ostream << location.line << ':' << location.column 
         << std::setw(line_col_padding(location))
+        << "  "
         << prefix(loglevel);
                 
     // if (global_options.print_context_prefixes)

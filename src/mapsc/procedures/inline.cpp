@@ -45,7 +45,7 @@ bool inline_call(Expression& expression, const DefinitionBody& definition) {
         return false;
 
     if (args.empty()) {
-        Log::debug_extra(expression.location) << "Changed nullary call back to a reference";
+        Log::debug_extra(expression.location) << "Changed nullary call back to a reference" << Endl;
         expression.expression_type = ExpressionType::reference;
         return substitute_value_reference(expression, definition);
     }
@@ -72,12 +72,12 @@ bool substitute_value_reference(Expression& expression) {
     assert(expression.expression_type == ExpressionType::reference && 
         "substitute_value_reference called with not a reference");
 
-    Log::debug_extra(expression.location) << "Substituting " << expression;
+    Log::debug_extra(expression.location) << "Substituting " << expression << Endl;
 
     auto callee = expression.reference_value();
 
     if (!callee->body_) {
-        Log::error(expression.location) << "Substitution failed";
+        Log::error(expression.location) << "Substitution failed" << Endl;
         return false;
     }
 
@@ -89,7 +89,7 @@ bool substitute_value_reference(Expression& expression, const DefinitionBody& ca
         "substitute_value_reference called with not a reference");
 
     // if (callee.is_undefined()) {
-    //     Log::error("\"" << callee.name_string() << "\" is undefined", expression.location);
+    //     Log::error("\"" << callee.name_string() << "\" is undefined", expression.location) << Endl;
     //     return false;
     // }
 
@@ -121,7 +121,7 @@ bool substitute_value_reference(Expression& expression, const DefinitionBody& ca
 
     // reject impure functions (maybe we can get llvm to inline them?)
     if (callee_type->is_impure_function()) {
-        Log::warning(expression.location) << "Impure functions aren't yet inlinable";
+        Log::warning(expression.location) << "Impure functions aren't yet inlinable" << Endl;
         return false;
     }
 

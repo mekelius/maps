@@ -24,7 +24,7 @@ Lexer::Lexer(std::istream* source_is, SourceFileID source_id)
 Token Lexer::get_token() {
     Token token = get_token_();
 
-    Log::debug_extra(prev_token_.location) << "TOKEN: " << prev_token_;
+    Log::debug_extra(prev_token_.location) << "TOKEN: " << prev_token_ << Endl;
     
     // a bit of a hack to keep the outputs in sync
     prev_token_ = token;
@@ -277,7 +277,7 @@ Token Lexer::read_string_literal() {
 
     if (current_char_ != '\"') {
         if (source_is_->eof()) {
-            Log::error(current_location()) << "Unexpected eof during string literal";
+            Log::error(current_location()) << "Unexpected eof during string literal" << Endl;
         } else {
             Log::compiler_error(current_location()) <<
                 "Something unexpected happened during string literal lexing";

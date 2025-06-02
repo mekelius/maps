@@ -23,7 +23,7 @@ bool Type::cast_to(const Type* target_type, Expression& expression) const {
         return true;
 
     if (!is_castable_expression(expression)) {
-        Log::error(expression.location) << expression << ", is not castable";
+        Log::error(expression.location) << expression << ", is not castable" << Endl;
         return false;
     }
     

@@ -111,7 +111,7 @@ bool IR_Generator::run(Maps::Scopes scopes,
     }
 
     if (!verify_module()) {
-        Log::compiler_error(NO_SOURCE_LOCATION) << "Module verification failed";
+        Log::compiler_error(NO_SOURCE_LOCATION) << "Module verification failed" << Endl;
         fail();
         return false;
     }
@@ -219,7 +219,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
     if (!definition.body_)
         assert(false && "not implemented");
 
-    Log::debug_extra(definition.location()) << "Generating ir for " << definition;
+    Log::debug_extra(definition.location()) << "Generating ir for " << definition << Endl;
 
     if (definition.get_type()->is_function())
         return handle_function(definition);
@@ -254,7 +254,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
     auto value = handle_expression(expression);
 
     if (!*value) {
-        Log::compiler_error(expression.location) << "Converting " << expression << " to a value failed";
+        Log::compiler_error(expression.location) << "Converting " << expression << " to a value failed" << Endl;
         return fail_optional();
     }
 
@@ -280,7 +280,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
         *function_type->return_type(), function_type->param_types());
 
     if (!signature) {
-        Log::error(definition.location()) << "unable to convert type signature for " << definition;
+        Log::error(definition.location()) << "unable to convert type signature for " << definition << Endl;
         return nullopt;
     }
 
@@ -304,7 +304,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
         [this, &definition](auto) {
             Log::compiler_error(definition.location()) << 
                 "Unhandled definition body encountered during ir gen";
-            Log::compiler_error(definition.location()) << "IR gen for " << definition << " failed";
+            Log::compiler_error(definition.location()) << "IR gen for " << definition << " failed" << Endl;
             fail();
             return false;
         }
@@ -361,7 +361,7 @@ bool IR_Generator::handle_statement(const Statement& statement) {
 
         case BAD_STATEMENT_TYPE:
             Log::compiler_error(statement.location) << 
-                "Bad statement " << statement << " in handle_statement";
+                "Bad statement " << statement << " in handle_statement" << Endl;
             fail();
             assert(false && "bad statement got through to IR_Generator");
             return false;
@@ -402,7 +402,7 @@ bool IR_Generator::handle_conditional(const Statement& statement) {
     auto condition_value = handle_expression(*condition);
 
     if (!condition_value) {
-        Log::compiler_error(statement.location) << "Handling conditional condition failed";
+        Log::compiler_error(statement.location) << "Handling conditional condition failed" << Endl;
         fail();
         return false;
     }
@@ -439,7 +439,7 @@ bool IR_Generator::handle_conditional(const Statement& statement) {
     builder_->SetInsertPoint(then_branch);
 
     if (!handle_statement(*then_statement)) {
-        Log::compiler_error(statement.location) << "Handling conditional statement then branch failed";
+        Log::compiler_error(statement.location) << "Handling conditional statement then branch failed" << Endl;
         fail();
         return false;
     }
@@ -451,7 +451,7 @@ bool IR_Generator::handle_conditional(const Statement& statement) {
 
     builder_->SetInsertPoint(else_branch);
     if (!handle_statement(**else_statement)) {
-        Log::compiler_error(statement.location) << "Handling conditional statement else branch failed";
+        Log::compiler_error(statement.location) << "Handling conditional statement else branch failed" << Endl;
         fail();
         return false;
     }
@@ -543,7 +543,7 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     using llvm::ConstantInt, llvm::APInt;
     auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
 
-    Log::debug_extra(call.location) << "Creating call to " << *callee;
+    Log::debug_extra(call.location) << "Creating call to " << *callee << Endl;
 
     // auto deduced_type = deduce_function_type(*compilation_state_->types_, call);
     // Log::debug_extra("Deduced function type to be " + deduced_type->name_string(), call.location);
@@ -551,7 +551,7 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
     std::optional<llvm::FunctionCallee> function = function_store_->get(*callee);
 
     if (!function) {
-        Log::compiler_error(call.location) << "Attempt to call unknown function: \"" << *callee << "\"";
+        Log::compiler_error(call.location) << "Attempt to call unknown function: \"" << *callee << "\"" << Endl;
         fail();
         return nullptr;
     }
@@ -673,7 +673,7 @@ optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression)
 
 optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& expression) {
     if (!is_reduced_value(expression)) {
-        Log::compiler_error(expression.location) << expression << " is not a reduced value";
+        Log::compiler_error(expression.location) << expression << " is not a reduced value" << Endl;
         return fail_optional();
     }
 
@@ -681,7 +681,7 @@ optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& exp
         return convert_value(expression);
     }
 
-    Log::compiler_error(expression.location) << "Could not create a global constant from " << expression;
+    Log::compiler_error(expression.location) << "Could not create a global constant from " << expression << Endl;
     return fail_optional();
 }
 
@@ -692,7 +692,7 @@ optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expressio
     if (*expression.type == Maps::NumberLiteral)
         return convert_numeric_literal(expression);
 
-    Log::compiler_error(expression.location) << expression << " is not a literal";
+    Log::compiler_error(expression.location) << expression << " is not a literal" << Endl;
     assert(false && "IR_Generator::convert_literal called with a non-literal");
 
     return fail_optional();

@@ -22,22 +22,22 @@ std::optional<llvm::FunctionCallee> FunctionStore::get(const DefinitionHeader& d
 
     auto name = definition.name_string();
 
-    Log::debug_extra(NO_SOURCE_LOCATION) << "Looking up a function with name \"" << name << "\"";
+    Log::debug_extra(NO_SOURCE_LOCATION) << "Looking up a function with name \"" << name << "\"" << Endl;
     
     auto it = functions_.find(name);
     if (it != functions_.end()) {
-        Log::debug_extra(NO_SOURCE_LOCATION) << "Found function";
+        Log::debug_extra(NO_SOURCE_LOCATION) << "Found function" << Endl;
         return it->second;
     }
 
     auto overload_it = functions_.find(name + get_suffix(definition));
     if (overload_it != functions_.end()) {
-        Log::debug_extra(NO_SOURCE_LOCATION) << "Found overload";
+        Log::debug_extra(NO_SOURCE_LOCATION) << "Found overload" << Endl;
         return overload_it->second;
     }
 
     Log::error(NO_SOURCE_LOCATION) << "No function named \"" << name << "\" overloaded for type " << 
-        *definition.get_type() << " in function store";
+        *definition.get_type() << " in function store" << Endl;
     return nullopt;
 }
 

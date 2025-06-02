@@ -56,8 +56,6 @@ struct Token {
 
 std::optional<TokenType> lookup_reserved_word_token_type(const std::string& str);
 
-std::ostream& operator<<(std::ostream& os, const Token& token);
-
 bool is_assignment_operator(const Token& token);
 bool is_statement_separator(const Token& token);
 bool is_expression_ender(const Token& token);

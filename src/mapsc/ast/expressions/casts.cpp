@@ -27,18 +27,18 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
 
     switch (expression_type) {
         case NON_CASTABLE_EXPRESSION:
-            Log::debug(type_declaration_location) << "Expression " << *this << " in not castable";
+            Log::debug(type_declaration_location) << "Expression " << *this << " in not castable" << Endl;
             return nullopt;
 
         case ExpressionType::known_value:
             // as a special case, every type can be casted into a const function of itself
             if (target_type->is_function()) {
                 Log::debug_extra(type_declaration_location) << "Attempting to cast " << *this << 
-                    " to const lambda " << *target_type;
+                    " to const lambda " << *target_type << Endl;
                 auto function_type = dynamic_cast<const FunctionType*>(target_type);
                 if (*function_type->return_type() != *type) {
                     Log::debug(type_declaration_location) << "Could not cast " << *this << " to " << 
-                        *target_type;
+                        *target_type << Endl;
                     return nullopt;
                 }
 
@@ -49,18 +49,18 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
                 Log::debug_extra(type_declaration_location) << 
                     "Succesfully casted " << *this << " into " << *type;
 
-                Log::debug_extra(type_declaration_location) << "Created lambda wrapper " << *definition;
+                Log::debug_extra(type_declaration_location) << "Created lambda wrapper " << *definition << Endl;
                 return expression;
             }
 
             if (type->cast_to(target_type, *this)) {
                 Log::debug_extra(type_declaration_location) << "Casted " << *this << " to " << 
-                    *target_type;
+                    *target_type << Endl;
                 return this;
             }
                 
             Log::debug(type_declaration_location) << 
-                "Could not cast " << *this << " to " << *target_type;
+                "Could not cast " << *this << " to " << *target_type << Endl;
             return nullopt;
 
         case ExpressionType::missing_arg:
@@ -68,7 +68,7 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
             return this;
 
         case ExpressionType::known_value_reference:
-            Log::compiler_error(location) << "Casts on known value references not implemented";
+            Log::compiler_error(location) << "Casts on known value references not implemented" << Endl;
             assert(false && "not implemented");
             // copy and cast
 
@@ -77,7 +77,7 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
         case ExpressionType::partial_binop_call_right:
         case ExpressionType::partial_binop_call_both:
             Log::debug(type_declaration_location) << 
-                "Expression " << *this << " in not castable due to being a partial call";
+                "Expression " << *this << " in not castable due to being a partial call" << Endl;
             return nullopt;
 
         case ExpressionType::reference:
@@ -88,12 +88,12 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
         case ExpressionType::partially_applied_minus:
             if (target_type->arity() != 0) {
                 Log::debug(type_declaration_location) 
-                    << "Expression " << *this << " in not castable due to being a partial call";
+                    << "Expression " << *this << " in not castable due to being a partial call" << Endl;
                 return nullopt;
             }
 
             if (!convert_to_unary_minus_call(state, *this)) {
-                Log::error(type_declaration_location) << "Converting to unary minus call failed";
+                Log::error(type_declaration_location) << "Converting to unary minus call failed" << Endl;
                 return nullopt;
             }
             // intentional fall-through
@@ -102,12 +102,12 @@ optional<Expression*> Expression::cast_to(CompilationState& state, const Type* t
                 return wrap_in_runtime_cast(state, target_type, type_declaration_location);
 
             Log::debug(type_declaration_location) << "Expression " << *this <<
-                " in not castable due to being a partial call";
+                " in not castable due to being a partial call" << Endl;
             return nullopt;
 
         // case ExpressionType::lambda:
         case ExpressionType::ternary_expression:
-            Log::compiler_error(location) << "Casts on lambdas and ternary expressions not implemented";
+            Log::compiler_error(location) << "Casts on lambdas and ternary expressions not implemented" << Endl;
             assert(false && "not implemented");
     }
 }
@@ -124,7 +124,7 @@ optional<Expression*> Expression::wrap_in_runtime_cast(CompilationState& state, 
     auto runtime_cast = find_external_runtime_cast(*state.builtins_, type, target_type);
 
     if (!runtime_cast) {
-        Log::debug(type_declaration_location) << "Could not cast " << *this << " to " << *target_type;
+        Log::debug(type_declaration_location) << "Could not cast " << *this << " to " << *target_type << Endl;
         return nullopt;
     }
 
@@ -132,7 +132,7 @@ optional<Expression*> Expression::wrap_in_runtime_cast(CompilationState& state, 
 
     if (!wrapper) {
         Log::debug(type_declaration_location) << "Could not create cast wrapper for " << *this << 
-            " to type " << *target_type;
+            " to type " << *target_type << Endl;
         return nullopt;
     }
 

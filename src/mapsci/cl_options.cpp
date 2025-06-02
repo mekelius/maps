@@ -55,7 +55,7 @@ std::optional<std::filesystem::path> get_default_history_file_path() {
 
     // check if the directory existed but was a file
     if (!std::filesystem::is_directory(*data_directory)) {
-        std::cerr << "ERROR: " << *data_directory << " is not a directory";
+        std::cerr << "ERROR: " << *data_directory << " is not a directory" << Endl;
         return std::nullopt;
     }
 

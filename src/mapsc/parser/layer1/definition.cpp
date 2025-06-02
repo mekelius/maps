@@ -31,7 +31,7 @@ Chunk ParserLayer1::parse_top_level_chunk() {
             return std::monostate{};
 
         case TokenType::let:
-            Log::warning(current_token().location) << "Scoping not yet implemented";
+            Log::warning(current_token().location) << "Scoping not yet implemented" << Endl;
                 return parse_top_level_let_definition();
 
             if (current_token().string_value() == "operator")
@@ -59,7 +59,7 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
                 
                 // check if name already exists
                 if (identifier_exists(name)) {
-                    Log::error(location) << "Attempting to redefine identifier " << name;
+                    Log::error(location) << "Attempting to redefine identifier " << name << Endl;
                     return fail_definition(location);
                 }
 
@@ -74,7 +74,7 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
                     // create an unitialized identifier
                     auto definition = create_undefined_identifier(name, true, location);
                     if (!definition) {
-                        Log::compiler_error(location) << "Creating undefined identifier failed"; 
+                        Log::compiler_error(location) << "Creating undefined identifier failed" << Endl; 
                         return fail_definition(location, true);
                     }
 
@@ -94,7 +94,7 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
 
                     ast_store_->allocate_definition_body(definition, body);
                     if (!create_identifier(definition)) {
-                        Log::compiler_error(location) << "Creating top level identifier failed";
+                        Log::compiler_error(location) << "Creating top level identifier failed" << Endl;
                         return fail_definition(location, true);
                     }
                     
@@ -102,28 +102,28 @@ DefinitionHeader* ParserLayer1::parse_top_level_let_definition() {
 
                     // This means a syntax error
                     if (!popped_context) {
-                        Log::error(location) << "Creating top level definition body failed"; 
+                        Log::error(location) << "Creating top level definition body failed" << Endl; 
                         return fail_definition(location);
                     }
 
 
                     assert(popped_context == new_scope && "context stack not returned to correct state");
 
-                    Log::debug_extra(definition->location()) << "Parsed let definition";
+                    Log::debug_extra(definition->location()) << "Parsed let definition" << Endl;
                     return definition;
                 }
 
                 get_token();
-                Log::error(location) << "Unexpected " << current_token() << ", in let-definition";
+                Log::error(location) << "Unexpected " << current_token() << ", in let-definition" << Endl;
                 return fail_definition(location);
             }
 
         case TokenType::operator_t:
-            Log::error(location) << "Operator overloading not yet implemented, ignoring";
+            Log::error(location) << "Operator overloading not yet implemented, ignoring" << Endl;
             return fail_definition(location);
 
         default:
-            Log::error(location) << "unexpected token: " << current_token() << " in let definition";
+            Log::error(location) << "unexpected token: " << current_token() << " in let definition" << Endl;
             return fail_definition(location);
     }
 }

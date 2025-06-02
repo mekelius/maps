@@ -29,26 +29,29 @@ inline std::optional<KnownValue> evaluate(const DefinitionBody& definition) {
                 }
 
                 case ExpressionType::known_value: {
-                    Log::debug_extra(expression->location) << "Evaluating " << *expression;
+                    Log::debug_extra(expression->location) << "Evaluating " << *expression << Endl;
                     auto value = expression->known_value_value();
 
                     if (!value) {
-                        Log::error(expression->location) << "Evaluating " << *expression << " failed";
+                        Log::error(expression->location) << 
+                            "Evaluating " << *expression << " failed" << Endl;
                         return nullopt;
                     }
 
-                    Log::debug_extra(expression->location) << "Evaluated to " << value_to_string(*value);
+                    Log::debug_extra(expression->location) << 
+                        "Evaluated to " << value_to_string(*value) << Endl;
                     return value;
                 }
                 default:
                     Log::compiler_error(expression->location) << "Compile-time evaluating " << 
-                        expression->expression_type_string() << " not implemented";
+                        expression->expression_type_string() << " not implemented" << Endl;
                     return nullopt;
             }
         },
         [definition](auto)->std::optional<KnownValue> {
-            Log::compiler_error(definition.location()) << "Compile time evaluating definitions with body type " << 
-                definition.node_type_string() << " not implemented";
+            Log::compiler_error(definition.location()) << 
+                "Compile time evaluating definitions with body type " << 
+                definition.node_type_string() << " not implemented" << Endl;
             return nullopt;
         }
     }, definition.value_);

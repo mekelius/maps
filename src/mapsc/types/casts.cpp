@@ -125,7 +125,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
         return true;
     }
 
-    Log::error(expression.location) << "Cannot convert String to " << *target_type;
+    Log::error(expression.location) << "Cannot convert String to " << *target_type << Endl;
     return false;
 }
 
@@ -191,7 +191,7 @@ bool cast_from_MutString(const Type* target_type, Expression& expression) {
         return true;
     }
 
-    Log::compiler_error(expression.location) << "Mut string casts not implemented";
+    Log::compiler_error(expression.location) << "Mut string casts not implemented" << Endl;
     return false;
 }
 

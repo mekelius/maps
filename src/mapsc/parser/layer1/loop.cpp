@@ -15,38 +15,38 @@ Statement* ParserLayer1::parse_while_loop() {
     auto location = current_token().location;
     auto initial_indent = indent_level_;
 
-    Log::debug_extra(location) << "Parsing while loop";
+    Log::debug_extra(location) << "Parsing while loop" << Endl;
 
     get_token();
 
     auto condition = parse_condition_expression();
     if (has_failed()) {
-        Log::error(condition->location) << "Parsing while loop failed";
+        Log::error(condition->location) << "Parsing while loop failed" << Endl;
         return fail_statement(condition->location);
     }
     
-    Log::debug_extra(current_token().location) << "Parsing while loop body";
+    Log::debug_extra(current_token().location) << "Parsing while loop body" << Endl;
 
     auto body = parse_conditional_body();
     if (has_failed()) {
-        Log::error(body->location) << "Parsing while loop failed";
+        Log::error(body->location) << "Parsing while loop failed" << Endl;
         return fail_statement(body->location);
     }
 
     if (current_token().token_type != TokenType::else_t) {
-        Log::debug_extra(current_token().location) << "Finished parsing while loop from " << location;
+        Log::debug_extra(current_token().location) << "Finished parsing while loop from " << location << Endl;
         return create_while(*ast_store_, condition, body, location);
     }
 
-    Log::debug_extra(current_token().location) << "Parsing else branch for a while loop";
+    Log::debug_extra(current_token().location) << "Parsing else branch for a while loop" << Endl;
 
     auto else_branch = parse_else_branch(initial_indent);
     if (has_failed()) {
-        Log::error(body->location) << "Parsing while loop else branch failed";
+        Log::error(body->location) << "Parsing while loop else branch failed" << Endl;
         return fail_statement(body->location);
     }
 
-    Log::debug_extra(current_token().location) << "Finished parsing while loop from " << location;
+    Log::debug_extra(current_token().location) << "Finished parsing while loop from " << location << Endl;
 
     return create_while_else(*ast_store_, condition, body, else_branch, location);
 }

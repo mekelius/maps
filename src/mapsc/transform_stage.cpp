@@ -57,7 +57,7 @@ bool run_transforms(CompilationState& state, Scope& scope, DefinitionBody& defin
         return false;
     }
 
-    Log::debug_extra(definition.location()) << "Running transforms on definition " << definition << "...";
+    Log::debug_extra(definition.location()) << "Running transforms on definition " << definition << "..." << Endl;
 
     // Log::debug_extra("Simplify " + definition.to_string() + "...", 
     //     definition.location());
@@ -79,12 +79,12 @@ bool run_transforms(CompilationState& state, Scope& scope, DefinitionBody& defin
     //     definition.location());
 
 
-    Log::debug_extra(definition.location()) << "Concretize " << definition << "...";
+    Log::debug_extra(definition.location()) << "Concretize " << definition << "..." << Endl;
     if (!concretize(state, definition)) {
-        Log::error(definition.location()) << "Concretizing " << definition << " failed";
+        Log::error(definition.location()) << "Concretizing " << definition << " failed" << Endl;
         return false;
     }
-    Log::debug_extra(definition.location()) << "Concretize ok";
+    Log::debug_extra(definition.location()) << "Concretize ok" << Endl;
 
     
     // Log::debug_extra("Type checking " + definition.to_string() + "...", 

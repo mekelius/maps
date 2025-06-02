@@ -49,7 +49,7 @@ bool SimpleTypeChecker::visit_expression(Expression* expression) {
             return false;
     }
 
-    Log::error(expression->location) << "Type check on " << *expression << " failed";
+    Log::error(expression->location) << "Type check on " << *expression << " failed" << Endl;
 
 }
 

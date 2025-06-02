@@ -60,7 +60,7 @@ BuiltinExternal concat{"concat", &MutString_MutString_to_MutString};
 
 bool init_builtin(Scope& scope, DefinitionHeader& node) {
     if (!scope.create_identifier(&node)) {
-        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Creating builtin " << node << " failed";
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Creating builtin " << node << " failed" << Endl;
         return false;
     }
 
@@ -90,7 +90,7 @@ bool init_builtins(Scope& scope) {
 
 const Scope* get_builtins() {
     if (!builtins_initialized && !init_builtins(builtins)) {
-        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Initializing builtins failed";
+        Log::compiler_error(COMPILER_INIT_SOURCE_LOCATION) << "Initializing builtins failed" << Endl;
         assert(false && "initializing builtins failed");
     }
 
@@ -102,7 +102,7 @@ optional<DefinitionHeader*> find_external_runtime_cast(const Scope& scope, const
     
     std::string cast_name = "to_" + target_type->name_string() + "_" + source_type->name_string();
     
-    Log::debug_extra(NO_SOURCE_LOCATION) << "Trying to find runtime cast " << cast_name;
+    Log::debug_extra(NO_SOURCE_LOCATION) << "Trying to find runtime cast " << cast_name << Endl;
 
     auto cast = scope.get_identifier(cast_name);
     if (!cast)

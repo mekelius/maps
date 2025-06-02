@@ -77,11 +77,11 @@ optional<Expression*> create_known_value(CompilationState& state, KnownValue val
 
     if (!expression->cast_to(state, type)) {
         Log::error(location) << "Couldn't create a known value of type " << *type << 
-            " from value:" << value_to_string(value);
+            " from value:" << value_to_string(value) << Endl;
         return nullopt;
     }
 
-    Log::debug_extra(location) << "Succesfully casted to " << *type;
+    Log::debug_extra(location) << "Succesfully casted to " << *type << Endl;
 
     return expression;
 }
@@ -102,7 +102,7 @@ optional<KnownValue> Expression::known_value_value() const {
         [](maps_MutString value)->optional<KnownValue>
             { return {value}; },
         [this](auto)->optional<KnownValue> {
-            LogNoContext::compiler_error(location) << *this << " held an incorrect value type";
+            LogNoContext::compiler_error(location) << *this << " held an incorrect value type" << Endl;
             assert(false && "known_value expression didn't have a correct value type");
             return nullopt;
         }

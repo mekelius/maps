@@ -93,16 +93,16 @@ bool concretize_loop(CompilationState& state, std::vector<const Type*>& potentia
 bool concretize_call(CompilationState& state, Expression& call) {
     auto [callee, args] = call.call_value();
 
-    Log::debug_extra(call.location) << "Concretizing a call to " << *callee;
+    Log::debug_extra(call.location) << "Concretizing a call to " << *callee << Endl;
 
     // attempt inline first
-    Log::debug_extra(call.location) << "Attempting to inline " << call;
+    Log::debug_extra(call.location) << "Attempting to inline " << call << Endl;
 
     if (callee->body_)
         if (inline_call(call, **callee->body_))
             return concretize(state, call);
 
-    Log::debug_extra(call.location) << "Could not inline, attempting to cast arguments";
+    Log::debug_extra(call.location) << "Could not inline, attempting to cast arguments" << Endl;
 
     auto callee_type = dynamic_cast<const FunctionType*>(callee->get_type());
 
@@ -114,7 +114,7 @@ bool concretize_call(CompilationState& state, Expression& call) {
     }
 
     if (call.declared_type) {
-        Log::debug_extra(call.location) << "Call has a declared type";
+        Log::debug_extra(call.location) << "Call has a declared type" << Endl;
 
         if (**call.declared_type != *callee_type) {
             assert(false && "mismatching declared type not implemented in concretize call");
@@ -144,7 +144,7 @@ bool concretize_call(CompilationState& state, Expression& call) {
                 *arg->type << " into " << *param_type;
             
             if (!arg->type->cast_to(param_type, *arg)) {
-                Log::error(arg->location) << "No";
+                Log::error(arg->location) << "No" << Endl;
                 return false;
             }
         }
@@ -152,7 +152,7 @@ bool concretize_call(CompilationState& state, Expression& call) {
             return false;
 
         if (*arg->type != *param_type) {
-            Log::error(arg->location) << *arg << " does not match parameter type: " << *param_type;
+            Log::error(arg->location) << *arg << " does not match parameter type: " << *param_type << Endl;
             return false;
         }
     }
@@ -193,7 +193,7 @@ bool concretize(CompilationState& state, DefinitionBody& definition) {
             return concretize(state, *expression);
         },
         [&definition, &state](Statement* statement) {
-            Log::debug_extra(definition.location()) << "Concretizing definition body of " << definition;
+            Log::debug_extra(definition.location()) << "Concretizing definition body of " << definition << Endl;
 
             // Need to figure out the return type
             std::vector<const Type*> potential_return_types {};
@@ -202,7 +202,7 @@ bool concretize(CompilationState& state, DefinitionBody& definition) {
 
             optional<const Type*> deduced_return_type = deduce_return_type(*state.types_, potential_return_types);
             if (!deduced_return_type) {
-                Log::error(definition.location()) << "No viable return type for " << definition;
+                Log::error(definition.location()) << "No viable return type for " << definition << Endl;
                 return false;
             }
             Log::debug_extra(definition.location()) << 
@@ -221,7 +221,7 @@ bool concretize(CompilationState& state, DefinitionBody& definition) {
 }
 
 bool concretize(CompilationState& state, Expression& expression) {
-    Log::debug_extra(expression.location) << "Concretizing " << expression;
+    Log::debug_extra(expression.location) << "Concretizing " << expression << Endl;
 
     switch (expression.expression_type) {
         case ExpressionType::call:
@@ -229,7 +229,7 @@ bool concretize(CompilationState& state, Expression& expression) {
 
         case ExpressionType::known_value_reference:
             if (!substitute_value_reference(expression)) {
-                Log::compiler_error(expression.location) << "Substituting known value reference failed";
+                Log::compiler_error(expression.location) << "Substituting known value reference failed" << Endl;
                 return false;
             }
             assert(expression.expression_type == ExpressionType::known_value &&
