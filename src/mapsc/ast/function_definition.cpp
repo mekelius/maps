@@ -19,6 +19,8 @@
 
 namespace Maps {
 
+using Log = LogInContext<LogContext::definition_creation>;
+
 std::pair<DefinitionHeader*, DefinitionBody*> function_definition(CompilationState& state, 
     const ParameterList& parameter_list, Scope* inner_scope, LetDefinitionValue value, 
     bool is_top_level, const SourceLocation& location) {
@@ -55,6 +57,9 @@ std::pair<DefinitionHeader*, DefinitionBody*> function_definition(CompilationSta
 
 std::pair<DefinitionHeader*, DefinitionBody*> create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
     Expression* value, bool is_pure, const SourceLocation& location) {
+
+    Log::debug_extra(location) << 
+        "Creating nullary function from " << *value << " with type " << *value->type << Endl;
 
     return ast_store.allocate_definition(
         DefinitionHeader{DefinitionType::let_definition, "testing_nullary_function", 

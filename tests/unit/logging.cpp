@@ -4,7 +4,6 @@
 
 using namespace Maps;
 
-
 TEST_CASE("Lock should lock properly") {
     auto lock = LogStream::global.lock();
     (*lock)->options_->set_loglevel(LogLevel::debug_extra);

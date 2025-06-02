@@ -27,9 +27,7 @@ TEST_CASE("Should report failure correctly") {
     auto& ast_store = *state.ast_store_;
 
     auto value = create_numeric_literal(ast_store, "23", TSL);
-
     auto outer = create_layer2_expression_testing(ast_store, {value, value, value}, TSL);
-
     auto success = run_layer2(state, outer);
 
     CHECK(!success);

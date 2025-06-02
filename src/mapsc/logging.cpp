@@ -14,6 +14,66 @@ namespace {
 
 bool log_check_flag = false;
 
+constexpr std::string_view prefix(LogContext context) {
+    switch (context) {
+        case LogContext::no_context:
+            return "";
+        case LogContext::compiler_init:
+            return "during compiler initialization: ";
+        case LogContext::lexer:
+            return "in lexer: ";
+        case LogContext::layer1:
+            return "in layer1: ";
+        case LogContext::name_resolution:
+            return "during name resolution: ";
+        case LogContext::layer2:
+            return "in layer2: ";
+        case LogContext::layer3:
+            return "in layer3: ";
+        case LogContext::layer4:
+            return "in layer4: ";
+        case LogContext::inline_:
+            return "during function inline: ";
+        case LogContext::concretize:
+            return "during concretize: ";
+        case LogContext::ir_gen_init:
+            return "during initializing IR generation: ";
+        case LogContext::ir_gen:
+            return "during IR generation: ";
+        case LogContext::REPL:
+            return "in REPL: ";
+        case LogContext::dsir_parser:
+            return "in dsir parser: ";
+        case LogContext::definition_creation:
+            return "during definition creation";
+        case LogContext::transform_stage:
+            return "in transform stage";
+        case LogContext::type_checks:
+            return "in type checks";
+        case LogContext::type_casts:
+            return "in type cast";
+        case LogContext::eval:
+            return "during compile time evaluation";
+    }
+}
+
+constexpr std::string_view prefix(LogLevel loglevel) {
+    switch (loglevel) {
+        case LogLevel::compiler_error:
+            return "COMPILER ERROR: ";
+        case LogLevel::error:
+            return "Error:   ";
+        case LogLevel::warning:
+            return "Warning: ";
+        case LogLevel::info:
+            return "Info:    ";
+        case LogLevel::debug:
+            return "Debug:   ";
+        case LogLevel::debug_extra:
+            return "Extra:   ";
+    }
+}
+
 } // anonymous namespace
 
 LogOptions::Lock::~Lock() {

@@ -73,7 +73,7 @@ optional<Expression*> create_known_value(CompilationState& state, KnownValue val
 
     // try to cast
     Log::debug_extra(location) << "While creating known value expression: " << 
-        "de-facto type didn't match given type, attempting to cast...";
+        "de-facto type didn't match given type, attempting to cast..." << Endl;
 
     if (!expression->cast_to(state, type)) {
         Log::error(location) << "Couldn't create a known value of type " << *type << 

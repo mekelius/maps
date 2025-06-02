@@ -79,8 +79,6 @@ void prime_terms(auto expr, const string& input, auto op1_ref, auto op2_ref,
 
 } // namespace
 
-
-
 TEST_CASE("TermedExpressionParser should handle binop expressions") {
     auto [state, _0, _1] = CompilationState::create_test_state();
     auto ast = state.ast_store_.get();

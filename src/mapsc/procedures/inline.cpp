@@ -85,13 +85,14 @@ bool substitute_value_reference(Expression& expression) {
 }
 
 bool substitute_value_reference(Expression& expression, const DefinitionBody& callee) {
-    assert(expression.expression_type == ExpressionType::reference && 
+    assert((expression.expression_type == ExpressionType::reference || 
+            expression.expression_type == ExpressionType::known_value_reference) && 
         "substitute_value_reference called with not a reference");
 
-    // if (callee.is_undefined()) {
-    //     Log::error("\"" << callee.name_string() << "\" is undefined", expression.location) << Endl;
-    //     return false;
-    // }
+    if (callee.is_undefined()) {
+        Log::error(expression.location) << "\"" << callee << "\" is undefined" << Endl;
+        return false;
+    }
 
     // check that the types match, or try to cast
     auto callee_type = callee.get_type();

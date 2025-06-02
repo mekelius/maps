@@ -17,7 +17,7 @@ namespace Maps {
 class DefinitionHeader;
 
 using Log_resolution = LogInContext<LogContext::name_resolution>;
-using Log_creation = LogInContext<LogContext::identifier_creation>;
+using Log_creation = LogInContext<LogContext::definition_creation>;
 
 // Scopes contain names bound to definitions
 class Scope {

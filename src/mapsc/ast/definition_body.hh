@@ -59,6 +59,7 @@ public:
     void set_type(const Type* type);
     bool set_declared_type(const Type* type);
 
+    bool is_undefined()const { return header_->is_undefined(); }
     bool is_deleted() const { return header_->is_deleted_; }
     void mark_deleted() { header_->is_deleted_ = true; }
 

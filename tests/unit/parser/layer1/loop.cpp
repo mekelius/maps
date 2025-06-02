@@ -21,8 +21,6 @@ inline std::tuple<CompilationState, Scope, stringstream> setup(const std::string
     };
 }
 
-// auto lock = LogOptions::set_global(LogLevel::debug_extra);
-
 #define WHILE_CASE(source_string)\
 TEST_CASE(source_string) {\
     LogNoContext::debug_extra(TSL) << "TEST_CASE:\n" << source_string;\

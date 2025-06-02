@@ -15,7 +15,7 @@
 namespace Maps {
 
 using Log_resolution = LogInContext<LogContext::name_resolution>;
-using Log_creation = LogInContext<LogContext::identifier_creation>;
+using Log_creation = LogInContext<LogContext::definition_creation>;
 
 std::optional<DefinitionHeader*> Scope::create_identifier(DefinitionHeader* node) {
     auto name = node->name_string();
