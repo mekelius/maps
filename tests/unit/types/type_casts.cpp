@@ -7,7 +7,6 @@
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/value.hh"
 #include "mapsc/types/type_defs.hh"
-#include "mapsc/procedures/type_check.hh"
 
 using std::holds_alternative, std::get;
 using namespace Maps;
