@@ -7,7 +7,7 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/logging.hh"
 
 #include "mapsc/types/type_defs.hh"

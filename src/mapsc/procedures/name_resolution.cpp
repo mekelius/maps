@@ -14,7 +14,7 @@
 #include "mapsc/compilation_state.hh"
 #include "mapsc/logging.hh"
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/types/type_store.hh"
 
 using std::optional, std::nullopt;

@@ -8,7 +8,7 @@
 #include <cassert>
 #include <span>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/types/type.hh"
 

@@ -7,7 +7,7 @@
 
 #include "common/std_visit_helper.hh"
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/logging.hh"
 
 #include "mapsc/types/type.hh"

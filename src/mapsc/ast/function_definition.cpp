@@ -8,7 +8,7 @@
 
 #include "mapsc/compilation_state.hh"
 #include "mapsc/log_format.hh"
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 
 #include "mapsc/types/type_defs.hh"
 

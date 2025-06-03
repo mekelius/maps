@@ -1,5 +1,5 @@
-#ifndef __SOURCE_HH
-#define __SOURCE_HH
+#ifndef __SOURCE_LOCATION_HH
+#define __SOURCE_LOCATION_HH
 
 #include <optional>
 #include <string>

@@ -29,7 +29,7 @@
 #include "common/string_helpers.hh"
 #include "common/maps_datatypes.h"
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/logging.hh"
 
 #include "mapsc/compilation_state.hh"

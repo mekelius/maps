@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "mapsc/log_format.hh"
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/ast/definition.hh"
 
 namespace Maps {

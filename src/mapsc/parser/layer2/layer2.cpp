@@ -6,7 +6,7 @@
 #include <span>
 #include <variant>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/logging.hh"
 
 #include "mapsc/compilation_state.hh"
@@ -21,7 +21,7 @@
 #include "mapsc/ast/call_expression.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 
 
 using std::optional, std::nullopt;

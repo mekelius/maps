@@ -4,7 +4,7 @@
 #include <cassert>
 #include <optional>
 
-#include "source.hh"
+#include "mapsc/source_location.hh"
 
 namespace Maps {
 

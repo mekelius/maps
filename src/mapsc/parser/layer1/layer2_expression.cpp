@@ -3,7 +3,7 @@
 #include <cassert>
 #include <variant>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/ast/identifier.hh"
 #include "mapsc/ast/layer2_expression.hh"

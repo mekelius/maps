@@ -1,7 +1,7 @@
 #include "doctest.h"
 
 #include "mapsc/procedures/concretize.hh"
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/function_definition.hh"
 #include "mapsc/ast/test_helpers/test_definition.hh"

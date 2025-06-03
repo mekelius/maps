@@ -41,7 +41,7 @@ set_property(TARGET libmaps PROPERTY OUTPUT_NAME maps)
 # -------------------- MAPSC FRONTEND --------------------
 
 add_library(mapsc_frontend OBJECT
-    src/mapsc/source.cpp
+    src/mapsc/source_location.cpp
     src/mapsc/logging.cpp
     src/mapsc/pragma.cpp
     src/mapsc/compilation_state.cpp
@@ -234,12 +234,51 @@ target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
 add_executable(logging_unit_tests
     tests/unit/tests_main.cpp
     tests/unit/logging.cpp
+
+    src/mapsc/source_location.cpp
     src/mapsc/logging.cpp
 )
 
 set_property(TARGET logging_unit_tests 
     PROPERTY EXCLUDE_FROM_ALL True)
 target_include_directories(logging_unit_tests SYSTEM PRIVATE doctest tests)
+
+
+# --------------------- BUILTINS UNIT TESTS -----------------------
+
+add_executable(builtins_unit_tests
+    tests/unit/tests_main.cpp
+    tests/unit/builtin.cpp
+
+    src/mapsc/source_location.cpp
+    src/mapsc/logging.cpp
+    src/mapsc/builtins.cpp
+    
+    src/mapsc/types/casts.cpp
+    src/mapsc/types/type.cpp
+    
+    src/mapsc/ast/scope.cpp
+    src/mapsc/ast/definition.cpp
+    src/mapsc/ast/function_definition.cpp
+    src/mapsc/ast/definition_body.cpp
+    src/mapsc/ast/expression.cpp
+    src/mapsc/ast/call_expression.cpp
+    src/mapsc/ast/lambda.cpp
+    src/mapsc/ast/misc_expression.cpp
+    src/mapsc/ast/expressions/casts.cpp
+    src/mapsc/ast/expression_properties.cpp
+    src/mapsc/ast/reference.cpp
+    src/mapsc/ast/builtin.cpp
+    src/mapsc/ast/ast_store.cpp
+    src/mapsc/ast/value.cpp
+
+    src/mapsc/procedures/create_call.cpp
+)
+
+set_property(TARGET builtins_unit_tests 
+    PROPERTY EXCLUDE_FROM_ALL True)
+target_include_directories(builtins_unit_tests SYSTEM PRIVATE doctest tests)
+target_link_libraries(builtins_unit_tests libmaps)
 
 # --------------------- DSIR UNIT TESTS -----------------------
 
@@ -261,4 +300,5 @@ configure_file(tests/e2e/lit.site.cfg.py.in lit.site.cfg.py @ONLY)
 
 add_test(NAME unit_tests COMMAND unit_tests)
 add_test(NAME logging_unit_tests COMMAND logging_unit_tests)
+add_test(NAME builtins_unit_tests COMMAND builtins_unit_tests)
 add_test(NAME e2e_tests COMMAND lit "${CMAKE_CURRENT_BINARY_DIR}" -v)

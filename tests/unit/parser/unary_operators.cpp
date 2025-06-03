@@ -4,7 +4,7 @@
 #include "mapsc/compilation_state.hh"
 
 #include "mapsc/ast/layer2_expression.hh"
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/parser/layer2.hh"
 
 using namespace std;

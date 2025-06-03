@@ -15,7 +15,7 @@
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/expression_properties.hh"
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/compilation_state.hh"
 
 using std::optional, std::nullopt;

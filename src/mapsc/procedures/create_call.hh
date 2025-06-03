@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 
 namespace Maps {
 

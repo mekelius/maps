@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/logging.hh"
 
 #include "mapsc/pragma.hh"

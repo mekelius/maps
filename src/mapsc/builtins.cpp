@@ -6,7 +6,7 @@
 #include <string_view>
 #include <variant>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/logging.hh"
 
 #include "mapsc/types/function_type.hh"

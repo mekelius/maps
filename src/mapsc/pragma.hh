@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 
 namespace Maps {
 

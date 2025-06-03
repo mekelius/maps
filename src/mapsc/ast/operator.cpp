@@ -1,7 +1,7 @@
 #include "operator.hh"
 
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/let_definition.hh"
 

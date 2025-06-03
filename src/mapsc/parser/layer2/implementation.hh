@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/ast/operator.hh"
 
 /**

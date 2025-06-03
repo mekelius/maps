@@ -10,7 +10,7 @@
 #include <map>
 
 #include "mapsc/logging.hh"
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 
 namespace Maps {
 

@@ -7,7 +7,7 @@
 #include <variant>
 #include <vector>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/logging.hh"
 #include "mapsc/compilation_state.hh"
 

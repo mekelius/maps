@@ -9,7 +9,7 @@
 #include "common/maps_datatypes.h"
 
 #include "mapsc/log_format.hh"
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/types/type_defs.hh"
 #include "mapsc/ast/scope.hh"
 

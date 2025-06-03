@@ -1,7 +1,7 @@
 #ifndef __OPERATOR_HH
 #define __OPERATOR_HH
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/ast/definition.hh"
 
 namespace Maps {

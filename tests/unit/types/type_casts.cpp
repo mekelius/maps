@@ -2,7 +2,7 @@
 
 #include <variant>
 
-#include "mapsc/source.hh"
+#include "mapsc/source_location.hh"
 #include "mapsc/compilation_state.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/value.hh"
