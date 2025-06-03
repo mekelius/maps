@@ -40,7 +40,7 @@ set_property(TARGET libmaps PROPERTY OUTPUT_NAME maps)
 
 # -------------------- MAPSC FRONTEND --------------------
 
-add_library(mapsc_frontend OBJECT
+add_library(mapsc_types_and_ast OBJECT
     src/mapsc/source_location.cpp
     src/mapsc/logging.cpp
     src/mapsc/pragma.cpp
@@ -79,6 +79,14 @@ add_library(mapsc_frontend OBJECT
 
     src/mapsc/builtins.cpp
 
+    src/mapsc/procedures/create_call.cpp
+)
+
+target_link_libraries(mapsc_types_and_ast libmaps)
+
+# -------------------- MAPSC FRONTEND --------------------
+
+add_library(mapsc_frontend OBJECT
     src/mapsc/procedures/inline.cpp
     src/mapsc/procedures/coerce_type.cpp
     src/mapsc/procedures/simplify.cpp
@@ -86,7 +94,6 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/procedures/type_check.cpp
     src/mapsc/procedures/name_resolution.cpp
     src/mapsc/procedures/reverse_parse.cpp
-    src/mapsc/procedures/create_call.cpp
     src/mapsc/procedures/cleanup.cpp
 
     src/mapsc/parser/token.cpp
@@ -109,7 +116,7 @@ add_library(mapsc_frontend OBJECT
     src/mapsc/transform_stage.cpp
 )
 
-target_link_libraries(mapsc_frontend libmaps)
+target_link_libraries(mapsc_frontend libmaps mapsc_types_and_ast)
 
 # ------------------------- DSIR -------------------------
 
@@ -128,7 +135,7 @@ add_library(ir_gen OBJECT
     src/mapsc/llvm_ir_gen/function_store.cpp
 )
 
-target_link_libraries(ir_gen mapsc_frontend -lLLVM-19)
+target_link_libraries(ir_gen mapsc_types_and_ast mapsc_frontend -lLLVM-19)
 target_include_directories(ir_gen SYSTEM PUBLIC /usr/lib/llvm-19/include)
 
 # ------------------------- MAPSC -------------------------
@@ -161,7 +168,7 @@ add_executable(mapsci
     src/mapsci_main.cpp
 )
 
-target_link_libraries(mapsci mapsc_frontend ir_gen libmaps -lLLVM-19 -ledit -lncurses)
+target_link_libraries(mapsci mapsc_types_and_ast mapsc_frontend ir_gen libmaps -lLLVM-19 -ledit -lncurses)
 target_include_directories(mapsci SYSTEM PUBLIC 
     /usr/lib/llvm-19/include
     /usr/include/editline
@@ -225,7 +232,7 @@ add_executable(unit_tests
 set_property(TARGET unit_tests 
     PROPERTY EXCLUDE_FROM_ALL True)
 
-target_link_libraries(unit_tests mapsc_frontend)
+target_link_libraries(unit_tests mapsc_types_and_ast mapsc_frontend)
 target_include_directories(unit_tests SYSTEM PRIVATE doctest tests)
 
 
@@ -249,36 +256,12 @@ target_include_directories(logging_unit_tests SYSTEM PRIVATE doctest tests)
 add_executable(builtins_unit_tests
     tests/unit/tests_main.cpp
     tests/unit/builtin.cpp
-
-    src/mapsc/source_location.cpp
-    src/mapsc/logging.cpp
-    src/mapsc/builtins.cpp
-    
-    src/mapsc/types/casts.cpp
-    src/mapsc/types/type.cpp
-    
-    src/mapsc/ast/scope.cpp
-    src/mapsc/ast/definition.cpp
-    src/mapsc/ast/function_definition.cpp
-    src/mapsc/ast/definition_body.cpp
-    src/mapsc/ast/expression.cpp
-    src/mapsc/ast/call_expression.cpp
-    src/mapsc/ast/lambda.cpp
-    src/mapsc/ast/misc_expression.cpp
-    src/mapsc/ast/expressions/casts.cpp
-    src/mapsc/ast/expression_properties.cpp
-    src/mapsc/ast/reference.cpp
-    src/mapsc/ast/builtin.cpp
-    src/mapsc/ast/ast_store.cpp
-    src/mapsc/ast/value.cpp
-
-    src/mapsc/procedures/create_call.cpp
 )
 
 set_property(TARGET builtins_unit_tests 
     PROPERTY EXCLUDE_FROM_ALL True)
 target_include_directories(builtins_unit_tests SYSTEM PRIVATE doctest tests)
-target_link_libraries(builtins_unit_tests libmaps)
+target_link_libraries(builtins_unit_tests mapsc_types_and_ast libmaps)
 
 # --------------------- DSIR UNIT TESTS -----------------------
 
