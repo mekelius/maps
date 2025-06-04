@@ -30,7 +30,9 @@ using Log = LogInContext<LogContext::concretize>;
 
 namespace {
 
-optional<const Type*> deduce_return_type(TypeStore& types, const std::vector<const Type*> potential_return_types) {
+optional<const Type*> deduce_return_type(TypeStore& types, 
+    const std::vector<const Type*> potential_return_types) {
+    
     if (potential_return_types.size() == 1)
         return potential_return_types.back();
 
@@ -109,7 +111,7 @@ bool concretize_call(CompilationState& state, Expression& call) {
     // if it's not a function, it should have been inlinable?
     if (!callee_type) {
         Log::warning(call.location) << 
-            "Concretizing " << call << " failed, was not a function and could not inline";
+            "Concretizing " << call << " failed, was not a function and could not inline" << Endl;
         return false;
     }
 
@@ -141,7 +143,7 @@ bool concretize_call(CompilationState& state, Expression& call) {
         if (is_constant_value(*arg)) { 
             Log::debug_extra(call.location) << 
                 "Substituting constant argument: \"" << *arg << "\". Attempting to cast from " << 
-                *arg->type << " into " << *param_type;
+                *arg->type << " into " << *param_type << Endl;
             
             if (!arg->type->cast_to(param_type, *arg)) {
                 Log::error(arg->location) << "No" << Endl;
@@ -152,7 +154,8 @@ bool concretize_call(CompilationState& state, Expression& call) {
             return false;
 
         if (*arg->type != *param_type) {
-            Log::error(arg->location) << *arg << " does not match parameter type: " << *param_type << Endl;
+            Log::error(arg->location) << 
+                *arg << " does not match parameter type: " << *param_type << Endl;
             return false;
         }
     }
@@ -189,24 +192,27 @@ bool concretize(CompilationState& state, DefinitionBody& definition) {
     return std::visit(overloaded{
         [definition, &state](Expression* expression) {
             Log::debug_extra(definition.location()) << 
-                "Concretizing definition body of " << definition;
+                "Concretizing definition body of " << definition << Endl;
             return concretize(state, *expression);
         },
         [&definition, &state](Statement* statement) {
-            Log::debug_extra(definition.location()) << "Concretizing definition body of " << definition << Endl;
+            Log::debug_extra(definition.location()) << 
+                "Concretizing definition body of " << definition << Endl;
 
             // Need to figure out the return type
             std::vector<const Type*> potential_return_types {};
             if (!concretize(state, potential_return_types, *statement))
                 return false;
 
-            optional<const Type*> deduced_return_type = deduce_return_type(*state.types_, potential_return_types);
+            optional<const Type*> deduced_return_type = 
+                deduce_return_type(*state.types_, potential_return_types);
             if (!deduced_return_type) {
-                Log::error(definition.location()) << "No viable return type for " << definition << Endl;
+                Log::error(definition.location()) << 
+                    "No viable return type for " << definition << Endl;
                 return false;
             }
             Log::debug_extra(definition.location()) << 
-                "Deduced type for " << definition << "(" << **deduced_return_type << ")";
+                "Deduced type for " << definition << "(" << **deduced_return_type << ")" << Endl;
 
             auto function_type = state.types_->get_function_type(*deduced_return_type, {}, false);
             definition.set_type(function_type);
@@ -214,7 +220,7 @@ bool concretize(CompilationState& state, DefinitionBody& definition) {
         },
         [definition](auto) { 
             Log::info(definition.location()) << 
-                "Not concretizing " << definition << ", unhandled definition body type";
+                "Not concretizing " << definition << ", unhandled definition body type" << Endl;
             return true; 
         }
     }, definition.body());
@@ -229,7 +235,8 @@ bool concretize(CompilationState& state, Expression& expression) {
 
         case ExpressionType::known_value_reference:
             if (!substitute_value_reference(expression)) {
-                Log::compiler_error(expression.location) << "Substituting known value reference failed" << Endl;
+                Log::compiler_error(expression.location) << 
+                    "Substituting known value reference failed" << Endl;
                 return false;
             }
             assert(expression.expression_type == ExpressionType::known_value &&
@@ -249,7 +256,7 @@ bool concretize(CompilationState& state, Expression& expression) {
 
         default:
             Log::error(expression.location) <<
-                "Concretizer encountered an expression that was not a value or a call";
+                "Concretizer encountered an expression that was not a value or a call" << Endl;
             return false;
     }
 }
@@ -287,7 +294,7 @@ bool concretize(CompilationState& state, std::vector<const Type*>& potential_ret
         default:
             Log::error(statement.location) << 
                 "Concretizer encountered an unhandled statement type:" << 
-                statement.statement_type_string();
+                statement.statement_type_string() << Endl;
             return false;
     }
 }
