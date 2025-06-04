@@ -55,7 +55,7 @@ public:
 
     // ---------- CONSTRUCTORS ETC. ----------
 
-    Operator(const std::string& name, DefinitionHeader* value,
+    constexpr Operator(std::string_view name, const DefinitionHeader* value,
         Operator::Properties operator_props, SourceLocation location)
     :DefinitionHeader(DefinitionType::operator_def, name, value->get_type(), location), 
      value_(value), 
@@ -68,7 +68,6 @@ public:
     // ---------- PUBLIC METHODS ----------
 
     virtual std::string node_type_string() const { return "operator"; }
-    virtual std::string name_string() const { return name_; }
     virtual const Type* get_type() const { return value_->get_type(); };
 
     bool is_binary() const { return operator_props().fixity == Operator::Fixity::binary; }
@@ -84,8 +83,7 @@ public:
         return operator_props_;
     };
 
-    std::string name_;
-    DefinitionHeader* value_;
+    const DefinitionHeader* value_;
     Operator::Properties operator_props_;
 
 private:

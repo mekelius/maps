@@ -20,7 +20,7 @@ using namespace Maps;
 using namespace std;
 
 TEST_CASE("Layer2 should handle type specifiers") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
 
     auto type_specifier = Expression{ExpressionType::type_reference, &Int, TSL};
     auto value = create_numeric_literal(*state.ast_store_, "32", TSL);
@@ -64,7 +64,7 @@ TEST_CASE("Layer2 should handle type specifiers") {
 }
 
 TEST_CASE("Should apply a type declaration") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto value = create_numeric_literal(ast_store, "23", TSL);
@@ -79,7 +79,7 @@ TEST_CASE("Should apply a type declaration") {
 }
 
 TEST_CASE("Partially applied minus and type declaration") {
-    auto [state, types] = CompilationState::create_test_state_with_builtins();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto value = create_numeric_literal(ast_store, "23", TSL);
@@ -95,7 +95,7 @@ TEST_CASE("Partially applied minus and type declaration") {
 }
 
 TEST_CASE("Unary minus and type declaration") {
-    auto [state, types] = CompilationState::create_test_state_with_builtins();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto value = create_numeric_literal(ast_store, "23", TSL);
@@ -111,7 +111,7 @@ TEST_CASE("Unary minus and type declaration") {
 }
 
 TEST_CASE("Unary minus in parentheses and a type declaration") {
-    auto [state, types] = CompilationState::create_test_state_with_builtins();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto value = create_numeric_literal(ast_store, "23", TSL);
@@ -128,7 +128,7 @@ TEST_CASE("Unary minus in parentheses and a type declaration") {
 }
 
 TEST_CASE("MutString (1 + 2)") {
-    auto [state, _1] = CompilationState::create_test_state_with_builtins();
+    auto [state, _1] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto value1 = create_numeric_literal(ast_store, "1", TSL);

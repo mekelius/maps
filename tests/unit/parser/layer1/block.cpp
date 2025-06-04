@@ -9,7 +9,7 @@ using namespace Maps;
 using namespace std;
 
 TEST_CASE("Should parse a block") {
-    auto [state, types, _] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     Scope scope{};
 
     REQUIRE(state.ast_store_->empty());
@@ -139,7 +139,7 @@ TEST_CASE("Should parse a block") {
 TEST_CASE("layer1 eval should simplify single statement blocks") {
     TypeStore types{};
     Scope scope{};
-    CompilationState state{get_builtins(), &types};
+    CompilationState state{&types};
     
     REQUIRE(state.ast_store_->empty());
 

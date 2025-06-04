@@ -15,7 +15,7 @@
 using namespace Maps;
 
 TEST_CASE("Should parse a numberliteral with the correct type") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
     auto expr = create_layer2_expression_testing(ast, {
@@ -29,7 +29,7 @@ TEST_CASE("Should parse a numberliteral with the correct type") {
 }
 
 TEST_CASE("Should be able to cast a string literal into Int") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
     
     auto expr = create_layer2_expression_testing(ast, {

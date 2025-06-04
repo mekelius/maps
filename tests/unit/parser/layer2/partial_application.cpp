@@ -36,7 +36,7 @@ inline tuple<Expression*, DefinitionHeader*> create_operator_helper(CompilationS
 
 
 TEST_CASE("Should handle partial application of binary operators") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
     auto [op_ref, op] = create_operator_helper(state, "-");

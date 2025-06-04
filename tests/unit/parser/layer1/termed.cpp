@@ -10,7 +10,7 @@ using namespace Maps;
 
 
 TEST_CASE("Should parse parentheses and colons correctly") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     Scope scope{};
     REQUIRE(scope.empty());
 

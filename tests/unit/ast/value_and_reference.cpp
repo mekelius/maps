@@ -13,7 +13,7 @@ using namespace std;
 namespace {
 
 std::tuple<CompilationState, AST_Store&> setup() {
-    auto [state, _1, _2] = CompilationState::create_test_state();
+    auto [state, _1] = CompilationState::create_test_state();
     
     return {
         state,

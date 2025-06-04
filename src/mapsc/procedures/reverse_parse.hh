@@ -30,7 +30,7 @@ public:
 
     void set_options(const Options& options) { options_ = options; }
 
-    ReverseParser& operator<<(const std::string& str) { *ostream_ << str; return *this; }
+    ReverseParser& operator<<(std::string_view str) { *ostream_ << str; return *this; }
     ReverseParser& operator<<(const char ch) { *ostream_ << ch; return *this; }
     ReverseParser& operator<<(const Scope& scope) { return reverse_parse(scope); }
     ReverseParser& operator<<(const DefinitionHeader& definition) { return print_definition(definition); }

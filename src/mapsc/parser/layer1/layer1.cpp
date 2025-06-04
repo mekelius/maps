@@ -253,7 +253,7 @@ bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
 // ----- IDENTIFIERS -----
 
 bool ParserLayer1::identifier_exists(const std::string& identifier) const {
-    if (compilation_state_->builtins_->identifier_exists(identifier))
+    if (builtins.identifier_exists(identifier))
         return true;
 
     if (parse_scope_->identifier_exists(identifier))

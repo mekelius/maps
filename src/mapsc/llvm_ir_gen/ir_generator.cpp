@@ -701,7 +701,7 @@ optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expressio
 // ??? shouldn;t this have been done earlier
 optional<llvm::Value*> IR_Generator::convert_numeric_literal(const Expression& expression) {
     double num_value;
-    if (!(std::stringstream{expression.string_value()} >> num_value))
+    if (!(std::stringstream{std::string{expression.string_value()}} >> num_value))
         return nullopt;
 
     return llvm::ConstantFP::get(*context_, llvm::APFloat(num_value));

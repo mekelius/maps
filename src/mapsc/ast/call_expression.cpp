@@ -29,7 +29,7 @@ Expression* create_missing_argument(AST_Store& store, const Type* type,
 }
 
 optional<Expression*> create_call(CompilationState& state, 
-    DefinitionHeader* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
+    const DefinitionHeader* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
 
     for (auto arg: args)
         assert(is_allowed_as_arg(*arg) && "invalid arg passed to Expression::call");
@@ -78,7 +78,7 @@ std::optional<Expression*> create_call(CompilationState& state,
 
 
 optional<Expression*> create_partial_binop_call(CompilationState& state, 
-    Operator* op, Expression* lhs, Expression* rhs, const SourceLocation& location) {
+    const Operator* op, Expression* lhs, Expression* rhs, const SourceLocation& location) {
 
     auto& store = *state.ast_store_;
     auto callee_type = op->get_type();
@@ -122,7 +122,7 @@ optional<Expression*> create_partial_binop_call(CompilationState& state,
 }
 
 static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
-    DefinitionHeader* lhs, Expression* lambda, DefinitionHeader* rhs, const SourceLocation& location) {
+    const Operator* lhs, Expression* lambda, const Operator* rhs, const SourceLocation& location) {
 
     assert(false && "not implemented");
 }

@@ -95,7 +95,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
 
     if (*target_type == Int) {
         maps_Int result;
-        if (!CT_to_Int_String(expression.string_value().c_str(), &result))
+        if (!CT_to_Int_String(expression.string_value().data(), &result))
             return false;
 
         cast_value<int>(expression, &Int, result);
@@ -104,7 +104,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
 
     if (*target_type == Float) {
         maps_Float result;
-        if (!CT_to_Float_String(expression.string_value().c_str(), &result))
+        if (!CT_to_Float_String(expression.string_value().data(), &result))
             return false;
 
         cast_value<maps_Float>(expression, &Float, result);
@@ -119,7 +119,7 @@ bool cast_from_String(const Type* target_type, Expression& expression) {
         maps_MutString value{static_cast<char*>(new_str), 
             static_cast<maps_UInt>(old_value.size()), old_value.size() + 1};
 
-        std::memcpy(new_str, old_value.c_str(), old_value.size() + 1);
+        std::memcpy(new_str, old_value.data(), old_value.size() + 1);
 
         cast_value<maps_MutString>(expression, &MutString, value);
         return true;
@@ -142,7 +142,7 @@ bool cast_from_Boolean(const Type* target_type, Expression& expression) {
 
 bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
     if (*target_type == String) {
-        cast_value<std::string>(expression, &String, expression.string_value());
+        cast_value<std::string>(expression, &String, expression.string_value().data());
         return true;
     }
 
@@ -151,7 +151,7 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
             return false;
 
         maps_Int result;
-        if (!CT_to_Int_String(expression.string_value().c_str(), &result))
+        if (!CT_to_Int_String(expression.string_value().data(), &result))
             return false;
 
         cast_value<maps_Int>(expression, &Int, result);
@@ -160,7 +160,7 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
 
     if (*target_type == MutString) {
         maps_Int int_result;
-        if (CT_to_Int_String(expression.string_value().c_str(), &int_result)) {
+        if (CT_to_Int_String(expression.string_value().data(), &int_result)) {
             cast_value<maps_Int>(expression, &Int, int_result);
             return cast_from_Int(&MutString, expression);
         }
@@ -172,7 +172,7 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
 
     if (*target_type == Float) {
         maps_Float result;
-        if (!CT_to_Float_String(expression.string_value().c_str(), &result))
+        if (!CT_to_Float_String(expression.string_value().data(), &result))
             return false;
 
         cast_value<maps_Float>(expression, &Float, result);

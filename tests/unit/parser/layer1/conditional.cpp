@@ -11,7 +11,7 @@ using namespace std;
 using namespace Maps;
 
 inline std::tuple<CompilationState, Scope, stringstream> setup(const std::string& source) {
-    auto [state, _1, _2] = CompilationState::create_test_state();
+    auto [state, _1] = CompilationState::create_test_state();
 
     return {
         std::move(state), 

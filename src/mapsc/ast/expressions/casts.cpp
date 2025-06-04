@@ -121,7 +121,7 @@ optional<Expression*> Expression::wrap_in_runtime_cast(CompilationState& state, 
     
     assert(is_castable_expression(*this) && "wrap_in_runtime_cast called on not a castable expression");
 
-    auto runtime_cast = find_external_runtime_cast(*state.builtins_, type, target_type);
+    auto runtime_cast = find_external_runtime_cast(type, target_type);
 
     if (!runtime_cast) {
         Log::debug(type_declaration_location) << "Could not cast " << *this << " to " << *target_type << Endl;

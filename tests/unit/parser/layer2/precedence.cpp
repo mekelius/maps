@@ -79,7 +79,7 @@ void prime_terms(auto expr, const string& input, auto op1_ref, auto op2_ref,
 } // namespace
 
 TEST_CASE("TermedExpressionParser should handle binop expressions") {
-    auto [state, _0, _1] = CompilationState::create_test_state();
+    auto [state, _0] = CompilationState::create_test_state();
     auto ast = state.ast_store_.get();
 
     Expression* expr = create_layer2_expression_testing(*ast, {}, {0,0});
@@ -170,7 +170,7 @@ TEST_CASE("TermedExpressionParser should handle binop expressions") {
 }
 
 TEST_CASE ("should handle more complex expressions") {
-    auto [state, _0, _1] = CompilationState::create_test_state();
+    auto [state, _0] = CompilationState::create_test_state();
     AST_Store& ast = *state.ast_store_;
 
     Expression* expr = create_layer2_expression_testing(ast, {}, {0,0});

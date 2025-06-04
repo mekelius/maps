@@ -11,7 +11,7 @@ using namespace Maps;
 using namespace std;
 
 TEST_CASE("Basics") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto callee_def = create_external(ast_store, "test", 
@@ -66,7 +66,7 @@ TEST_CASE("Basics") {
 // }
 
 TEST_CASE("Creating an arg list should coerce args correctly") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto callee_def = create_external(ast_store, "test", 

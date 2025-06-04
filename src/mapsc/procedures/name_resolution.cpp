@@ -26,40 +26,23 @@ using Log = LogInContext<LogContext::name_resolution>;
 
 namespace {
 
-optional<DefinitionHeader*> lookup_identifier(std::span<const Scope* const> ct_scopes, 
-    const_Scopes rt_scopes, const std::string& name) {
+optional<const DefinitionHeader*> lookup_identifier(const BuiltinScope<10>& builtins, 
+    const_Scopes rt_scopes, std::string_view name) {
     
-    for (auto scope: ct_scopes) {
-        auto definition = scope->get_identifier(name);
-        if (definition)
+    for (auto scope: rt_scopes)
+        if (auto definition = scope->get_identifier(name))
             return definition;
-    }
 
-    for (auto scope: rt_scopes) {
-        auto definition = scope->get_identifier(name);
-        if (definition)
-            return definition;
-    }   
+    if (auto definition = builtins.get_identifier(name))
+        return definition;
 
     return nullopt;
 }
 
-optional<DefinitionHeader*> lookup_identifier(const Scope& ct_scope, const_Scopes rt_scopes, 
-    const std::string& name) {
-
-    return lookup_identifier(std::array{&ct_scope}, rt_scopes, name);
-}
-
-optional<DefinitionHeader*> lookup_identifier(CompilationState& state, const_Scopes rt_scopes, 
-    const std::string& name) {
-
-    return lookup_identifier(*state.builtins_, rt_scopes, name);
-}
-
-bool resolve_identifier(CompilationState& state, const_Scopes scopes, 
+bool resolve_identifier(const BuiltinScope<10>& builtins, const_Scopes scopes, 
     Expression* expression) {
 
-    auto definition = lookup_identifier(state, scopes, expression->string_value());
+    auto definition = lookup_identifier(builtins, scopes, expression->string_value());
 
     if (!definition) {
         Log::error(expression->location) << "Unknown identifier: " << expression->string_value() << Endl;
@@ -75,10 +58,10 @@ bool resolve_identifier(CompilationState& state, const_Scopes scopes,
     return true;
 }
 
-bool resolve_operator(CompilationState& state, const_Scopes scopes, 
+bool resolve_operator(const BuiltinScope<10>& builtins, const_Scopes scopes, 
     Expression* expression) {
 
-    auto definition = lookup_identifier(state, scopes, expression->string_value());
+    auto definition = lookup_identifier(builtins, scopes, expression->string_value());
 
     if (!definition) {
         Log::error(expression->location) << "Unknown operator: " << expression->string_value() << Endl;
@@ -91,7 +74,7 @@ bool resolve_operator(CompilationState& state, const_Scopes scopes,
         return false;
     }
 
-    convert_to_operator_reference(*expression, dynamic_cast<Operator*>(*definition));
+    convert_to_operator_reference(*expression, dynamic_cast<const Operator*>(*definition));
     return true;
 }
 
@@ -117,7 +100,7 @@ bool resolve_type_identifier(CompilationState& state, Expression* expression) {
 
 // Replaces all identifiers and operators with references to the correct definitions
 bool resolve_identifiers(CompilationState& state, const_Scopes scopes, 
-    std::vector<Expression*>& unresolved_identifiers) {
+    std::vector<Expression*>& unresolved_identifiers, const BuiltinScope<10>& builtins) {
 
     Log::debug_extra(NO_SOURCE_LOCATION) << "Resolving identifiers" << Endl;
 
@@ -126,11 +109,11 @@ bool resolve_identifiers(CompilationState& state, const_Scopes scopes,
             case ExpressionType::identifier:
                 // assert(ast_->builtins_.identifier_exists(expression->string_value()) 
                 //     && "Builtin identifier passed to layer2");
-                if (!resolve_identifier(state, scopes, expression))
+                if (!resolve_identifier(builtins, scopes, expression))
                     return false;
                 break;
             case ExpressionType::operator_identifier:
-                if (!resolve_operator(state, scopes, expression))
+                if (!resolve_operator(builtins, scopes, expression))
                     return false;
                 break;
 
@@ -151,11 +134,9 @@ bool resolve_identifiers(CompilationState& state, const_Scopes scopes,
 }
 
 bool resolve_identifiers(CompilationState& state, const Scope& scope,
-    std::vector<Expression*>& unresolved_identifiers) {
+    std::vector<Expression*>& unresolved_identifiers, const BuiltinScope<10>& builtins) {
 
-    return resolve_identifiers(state,
-        std::array{&scope}, 
-        unresolved_identifiers);
+    return resolve_identifiers(state, std::array{&scope}, unresolved_identifiers, builtins);
 }
 
 } // namespace Maps

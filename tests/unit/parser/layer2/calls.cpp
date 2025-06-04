@@ -21,7 +21,7 @@ using namespace std;
 namespace {
 
 tuple<CompilationState, shared_ptr<AST_Store>, Scope, unique_ptr<TypeStore>> setup() {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
 
     return {
         std::move(state),
@@ -48,7 +48,7 @@ TEST_CASE("Should be able to call a lambda function") {
 }
 
 TEST_CASE("Should be able to call via known value reference to a function") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     AST_Store& ast_store = *state.ast_store_;
     Scope scope{};
 
@@ -75,7 +75,7 @@ TEST_CASE("Should be able to call via known value reference to a function") {
 }
 
 TEST_CASE("Should set the type of a call expression to the callee return type") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     AST_Store& ast_store = *state.ast_store_;
     Scope scope{};
 
@@ -97,7 +97,7 @@ TEST_CASE("Should set the type of a call expression to the callee return type") 
 }
 
 TEST_CASE("Should set the type on a \"operator expression\" to the return type") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     AST_Store& ast_store = *state.ast_store_;
 
     const FunctionType* IntString = types->get_function_type(&String, std::array{&Int, &Int}, false);

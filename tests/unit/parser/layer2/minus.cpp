@@ -17,7 +17,7 @@ using namespace Maps;
 using namespace std;
 
 TEST_CASE("Unary minus by itself should result in a partially applied minus") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto value = create_numeric_literal(ast_store, "456", TSL);
@@ -58,7 +58,7 @@ TEST_CASE("Unary minus by itself should result in a partially applied minus") {
 // }
 
 TEST_CASE("7 + - 2") {
-    auto [state, types] = CompilationState::create_test_state_with_builtins();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto plus = create_testing_binary_operator(ast_store, "+", &IntInt_to_Int, 2, 
@@ -92,7 +92,7 @@ TEST_CASE("7 + - 2") {
     auto [rhs_callee, rhs_args] = rhs->call_value();
     auto rhs_arg = rhs_args.at(0);
 
-    CHECK(rhs_callee == state.special_definitions_.unary_minus);
+    CHECK(*rhs_callee == *state.special_definitions_.unary_minus);
     CHECK(rhs_arg->expression_type == ExpressionType::known_value);
     CHECK(*rhs_arg->type == Int);
 
@@ -100,7 +100,7 @@ TEST_CASE("7 + - 2") {
 }
 
 TEST_CASE("7 - - 2") {
-    auto [state, types] = CompilationState::create_test_state_with_builtins();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto value1 = create_numeric_literal(ast_store, "7", TSL);
@@ -131,7 +131,7 @@ TEST_CASE("7 - - 2") {
     auto [rhs_callee, rhs_args] = rhs->call_value();
     auto rhs_arg = rhs_args.at(0);
 
-    CHECK(rhs_callee == state.special_definitions_.unary_minus);
+    CHECK(*rhs_callee == *state.special_definitions_.unary_minus);
     CHECK(rhs_arg->expression_type == ExpressionType::known_value);
     CHECK(*rhs_arg->type == Int);
 

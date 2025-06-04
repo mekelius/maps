@@ -1,5 +1,7 @@
 #include "expression_properties.hh"
 
+#include <cassert>
+
 #include "mapsc/ast/expression.hh"
 
 namespace Maps {

@@ -83,7 +83,7 @@ TEST_CASE("Should be able to cast a Number with an int value into Float") {
 }
 
 TEST_CASE("Should be able to cast a known value into a constant function yielding that value") {
-    auto [state, _1] = CompilationState::create_test_state_with_builtins();
+    auto [state, _1] = CompilationState::create_test_state();
 
     auto value = create_known_value(state, 23.3, TSL);
 
@@ -92,7 +92,7 @@ TEST_CASE("Should be able to cast a known value into a constant function yieldin
 }
 
 TEST_CASE("Casting a known value into a function type with mathcing return type should produce a const lambda") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     Scope scope{};
 
     const FunctionType* IntString = types->get_function_type(&String, array{&Int}, false);

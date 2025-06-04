@@ -28,7 +28,7 @@ TEST_CASE("Should be able to compare types") {
 }
 
 TEST_CASE("Should be able to compare types of expressions") {
-    auto [state, _1, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     AST_Store& store = *state.ast_store_;
 
     SUBCASE("Expression to global") {

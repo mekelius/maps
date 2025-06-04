@@ -56,7 +56,7 @@ REPL::REPL(JIT_Manager* jit, llvm::LLVMContext* context, llvm::raw_ostream* erro
 
 bool REPL::run() {    
     auto types = TypeStore{};
-    auto stored_state = CompilationState{Maps::get_builtins(), &types, options_.compiler_options};
+    auto stored_state = CompilationState{&types, options_.compiler_options};
     auto stored_definitions = Maps::Scope{};
 
     while (running_) {        

@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <span>
 #include <memory>
-#include <unordered_map>
+#include <map>
 #include <concepts>
 #include <vector>
 #include <string>
@@ -35,8 +35,13 @@ public:
     // TODO: move this to be private, callers should use get instead
     std::optional<const Type*> create_type(const std::string& name);
     
-    std::optional<const Type*> get(const std::string& identifier);
-    const Type* get_unsafe(const std::string& identifier);
+    std::optional<const Type*> get(const auto identifier) const {
+        const auto it = types_by_identifier_.find(identifier);
+        if (it == types_by_identifier_.end())
+            return std::nullopt;
+
+        return it->second;
+    };
 
     template <std::ranges::forward_range R = std::initializer_list<const Type*>>
         requires std::convertible_to<std::ranges::range_value_t<R>, const Type*>
@@ -91,14 +96,14 @@ private:
         return dynamic_cast<const FunctionType*>(raw_ptr);
     }
 
-    std::unordered_map<std::string, const Type*> types_by_identifier_ = {};
-    std::unordered_map<std::string, const Type*> types_by_structure_ = {};
+    std::map<std::string, const Type*, std::less<>> types_by_identifier_ = {};
+    std::map<std::string, const Type*, std::less<>> types_by_structure_ = {};
 
     // we need two different vectors, since the builtin types need to be accessable by id as well
     std::vector<std::unique_ptr<const Type>> types_ = {};
     
     // std::vector<std::unique_ptr<TypeConstructor>> type_constructors_ = {};
-    // std::unordered_map<std::string, const TypeConstructor*> typeconstructors_by_identifier = {};
+    // std::map<std::string, const TypeConstructor*> typeconstructors_by_identifier = {};
 };
 
 } // namespace Maps

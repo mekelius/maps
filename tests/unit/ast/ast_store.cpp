@@ -14,7 +14,7 @@ using namespace std;
 namespace {
 
 tuple<CompilationState, shared_ptr<AST_Store>, Scope, unique_ptr<TypeStore>> setup() {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
 
     return {
         std::move(state),
@@ -33,7 +33,7 @@ TEST_CASE("AST should be empty when created") {
 }
 
 TEST_CASE("Operator::create_binary should create an operator") {
-    auto [state, _0, _1] = CompilationState::create_test_state();
+    auto [state, _0] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     DefinitionHeader* op_definition = create_testing_binary_operator(ast_store,

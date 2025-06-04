@@ -13,7 +13,7 @@ using namespace Maps;
 using namespace std;
 
 tuple<CompilationState, shared_ptr<AST_Store>, Scope> setup() {
-    auto [state, _0, _1] = CompilationState::create_test_state();
+    auto [state, _0] = CompilationState::create_test_state();
 
     return {
         std::move(state),
@@ -23,7 +23,7 @@ tuple<CompilationState, shared_ptr<AST_Store>, Scope> setup() {
 }
 
 TEST_CASE("Should report failure correctly") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     auto& ast_store = *state.ast_store_;
 
     auto value = create_numeric_literal(ast_store, "23", TSL);
@@ -34,7 +34,7 @@ TEST_CASE("Should report failure correctly") {
 }
 
 TEST_CASE("TermedExpressionParser should replace a single value term with that value") {
-    auto [state, _0, _1] = CompilationState::create_test_state();
+    auto [state, _0] = CompilationState::create_test_state();
 
     Expression* expr = create_layer2_expression_testing(*state.ast_store_, {}, TSL);
 
@@ -60,7 +60,7 @@ TEST_CASE("TermedExpressionParser should replace a single value term with that v
 }
 
 TEST_CASE("TermedExpressionParser should handle haskell-style call expressions") {
-    auto [state, _0, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     Scope globals{};
     AST_Store& ast = *state.ast_store_;
 

@@ -14,7 +14,7 @@ using namespace Maps;
 using namespace std;
 
 TEST_CASE("Type concretizer should handle an Int Number") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
 
     Expression expr{
         ExpressionType::known_value,
@@ -32,7 +32,7 @@ TEST_CASE("Type concretizer should handle an Int Number") {
 }
 
 TEST_CASE("Type concretizer should handle a Float Number") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
 
     Expression expr{
         ExpressionType::known_value,
@@ -50,7 +50,7 @@ TEST_CASE("Type concretizer should handle a Float Number") {
 }
 
 TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
 
     Expression expr{
         ExpressionType::known_value,
@@ -68,7 +68,7 @@ TEST_CASE("Type concretizer should handle a Float NumberLiteral") {
 }
 
 TEST_CASE("Concretizer should run variable substitution with a concrete type") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
 
     Expression value{ExpressionType::known_value, 1, &Int, TSL};
     auto definition = create_let_definition(*state.ast_store_, &value, TSL).first;
@@ -80,7 +80,7 @@ TEST_CASE("Concretizer should run variable substitution with a concrete type") {
 } 
 
 TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
 
     Expression value{ExpressionType::known_value, 1, &Int, TSL};
     auto definition = create_nullary_function_definition(*state.ast_store_, *types, &value, true, TSL).first;
@@ -92,7 +92,7 @@ TEST_CASE("Concretizer should inline a nullary call with a concrete type") {
 }
 
 TEST_CASE("Concretizer should concretize the arguments to a call based on the definition type") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     REQUIRE(types->empty());
     
     auto IntInt = types->get_function_type(&Int, array{&Int}, false);
@@ -112,7 +112,7 @@ TEST_CASE("Concretizer should concretize the arguments to a call based on the de
 }
 
 TEST_CASE("Concretizer should be able to concretize function calls based on arguments") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     REQUIRE(types->empty());
 
     auto IntIntInt = types->get_function_type(&Int, {&Int, &Int}, true);
@@ -170,7 +170,7 @@ TEST_CASE("Concretizer should be able to concretize function calls based on argu
 }
 
 TEST_CASE("Concretizer should be able to cast arguments up if needed") {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     REQUIRE(types->empty());
 
     auto IntIntInt = types->get_function_type(&Float, array{&Float, &Float}, true);

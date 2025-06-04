@@ -25,37 +25,34 @@ namespace Maps {
 
 using Log = LogNoContext;
 
-DefinitionHeader::DefinitionHeader(DefinitionType definition_type, const std::string& name, const Type* type, Scope* outer_scope,
-    bool is_top_level, SourceLocation location)
-:definition_type_(definition_type),
- name_(name), 
- type_(type), 
- is_top_level_(is_top_level),
- location_(location),
- outer_scope_(outer_scope) {}
-
-DefinitionHeader::DefinitionHeader(DefinitionType definition_type, const std::string& name, Scope* outer_scope,
-    bool is_top_level, SourceLocation location)
-:DefinitionHeader(definition_type, name, &Hole, outer_scope, is_top_level, location) {}
-
-DefinitionHeader::DefinitionHeader(DefinitionType definition_type, const std::string& name, const Type* type, 
-    SourceLocation location)
-:definition_type_(definition_type),
- name_(name), 
- type_(type), 
- is_top_level_(true),
- location_(location), 
- outer_scope_(nullopt) {} 
-
-DefinitionHeader::DefinitionHeader(DefinitionType definition_type, const std::string& name, SourceLocation location)
-:DefinitionHeader(definition_type, name, &Hole, location) {} 
-
 std::optional<LetDefinitionValue> DefinitionHeader::get_body_value() const {
     if (!body_)
         return nullopt;
 
     return (*body_)->get_value();
 }
+
+
+RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, const Type* type, 
+    Scope* outer_scope, bool is_top_level, SourceLocation location)
+:DefinitionHeader(definition_type, {}, type, outer_scope, is_top_level, location), name_string_(name) {
+    name_ = name_string_;
+}
+
+RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, Scope* outer_scope,
+    bool is_top_level, SourceLocation location)
+:RT_DefinitionHeader(definition_type, name, &Hole, outer_scope, is_top_level, location) {}
+
+RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, const Type* type, 
+    SourceLocation location)
+:DefinitionHeader(definition_type, {}, type, location), name_string_(name) {
+    name_ = name_string_;
+}
+
+RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, SourceLocation location)
+:RT_DefinitionHeader(definition_type, name, &Hole, location){}
+
+
 
 // ------------------------------------- FACTORY FUNTIONS -----------------------------------------
 

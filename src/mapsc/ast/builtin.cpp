@@ -9,7 +9,7 @@
 namespace Maps {
 
 Builtin create_builtin(std::string_view name, BuiltinValue value, const Type* type) {
-    return DefinitionHeader{DefinitionType::builtin, std::string{name}, type, BUILTIN_SOURCE_LOCATION};
+    return {DefinitionHeader{DefinitionType::builtin, std::string{name}, type, BUILTIN_SOURCE_LOCATION}, value};
 }
 
 } // namespace Maps

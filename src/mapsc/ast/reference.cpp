@@ -7,10 +7,10 @@
 
 namespace Maps {
 
-DefinitionHeader* Expression::reference_value() const {
-    assert(std::holds_alternative<DefinitionHeader*>(value) && 
+const DefinitionHeader* Expression::reference_value() const {
+    assert(std::holds_alternative<const DefinitionHeader*>(value) && 
         "Expression::reference_value called with not a reference to definition");
-    return std::get<DefinitionHeader*>(value);
+    return std::get<const DefinitionHeader*>(value);
 }
 
 const Type* Expression::type_reference_value() const {
@@ -19,11 +19,11 @@ const Type* Expression::type_reference_value() const {
     return std::get<const Type*>(value);
 }
 
-Operator* Expression::operator_reference_value() const {
-    return dynamic_cast<Operator*>(std::get<DefinitionHeader*>(value));
+const Operator* Expression::operator_reference_value() const {
+    return dynamic_cast<const Operator*>(std::get<const DefinitionHeader*>(value));
 }
 
-Expression* create_reference(AST_Store& store, DefinitionHeader* definition, 
+Expression* create_reference(AST_Store& store, const DefinitionHeader* definition, 
     const SourceLocation& location) {
     
     auto expression_type = definition->is_known_scalar_value() ?
@@ -77,7 +77,7 @@ Expression* create_type_reference(AST_Store& store, const Type* type,
     return store.allocate_expression({ExpressionType::type_reference, type, &Void, location});
 }
 
-Expression create_operator_reference(Operator* definition, const SourceLocation& location) {
+Expression create_operator_reference(const Operator* definition, const SourceLocation& location) {
     assert(definition->is_operator() && "AST::create_operator_ref called with not an operator");
 
     ExpressionType expression_type;
@@ -97,20 +97,20 @@ Expression create_operator_reference(Operator* definition, const SourceLocation&
     return {expression_type, definition, definition->get_type(), location};
 }
 
-Expression* create_operator_reference(AST_Store& store, Operator* definition, 
+Expression* create_operator_reference(AST_Store& store, const Operator* definition, 
     const SourceLocation& location) {
     
     return store.allocate_expression(create_operator_reference(definition, location));
 }
 
-void convert_to_reference(Expression& expression, DefinitionHeader* definition) {
+void convert_to_reference(Expression& expression, const DefinitionHeader* definition) {
     expression.expression_type = definition->is_known_scalar_value() ? 
         ExpressionType::known_value_reference : ExpressionType::reference;
     expression.value = definition;
     expression.type = definition->get_type();
 }
 
-void convert_to_operator_reference(Expression& expression, Operator* definition) {
+void convert_to_operator_reference(Expression& expression, const Operator* definition) {
     assert(definition->is_operator() && 
         "convert_to_operator_reference called with not an operator");
 
@@ -166,7 +166,7 @@ Operator::Precedence get_operator_precedence(const Expression& operator_ref) {
     assert(operator_ref.expression_type == ExpressionType::binary_operator_reference && 
         "get_operator_precedence called with not a binary operator reference");
 
-    return dynamic_cast<Operator*>(operator_ref.operator_reference_value())->precedence();
+    return dynamic_cast<const Operator*>(operator_ref.operator_reference_value())->precedence();
 }
 
 } // namespace Maps

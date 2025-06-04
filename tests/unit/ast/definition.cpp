@@ -16,7 +16,7 @@ using namespace std;
 namespace {
 
 tuple<CompilationState, shared_ptr<AST_Store>> setup() {
-    auto [state, _0, _1] = CompilationState::create_test_state();
+    auto [state, _0] = CompilationState::create_test_state();
 
     return {
         state,
@@ -40,7 +40,7 @@ TEST_CASE("Definitions should know if they are a known value") {
 
 
 TEST_CASE("Should be able to create a let definition") {
-    auto [state, _1, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     REQUIRE(types->empty());
 
     auto IntIntInt = types->get_function_type(&Int, {&Int, &Int}, true);

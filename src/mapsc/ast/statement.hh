@@ -1,6 +1,7 @@
 #ifndef __STATEMENT_HH
 #define __STATEMENT_HH
 
+#include <cassert>
 #include <string>
 #include <tuple>
 #include <utility>

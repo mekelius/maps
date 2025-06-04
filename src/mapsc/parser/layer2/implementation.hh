@@ -118,7 +118,7 @@ private:
     void initial_type_constructor_state();
 
     // calls/access operations
-    bool is_acceptable_next_arg(DefinitionHeader* callee, 
+    bool is_acceptable_next_arg(const DefinitionHeader* callee, 
       const std::vector<Expression*>& args/*, Expression* next_arg*/);
 
     // mainly checks that the expression type is correct
@@ -128,7 +128,7 @@ private:
     void partial_call_state();
     void deferred_call_state();
 
-    Expression* handle_arg_state(DefinitionHeader* callee, const std::vector<Expression*>& args);
+    Expression* handle_arg_state(const DefinitionHeader* callee, const std::vector<Expression*>& args);
 
     // creating minus refs
     Expression* binary_minus_ref(SourceLocation location);

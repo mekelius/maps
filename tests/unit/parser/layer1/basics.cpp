@@ -10,7 +10,7 @@ using namespace Maps;
 using namespace std;
 
 tuple<CompilationState, Scope, stringstream> setup(const string& source_str) { 
-    auto [state, _1, _2] = CompilationState::create_test_state();
+    auto [state, _1] = CompilationState::create_test_state();
 
     return {
         std::move(state), 
@@ -22,7 +22,7 @@ tuple<CompilationState, Scope, stringstream> setup(const string& source_str) {
 TEST_CASE("Should handle various cases") {
     TypeStore types{};
     Scope scope{};
-    CompilationState state{get_builtins(), &types};
+    CompilationState state{&types};
 
     REQUIRE(state.ast_store_->empty());
     
@@ -115,7 +115,7 @@ TEST_CASE("Should handle various cases") {
 }
 
 TEST_CASE("layer1 eval should not put top level let statements into the root") {
-    auto [state, types, builtins] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     Scope scope{};
 
     std::stringstream source{"let x = 5"};
@@ -133,7 +133,7 @@ TEST_CASE("layer1 eval should not put top level let statements into the root") {
 }
 
 TEST_CASE("Should correctly produce empty results") {
-    auto [state, _1, _2] = CompilationState::create_test_state();
+    auto [state, _1] = CompilationState::create_test_state();
     Scope scope;
     REQUIRE(scope.empty());
 

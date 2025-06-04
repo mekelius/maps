@@ -19,7 +19,7 @@ using namespace std;
 namespace {
 
 std::tuple<CompilationState, std::shared_ptr<AST_Store>, std::unique_ptr<TypeStore>> setup() {
-    auto [state, _, types] = CompilationState::create_test_state();
+    auto [state, types] = CompilationState::create_test_state();
     
     return {
         state,

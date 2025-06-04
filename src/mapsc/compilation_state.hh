@@ -11,8 +11,6 @@
 #include "mapsc/types/type_store.hh"
 
 #include "mapsc/ast/ast_store.hh"
-#include "mapsc/ast/scope.hh"
-
 
 namespace Maps {
 
@@ -22,24 +20,21 @@ public:
     };
 
     struct SpecialDefinitions {
-        Operator* unary_minus;
-        Operator* binary_minus;
-        DefinitionHeader* print_String;
-        DefinitionHeader* print_MutString;
+        const Operator* unary_minus;
+        const Operator* binary_minus;
+        const DefinitionHeader* print_String;
+        const DefinitionHeader* print_MutString;
     };
 
-    static std::tuple<CompilationState, std::unique_ptr<Scope>, std::unique_ptr<TypeStore>> 
+    static std::tuple<CompilationState, std::unique_ptr<TypeStore>> 
         create_test_state();
 
-    static std::tuple<CompilationState, std::unique_ptr<TypeStore>> 
-        create_test_state_with_builtins();
+    CompilationState(TypeStore* types, 
+        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &prints, &printms});
 
-    CompilationState(const Scope* builtins, TypeStore* types, 
-        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String, &print_MutString});
-
-    CompilationState(const Scope* builtins, TypeStore* types, 
+    CompilationState(TypeStore* types, 
         Options compiler_options,
-        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &print_String, &print_MutString});
+        SpecialDefinitions specials = {&unary_minus_Int, &binary_minus_Int, &prints, &printms});
 
     // copy constructor
     CompilationState(const CompilationState&) = default;
@@ -52,9 +47,8 @@ public:
     PragmaStore pragmas_ = {};
     
     TypeStore* types_;
-    const Scope* builtins_;
     SpecialDefinitions special_definitions_ = 
-        SpecialDefinitions{&unary_minus_Int, &binary_minus_Int, &print_String, &print_MutString};
+        SpecialDefinitions{&unary_minus_Int, &binary_minus_Int, &prints, &printms};
 };
 
 } // namespace Maps

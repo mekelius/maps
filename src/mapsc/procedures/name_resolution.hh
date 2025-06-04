@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "mapsc/ast/scope.hh"
+#include "mapsc/builtins.hh"
 
 namespace Maps {
 
@@ -12,10 +13,10 @@ class CompilationState;
 struct Expression;
 
 bool resolve_identifiers(CompilationState& state, const_Scopes scopes, 
-    std::vector<Expression*>& unresolved_identifiers);
+    std::vector<Expression*>& unresolved_identifiers, const BuiltinScope<10>& builtins_ = builtins);
 
 bool resolve_identifiers(CompilationState& state, const Scope& scope, 
-    std::vector<Expression*>& unresolved_identifiers);
+    std::vector<Expression*>& unresolved_identifiers, const BuiltinScope<10>& builtins_ = builtins);
 
 } //namespace Maps
 

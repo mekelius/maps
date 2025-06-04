@@ -36,16 +36,4 @@ size_t TypeStore::size() const {
     return types_.size();
 }
 
-optional<const Type*> TypeStore::get(const std::string& identifier) {
-    auto it = types_by_identifier_.find(identifier);
-    if (it == types_by_identifier_.end())
-        return nullopt;
-
-    return it->second;
-}
-
-// NOTE: This actually doesn't work. The type structure notation idea is extremely ambiguous...
-// we need to do this by pattern matching instead, but it is what it is
-
-
 } // namespace Maps

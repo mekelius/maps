@@ -536,7 +536,7 @@ void TermedExpressionParser::value_state() {
             shift();
             auto op = current_term()->operator_reference_value();
             
-            precedence_stack_.push_back(dynamic_cast<Operator*>(op)->precedence());
+            precedence_stack_.push_back(dynamic_cast<const Operator*>(op)->precedence());
             return post_binary_operator_state();
         }
         case ExpressionType::prefix_operator_reference:
@@ -555,7 +555,7 @@ void TermedExpressionParser::value_state() {
             auto location = get_term()->location;
             parse_stack_.push_back(binary_minus_ref(location));
             precedence_stack_.push_back(
-                dynamic_cast<Operator*>(current_term()->operator_reference_value())->precedence());
+                dynamic_cast<const Operator*>(current_term()->operator_reference_value())->precedence());
             return post_binary_operator_state();
         }
 
@@ -667,7 +667,7 @@ void TermedExpressionParser::binary_operator_state() {
             // intentional fall-through
         case GUARANTEED_VALUE:
             precedence_stack_.push_back(
-                dynamic_cast<Operator*>(current_term()->operator_reference_value())
+                dynamic_cast<const Operator*>(current_term()->operator_reference_value())
                     ->precedence());
             shift();
             value_state();
@@ -879,7 +879,7 @@ void TermedExpressionParser::partial_binop_call_right_state() {
     auto [callee, args] = current_term()->call_value();
     assert(callee->is_operator() 
         && "initial_partial_binop_call_right_state called with not an operator call");
-    assert(dynamic_cast<Operator*>(callee)->is_binary() && 
+    assert(dynamic_cast<const Operator*>(callee)->is_binary() && 
         "initial_partial_binop_call_right_state called with not a binary operator call");
 
     assert(((args.size() == 2 && args.at(1)->expression_type == ExpressionType::missing_arg) || 
@@ -920,7 +920,7 @@ void TermedExpressionParser::partial_binop_call_right_state() {
 
     pop_term();
     parse_stack_.push_back(args.at(0));
-    parse_stack_.push_back(create_operator_reference(*ast_store_, dynamic_cast<Operator*>(callee), 
+    parse_stack_.push_back(create_operator_reference(*ast_store_, dynamic_cast<const Operator*>(callee), 
         location));
     return post_binary_operator_state();
 }
@@ -1153,19 +1153,19 @@ void TermedExpressionParser::reduce_binop_call() {
     }
 
     // TODO: check types here
-    assert(std::holds_alternative<DefinitionHeader*>(operator_->value) && 
+    assert(std::holds_alternative<const DefinitionHeader*>(operator_->value) && 
         "TermedExpressionParser::reduce_operator_left called with a call stack \
 where operator didn't hold a reference to a definition");
 
     auto reduced = create_call(*compilation_state_,
-        std::get<DefinitionHeader*>(operator_->value), {lhs, rhs}, lhs->location);
+        std::get<const DefinitionHeader*>(operator_->value), {lhs, rhs}, lhs->location);
 
     if (!reduced) {
         Log::error(rhs->location) << "Creating a binary operator call failed" << Endl;
         return fail(); 
     }
 
-    (*reduced)->value = CallExpressionValue{std::get<DefinitionHeader*>(operator_->value), 
+    (*reduced)->value = CallExpressionValue{std::get<const DefinitionHeader*>(operator_->value), 
         std::vector<Expression*>{lhs, rhs}};
 
     parse_stack_.push_back(*reduced);
@@ -1317,7 +1317,7 @@ void TermedExpressionParser::add_to_partial_call_and_push(Expression* partial_ca
 
 void TermedExpressionParser::push_unary_operator_call(Expression* operator_ref, Expression* value) {
     auto location = 
-        dynamic_cast<Operator*>(
+        dynamic_cast<const Operator*>(
             operator_ref->operator_reference_value())->fixity() == Operator::Fixity::unary_prefix ?
             operator_ref->location : value->location;
     auto call = create_call(*compilation_state_, 
@@ -1364,7 +1364,7 @@ void TermedExpressionParser::substitute_known_value_reference(Expression* known_
 }
 
 
-bool TermedExpressionParser::is_acceptable_next_arg(DefinitionHeader* callee, 
+bool TermedExpressionParser::is_acceptable_next_arg(const DefinitionHeader* callee, 
     const std::vector<Expression*>& args/*, Expression* next_arg*/) {
     if (args.size() >= callee->get_type()->arity())
         return false;
@@ -1407,7 +1407,7 @@ void TermedExpressionParser::call_expression_state() {
     }
 
     auto call_expression = create_call(*compilation_state_,
-        std::get<DefinitionHeader*>(reference->value), std::vector<Expression*>{args}, reference->location);
+        std::get<const DefinitionHeader*>(reference->value), std::vector<Expression*>{args}, reference->location);
     
     if (!call_expression) {
         Log::error(reference->location) << "Creating call expression failed" << Endl;
@@ -1480,7 +1480,7 @@ void TermedExpressionParser::deferred_call_state() {
 }
 
 Expression* TermedExpressionParser::handle_arg_state(
-    DefinitionHeader* callee, const std::vector<Expression*>& args) { 
+    const DefinitionHeader* callee, const std::vector<Expression*>& args) { 
     
     switch (current_term()->expression_type) {
         case ExpressionType::layer2_expression:

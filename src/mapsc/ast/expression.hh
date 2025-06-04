@@ -91,7 +91,7 @@ enum class ExpressionType {
     deleted,                    // value: std::monostate
 };
 
-using CallExpressionValue = std::tuple<DefinitionHeader*, std::vector<Expression*>>;
+using CallExpressionValue = std::tuple<const DefinitionHeader*, std::vector<Expression*>>;
 
 using TypeArgument = std::tuple<
     Expression*,                // type construct or type identifier
@@ -143,7 +143,7 @@ using ExpressionValue = std::variant<
     bool,
     std::string,
     Expression*,
-    DefinitionHeader*,
+    const DefinitionHeader*,
     const Type*,
     TermedExpressionValue,
     CallExpressionValue,
@@ -183,9 +183,9 @@ struct Expression {
     Scope* termed_context() const;
 
     CallExpressionValue& call_value();
-    DefinitionHeader* reference_value() const;
+    const DefinitionHeader* reference_value() const;
     const Type* type_reference_value() const;
-    Operator* operator_reference_value() const;
+    const Operator* operator_reference_value() const;
     std::optional<KnownValue> known_value_value() const;
     Expression* partially_applied_minus_arg_value() const;
 
@@ -198,7 +198,7 @@ struct Expression {
     void mark_not_type_declaration();
     DeferredBool is_type_declaration();
 
-    std::string string_value() const;
+    std::string_view string_value() const;
     LogStream::InnerStream& log_self_to(LogStream::InnerStream& ostream) const;
     
     std::optional<Expression*> cast_to(CompilationState& state, const Type* type, 

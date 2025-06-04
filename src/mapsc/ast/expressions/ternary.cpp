@@ -1,5 +1,7 @@
 #include "../expression.hh"
 
+#include <cassert>
+
 namespace Maps {
 
 TernaryExpressionValue& Expression::ternary_value() {
