@@ -302,15 +302,18 @@ add_library(libmapsc INTERFACE)
 
 target_link_libraries(libmapsc INTERFACE
     libmaps
-    mapsc_common
-    mapsc_types_and_ast
-    mapsc_parser_layer1
-    mapsc_parser_layer2
-    mapsc_procedures
-    mapsc_transforms
-    mapsc_ir_gen
+    $<TARGET_OBJECTS:mapsc_common>
+    $<TARGET_OBJECTS:mapsc_types_and_ast>
+    $<TARGET_OBJECTS:mapsc_parser_layer1>
+    $<TARGET_OBJECTS:mapsc_parser_layer2>
+    $<TARGET_OBJECTS:mapsc_procedures>
+    $<TARGET_OBJECTS:mapsc_transforms>
+    $<TARGET_OBJECTS:mapsc_ir_gen>
     -lLLVM-19
 )
+
+set_target_properties(libmapsc PROPERTIES
+    IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 
 add_executable(mapsc_integration_tests
     tests/unit/tests_main.cpp
@@ -356,18 +359,10 @@ add_executable(mapsci
 )
 
 target_link_libraries(mapsci 
-    libmaps 
-
-    mapsc_common
-    mapsc_types_and_ast
-    mapsc_parser_layer1
-    mapsc_parser_layer2
-    mapsc_procedures
-    mapsc_transforms
-    mapsc_ir_gen
-
-    -lLLVM-19
     -lLLVM-19 
+    libmapsc
+    libmaps
+    
     -ledit 
     -lncurses
 )
