@@ -29,6 +29,8 @@ std::optional<DefinitionHeader*> Scope::create_identifier(DefinitionHeader* node
     
     Log_creation::debug_extra(node->location()) << "Created identifier " << name << Endl;
 
+    assert(identifier_exists(node->name_) && "created identifier doesn't exist");
+
     return node;
 }
 

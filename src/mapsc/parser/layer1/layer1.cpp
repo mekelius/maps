@@ -252,7 +252,7 @@ bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
 
 // ----- IDENTIFIERS -----
 
-bool ParserLayer1::identifier_exists(const std::string& identifier) const {
+bool ParserLayer1::identifier_exists(std::string_view identifier) const {
     if (builtins.identifier_exists(identifier))
         return true;
 
@@ -262,9 +262,13 @@ bool ParserLayer1::identifier_exists(const std::string& identifier) const {
     return false;
 }
 
-optional<DefinitionHeader*> ParserLayer1::create_undefined_identifier(const std::string& name, bool is_top_level, SourceLocation location) {
+optional<DefinitionHeader*> ParserLayer1::create_undefined_identifier(std::string name, 
+    bool is_top_level, SourceLocation location) {
+    
     return parse_scope_->create_identifier(
-        create_let_definition(*ast_store_, parse_scope_, name, &Hole, is_top_level, location).first
+        create_let_definition(
+            *ast_store_, parse_scope_, std::move(name), &Hole, is_top_level, std::move(location)
+        ).first
     );
 }
 
@@ -272,23 +276,24 @@ optional<DefinitionHeader*> ParserLayer1::create_identifier(DefinitionHeader* de
     return parse_scope_->create_identifier(definition);
 }
 
-std::optional<DefinitionHeader*> ParserLayer1::lookup_identifier(const std::string& identifier) {
+std::optional<DefinitionHeader*> ParserLayer1::lookup_identifier(std::string_view identifier) {
     return parse_scope_->get_identifier(identifier);
 }
 
 // ----- CREATION HELPERS -----
 
-DefinitionHeader* ParserLayer1::create_definition(const std::string& name, 
+DefinitionHeader* ParserLayer1::create_definition(std::string name, 
     const LetDefinitionValue& body_value, bool is_top_level, SourceLocation location) {
     
-    return create_let_definition(*ast_store_, parse_scope_, name, body_value, is_top_level, 
-        location).first;
+    return create_let_definition(*ast_store_, parse_scope_, std::move(name), body_value, is_top_level, 
+        std::move(location)).first;
 }
 
-DefinitionHeader* ParserLayer1::create_definition(const std::string& name, bool is_top_level, 
+DefinitionHeader* ParserLayer1::create_definition(std::string name, bool is_top_level, 
     SourceLocation location) {
 
-    return create_let_definition(*ast_store_, parse_scope_, name, &Hole, is_top_level, location).first;
+    return create_let_definition(
+        *ast_store_, parse_scope_, std::move(name), &Hole, is_top_level, std::move(location)).first;
 }
 
 DefinitionHeader* ParserLayer1::create_definition(LetDefinitionValue body, bool is_top_level, 

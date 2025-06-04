@@ -61,7 +61,7 @@ TEST_CASE("Should allocate definitions correctly") {
 
     auto value = create_known_value(state, 123, TSL);
     auto [header, body] = ast_store->allocate_definition(
-        DefinitionHeader{DefinitionType::let_definition, "test", TSL}, value);
+        RT_DefinitionHeader{DefinitionType::let_definition, "test", TSL}, value);
 
     CHECK(std::holds_alternative<Expression*>(body->get_value()));
     CHECK(*std::get<Expression*>(body->get_value()) == *value);

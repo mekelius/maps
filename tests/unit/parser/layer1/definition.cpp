@@ -6,6 +6,8 @@
 #include "mapsc/parser/layer1.hh"
 #include "mapsc/compilation_state.hh"
 
+#include "mapsc/logging.hh"
+
 using namespace Maps;
 using namespace std;
 
@@ -24,6 +26,8 @@ tuple<CompilationState, Scope, stringstream> setup(const string& source_str) {
 } // namespace
 
 TEST_CASE("Should create definitions with proper names") {
+    auto lock = LogStream::global.set_loglevel(LogLevel::debug_extra);
+
     auto [state, scope, source] = setup("let test = 123");
     
     auto result = run_layer1_eval(state, scope, source);

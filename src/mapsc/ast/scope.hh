@@ -37,11 +37,11 @@ public:
     Scope& operator=(const Scope& other) = default;
     ~Scope() = default;
 
-    bool identifier_exists(auto name) const {
+    bool identifier_exists(std::string_view name) const {
         return identifiers_.find(name) != identifiers_.end();
     }
 
-    std::optional<DefinitionHeader*> get_identifier(auto name) const {
+    std::optional<DefinitionHeader*> get_identifier(std::string_view name) const {
         auto it = identifiers_.find(name);
         if (it == identifiers_.end())
             return std::nullopt;

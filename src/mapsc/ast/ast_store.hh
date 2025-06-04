@@ -29,8 +29,9 @@ public:
 
     Expression* allocate_expression(const Expression&& expr);
     Statement* allocate_statement(const Statement&& statement);
-    DefinitionHeader* allocate_definition_header(const DefinitionHeader&& definition);
-    std::pair<DefinitionHeader*, DefinitionBody*> allocate_definition(const DefinitionHeader&& header, const LetDefinitionValue& body);
+    DefinitionHeader* allocate_definition_header(RT_DefinitionHeader definition);
+    std::pair<DefinitionHeader*, DefinitionBody*> allocate_definition(
+        RT_DefinitionHeader header, const LetDefinitionValue& body);
     DefinitionBody* allocate_definition_body(DefinitionHeader*, const LetDefinitionValue& body);
     Operator* allocate_operator(const Operator&& definition);
     Parameter* allocate_parameter(const Parameter&& definition);

@@ -33,7 +33,7 @@ TEST_CASE("Definitions should know if they are a known value") {
 
     auto value = create_known_value(state, 123, TSL);
     auto [definition, _] = ast_store->allocate_definition(
-        DefinitionHeader{DefinitionType::let_definition, "test", TSL}, value);
+        RT_DefinitionHeader{DefinitionType::let_definition, "test36", TSL}, value);
 
     CHECK(definition->is_known_scalar_value());
 }
@@ -53,30 +53,30 @@ TEST_CASE("Should create definitions with proper names") {
     auto [state, types] = setup();
     
     auto expression = create_known_value(state, KnownValue{"123"}, TSL);
-    auto [header, body] = create_let_definition(*state.ast_store_, "test", expression, TSL);
+    auto [header, body] = create_let_definition(*state.ast_store_, "test56", expression, TSL);
 
-    CHECK(header->name_ == "test");
+    CHECK(header->name_ == "test56");
 }
 
 TEST_CASE("Should create definitions with stored names") {
     auto [state, types] = setup();
     
-    std::string name = "test";
+    std::string name = "test64";
 
     auto expression = create_known_value(state, KnownValue{"123"}, TSL);
     auto [header, body] = create_let_definition(*state.ast_store_, name, expression, TSL);
 
     name = "kk";
-    CHECK(header->name_ == "test");
+    CHECK(header->name_ == "test64");
 }
 
 TEST_CASE("Should create definitions with proper values") {
     auto [state, types] = setup();
     
     auto expression = create_known_value(state, KnownValue{"123"}, TSL);
-    auto [header, body] = create_let_definition(*state.ast_store_, "test", expression, TSL);
+    auto [header, body] = create_let_definition(*state.ast_store_, "test77", expression, TSL);
 
-    CHECK(header->name_ == "test");
+    CHECK(header->name_ == "test77");
 
     auto value = body->get_value();
     CHECK(holds_alternative<Expression*>(value));

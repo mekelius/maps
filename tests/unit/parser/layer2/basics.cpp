@@ -143,7 +143,7 @@ TEST_CASE("Should perform known value substitution") {
     REQUIRE((*known_val)->expression_type == ExpressionType::known_value);
 
     auto [known_val_def, _] = ast_store->allocate_definition(
-        DefinitionHeader{DefinitionType::let_definition, "x", &Hole, TSL}, {*known_val});
+        RT_DefinitionHeader{DefinitionType::let_definition, "x", &Hole, TSL}, {*known_val});
 
     auto known_val_ref = create_reference(*ast_store, known_val_def, TSL);
 

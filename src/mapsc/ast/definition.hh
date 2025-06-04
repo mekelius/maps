@@ -134,14 +134,31 @@ public:
 };
 
 class RT_DefinitionHeader: public DefinitionHeader {
-    RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, const Type* type, 
+public:
+    RT_DefinitionHeader(DefinitionType definition_type, std::string name, const Type* type, 
         Scope* outer_scope, bool is_top_level, SourceLocation location);
-    RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, Scope* outer_scope,
+    RT_DefinitionHeader(DefinitionType definition_type, std::string name, Scope* outer_scope,
         bool is_top_level, SourceLocation location);
-    RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, const Type* type, 
+    RT_DefinitionHeader(DefinitionType definition_type, std::string name, const Type* type, 
         SourceLocation location);
-    RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, SourceLocation location);
+    RT_DefinitionHeader(DefinitionType definition_type, std::string name, 
+        SourceLocation location);
 
+    virtual ~RT_DefinitionHeader() = default;
+    // Move and copy constructors need to update the name_
+    RT_DefinitionHeader(const RT_DefinitionHeader& other) noexcept
+    :DefinitionHeader(other.definition_type_, {}, other.type_, other.location_), 
+     name_string_(other.name_string_) {
+        name_ = name_string_;
+    }
+    RT_DefinitionHeader(RT_DefinitionHeader&& other) noexcept
+    :DefinitionHeader(other.definition_type_, {}, other.type_, std::move(other.location_)), 
+     name_string_(std::move(other.name_string_)) {
+        name_ = name_string_;
+    }
+    // can't be bothered to figure these out now
+    RT_DefinitionHeader& operator=(RT_DefinitionHeader&&) = delete; 
+    RT_DefinitionHeader& operator=(const RT_DefinitionHeader&) = delete;
 
 private:
     std::string name_string_;

@@ -23,7 +23,7 @@ using std::optional, std::nullopt;
 
 namespace Maps {
 
-using Log = LogNoContext;
+using Log = LogInContext<LogContext::definition_creation>;
 
 std::optional<LetDefinitionValue> DefinitionHeader::get_body_value() const {
     if (!body_)
@@ -33,24 +33,38 @@ std::optional<LetDefinitionValue> DefinitionHeader::get_body_value() const {
 }
 
 
-RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, const Type* type, 
-    Scope* outer_scope, bool is_top_level, SourceLocation location)
+RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, 
+    const Type* type, Scope* outer_scope, bool is_top_level, SourceLocation location)
 :DefinitionHeader(definition_type, {}, type, outer_scope, is_top_level, location), name_string_(name) {
+
+    Log::debug_extra(location) << "Created RT_DefinitionHeader " << *this << Endl;
+    
     name_ = name_string_;
+
+    assert(name_ == name);
+    assert(name_ == name_string_);
+    assert(name == name_string_);
 }
 
-RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, Scope* outer_scope,
-    bool is_top_level, SourceLocation location)
-:RT_DefinitionHeader(definition_type, name, &Hole, outer_scope, is_top_level, location) {}
+RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, 
+    Scope* outer_scope, bool is_top_level, SourceLocation location)
+:RT_DefinitionHeader(definition_type, std::move(name), &Hole, outer_scope, is_top_level, std::move(location)) {}
 
-RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, const Type* type, 
-    SourceLocation location)
+RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, 
+    const Type* type, SourceLocation location)
 :DefinitionHeader(definition_type, {}, type, location), name_string_(name) {
+
     name_ = name_string_;
+
+    Log::debug_extra(location) << "Created RT_DefinitionHeader " << *this << Endl;
+
+    assert(name_ == name);
+    assert(name_ == name_string_);
+    assert(name == name_string_);
 }
 
-RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, const std::string& name, SourceLocation location)
-:RT_DefinitionHeader(definition_type, name, &Hole, location){}
+RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, SourceLocation location)
+:RT_DefinitionHeader(definition_type, std::move(name), &Hole, std::move(location)){}
 
 
 

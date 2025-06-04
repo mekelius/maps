@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "mapsc/logging.hh"
+
 namespace Maps {
 
 bool AST_Store::empty() const {
@@ -39,12 +41,19 @@ Statement* AST_Store::allocate_statement(const Statement&& statement) {
     return statements_.back().get();
 }
 
-DefinitionHeader* AST_Store::allocate_definition_header(const DefinitionHeader&& definition) {
-    definition_headers_.push_back(std::make_unique<DefinitionHeader>(definition));
-    return definition_headers_.back().get();
+DefinitionHeader* AST_Store::allocate_definition_header(RT_DefinitionHeader definition) {
+    using Log = LogInContext<LogContext::definition_creation>;
+
+    definition_headers_.push_back(std::make_unique<RT_DefinitionHeader>(std::move(definition)));
+    Log::debug_extra(definition.location()) << "Allocated definition header " << definition << Endl;
+    auto allocated_header = definition_headers_.back().get();
+
+    // allocated_header->name_ = dynamic_cast<RT_DefinitionHeader*>(allocated_header)->name_string_;
+
+    return allocated_header;
 }
 
-std::pair<DefinitionHeader*, DefinitionBody*> AST_Store::allocate_definition(const DefinitionHeader&& header, 
+std::pair<DefinitionHeader*, DefinitionBody*> AST_Store::allocate_definition(RT_DefinitionHeader header, 
     const LetDefinitionValue& body) {
     
     auto allocated_header = allocate_definition_header(std::move(header));
@@ -54,11 +63,15 @@ std::pair<DefinitionHeader*, DefinitionBody*> AST_Store::allocate_definition(con
 }
 
 DefinitionBody* AST_Store::allocate_definition_body(DefinitionHeader* header, const LetDefinitionValue& body) {
+    using Log = LogInContext<LogContext::definition_creation>;
+
     definition_bodies_.push_back(std::make_unique<DefinitionBody>(header, body));
     auto allocated_body = definition_bodies_.back().get();
 
     allocated_body->header_ = header;
     header->body_ = allocated_body;
+
+    Log::debug_extra(header->location()) << "Allocated definition body " << *header << Endl;
 
     return allocated_body;
 }

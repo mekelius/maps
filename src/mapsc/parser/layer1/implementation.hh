@@ -66,19 +66,19 @@ protected:
     std::nullopt_t fail_optional();
     
     // ---- IDENTIFIERS -----
-    bool identifier_exists(const std::string& name) const;
+    bool identifier_exists(std::string_view name) const;
 
-    [[nodiscard]] std::optional<DefinitionHeader*> create_undefined_identifier(const std::string& name, 
+    [[nodiscard]] std::optional<DefinitionHeader*> create_undefined_identifier(std::string name, 
         bool is_top_level, SourceLocation location);
     [[nodiscard]] std::optional<DefinitionHeader*> create_identifier(DefinitionHeader* definition);
-    std::optional<DefinitionHeader*> lookup_identifier(const std::string& name);
+    std::optional<DefinitionHeader*> lookup_identifier(std::string_view name);
 
     // attempts to collapse a single statement block
     bool simplify_single_statement_block(Statement* outer);
 
-    DefinitionHeader* create_definition(const std::string& name, const LetDefinitionValue& definition, 
+    DefinitionHeader* create_definition(std::string name, const LetDefinitionValue& definition, 
         bool is_top_level, SourceLocation location);
-    DefinitionHeader* create_definition(const std::string& name, bool is_top_level, 
+    DefinitionHeader* create_definition(std::string name, bool is_top_level, 
         SourceLocation location);
     DefinitionHeader* create_definition(LetDefinitionValue body, bool is_top_level, 
         SourceLocation location);
@@ -154,7 +154,7 @@ protected:
     PragmaStore* const pragma_store_;
     
     int which_buf_slot_ = 0;
-    std::array<Token, 2> token_buf_ = { Token::dummy_token, Token::dummy_token };
+    std::array<Token, 2> token_buf_ { Token::dummy_token, Token::dummy_token };
 
     bool force_top_level_eval_ = false;
 

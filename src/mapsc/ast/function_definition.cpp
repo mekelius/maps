@@ -32,12 +32,12 @@ std::pair<DefinitionHeader*, DefinitionBody*> function_definition(CompilationSta
 
     if (std::holds_alternative<Expression*>(value)) {
         return state.ast_store_->allocate_definition(
-            DefinitionHeader{DefinitionType::let_definition, MAPS_INTERNALS_PREFIX + "anonymous_function", 
+            RT_DefinitionHeader{DefinitionType::let_definition, MAPS_INTERNALS_PREFIX + "anonymous_function", 
                 location}, value);
     }
 
     return state.ast_store_->allocate_definition(
-        DefinitionHeader{DefinitionType::let_definition, MAPS_INTERNALS_PREFIX + "anonymous_function", 
+        RT_DefinitionHeader{DefinitionType::let_definition, MAPS_INTERNALS_PREFIX + "anonymous_function", 
             location}, value);
 }
 
@@ -51,18 +51,18 @@ std::pair<DefinitionHeader*, DefinitionBody*> function_definition(CompilationSta
 std::pair<DefinitionHeader*, DefinitionBody*> function_definition(CompilationState& state, const std::string& name, 
     Expression* value, const SourceLocation& location) {
     
-    return state.ast_store_->allocate_definition(DefinitionHeader{DefinitionType::let_definition, 
+    return state.ast_store_->allocate_definition(RT_DefinitionHeader{DefinitionType::let_definition, 
         name, value->type, location}, value);
 }
 
-std::pair<DefinitionHeader*, DefinitionBody*> create_nullary_function_definition(AST_Store& ast_store, TypeStore& types, 
-    Expression* value, bool is_pure, const SourceLocation& location) {
+std::pair<DefinitionHeader*, DefinitionBody*> create_nullary_function_definition(AST_Store& ast_store, 
+    TypeStore& types, Expression* value, bool is_pure, const SourceLocation& location) {
 
     Log::debug_extra(location) << 
         "Creating nullary function from " << *value << " with type " << *value->type << Endl;
 
     return ast_store.allocate_definition(
-        DefinitionHeader{DefinitionType::let_definition, "testing_nullary_function", 
+        RT_DefinitionHeader{DefinitionType::let_definition, "testing_nullary_function", 
             types.get_function_type(value->type, {}, is_pure), location}, value);
 }
 
