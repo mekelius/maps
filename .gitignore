@@ -1,4 +1,5 @@
 build
+bnr
 .vscode
 *.ignore
 parsing_rules
