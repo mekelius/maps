@@ -39,6 +39,7 @@
     - also stack overflow if you feed it a pointer??
         - sounds like a disaster
 - type identifiers arent scoped, how should this be handled?
+- operators may end up holding a stale pointer to the function
 
 ## Misc jank
 

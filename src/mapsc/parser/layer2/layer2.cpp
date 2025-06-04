@@ -87,7 +87,7 @@ bool TermedExpressionParser::run() {
 
     // overwrite the expression in-place
     *expression_ = **result;
-    Log::debug_extra((*result)->location) << "parsed a termed expression" << Endl;
+    Log::debug_extra((*result)->location) << "Parsed a termed expression" << Endl;
     return true;
 }
 
@@ -181,10 +181,11 @@ optional<Expression*> TermedExpressionParser::parse_termed_expression() {
 }
 
 Expression* TermedExpressionParser::handle_termed_sub_expression(Expression* expression) {
+    Log::debug_extra(current_term()->location) << "Handle termed subexpression" << Endl;
+
     assert(expression->expression_type == ExpressionType::layer2_expression 
         && "handle_sub_termed_expression called with non-termed expression");
 
-    // TODO: pass some kind of type hint
     TermedExpressionParser{compilation_state_, expression}.run();
 
     return expression;
@@ -514,6 +515,8 @@ void TermedExpressionParser::reference_state() {
 }
 
 void TermedExpressionParser::value_state() {
+    Log::debug_extra(current_term()->location) << "Value state" << Endl;
+
     if (at_expression_end())
         return;
 
@@ -606,6 +609,8 @@ void TermedExpressionParser::known_value_reference_state() {
 }
 
 void TermedExpressionParser::prefix_operator_state() {
+    Log::debug_extra(current_term()->location) << "Prefix operator state" << Endl;
+
     if (at_expression_end()) {
         auto op = *pop_term();
         return parse_stack_.push_back(create_reference(
@@ -770,6 +775,8 @@ void TermedExpressionParser::binary_operator_state() {
 }
 
 void TermedExpressionParser::minus_sign_state() {
+    Log::debug_extra(current_term()->location) << "Minus sign state" << Endl;
+
     if (at_expression_end()) {
         auto declared_type = current_term()->declared_type;
 
@@ -966,6 +973,8 @@ void TermedExpressionParser::partial_binop_call_standoff_state() {
 }
 
 void TermedExpressionParser::post_binary_operator_state() {
+    Log::debug_extra(current_term()->location) << "Post-binary operator state" << Endl;
+
     if (at_expression_end())
         return reduce_to_partial_binop_call_right();
 
@@ -984,9 +993,9 @@ void TermedExpressionParser::post_binary_operator_state() {
         case ExpressionType::reference:
             shift();
             // if the reference is to a function, go ahead and try to apply it first
-            if (current_term()->reference_value()->get_type()->arity() > 0) {
+            if (current_term()->reference_value()->get_type()->arity() > 0)
                 call_expression_state();
-            }
+
             return compare_precedence_state();
 
         case ExpressionType::partial_binop_call_left:
@@ -1006,8 +1015,12 @@ void TermedExpressionParser::post_binary_operator_state() {
         }
 
         case ExpressionType::minus_sign:
-            shift();
-            initial_minus_sign_state();
+            parse_stack_.push_back(unary_minus_ref(get_term()->location));
+            prefix_operator_state();
+
+            if (has_failed())
+                return;
+
             return compare_precedence_state();
 
         case ExpressionType::partially_applied_minus:
@@ -1034,7 +1047,7 @@ void TermedExpressionParser::post_binary_operator_state() {
         case TYPE_DECLARATION_TERM:
             if (peek()->expression_type == ExpressionType::type_reference) {
                 shift();
-                initial_type_reference_state();
+                type_reference_state();
                 return compare_precedence_state();
             }
 
@@ -1050,6 +1063,8 @@ void TermedExpressionParser::post_binary_operator_state() {
 // so, we compare the precedences of the operators
 // if OP1 wins, we can reduce left, if OP2 wins we must wait (how?)
 void TermedExpressionParser::compare_precedence_state() {
+    Log::debug_extra(current_term()->location) << "Compare precedence state" << Endl;
+
     if (at_expression_end()) {
         reduce_binop_call();
         precedence_stack_.pop_back();
@@ -1133,6 +1148,8 @@ that the caller put on the precedence stack");
 
 // Pops 3 values from the parse stack, reduces them into a binop apply expression and pushes it on top
 void TermedExpressionParser::reduce_binop_call() {
+    Log::debug_extra(current_term()->location) << "Reduce binop call" << Endl;
+
     assert(parse_stack_.size() >= 3 
         && "TermedExpressionParser::reduce_operator_left_ called with parse stack size < 3");
 

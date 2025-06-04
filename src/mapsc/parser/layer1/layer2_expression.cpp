@@ -35,7 +35,8 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     Expression* expression = create_layer2_expression(*ast_store_, {}, *context, current_token().location);
 
     Log::debug_extra(current_token().location) <<
-        (in_tied_expression ? "start parsing tied expression" : "start parsing termed expression");
+        (in_tied_expression ? "start parsing tied expression" : "start parsing termed expression") << 
+        Endl;
 
     expression->terms().push_back(parse_term(in_tied_expression));
     
@@ -127,7 +128,7 @@ Expression* ParserLayer1::parse_termed_expression(bool in_tied_expression) {
     }
 
     Log::debug_extra(current_token().location) << 
-        "Finished parsing termed expression from " << expression->location;
+        "Finished parsing termed expression from " << expression->location << Endl;
     return close_termed_expression(expression);
 }
 

@@ -92,7 +92,6 @@ TEST_CASE("7 + - 2") {
     auto [rhs_callee, rhs_args] = rhs->call_value();
     auto rhs_arg = rhs_args.at(0);
 
-    CHECK(*rhs_callee == *state.special_definitions_.unary_minus);
     CHECK(rhs_arg->expression_type == ExpressionType::known_value);
     CHECK(*rhs_arg->type == Int);
 
@@ -131,9 +130,59 @@ TEST_CASE("7 - - 2") {
     auto [rhs_callee, rhs_args] = rhs->call_value();
     auto rhs_arg = rhs_args.at(0);
 
-    CHECK(*rhs_callee == *state.special_definitions_.unary_minus);
     CHECK(rhs_arg->expression_type == ExpressionType::known_value);
     CHECK(*rhs_arg->type == Int);
 
     CHECK(std::get<maps_Int>(rhs_arg->value) == 2);
+}
+
+TEST_CASE("Binop should force rhs unary minus into unary call") {
+    auto [state, types] = CompilationState::create_test_state();
+    auto& ast_store = *state.ast_store_;
+
+    auto plus = create_testing_binary_operator(ast_store, "+", &IntInt_to_Int, 2, 
+        Operator::Associativity::left, TSL);
+
+    auto value1 = create_numeric_literal(ast_store, "7", TSL);
+    auto plus_ref = create_operator_reference(ast_store, plus, TSL);
+    auto minus = create_minus_sign(ast_store, TSL);
+    auto value2 = create_numeric_literal(ast_store, "2", TSL);
+
+    auto expr = create_layer2_expression_testing(ast_store, {value1, plus_ref, minus, value2}, TSL);    
+
+    run_layer2(state, expr);
+
+    auto [callee, args] = expr->call_value();
+    auto rhs = args.at(1);
+    CHECK(rhs->expression_type == ExpressionType::call);
+
+    auto [rhs_callee, rhs_args] = rhs->call_value();
+    CHECK(*rhs_callee == *state.special_definitions_.unary_minus);
+}
+
+TEST_CASE("Minus as a binop should force rhs unary minus into unary call ") {
+    auto [state, types] = CompilationState::create_test_state();
+    auto& ast_store = *state.ast_store_;
+
+    auto value1 = create_numeric_literal(ast_store, "7", TSL);
+    auto minus1 = create_minus_sign(ast_store, TSL);
+    auto minus2 = create_minus_sign(ast_store, TSL);
+    auto value2 = create_numeric_literal(ast_store, "2", TSL);
+
+    auto expr = create_layer2_expression_testing(ast_store, {value1, minus1, minus2, value2}, TSL);    
+
+    run_layer2(state, expr);
+
+    CHECK(expr->expression_type == ExpressionType::call);
+
+    auto [callee, args] = expr->call_value();
+
+    CHECK(callee == state.special_definitions_.binary_minus);
+
+    auto rhs = args.at(1);
+    CHECK(rhs->expression_type == ExpressionType::call);
+
+    auto [rhs_callee, rhs_args] = rhs->call_value();
+
+    CHECK(*rhs_callee == *state.special_definitions_.unary_minus);
 }

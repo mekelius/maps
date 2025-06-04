@@ -47,6 +47,7 @@ private:
     std::optional<Expression*> pop_term();
 
     void fail();
+    bool has_failed() const { return !success_; }
 
     bool at_expression_end() const;
     bool parse_stack_reduced() const;

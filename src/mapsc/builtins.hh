@@ -74,7 +74,8 @@ constexpr std::optional<const DefinitionHeader*> find_external_runtime_cast(cons
 
     auto cast = builtins.get_identifier(cast_name);
     if (!cast)
-        LogNoContext::debug(NO_SOURCE_LOCATION) << "Could not find runtime cast " << cast_name;
+        LogNoContext::debug(NO_SOURCE_LOCATION) << 
+            "Could not find runtime cast " << cast_name << Endl;
 
     return cast;
 }
