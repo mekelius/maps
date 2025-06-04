@@ -46,7 +46,7 @@ constexpr DefinitionHeader to_MutString_Int{"to_MutString_Int", &Int_to_MutStrin
 constexpr DefinitionHeader to_MutString_Float{"to_MutString_Float", &Float_to_MutString};
 constexpr DefinitionHeader concat{"concat", &MutString_MutString_to_MutString};
 
-constexpr BuiltinScope<10> builtins {
+constexpr BuiltinScope builtins {
     &prints,
     &printms,
     &to_String_Boolean,
@@ -56,7 +56,13 @@ constexpr BuiltinScope<10> builtins {
     &to_String_MutString,
     &to_MutString_Int,
     &to_MutString_Float,
-    &concat
+    &concat,
+    &unary_minus_Int,
+    &plus_Int,
+    &binary_minus_Int,
+    &mult_Int,
+    &true_.header,
+    &false_.header
 };
 
 constexpr std::optional<const DefinitionHeader*> find_external_runtime_cast(const Type* source_type, 

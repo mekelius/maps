@@ -110,6 +110,9 @@ private:
     std::array<const DefinitionHeader*, size_p> identifiers_;
 };
 
+template<typename...Args>
+BuiltinScope(Args&&...) -> BuiltinScope<sizeof...(Args)>;
+
 using Scopes = std::span<Scope* const>;
 using const_Scopes = std::span<const Scope* const>;
 
