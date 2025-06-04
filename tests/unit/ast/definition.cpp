@@ -48,3 +48,40 @@ TEST_CASE("Should be able to create a let definition") {
 
     CHECK(*dummy_definition->get_type() == *IntIntInt);
 }
+
+TEST_CASE("Should create definitions with proper names") {
+    auto [state, types] = setup();
+    
+    auto expression = create_known_value(state, KnownValue{"123"}, TSL);
+    auto [header, body] = create_let_definition(*state.ast_store_, "test", expression, TSL);
+
+    CHECK(header->name_ == "test");
+}
+
+TEST_CASE("Should create definitions with stored names") {
+    auto [state, types] = setup();
+    
+    std::string name = "test";
+
+    auto expression = create_known_value(state, KnownValue{"123"}, TSL);
+    auto [header, body] = create_let_definition(*state.ast_store_, name, expression, TSL);
+
+    name = "kk";
+    CHECK(header->name_ == "test");
+}
+
+TEST_CASE("Should create definitions with proper values") {
+    auto [state, types] = setup();
+    
+    auto expression = create_known_value(state, KnownValue{"123"}, TSL);
+    auto [header, body] = create_let_definition(*state.ast_store_, "test", expression, TSL);
+
+    CHECK(header->name_ == "test");
+
+    auto value = body->get_value();
+    CHECK(holds_alternative<Expression*>(value));
+
+    auto expr = get<Expression*>(value);
+    CHECK(expr->expression_type == ExpressionType::known_value);
+    CHECK(expr->known_value_value() == KnownValue{"123"});
+}

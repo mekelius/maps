@@ -110,6 +110,7 @@ add_executable(types_and_ast_unit_tests
     tests/unit/pragmas.cpp
 
     tests/unit/ast/ast_store.cpp
+    tests/unit/ast/scope.cpp
     tests/unit/ast/definition.cpp
     tests/unit/ast/value_and_reference.cpp
 
@@ -182,12 +183,10 @@ add_library(parser_layer1 OBJECT
 add_executable(parser_layer1_unit_tests
     tests/unit/tests_main.cpp
 
-    tests/unit/parser/lexer.cpp
-    tests/unit/parser/unary_minus.cpp
-    tests/unit/parser/unary_operators.cpp
-
+    tests/unit/parser/layer1/lexer.cpp
     tests/unit/parser/layer1/basics.cpp
     tests/unit/parser/layer1/block.cpp
+    tests/unit/parser/layer1/definition.cpp
     tests/unit/parser/layer1/conditional.cpp
     tests/unit/parser/layer1/loop.cpp
     tests/unit/parser/layer1/lambda.cpp
@@ -219,6 +218,8 @@ add_library(parser_layer2 OBJECT
 add_executable(parser_layer2_unit_tests
     tests/unit/tests_main.cpp
 
+    tests/unit/parser/layer2/unary_minus.cpp
+    tests/unit/parser/layer2/unary_operators.cpp
     tests/unit/parser/layer2/basics.cpp
     tests/unit/parser/layer2/calls.cpp
     tests/unit/parser/layer2/minus.cpp

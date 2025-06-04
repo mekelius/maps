@@ -20,26 +20,26 @@ class AST_Store;
 class CompilationState;
 struct SourceLocation;
 
-std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, Scope* outer_scope, const std::string& name,
-    LetDefinitionValue body_value, bool is_top_level, const SourceLocation& location);
+std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, 
+    Scope* outer_scope, std::string name, LetDefinitionValue body_value, bool is_top_level, SourceLocation location);
 
-std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, Scope* outer_scope, const std::string& name, 
-    const Type* type, bool is_top_level, const SourceLocation& location);
+std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, 
+    Scope* outer_scope, std::string name, const Type* type, bool is_top_level, SourceLocation location);
 
-std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, const Type* type, 
-    const SourceLocation& location);
+std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, 
+    const Type* type, SourceLocation location);
 
-std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, const std::string& name, 
-    LetDefinitionValue value, const SourceLocation& location);
+std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, 
+    std::string name, LetDefinitionValue value, SourceLocation location);
 
 std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, 
     LetDefinitionValue value, const SourceLocation& location);
 
-std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, const std::string& name, 
-    Expression* value, const SourceLocation& location);
+std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store, 
+    std::string name, Expression* value, SourceLocation location);
 
 std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& ast_store,
-    Expression* value, const SourceLocation& location);
+    Expression* value, SourceLocation location);
 
 } // namespace Maps
 

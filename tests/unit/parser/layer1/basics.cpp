@@ -9,6 +9,8 @@
 using namespace Maps;
 using namespace std;
 
+namespace {
+
 tuple<CompilationState, Scope, stringstream> setup(const string& source_str) { 
     auto [state, _1] = CompilationState::create_test_state();
 
@@ -18,6 +20,8 @@ tuple<CompilationState, Scope, stringstream> setup(const string& source_str) {
         stringstream{source_str}
     };
 }
+
+} // namespace
 
 TEST_CASE("Should handle various cases") {
     TypeStore types{};
