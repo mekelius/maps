@@ -76,8 +76,8 @@ DefinitionBody* AST_Store::allocate_definition_body(DefinitionHeader* header, co
     return allocated_body;
 }
 
-Operator* AST_Store::allocate_operator(const Operator&& definition) {
-    definition_headers_.push_back(std::make_unique<Operator>(definition));
+Operator* AST_Store::allocate_operator(RT_Operator definition) {
+    definition_headers_.push_back(std::make_unique<RT_Operator>(std::move(definition)));
     return dynamic_cast<Operator*>(definition_headers_.back().get());
 }
 

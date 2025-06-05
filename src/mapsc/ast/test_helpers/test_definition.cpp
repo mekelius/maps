@@ -23,7 +23,7 @@ Operator* create_testing_binary_operator(AST_Store& ast_store, std::string name,
 
     auto function = create_testing_let_definition(ast_store, name + "_f", type, location);
 
-    return ast_store.allocate_operator(Operator{ 
+    return ast_store.allocate_operator(RT_Operator{ 
         std::move(name), 
         function, 
         Operator::Properties {

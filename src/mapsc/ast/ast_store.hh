@@ -33,7 +33,7 @@ public:
     std::pair<DefinitionHeader*, DefinitionBody*> allocate_definition(
         RT_DefinitionHeader header, const LetDefinitionValue& body);
     DefinitionBody* allocate_definition_body(DefinitionHeader*, const LetDefinitionValue& body);
-    Operator* allocate_operator(const Operator&& definition);
+    Operator* allocate_operator(RT_Operator definition);
     Parameter* allocate_parameter(const Parameter&& definition);
     External* allocate_external(const External&& definition);
 

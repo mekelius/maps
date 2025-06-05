@@ -49,7 +49,7 @@ public:
     //         location };
     // }
 
-    static Operator create_binary(const std::string& name, DefinitionHeader* value, 
+    static Operator create_binary(std::string name, DefinitionHeader* value, 
         Operator::Precedence precedence, Operator::Associativity associativity, 
         SourceLocation location);
 
@@ -57,9 +57,9 @@ public:
 
     constexpr Operator(std::string_view name, const DefinitionHeader* value,
         Operator::Properties operator_props, SourceLocation location)
-    :DefinitionHeader(DefinitionType::operator_def, name, value->get_type(), location), 
+    :DefinitionHeader(DefinitionType::operator_def, name, value->get_type(), std::move(location)),
      value_(value), 
-     operator_props_(operator_props) {}
+     operator_props_(std::move(operator_props)) {}
 
     Operator(const Operator& other) = default;
     Operator& operator=(const Operator& other) = default;
@@ -89,13 +89,44 @@ public:
 private:
 };
 
-Operator* create_binary_operator(AST_Store& ast_store, const std::string& name, DefinitionHeader* value, 
+class RT_Operator: public Operator {
+public:
+    RT_Operator(std::string name, const DefinitionHeader* value,
+        Operator::Properties operator_props, SourceLocation location)
+    :Operator("", value, std::move(operator_props), std::move(location)), 
+     name_string_(std::move(name)) {
+        name_ = name_string_;
+    }
+
+    virtual ~RT_Operator() = default;
+    // Move and copy constructors need to update the name_
+    RT_Operator(const RT_Operator& other) noexcept
+    :Operator("", other.value_, other.operator_props_, other.location_), 
+     name_string_(other.name_string_) {
+        name_ = name_string_;
+    }
+    RT_Operator(RT_Operator&& other) noexcept
+    :Operator("", other.value_, std::move(other.operator_props_), std::move(other.location_)), 
+     name_string_(std::move(other.name_string_)) {
+        name_ = name_string_;
+    }
+    // can't be bothered to figure these out now
+    RT_Operator& operator=(RT_Operator&&) = delete; 
+    RT_Operator& operator=(const RT_Operator&) = delete;
+
+private:
+    std::string name_string_;
+};
+
+
+Operator* create_binary_operator(AST_Store& ast_store, std::string name, DefinitionHeader* value, 
     Operator::Precedence precedence, Operator::Associativity associativity, 
     SourceLocation location);
 
-Operator* create_binary_operator(AST_Store& ast_store, const std::string& name, DefinitionHeader* value, 
+Operator* create_binary_operator(AST_Store& ast_store, std::string name, DefinitionHeader* value, 
     Operator::Precedence precedence, SourceLocation location);
 
 } // namespace Maps
+
 
 #endif

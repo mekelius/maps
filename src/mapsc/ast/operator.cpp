@@ -7,45 +7,43 @@
 
 namespace Maps {
 
-Operator Operator::create_binary(const std::string& name, DefinitionHeader* value, 
+Operator Operator::create_binary(std::string name, DefinitionHeader* value, 
     Operator::Precedence precedence, Operator::Associativity associativity, 
     SourceLocation location) {
 
     return Operator { 
-        name, 
+        std::move(name),
         value, 
         Properties {
             Fixity::binary, 
             precedence, 
             associativity 
         }, 
-        location 
+        std::move(location)
     };
 }
 
-Operator* create_binary_operator(AST_Store& ast_store, const std::string& name, DefinitionHeader* value, 
+Operator* create_binary_operator(AST_Store& ast_store, std::string name, DefinitionHeader* value, 
     Operator::Precedence precedence, Operator::Associativity associativity, 
     SourceLocation location) {
 
-    // auto function = ast_store.allocate_definition(name + "_f", value,)
-
-    return ast_store.allocate_operator(Operator{ 
-        name, 
+    return ast_store.allocate_operator(RT_Operator{ 
+        std::move(name), 
         value, 
         Operator::Properties {
             Operator::Fixity::binary, 
             precedence, 
             associativity 
-        }, 
-        location 
+        },
+        std::move(location) 
     });
 }
 
-Operator* create_binary_operator(AST_Store& ast_store, const std::string& name, DefinitionHeader* value, 
+Operator* create_binary_operator(AST_Store& ast_store, std::string name, DefinitionHeader* value, 
     Operator::Precedence precedence, SourceLocation location) {
 
     return create_binary_operator(
-        ast_store, name, value, precedence, Operator::Associativity::left, location);
+        ast_store, std::move(name), value, precedence, Operator::Associativity::left, std::move(location));
 }
 
 } // namespace Maps
