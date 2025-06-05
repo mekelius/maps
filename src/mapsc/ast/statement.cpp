@@ -4,6 +4,7 @@
 #include <optional>
 
 #include "mapsc/log_format.hh"
+#include "mapsc/types/type_defs.hh"
 #include "mapsc/ast/expression.hh"
 #include "mapsc/ast/ast_store.hh"
 
@@ -11,12 +12,12 @@ using std::optional, std::nullopt;
 
 namespace Maps {
 
-// Statement::Statement(StatementType statement_type, const SourceLocation& location)
+// Statement::Statement(StatementType statement_type, SourceLocation location)
 // :statement_type(statement_type), location(location), value(Undefined{}) {}
 
 Statement::Statement(StatementType statement_type, const StatementValue& value, 
-    const SourceLocation& location)
-:statement_type(statement_type), location(location), value(value) {}
+    const Type* type, SourceLocation location)
+:statement_type(statement_type), value(value), type(type), location(std::move(location)) {}
 
 LogStream::InnerStream& Statement::log_self_to(LogStream::InnerStream& ostream) const {
     switch (statement_type) {
@@ -87,61 +88,85 @@ bool Statement::is_definition() const {
     }
 }
 
-Statement* create_empty_statement(AST_Store& ast_store, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::empty, {}, location});
+Statement* create_empty_statement(AST_Store& ast_store, SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::empty, 
+        {}, &Untyped, std::move(location)});
 }
-Statement* create_assignment_statement(AST_Store& ast_store, Expression* identifier_or_reference, DefinitionBody* definition, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::assignment, identifier_or_reference, location});
+
+Statement* create_assignment_statement(AST_Store& ast_store, Expression* identifier_or_reference, 
+DefinitionBody* definition, SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::assignment, 
+        identifier_or_reference, identifier_or_reference->type, std::move(location)});
 }
-Statement* create_return_statement(AST_Store& ast_store, Expression* expression, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::return_, expression, location});
+
+Statement* create_return_statement(AST_Store& ast_store, Expression* expression, 
+SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::return_, 
+        expression, expression->type, std::move(location)});
 }
-Statement* create_block(AST_Store& ast_store, const Block& block, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::block, Block{block}, location});
+
+Statement* create_block(AST_Store& ast_store, const Block& block, SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::block, 
+        Block{block}, &NotImplemented, location});
 }
-Statement* create_expression_statement(AST_Store& ast_store, Expression* expression, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::expression_statement, expression, location});
+
+Statement* create_expression_statement(AST_Store& ast_store, Expression* expression, 
+SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::expression_statement, 
+        expression, expression->type, std::move(location)});
 }
-Statement* create_user_error_statement(AST_Store& ast_store, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::user_error, {}, location});
+
+Statement* create_user_error_statement(AST_Store& ast_store, SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::user_error, 
+        {}, &ErrorType, std::move(location)});
 }
-Statement* create_compiler_error_statement(AST_Store& ast_store, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::compiler_error, {}, location});
+
+Statement* create_compiler_error_statement(AST_Store& ast_store, SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::compiler_error, 
+        {}, &ErrorType, std::move(location)});
 }
-Statement* create_if(AST_Store& ast_store, Expression* condition, Statement* body, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::conditional, ConditionalValue{condition, body}, location});
+
+Statement* create_if(AST_Store& ast_store, Expression* condition, Statement* body, 
+SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::conditional, 
+        ConditionalValue{condition, body}, &NotImplemented, std::move(location)});
 }
-Statement* create_if_else(AST_Store& ast_store, Expression* condition, Statement* body, Statement* else_body, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::conditional, ConditionalValue{condition, body, else_body}, location});
+
+Statement* create_if_else(AST_Store& ast_store, Expression* condition, Statement* body, 
+Statement* else_body, SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::conditional, 
+        ConditionalValue{condition, body, else_body}, &NotImplemented, std::move(location)});
 }
-Statement* create_guard(AST_Store& ast_store, Expression* condition, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::guard, condition, location});
+
+Statement* create_guard(AST_Store& ast_store, Expression* condition, SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::guard, 
+        condition, &NotImplemented, std::move(location)});
 }
-Statement* create_switch(AST_Store& ast_store, Expression* key, const std::vector<CaseBlock>& cases, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::switch_s, SwitchStatementValue{key, cases}, location});
+
+Statement* create_switch(AST_Store& ast_store, Expression* key, const std::vector<CaseBlock>& cases, 
+SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::switch_s, 
+        SwitchStatementValue{key, cases}, &NotImplemented, std::move(location)});
 }
-Statement* create_while(AST_Store& ast_store, Expression* condition, Statement* body, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::loop, LoopStatementValue{condition, body}, location});
+
+Statement* create_while(AST_Store& ast_store, Expression* condition, Statement* body, 
+SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::loop, 
+        LoopStatementValue{condition, body}, &NotImplemented, std::move(location)});
 }
-Statement* create_while_else(AST_Store& ast_store, Expression* condition, Statement* body, Statement* else_branch, const SourceLocation& location) {
-    auto loop = ast_store.allocate_statement(Statement{StatementType::loop, LoopStatementValue{condition, body}, location});
+
+Statement* create_while_else(AST_Store& ast_store, Expression* condition, Statement* body, 
+Statement* else_branch, SourceLocation location) {
+    auto loop = ast_store.allocate_statement(Statement{StatementType::loop, 
+        LoopStatementValue{condition, body}, &NotImplemented, std::move(location)});
+
     return create_if_else(ast_store, condition, loop, else_branch, location);
 }
-Statement* create_for(AST_Store& ast_store, Statement* initializer, Expression* condition, Statement* body, const SourceLocation& location) {
-    return ast_store.allocate_statement(
-        Statement{StatementType::loop, LoopStatementValue{condition, body, initializer}, location});
+
+Statement* create_for(AST_Store& ast_store, Statement* initializer, Expression* condition, 
+Statement* body, SourceLocation location) {
+    return ast_store.allocate_statement(Statement{StatementType::loop, 
+        LoopStatementValue{condition, body, initializer}, &NotImplemented, std::move(location)});
 }
 
 } // namespace AST

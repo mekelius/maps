@@ -74,10 +74,10 @@ bool TermedExpressionParser::run() {
     // some expressions might be parsed early as sub-expressions
     if (expression_->expression_type != ExpressionType::layer2_expression) {
         Log::debug_extra(expression_->location) << 
-            "TermedExpressionPareser::run called on a non-termed expression, skipping";
+            "TermedExpressionParser::run called on a non-termed expression, skipping" << Endl;
         return true;
     }
-    
+
     auto result = parse_termed_expression();
 
     if (!result || !success_) {
@@ -87,7 +87,9 @@ bool TermedExpressionParser::run() {
 
     // overwrite the expression in-place
     *expression_ = **result;
+
     Log::debug_extra((*result)->location) << "Parsed a termed expression" << Endl;
+    assert(*expression_->type != UnknownPending && "Layer2 left the type as UnknownPending");
     return true;
 }
 
@@ -133,6 +135,7 @@ std::optional<Expression*> TermedExpressionParser::pop_term() {
 void TermedExpressionParser::fail() {
     parse_stack_ = {create_user_error(*ast_store_, NO_SOURCE_LOCATION)};
     next_term_it_ = expression_terms_->end();
+    expression_->type = &ErrorType;
     success_ = false;
 }
 
@@ -147,11 +150,28 @@ bool TermedExpressionParser::parse_stack_reduced() const {
 }
 
 optional<Expression*> TermedExpressionParser::parse_termed_expression() {
+    if (*expression_->type != UnknownLayer2) {
+        Log::compiler_error(expression_->location) << 
+            "parse_termed_expression called on an expression with type other than UnknownLayer2 ("
+            << *expression_->type << ')' << Endl;
+
+        if (*expression_->type == UnknownPending || *expression_->type == UnknownDeferred) {
+            Log::error(expression_->location) << 
+                "Loop detected in type dependencies, these are not handled yet. " <<
+                "Try adding type annotations" << Endl;
+            
+            return nullopt;
+        }
+    }
+
+    expression_->type = &UnknownPending;
+
     if (at_expression_end()) {
         Log::compiler_error(expression_->location) << "Layer2 tried to parse an empty expression" << Endl;
         fail();
         return create_user_error(*ast_store_, expression_->location);
     }
+
 
     // enter initial goto to find the first state
     shift();

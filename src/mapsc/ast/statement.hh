@@ -116,12 +116,14 @@ using StatementValue = std::variant<
 >;
 
 struct Statement {
-    // Statement(StatementType statement_type, const SourceLocation& location);
-    Statement(StatementType statement_type, const StatementValue& value, const SourceLocation& location);
+    // Statement(StatementType statement_type, SourceLocation location);
+    Statement(StatementType statement_type, const StatementValue& value, 
+        const Type* type, SourceLocation location);
 
     StatementType statement_type;
-    SourceLocation location;
     StatementValue value;
+    const Type* type;
+    SourceLocation location;
 
     LogStream::InnerStream& log_self_to(LogStream::InnerStream& logstream) const;
 
@@ -150,20 +152,20 @@ struct Statement {
     };
 };
 
-Statement* create_empty_statement(AST_Store& store, const SourceLocation& location);
-Statement* create_assignment_statement(AST_Store& store, Expression* identifier_or_reference, DefinitionBody* definition, const SourceLocation& location);
-Statement* create_return_statement(AST_Store& store, Expression* expression, const SourceLocation& location);
-Statement* create_block(AST_Store& store, const Block& block, const SourceLocation& location);
-Statement* create_expression_statement(AST_Store& store, Expression* expression, const SourceLocation& location);
-Statement* create_user_error_statement(AST_Store& store, const SourceLocation& location);
-Statement* create_compiler_error_statement(AST_Store& store, const SourceLocation& location);
-Statement* create_if(AST_Store& store, Expression* condition, Statement* body, const SourceLocation& location);
-Statement* create_if_else(AST_Store& store, Expression* condition, Statement* body, Statement* statement, const SourceLocation& location);
-Statement* create_guard(AST_Store& store, Expression* condition, const SourceLocation& location);
-Statement* create_switch(AST_Store& store, Expression* key, const CaseBlock& cases, const SourceLocation& location);
-Statement* create_while(AST_Store& store, Expression* condition, Statement* body, const SourceLocation& location);
-Statement* create_while_else(AST_Store& ast_store, Expression* condition, Statement* body, Statement* else_branch, const SourceLocation& location);
-Statement* create_for(AST_Store& store, Statement* initializer, Expression* condition, Statement* body, const SourceLocation& location);
+Statement* create_empty_statement(AST_Store& store, SourceLocation location);
+Statement* create_assignment_statement(AST_Store& store, Expression* identifier_or_reference, DefinitionBody* definition, SourceLocation location);
+Statement* create_return_statement(AST_Store& store, Expression* expression, SourceLocation location);
+Statement* create_block(AST_Store& store, const Block& block, SourceLocation location);
+Statement* create_expression_statement(AST_Store& store, Expression* expression, SourceLocation location);
+Statement* create_user_error_statement(AST_Store& store, SourceLocation location);
+Statement* create_compiler_error_statement(AST_Store& store, SourceLocation location);
+Statement* create_if(AST_Store& store, Expression* condition, Statement* body, SourceLocation location);
+Statement* create_if_else(AST_Store& store, Expression* condition, Statement* body, Statement* statement, SourceLocation location);
+Statement* create_guard(AST_Store& store, Expression* condition, SourceLocation location);
+Statement* create_switch(AST_Store& store, Expression* key, const CaseBlock& cases, SourceLocation location);
+Statement* create_while(AST_Store& store, Expression* condition, Statement* body, SourceLocation location);
+Statement* create_while_else(AST_Store& ast_store, Expression* condition, Statement* body, Statement* else_branch, SourceLocation location);
+Statement* create_for(AST_Store& store, Statement* initializer, Expression* condition, Statement* body, SourceLocation location);
 
 } // namespace Maps
 

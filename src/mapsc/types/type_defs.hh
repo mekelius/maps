@@ -31,6 +31,8 @@ constexpr CT_Type UnknownPending{ "UnknownPending", &not_castable, &not_concreti
 constexpr CT_Type UnknownDeferred{ "UnknownDeferred", &not_castable, &not_concretizable };
 constexpr CT_Type NumberLiteral{ "NumberLiteral", &cast_from_NumberLiteral, &concretize_NumberLiteral };
 constexpr CT_Type TestingType{ "TestingType", &not_castable, &not_concretizable };
+constexpr CT_Type NotImplemented{ "NotImplemented", &not_castable, &not_concretizable };
+constexpr CT_Type ErrorType{ "ErrorType", &not_castable, &not_concretizable };
 constexpr auto IO_Int = IO_TypeConstructor::ct_apply("IO_Int", Int);
 constexpr auto IO_Boolean = IO_TypeConstructor::ct_apply("IO_Boolean", Boolean);
 constexpr auto IO_Float = IO_TypeConstructor::ct_apply("IO_Float", Float);
@@ -42,7 +44,7 @@ constexpr auto CT_TYPES_COUNT = __LINE__ - CT_TYPES_START_LINE - 1;
 constexpr std::array<const Type*, CT_TYPES_COUNT> BUILTIN_TYPES {
     &Void, &Int, &Boolean, &Float, &String,
     &Untyped, &Unknown, &UnknownLayer2, &UnknownPending, &UnknownDeferred,
-    &NumberLiteral, &TestingType,
+    &NumberLiteral, &TestingType, &NotImplemented, &ErrorType,
     &IO_Int, &IO_Boolean, &IO_Float, &IO_String, &IO_Void,
 
     &MutString
