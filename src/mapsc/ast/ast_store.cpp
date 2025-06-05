@@ -45,33 +45,33 @@ DefinitionHeader* AST_Store::allocate_definition_header(RT_DefinitionHeader defi
     using Log = LogInContext<LogContext::definition_creation>;
 
     definition_headers_.push_back(std::make_unique<RT_DefinitionHeader>(std::move(definition)));
-    Log::debug_extra(definition.location()) << "Allocated definition header " << definition << Endl;
     auto allocated_header = definition_headers_.back().get();
-
-    // allocated_header->name_ = dynamic_cast<RT_DefinitionHeader*>(allocated_header)->name_string_;
+    Log::debug_extra(definition.location()) << 
+        "Allocated definition header " << *allocated_header << Endl;
 
     return allocated_header;
 }
 
-std::pair<DefinitionHeader*, DefinitionBody*> AST_Store::allocate_definition(RT_DefinitionHeader header, 
-    const LetDefinitionValue& body) {
-    
+std::pair<DefinitionHeader*, DefinitionBody*> AST_Store::allocate_definition(
+RT_DefinitionHeader header, const LetDefinitionValue& body) {
     auto allocated_header = allocate_definition_header(std::move(header));
     auto allocated_body = allocate_definition_body(allocated_header, body);
 
     return {allocated_header, allocated_body};
 }
 
-DefinitionBody* AST_Store::allocate_definition_body(DefinitionHeader* header, const LetDefinitionValue& body) {
+DefinitionBody* AST_Store::allocate_definition_body(DefinitionHeader* header, 
+const LetDefinitionValue& body_value) {    
     using Log = LogInContext<LogContext::definition_creation>;
 
-    definition_bodies_.push_back(std::make_unique<DefinitionBody>(header, body));
+    definition_bodies_.push_back(std::make_unique<DefinitionBody>(header, body_value));
     auto allocated_body = definition_bodies_.back().get();
 
     allocated_body->header_ = header;
     header->body_ = allocated_body;
 
-    Log::debug_extra(header->location()) << "Allocated definition body " << *header << Endl;
+    Log::debug_extra(header->location()) << 
+        "Allocated " << *allocated_body << Endl;
 
     return allocated_body;
 }

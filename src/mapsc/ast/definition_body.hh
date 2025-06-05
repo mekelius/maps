@@ -67,7 +67,7 @@ public:
     const Type* get_type() const { return header_->get_type(); }
     const SourceLocation& location() const { return header_->location(); }
 
-    std::string_view log_representation() const { return header_->log_representation(); }
+    LogStream::InnerStream& log_self_to(LogStream::InnerStream&) const;
 
     DefinitionHeader* header_;
     // virtual bool operator==(const Definition& other) const {

@@ -88,4 +88,15 @@ bool DefinitionBody::set_declared_type(const Type* type) {
     return false;
 }
 
+LogStream::InnerStream& DefinitionBody::log_self_to(LogStream::InnerStream& ostream) const {
+    std::visit(overloaded {
+        [&ostream](Undefined)   { ostream << "(undefined)";  },
+        [&ostream](Expression*) { ostream << "(expression-valued)"; },
+        [&ostream](Statement*)  { ostream << "(statement-valued)";  },
+        [&ostream](Error)       { ostream << "(ERROR-valued)";      },
+    }, value_);
+
+    return ostream << " definition body of " << header_->log_representation();
+}
+
 } // namespace Maps
