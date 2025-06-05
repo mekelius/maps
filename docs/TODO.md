@@ -81,13 +81,10 @@ Needed features:
 
 - clean up the responsibilities of converting values
     - now IR_gen does some and earlier passes do some
-- name resolution should return false on fail
-- fix pragmas when we do multiple files
 - move simplifying blocks and other ast nodes out of layer1
-- use vector or array instead of hashmap as TypeMap for efficiency
 - expression factory functions are a bit all over the place
+    - type name resolution doesn't use convert function
     - need factories for the remaining types
-    - also for remaining statements
 
 #### UX tweaks
 

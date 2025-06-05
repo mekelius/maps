@@ -18,7 +18,7 @@ public:
     bool visit_statement(Statement*);
     bool visit_definition(DefinitionBody*);
 
-    bool run(CompilationState& state, Scopes scopes, 
+    bool run(CompilationState& state, Scope scope, 
         std::span<DefinitionBody* const> extra_definitions);
 };
 

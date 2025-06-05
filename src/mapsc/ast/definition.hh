@@ -33,7 +33,7 @@ struct Error {
 };
 
 class DefinitionBody;
-using LetDefinitionValue = std::variant<Undefined, Error, Expression*, Statement*>;
+using LetDefinitionValue = std::variant<Undefined, Error,  Expression*, Statement*>;
 
 enum class DefinitionType {
     let_definition,
@@ -79,7 +79,7 @@ public:
 
     constexpr const SourceLocation& location() const { return location_; }
 
-    virtual ~DefinitionHeader() = default;
+    virtual constexpr ~DefinitionHeader() = default;
     DefinitionHeader(const DefinitionHeader&) = default;
     DefinitionHeader& operator=(const DefinitionHeader&) = default;
     DefinitionHeader(DefinitionHeader&&) = default;

@@ -7,7 +7,9 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
+#include <concepts>
 #include <span>
+#include <string>
 
 #include "mapsc/ast/definition.hh"
 #include "mapsc/source_location.hh"
@@ -61,11 +63,16 @@ private:
     std::map<std::string, DefinitionHeader*, std::less<>> identifiers_;
 };
 
+template<typename T>
+concept HasName = 
+    requires (T t) {{t->name_} -> std::three_way_comparable_with<std::string_view>;};
+
 // Scopes contain names bound to definitions
-template <size_t size_p>
-class BuiltinScope {
+template <typename content_p, size_t size_p>
+    requires HasName<content_p>
+class TBuiltinScope {
 public:
-    using const_iterator = std::array<const DefinitionHeader*, size_p>::const_iterator;
+    using const_iterator = std::array<content_p, size_p>::const_iterator;
 
     struct Compare {
         constexpr bool operator() (auto lhs, auto rhs) const { 
@@ -85,20 +92,20 @@ public:
     const_iterator end() const { return identifiers_.end(); }
     consteval size_t size() const { return size_p; }
 
-    constexpr BuiltinScope(auto... identifiers)
+    constexpr TBuiltinScope(auto... identifiers)
     :identifiers_{identifiers...} {
         // std::copy(identifiers.begin(), identifiers.end(), identifiers_.begin());
         std::sort(identifiers_.begin(), identifiers_.end(), Compare{});
     }
 
-    // BuiltinScope(const BuiltinScope& other) = default;
-    // BuiltinScope& operator=(const BuiltinScope& other) = default;
+    // BuiltinScope(const BuiltinExternalsScope& other) = default;
+    // BuiltinExternalsScope& operator=(const BuiltinExternalsScope& other) = default;
 
     constexpr bool identifier_exists(std::string_view name) const {
         return std::binary_search(identifiers_.begin(), identifiers_.end(), name, Compare{});
     }
 
-    constexpr std::optional<const DefinitionHeader*> get_identifier(std::string_view name) const {
+    constexpr std::optional<content_p> get_identifier(std::string_view name) const {
         auto it = std::lower_bound(identifiers_.begin(), identifiers_.end(), name, Compare{});
         if (it == identifiers_.end() || (*it)->name_ != name)
             return std::nullopt;
@@ -107,14 +114,18 @@ public:
     }
 
 private:
-    std::array<const DefinitionHeader*, size_p> identifiers_;
+    std::array<content_p, size_p> identifiers_;
 };
 
-template<typename...Args>
-BuiltinScope(Args&&...) -> BuiltinScope<sizeof...(Args)>;
+template<typename T, typename... Ts>
+concept MonoPack = (std::convertible_to<Ts, T> && ...);
 
-using Scopes = std::span<Scope* const>;
-using const_Scopes = std::span<const Scope* const>;
+template<typename Arg, typename...Args>
+    requires MonoPack<Arg, Args...>
+TBuiltinScope(Arg, Args&&...) -> TBuiltinScope<Arg, sizeof...(Args) + 1>;
+
+template<size_t size_p>
+using BuiltinExternalScope = TBuiltinScope<const DefinitionHeader*, size_p>;
 
 } // namespace Maps
 

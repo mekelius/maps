@@ -48,6 +48,9 @@ void DefinitionBody::set_type(const Type* type) {
             if (statement->statement_type == StatementType::expression_statement)
                 std::get<Expression*>(statement->value)->type = type;
         },
+        [](BuiltinValue value) {
+            assert(false && "trying to set type on a builtin");
+        }
     }, value_);
 }
 

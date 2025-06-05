@@ -1,0 +1,7 @@
+// RUN: %mapsci < %s | filecheck %s
+
+// CHECK: "yea"
+if true then { return "yea"; } else { return "nah"; }
+
+// CHECK: "nah"
+if false then { return "yea"; } else { return "nah"; }

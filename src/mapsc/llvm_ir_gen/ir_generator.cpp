@@ -57,15 +57,17 @@ using Maps::Helpers::capitalize;
 #define IGNORED_STATEMENT_TYPE StatementType::empty
 
 
-using Log = Maps::LogInContext<Maps::LogContext::ir_gen>;
 
 namespace Maps {
+
+using Log = LogInContext<LogContext::ir_gen>;
+
 namespace LLVM_IR {
 
 // ----- IR GENERATOR -----
 
 IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module,
-    const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream, 
+    const CompilationState* compilation_state, llvm::raw_ostream* error_stream, 
     Options options)
 :errs_(error_stream),
  context_(context),
@@ -85,21 +87,19 @@ IR_Generator::IR_Generator(llvm::LLVMContext* context, llvm::Module* module,
     builder_ = std::make_unique<llvm::IRBuilder<>>(*context_);
 }
 
-bool IR_Generator::run(Maps::Scopes scopes) {
-    return run(scopes, {});
+bool IR_Generator::run(const Scope& scope) {
+    return run(scope, {});
 }
 
-bool IR_Generator::run(Maps::Scopes scopes, 
-    std::span<Maps::DefinitionHeader* const> additional_definitions) {
+bool IR_Generator::run(const Scope& scope, 
+    std::span<DefinitionHeader* const> additional_definitions) {
     
     // Not allowed to run if we have already failed
     if (has_failed_)
         return false;
 
-    for (auto scope: scopes) {
-        if (!handle_global_functions(*scope))
-            return false;
-    }
+    if (!handle_global_functions(scope))
+        return false;
 
     for (auto definition: additional_definitions) {
         if (!handle_global_definition(*definition)) {
@@ -139,7 +139,7 @@ optional<llvm::Function*> IR_Generator::function_definition(const std::string& n
 }
 
 optional<llvm::Function*> IR_Generator::overloaded_function_definition(const std::string& name, 
-    const Maps::FunctionType& maps_type, llvm::FunctionType* llvm_type, 
+    const FunctionType& maps_type, llvm::FunctionType* llvm_type, 
     llvm::Function::LinkageTypes linkage) {
 
     if (!maps_type.is_function()) {
@@ -183,7 +183,7 @@ optional<llvm::Function*> IR_Generator::forward_declaration(const std::string& n
 }
 
 optional<llvm::Function*> IR_Generator::overloaded_forward_declaration(const std::string& name, 
-    const Maps::FunctionType& maps_type, llvm::FunctionType* llvm_type,
+    const FunctionType& maps_type, llvm::FunctionType* llvm_type,
     llvm::Function::LinkageTypes linkage) {
     
     auto suffixed_name = name + FunctionStore::get_suffix(maps_type);
@@ -204,7 +204,7 @@ bool IR_Generator::verify_module() {
     return (!llvm::verifyModule(*module_, errs_));
 }
 
-bool IR_Generator::handle_global_functions(const Maps::Scope& scope) {
+bool IR_Generator::handle_global_functions(const Scope& scope) {
     for (auto definition: scope) {
         if (!handle_global_definition(*definition))
             return false;
@@ -214,7 +214,7 @@ bool IR_Generator::handle_global_functions(const Maps::Scope& scope) {
 }
 
 std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
-    const Maps::DefinitionHeader& definition) {
+    const DefinitionHeader& definition) {
 
     if (!definition.body_)
         assert(false && "not implemented");
@@ -227,7 +227,7 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
     auto definition_body = (*definition.body_)->get_value();
 
     if (const Expression* const* expression = 
-            std::get_if<Maps::Expression*>(&definition_body))
+            std::get_if<Expression*>(&definition_body))
         return wrap_value_in_function(definition.name_string(), **expression);
 
     Log::compiler_error(definition.location()) << "In IR_Generator::handle_global_definition:" <<
@@ -236,9 +236,9 @@ std::optional<llvm::FunctionCallee> IR_Generator::handle_global_definition(
 }
 
 std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
-    const std::string& name, const Maps::Expression& expression) {
+    const std::string& name, const Expression& expression) {
     
-    const Maps::FunctionType* maps_type = 
+    const FunctionType* maps_type = 
         maps_types_->get_function_type(expression.type, {}, expression.type->is_pure());
 
     optional<llvm::FunctionType*> llvm_type = types_.convert_function_type(
@@ -268,12 +268,12 @@ std::optional<llvm::FunctionCallee> IR_Generator::wrap_value_in_function(
 }
 
 std::optional<llvm::FunctionCallee> IR_Generator::handle_function(
-    const Maps::DefinitionHeader& definition) {
+    const DefinitionHeader& definition) {
     
     assert(definition.get_type()->is_function() && 
         "IR_Generator::handle function called with a non-function definition");
 
-    const Maps::FunctionType* function_type = dynamic_cast<const Maps::FunctionType*>(
+    const FunctionType* function_type = dynamic_cast<const FunctionType*>(
         definition.get_type());
 
     optional<llvm::FunctionType*> signature = types_.convert_function_type(
@@ -327,7 +327,7 @@ bool IR_Generator::handle_statement(const Statement& statement) {
             return handle_block(statement);
 
         case StatementType::expression_statement:
-            return static_cast<bool>(handle_expression(*get<Maps::Expression*>(statement.value)));
+            return static_cast<bool>(handle_expression(*get<Expression*>(statement.value)));
 
         case StatementType::return_: {
             optional<llvm::Value*> value = handle_expression(*get<Expression*>(statement.value));
@@ -372,7 +372,7 @@ bool IR_Generator::handle_block(const Statement& statement) {
     assert(statement.statement_type == StatementType::block && 
         "IR_Generator::handle_block called with a statement that wasn't a block");
 
-    for (const Statement* sub_statement: get<Maps::Block>(statement.value)) {
+    for (const Statement* sub_statement: get<Block>(statement.value)) {
         switch (sub_statement->statement_type) {
             case StatementType::expression_statement:
                 if (!handle_expression_statement(*sub_statement))
@@ -519,15 +519,15 @@ optional<llvm::Value*> IR_Generator::handle_expression(const Expression& express
     }
 }
 
-const Maps::FunctionType* deduce_function_type(Maps::TypeStore& types, 
-    const Maps::Expression& call) {
+const FunctionType* deduce_function_type(TypeStore& types, 
+    const Expression& call) {
 
-    auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
+    auto [callee, args] = std::get<CallExpressionValue>(call.value);
 
     // hack to make printing work for now
-    auto callee_type = dynamic_cast<const Maps::FunctionType*>(callee->get_type());
+    auto callee_type = dynamic_cast<const FunctionType*>(callee->get_type());
     auto return_type = callee_type->return_type();
-    std::vector<const Maps::Type*> arg_types;
+    std::vector<const Type*> arg_types;
 
     for (auto arg: args)
         arg_types.push_back(arg->type);
@@ -539,9 +539,9 @@ const Maps::FunctionType* deduce_function_type(Maps::TypeStore& types,
         return_type, arg_types, callee_type->is_pure());
 }
 
-llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
+llvm::Value* IR_Generator::handle_call(const Expression& call) {
     using llvm::ConstantInt, llvm::APInt;
-    auto [callee, args] = std::get<Maps::CallExpressionValue>(call.value);
+    auto [callee, args] = std::get<CallExpressionValue>(call.value);
 
     Log::debug_extra(call.location) << "Creating call to " << *callee << Endl;
 
@@ -561,7 +561,7 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
 
     for (Expression* arg_expr : args) {
         if (arg_expr->expression_type == 
-            ExpressionType::known_value && *arg_expr->type == Maps::MutString) {
+            ExpressionType::known_value && *arg_expr->type == MutString) {
 
             maps_MutString maps_str = std::get<maps_MutString>(arg_expr->value);
             llvm::Constant* data = builder_->CreateGlobalString(maps_str.data);
@@ -599,28 +599,28 @@ llvm::Value* IR_Generator::handle_call(const Maps::Expression& call) {
 
 // ----- VALUE HANDLERS -----
 
-llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
+llvm::Value* IR_Generator::handle_value(const Expression& expression) {
     using llvm::ConstantInt, llvm::APInt;
 
     // TODO: make typeids known at compile time so this can be a switch
-    if (*expression.type == Maps::Int) {
+    if (*expression.type == Int) {
         assert(std::holds_alternative<maps_Int>(expression.value) && 
             "type on expression didn't match value");
         return llvm::ConstantInt::get(*context_, 
             llvm::APInt(32, std::get<maps_Int>(expression.value), true));
 
-    } else if (*expression.type == Maps::Float) {
+    } else if (*expression.type == Float) {
         return llvm::ConstantFP::get(*context_, 
             llvm::APFloat(std::get<maps_Float>(expression.value)));
         
-    } else if (*expression.type == Maps::Boolean) {
+    } else if (*expression.type == Boolean) {
         return llvm::ConstantInt::get(*context_, 
             llvm::APInt(8, std::get<maps_Boolean>(expression.value), true));
                 
-    } else if (*expression.type == Maps::String) {
+    } else if (*expression.type == String) {
         return builder_->CreateGlobalString(std::get<std::string>(expression.value)); 
 
-    } else if (*expression.type == Maps::MutString) {
+    } else if (*expression.type == MutString) {
         maps_MutString maps_str = std::get<maps_MutString>(expression.value);
         llvm::Constant* data = builder_->CreateGlobalString(maps_str.data);
 
@@ -638,27 +638,27 @@ llvm::Value* IR_Generator::handle_value(const Maps::Expression& expression) {
 
 // TODO: some assertions here for variant types
 optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression) {
-    auto concrete_type = dynamic_cast<const Maps::ConcreteType*>(expression.type);
+    auto concrete_type = dynamic_cast<const ConcreteType*>(expression.type);
     assert(concrete_type && "IR_Generator::convert_value called with not a concrete type");
     switch (concrete_type->concrete_type_id_) {
-        case Maps::Int_ID:
+        case Int_ID:
             assert(std::holds_alternative<maps_Int>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
             return llvm::ConstantInt::get(*context_, 
                 llvm::APInt(32, std::get<maps_Int>(expression.value)));
 
-        case Maps::Float_ID:
+        case Float_ID:
             assert(std::holds_alternative<maps_Float>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
             return llvm::ConstantFP::get(*context_, 
                 llvm::APFloat(std::get<maps_Float>(expression.value)));
 
-        case Maps::String_ID:
+        case String_ID:
             assert(std::holds_alternative<std::string>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
             return builder_->CreateGlobalString(expression.string_value());
 
-        case Maps::Boolean_ID:
+        case Boolean_ID:
             assert(std::holds_alternative<bool>(expression.value) && 
                 "In IR_Generator::convert_value: expression type didn't match value");
             return llvm::ConstantInt::get(*context_, 
@@ -671,7 +671,7 @@ optional<llvm::Value*> IR_Generator::convert_value(const Expression& expression)
     }
 }
 
-optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& expression) {
+optional<llvm::Value*> IR_Generator::global_constant(const Expression& expression) {
     if (!is_reduced_value(expression)) {
         Log::compiler_error(expression.location) << expression << " is not a reduced value" << Endl;
         return fail_optional();
@@ -686,10 +686,10 @@ optional<llvm::Value*> IR_Generator::global_constant(const Maps::Expression& exp
 }
 
 optional<llvm::Value*> IR_Generator::convert_literal(const Expression& expression) {
-    if (*expression.type == Maps::String)
+    if (*expression.type == String)
         return builder_->CreateGlobalString(expression.string_value());
 
-    if (*expression.type == Maps::NumberLiteral)
+    if (*expression.type == NumberLiteral)
         return convert_numeric_literal(expression);
 
     Log::compiler_error(expression.location) << expression << " is not a literal" << Endl;

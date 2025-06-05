@@ -79,7 +79,6 @@ add_library(types_and_ast OBJECT
     src/mapsc/ast/function_definition.cpp
     src/mapsc/ast/operator.cpp
     src/mapsc/ast/external.cpp
-    src/mapsc/ast/builtin.cpp
     src/mapsc/ast/ast_store.cpp
     src/mapsc/ast/identifier.cpp
     src/mapsc/ast/reference.cpp
@@ -94,8 +93,6 @@ add_library(types_and_ast OBJECT
     src/mapsc/ast/expressions/ternary.cpp
 
     src/mapsc/ast/test_helpers/test_definition.cpp
-
-    src/mapsc/builtins.cpp
 
     src/mapsc/compilation_state.cpp # what to do about this?
     src/mapsc/procedures/create_call.cpp # should be moved into ast
@@ -146,6 +143,7 @@ add_library(procedures OBJECT
 add_executable(procedures_unit_tests
     tests/unit/tests_main.cpp
 
+    tests/unit/procedures/name_resolution.cpp
     tests/unit/procedures/concretize.cpp
     tests/unit/procedures/create_call.cpp
     tests/unit/procedures/inline.cpp

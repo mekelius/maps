@@ -26,10 +26,3 @@ tuple<CompilationState, shared_ptr<AST_Store>, Scope, unique_ptr<TypeStore>> set
 }
 
 } // namespace
-
-constexpr Builtin test_value = create_builtin_known_value("name", "qwe");
-
-TEST_CASE("Should be able to create builtins") {
-    CHECK(test_value.header.name_ == "name");
-    CHECK(std::get<const char*>(test_value.value) == "qwe");
-}

@@ -25,21 +25,14 @@ class CompilationState;
 class DefinitionBody {
 public:
     // creates a new dummy definition suitable for unit testing
-    static std::pair<DefinitionHeader, DefinitionBody> 
-        testing_definition(const Type* type = &Hole, bool is_top_level = true); 
+    // static std::pair<DefinitionHeader, DefinitionBody> 
+    //     testing_definition(const Type* type = &Hole, bool is_top_level = true); 
 
     DefinitionBody(DefinitionHeader* header, LetDefinitionValue value);
 
-    DefinitionBody(const std::string& name, DefinitionBody body, bool is_top_level, 
-        const SourceLocation& location);
-    DefinitionBody(DefinitionBody body, bool is_top_level, 
-        const SourceLocation& location); // create anonymous definition
-
-    // anonymous definitions
-    DefinitionBody(const std::string& name, DefinitionBody body, const Type* type, bool is_top_level, 
-        const SourceLocation& location);
-    DefinitionBody(DefinitionBody body, const Type* type, bool is_top_level, 
-        const SourceLocation& location);
+    // create anonymous definition
+    DefinitionBody(DefinitionBody body, bool is_top_level, SourceLocation location);
+    DefinitionBody(DefinitionBody body, const Type* type, bool is_top_level, SourceLocation location);
 
     DefinitionBody(const DefinitionBody& other) = default;
     DefinitionBody& operator=(const DefinitionBody& other) = default;
@@ -89,7 +82,7 @@ public:
 
 private:
     LetDefinitionValue value_;
-    std::optional<const Type*> declared_type_;
+    std::optional<const Type*> declared_type_ = std::nullopt;
 
     std::optional<Scope*> inner_scope_ = std::nullopt;
 };

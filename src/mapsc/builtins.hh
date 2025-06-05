@@ -32,9 +32,6 @@ constexpr Operator plus_Int{"+", &plus_Int_, {Operator::Fixity::binary, 500}, BU
 constexpr Operator binary_minus_Int{"-", &minus_Int_, {Operator::Fixity::binary, 510}, BUILTIN_SOURCE_LOCATION};
 constexpr Operator mult_Int{"*", &mult_Int_, {Operator::Fixity::binary, 520}, BUILTIN_SOURCE_LOCATION};
 
-constexpr Builtin true_ = create_builtin_known_value("true", BuiltinValue{true}, &Boolean);
-constexpr Builtin false_ = create_builtin_known_value("false", BuiltinValue{false}, &Boolean);
-
 constexpr DefinitionHeader prints("prints", &String_to_IO_Void);
 constexpr DefinitionHeader printms{"printms", &MutString_to_IO_Void};
 constexpr DefinitionHeader to_String_Boolean{"to_String_Boolean", &Boolean_to_String};
@@ -46,7 +43,7 @@ constexpr DefinitionHeader to_MutString_Int{"to_MutString_Int", &Int_to_MutStrin
 constexpr DefinitionHeader to_MutString_Float{"to_MutString_Float", &Float_to_MutString};
 constexpr DefinitionHeader concat{"concat", &MutString_MutString_to_MutString};
 
-constexpr BuiltinScope builtins {
+constexpr BuiltinExternalScope builtin_externals {
     &prints,
     &printms,
     &to_String_Boolean,
@@ -61,24 +58,34 @@ constexpr BuiltinScope builtins {
     &plus_Int,
     &binary_minus_Int,
     &mult_Int,
-    &true_.header,
-    &false_.header
 };
 
-constexpr std::optional<const DefinitionHeader*> find_external_runtime_cast(const Type* source_type, 
-    const Type* target_type) {
+constexpr BuiltinValue true_{"true", true, &Boolean};
+constexpr BuiltinValue false_{"false", false, &Boolean};
+
+constexpr BuiltinValueScope builtin_values {
+    &true_,
+    &false_,
+};
+
+inline std::optional<const DefinitionHeader*> find_external_runtime_cast(
+    const Type* source_type, const Type* target_type) {
     
+    using Log = LogInContext<LogContext::type_casts>;
+
     std::string cast_name = "to_" + target_type->name_string() + "_" + source_type->name_string();
     
-    // Log::debug_extra(NO_SOURCE_LOCATION) << "Trying to find runtime cast " << cast_name << Endl;
+    Log::debug_extra(NO_SOURCE_LOCATION) << "Trying to find runtime cast " << cast_name << Endl;
 
-    auto cast = builtins.get_identifier(cast_name);
+    auto cast = builtin_externals.get_identifier(cast_name);
     if (!cast)
         LogNoContext::debug(NO_SOURCE_LOCATION) << 
             "Could not find runtime cast " << cast_name << Endl;
 
     return cast;
 }
+
+constexpr auto builtins = std::tie(builtin_externals, builtin_values);
 
 } // namespace Maps
 

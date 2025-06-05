@@ -240,7 +240,7 @@ bool REPL::run_compilation_pipeline(CompilationState& state,
         return false;
     }
 
-    bool ir_success = generator.run({std::array{&global_scope}}, 
+    bool ir_success = generator.run(global_scope, 
         std::array{(*top_level_definition)->header_, (*repl_wrapper)->header_});
 
     debug_print(REPL_Stage::ir, *module_);

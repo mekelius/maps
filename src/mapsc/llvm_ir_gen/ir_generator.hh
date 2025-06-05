@@ -50,17 +50,17 @@ public:
 
     // ----- CONSTRUCTORS -----
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, 
-        const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream, 
+        const CompilationState* compilation_state, llvm::raw_ostream* error_stream, 
         Options options);
 
     // delegating contructor to make options optional
     IR_Generator(llvm::LLVMContext* context, llvm::Module* module, 
-        const Maps::CompilationState* compilation_state, llvm::raw_ostream* error_stream)
+        const CompilationState* compilation_state, llvm::raw_ostream* error_stream)
     :IR_Generator(context, module, compilation_state, error_stream, Options{}) {}
 
     // ----- RUNNING THE GENERATOR -----
-    bool run(Maps::Scopes scopes);
-    bool run(Maps::Scopes, std::span<Maps::DefinitionHeader* const> additional_definitions);
+    bool run(const Scope& scope);
+    bool run(const Scope& scope, std::span<DefinitionHeader* const> additional_definitions);
 
     // ----- PUBLIC FIELDS -----
 
@@ -82,7 +82,7 @@ public:
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
     std::optional<llvm::Function*> overloaded_function_definition(const std::string& name, 
-        const Maps::FunctionType& maps_type, llvm::FunctionType* llvm_type, 
+        const FunctionType& maps_type, llvm::FunctionType* llvm_type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
     
     bool close_function_definition(const llvm::Function& function, 
@@ -93,7 +93,7 @@ public:
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
     std::optional<llvm::Function*> overloaded_forward_declaration(const std::string& name, 
-        const Maps::FunctionType& maps_type, llvm::FunctionType* type, 
+        const FunctionType& maps_type, llvm::FunctionType* type, 
         llvm::Function::LinkageTypes linkage = llvm::Function::ExternalLinkage);
 
     bool block_has_terminated() const;
@@ -103,20 +103,20 @@ public:
     bool verify_module();
 
     // ---- HIGH-LEVEL HANDLERS -----
-    bool handle_global_functions(const Maps::Scope& scope);
+    bool handle_global_functions(const Scope& scope);
     std::optional<llvm::FunctionCallee> wrap_value_in_function(const std::string& name, 
-        const Maps::Expression& expression);
+        const Expression& expression);
 
     // ----- DEFINITION HANDLERS -----
-    std::optional<llvm::FunctionCallee> handle_global_definition(const Maps::DefinitionHeader& definition);
-    std::optional<llvm::FunctionCallee> handle_function(const Maps::DefinitionHeader& definition);
+    std::optional<llvm::FunctionCallee> handle_global_definition(const DefinitionHeader& definition);
+    std::optional<llvm::FunctionCallee> handle_function(const DefinitionHeader& definition);
 
     // ----- STATEMENT HANDLERS -----
-    bool handle_statement(const Maps::Statement& statement);
+    bool handle_statement(const Statement& statement);
     // if repl_top_level is true, wraps every expression-statement in the block into a print call
     // for the appropriate print function
-    bool handle_block(const Maps::Statement& statement);
-    std::optional<llvm::Value*> handle_expression_statement(const Maps::Statement& statement);
+    bool handle_block(const Statement& statement);
+    std::optional<llvm::Value*> handle_expression_statement(const Statement& statement);
 
     bool handle_conditional(const Statement& statement);
     bool handle_switch(const Statement& statement);
@@ -124,22 +124,22 @@ public:
     bool handle_guard(const Statement& statement);
 
     // ----- EXPRESSION HANDLERS -----
-    std::optional<llvm::Value*> handle_expression(const Maps::Expression& expression);
-    llvm::Value* handle_call(const Maps::Expression& call);
+    std::optional<llvm::Value*> handle_expression(const Expression& expression);
+    llvm::Value* handle_call(const Expression& call);
 
     // ----- VALUE HANDLERS -----
-    llvm::Value* handle_value(const Maps::Expression& expression);
-    std::optional<llvm::Value*> convert_value(const Maps::Expression& expression);
-    std::optional<llvm::Value*> global_constant(const Maps::Expression& expression);
-    std::optional<llvm::Value*> convert_literal(const Maps::Expression& expression);
-    std::optional<llvm::Value*> convert_numeric_literal(const Maps::Expression& expression);
+    llvm::Value* handle_value(const Expression& expression);
+    std::optional<llvm::Value*> convert_value(const Expression& expression);
+    std::optional<llvm::Value*> global_constant(const Expression& expression);
+    std::optional<llvm::Value*> convert_literal(const Expression& expression);
+    std::optional<llvm::Value*> convert_numeric_literal(const Expression& expression);
 
     // ----- PRIVATE FIELDS -----
     Options options_;
 
-    const Maps::CompilationState* compilation_state_;
-    const Maps::PragmaStore* pragmas_;
-    Maps::TypeStore* maps_types_;
+    const CompilationState* compilation_state_;
+    const PragmaStore* pragmas_;
+    TypeStore* maps_types_;
     
     std::unique_ptr<FunctionStore> function_store_ = std::make_unique<FunctionStore>();
     

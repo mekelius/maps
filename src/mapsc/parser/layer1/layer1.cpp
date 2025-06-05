@@ -253,7 +253,7 @@ bool ParserLayer1::simplify_single_statement_block(Statement* outer) {
 // ----- IDENTIFIERS -----
 
 bool ParserLayer1::identifier_exists(std::string_view identifier) const {
-    if (builtins.identifier_exists(identifier))
+    if (builtin_externals.identifier_exists(identifier))
         return true;
 
     if (parse_scope_->identifier_exists(identifier))

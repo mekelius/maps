@@ -14,6 +14,14 @@ using std::optional, std::nullopt, std::holds_alternative;
 
 namespace Maps {
 
+KnownValue to_known_value(const BuiltinValue& value) {
+    return std::visit( [](auto value) { return KnownValue{value}; }, value.value_);
+}
+
+ExpressionValue to_expression_value(const BuiltinValue& value) {
+    return std::visit( [](auto value) { return ExpressionValue{value}; }, value.value_);
+}
+
 Expression* create_string_literal(AST_Store& store, const std::string& value, 
     const SourceLocation& location) {
     
@@ -82,6 +90,14 @@ optional<Expression*> create_known_value(CompilationState& state, KnownValue val
     }
 
     Log::debug_extra(location) << "Succesfully casted to " << *type << Endl;
+
+    return expression;
+}
+
+Expression& convert_to_known_value(Expression& expression, const BuiltinValue& value) {
+    expression.expression_type = ExpressionType::known_value;
+    expression.value = to_expression_value(value);
+    expression.type = value.type_;
 
     return expression;
 }

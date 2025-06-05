@@ -63,7 +63,7 @@ public:
 
     Operator(const Operator& other) = default;
     Operator& operator=(const Operator& other) = default;
-    virtual ~Operator() = default;
+    virtual constexpr ~Operator() = default;
 
     // ---------- PUBLIC METHODS ----------
 

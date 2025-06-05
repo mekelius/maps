@@ -83,7 +83,7 @@ bool SimpleTypeChecker::visit_statement(Statement* statement) {
     return true; 
 }
 
-bool SimpleTypeChecker::run(CompilationState& state, Scopes scopes, 
+bool SimpleTypeChecker::run(CompilationState& state, Scope scope, 
     std::span<DefinitionBody* const> extra_definitions) {
 
     assert(false && "not updated");

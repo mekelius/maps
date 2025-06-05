@@ -6,15 +6,16 @@
 
 namespace Maps {
 
-DefinitionHeader* create_testing_let_definition(AST_Store& ast_store, const std::string& name, 
-    const Type* type, const SourceLocation& location) {
+DefinitionHeader* create_testing_let_definition(AST_Store& ast_store, std::string name, 
+    const Type* type, SourceLocation location) {
 
     return ast_store.allocate_definition(
-        RT_DefinitionHeader{DefinitionType::let_definition, name, type, location}, Undefined{}).first;
+        RT_DefinitionHeader{
+            DefinitionType::let_definition, std::move(name), type, std::move(location)}, 
+            Undefined{}).first;
 }
 
-
-Operator* create_testing_binary_operator(AST_Store& ast_store, const std::string& name, 
+Operator* create_testing_binary_operator(AST_Store& ast_store, std::string name, 
     const Type* type, Operator::Precedence precedence, Operator::Associativity associativity, 
     SourceLocation location) {
 
@@ -23,22 +24,22 @@ Operator* create_testing_binary_operator(AST_Store& ast_store, const std::string
     auto function = create_testing_let_definition(ast_store, name + "_f", type, location);
 
     return ast_store.allocate_operator(Operator{ 
-        name, 
+        std::move(name), 
         function, 
         Operator::Properties {
             Operator::Fixity::binary, 
             precedence, 
             associativity 
         }, 
-        location 
+        std::move(location)
     });
 }
 
-Operator* create_testing_binary_operator(AST_Store& ast_store, const std::string& name, 
+Operator* create_testing_binary_operator(AST_Store& ast_store, std::string name, 
     const Type* type, Operator::Precedence precedence, SourceLocation location) {
 
-    return create_testing_binary_operator(ast_store, name, type, precedence, 
-        Operator::Associativity::left, location);
+    return create_testing_binary_operator(ast_store, std::move(name), type, precedence, 
+        Operator::Associativity::left, std::move(location));
 }
 
 } // namespace Maps

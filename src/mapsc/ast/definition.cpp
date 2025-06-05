@@ -32,18 +32,12 @@ std::optional<LetDefinitionValue> DefinitionHeader::get_body_value() const {
     return (*body_)->get_value();
 }
 
-
 RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, 
     const Type* type, Scope* outer_scope, bool is_top_level, SourceLocation location)
-:DefinitionHeader(definition_type, {}, type, outer_scope, is_top_level, location), name_string_(name) {
-
-    Log::debug_extra(location) << "Created RT_DefinitionHeader " << *this << Endl;
-    
+:DefinitionHeader(definition_type, {}, type, outer_scope, is_top_level, std::move(location)), 
+ name_string_(name) {
     name_ = name_string_;
-
-    assert(name_ == name);
-    assert(name_ == name_string_);
-    assert(name == name_string_);
+    Log::debug_extra(location_) << "Created RT_DefinitionHeader " << *this << Endl;
 }
 
 RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, 
@@ -52,15 +46,9 @@ RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::st
 
 RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, 
     const Type* type, SourceLocation location)
-:DefinitionHeader(definition_type, {}, type, location), name_string_(name) {
-
+:DefinitionHeader(definition_type, {}, type, std::move(location)), name_string_(std::move(name)) {
     name_ = name_string_;
-
-    Log::debug_extra(location) << "Created RT_DefinitionHeader " << *this << Endl;
-
-    assert(name_ == name);
-    assert(name_ == name_string_);
-    assert(name == name_string_);
+    Log::debug_extra(location_) << "Created RT_DefinitionHeader " << *this << Endl;
 }
 
 RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, SourceLocation location)
