@@ -220,7 +220,7 @@ optional<ParameterList> ParserLayer1::parse_lambda_parameters(Scope* lambda_scop
             }
 
             case TokenType::underscore:
-                parameter_list.push_back(create_discarded_parameter(*ast_store_, &Hole, 
+                parameter_list.push_back(create_discarded_parameter(*ast_store_, &Unknown, 
                     current_token().location));
                 get_token();
                 continue;

@@ -18,7 +18,7 @@ std::pair<DefinitionHeader*, DefinitionBody*> create_let_definition(AST_Store& a
     Scope* outer_scope, std::string name, LetDefinitionValue body_value, 
     bool is_top_level, SourceLocation location) {
 
-    const Type* type = &Hole; // !!!
+    const Type* type = &Unknown; // !!!
 
     return ast_store.allocate_definition(
         {DefinitionType::let_definition, std::move(name), type, std::move(location)}, 

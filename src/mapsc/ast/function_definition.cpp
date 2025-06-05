@@ -75,7 +75,7 @@ Parameter* create_parameter(AST_Store& ast_store, const std::string& name, const
 Parameter* create_parameter(AST_Store& ast_store, const std::string& name, 
     const SourceLocation& location) {
 
-    return create_parameter(ast_store, name, &Hole, location);
+    return create_parameter(ast_store, name, &Unknown, location);
 }
 
 Parameter* create_discarded_parameter(AST_Store& ast_store, const Type* type, 
@@ -86,7 +86,7 @@ Parameter* create_discarded_parameter(AST_Store& ast_store, const Type* type,
 }
 
 Parameter* create_discarded_parameter(AST_Store& ast_store, const SourceLocation& location) {
-    return create_discarded_parameter(ast_store, &Hole, location);
+    return create_discarded_parameter(ast_store, &Unknown, location);
 }
 
 } // namespace Maps

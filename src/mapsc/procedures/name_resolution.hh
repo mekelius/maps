@@ -55,7 +55,7 @@ bool resolve_identifier(const Scope& scope, Expression& expression, BuiltinScope
     auto definition = lookup_definition(scope, expression.string_value(), builtin_externals);
 
     if (definition) {
-        Log::debug_extra(expression.location) << "Found definition " << *definition << Endl;
+        Log::debug_extra(expression.location) << "Found definition " << **definition << Endl;
 
         convert_to_reference(expression, *definition);
 

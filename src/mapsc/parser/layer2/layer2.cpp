@@ -953,7 +953,7 @@ void TermedExpressionParser::call_state() {
     auto type_to_use = current_term()->declared_type ?
         *current_term()->declared_type : current_term()->type;
 
-    if (*type_to_use == Hole) {
+    if (*type_to_use == Unknown) {
         switch (peek()->expression_type) {
             default:
                 assert(false && "Initial call type inference not implemented");
@@ -1148,7 +1148,7 @@ that the caller put on the precedence stack");
 
 // Pops 3 values from the parse stack, reduces them into a binop apply expression and pushes it on top
 void TermedExpressionParser::reduce_binop_call() {
-    Log::debug_extra(current_term()->location) << "Reduce binop call" << Endl;
+    Log::debug_extra(current_term()->location) << "Reducing binop call" << Endl;
 
     assert(parse_stack_.size() >= 3 
         && "TermedExpressionParser::reduce_operator_left_ called with parse stack size < 3");
@@ -1189,6 +1189,8 @@ where operator didn't hold a reference to a definition");
 }
 
 void TermedExpressionParser::reduce_minus_sign_to_unary_minus_call() {
+    Log::debug_extra(current_term()->location) << "Reducing unary minus call" << Endl;
+
     auto arg = pop_term();
     assert(arg && "reduce_unary_minus_call called with nothing on the stack");
 
@@ -1206,6 +1208,8 @@ void TermedExpressionParser::reduce_minus_sign_to_unary_minus_call() {
 }
 
 void TermedExpressionParser::type_reference_state() {
+    Log::debug_extra(current_term()->location) << "Type reference state" << Endl;
+
     if (at_expression_end()) {
         if (!possibly_type_expression_) {
             Log::error(current_term()->location) << "Unexpected type expression at expression end" << Endl;
@@ -1227,16 +1231,22 @@ void TermedExpressionParser::type_reference_state() {
             auto type_term = *pop_term();
             assert(std::holds_alternative<const Type*>(type_term->value) && "no type");
             auto type_value = std::get<const Type*>(type_term->value);
-            ast_store_->delete_expression(type_term);
 
             shift();
             auto term = current_term();
 
-            // ??? What if this fails
-            term->type->cast_to(type_value, *term);
+            Log::debug_extra(type_term->location) << "Applying " << *type_term << " to " << *term << Endl;
+            if (!term->cast_to(*compilation_state_, type_value)) {
+                Log::error(type_term->location) << 
+                    "Could not apply type declaration " << *type_term << " to " << *term << Endl;
+                return fail();
+            }
+
             term->declared_type = type_value;
             term->location = type_term->location;
-            term->expression_type = ExpressionType::known_value;
+
+            ast_store_->delete_expression(type_term);
+
             return value_state();
         }
         case ExpressionType::reference: {

@@ -32,7 +32,7 @@ std::string known_value_to_string(const KnownValue& value) {
     return value_to_string(value);
 }
 
-std::string value_to_string(const ExpressionValue& value) {
+std::string log_representation(const ExpressionValue& value) {
     return std::visit(overloaded{
         [](std::monostate)->std::string { return "@Undefined expression value@"; },
         [](Expression*)->std::string { return "@reference to expression@"; },
@@ -73,10 +73,10 @@ LogStream::InnerStream& Expression::log_self_to(LogStream::InnerStream& ostream)
             // return type_argument_value().to_string();
 
         case ExpressionType::layer2_expression:
-            return ostream << value_to_string(value);
+            return ostream << log_representation(value);
 
         case ExpressionType::known_value:
-            return ostream << "value expression " << value_to_string(value);
+            return ostream << "value expression " << log_representation(value);
         
         case ExpressionType::identifier:
             return ostream << "identifier " << string_value();
@@ -89,7 +89,7 @@ LogStream::InnerStream& Expression::log_self_to(LogStream::InnerStream& ostream)
             return ostream << "type identifier " << string_value();
 
         case ExpressionType::known_value_reference:
-            ostream << "reference to known value: " << reference_value()->log_representation();
+            return ostream << "reference to known value: " << reference_value()->log_representation();
         case ExpressionType::reference:
             return ostream << "reference to: " << reference_value()->log_representation();
         case ExpressionType::type_reference:

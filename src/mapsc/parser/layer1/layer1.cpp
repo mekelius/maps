@@ -267,7 +267,7 @@ optional<DefinitionHeader*> ParserLayer1::create_undefined_identifier(std::strin
     
     return parse_scope_->create_identifier(
         create_let_definition(
-            *ast_store_, parse_scope_, std::move(name), &Hole, is_top_level, std::move(location)
+            *ast_store_, parse_scope_, std::move(name), &Unknown, is_top_level, std::move(location)
         ).first
     );
 }
@@ -293,7 +293,7 @@ DefinitionHeader* ParserLayer1::create_definition(std::string name, bool is_top_
     SourceLocation location) {
 
     return create_let_definition(
-        *ast_store_, parse_scope_, std::move(name), &Hole, is_top_level, std::move(location)).first;
+        *ast_store_, parse_scope_, std::move(name), &Unknown, is_top_level, std::move(location)).first;
 }
 
 DefinitionHeader* ParserLayer1::create_definition(LetDefinitionValue body, bool is_top_level, 

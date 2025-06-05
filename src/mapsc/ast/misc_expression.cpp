@@ -8,7 +8,7 @@ namespace Maps {
 Expression* create_valueless(AST_Store& store, ExpressionType expression_type, 
     const SourceLocation& location) {
     
-    return store.allocate_expression({expression_type, std::monostate{}, &Absurd, location});
+    return store.allocate_expression({expression_type, std::monostate{}, &Untyped, location});
 }
 
 Expression* create_minus_sign(AST_Store& store, const SourceLocation& location) {

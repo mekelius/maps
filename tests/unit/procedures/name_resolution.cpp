@@ -29,9 +29,9 @@ std::tuple<CompilationState, AST_Store&, Scope, std::unique_ptr<TypeStore>> setu
 
 } // namespace
 
-constexpr DefinitionHeader bex1{DefinitionType::external_builtin, "jii1", &Hole, TSL};
-constexpr DefinitionHeader bex2{DefinitionType::external_builtin, "jii2", &Hole, TSL};
-constexpr DefinitionHeader bex3{DefinitionType::external_builtin, "jii3", &Hole, TSL};
+constexpr DefinitionHeader bex1{DefinitionType::external_builtin, "jii1", &Unknown, TSL};
+constexpr DefinitionHeader bex2{DefinitionType::external_builtin, "jii2", &Unknown, TSL};
+constexpr DefinitionHeader bex3{DefinitionType::external_builtin, "jii3", &Unknown, TSL};
 
 constexpr BuiltinExternalScope bexs {
     &bex1,
@@ -39,9 +39,9 @@ constexpr BuiltinExternalScope bexs {
     &bex3,
 };
 
-constexpr BuiltinValue bev1{"hoo1", "val1", &Hole};
-constexpr BuiltinValue bev2{"hoo2", "val2", &Hole};
-constexpr BuiltinValue bev3{"hoo3", "val3", &Hole};
+constexpr BuiltinValue bev1{"hoo1", "val1", &Unknown};
+constexpr BuiltinValue bev2{"hoo2", "val2", &Unknown};
+constexpr BuiltinValue bev3{"hoo3", "val3", &Unknown};
 
 constexpr BuiltinValueScope bevs {
     &bev1,

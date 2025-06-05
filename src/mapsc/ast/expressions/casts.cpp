@@ -21,9 +21,11 @@ namespace Maps {
 using Log = LogInContext<LogContext::type_casts>;
 
 optional<Expression*> Expression::cast_to(CompilationState& state, const Type* target_type, 
-    const SourceLocation& type_declaration_location) {
-    
+const SourceLocation& type_declaration_location) {    
     using Log = LogInContext<LogContext::type_checks>;
+
+    Log::debug_extra(type_declaration_location) << "Attempting to cast " << *this <<
+        " from " << *type << " to " << *target_type << Endl;
 
     switch (expression_type) {
         case NON_CASTABLE_EXPRESSION:

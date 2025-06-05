@@ -153,6 +153,8 @@ using ExpressionValue = std::variant<
     TypeConstruct
 >;
 
+std::string log_representation(const ExpressionValue& value);
+
 struct Expression {
     // ----- STATIC METHODS -----
 
@@ -217,7 +219,7 @@ struct Expression {
     ExpressionType expression_type; 
     
     ExpressionValue value;
-    const Type* type = &Hole; // this is the "de facto"-one
+    const Type* type = &Unknown; // this is the "de facto"-one
     std::optional<const Type*> declared_type = std::nullopt;
     SourceLocation location;
 };

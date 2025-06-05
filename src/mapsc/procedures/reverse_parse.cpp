@@ -401,7 +401,7 @@ ReverseParser& ReverseParser::print_expression(const Expression& expression) {
 }
 
 ReverseParser& ReverseParser::print_type_declaration(const Expression& expression) {
-    if (*expression.type == Absurd)
+    if (*expression.type == Untyped)
         return *this;
     
     return *this << expression.type->name_string() << " ";

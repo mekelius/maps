@@ -47,7 +47,7 @@ Expression* create_layer2_expression(AST_Store& store, std::vector<Expression*>&
     Scope* context, const SourceLocation& location) {
     
     return store.allocate_expression({ExpressionType::layer2_expression, 
-        TermedExpressionValue{terms, context}, &Hole, location});
+        TermedExpressionValue{terms, context}, &Unknown, location});
 }
 
 Expression* create_layer2_expression_testing(AST_Store& store, std::vector<Expression*>&& terms, 
@@ -59,7 +59,7 @@ Expression* create_layer2_expression_testing(AST_Store& store, std::vector<Expre
     auto context = store.allocate_scope({});
 
     return store.allocate_expression({ExpressionType::layer2_expression, 
-        TermedExpressionValue{terms, context}, &Hole, location});
+        TermedExpressionValue{terms, context}, &Unknown, location});
 }
 
 

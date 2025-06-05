@@ -42,7 +42,7 @@ RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::st
 
 RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, 
     Scope* outer_scope, bool is_top_level, SourceLocation location)
-:RT_DefinitionHeader(definition_type, std::move(name), &Hole, outer_scope, is_top_level, std::move(location)) {}
+:RT_DefinitionHeader(definition_type, std::move(name), &Unknown, outer_scope, is_top_level, std::move(location)) {}
 
 RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, 
     const Type* type, SourceLocation location)
@@ -52,7 +52,7 @@ RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::st
 }
 
 RT_DefinitionHeader::RT_DefinitionHeader(DefinitionType definition_type, std::string name, SourceLocation location)
-:RT_DefinitionHeader(definition_type, std::move(name), &Hole, std::move(location)){}
+:RT_DefinitionHeader(definition_type, std::move(name), &Unknown, std::move(location)){}
 
 
 

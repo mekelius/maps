@@ -53,8 +53,8 @@ TEST_CASE("BuiltinScope should order the items") {
     CHECK(**(++it) == tb2);
 }
 
-constexpr DefinitionHeader bex_a{DefinitionType::external_builtin, "a", &Hole, TSL};
-constexpr DefinitionHeader bex_b{DefinitionType::external_builtin, "b", &Hole, TSL};
+constexpr DefinitionHeader bex_a{DefinitionType::external_builtin, "a", &Unknown, TSL};
+constexpr DefinitionHeader bex_b{DefinitionType::external_builtin, "b", &Unknown, TSL};
 
 constexpr BuiltinExternalScope builtin_externals_scope {
     &bex_b,

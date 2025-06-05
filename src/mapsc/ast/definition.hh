@@ -58,7 +58,7 @@ public:
 
     constexpr DefinitionHeader(DefinitionType definition_type, std::string_view name, Scope* outer_scope,
         bool is_top_level, SourceLocation location)
-    :DefinitionHeader(definition_type, name, &Hole, outer_scope, is_top_level, location) {}
+    :DefinitionHeader(definition_type, name, &Unknown, outer_scope, is_top_level, location) {}
 
     constexpr DefinitionHeader(DefinitionType definition_type, std::string_view name, const Type* type, 
         SourceLocation location)
@@ -70,7 +70,7 @@ public:
      outer_scope_(std::nullopt) {} 
 
     constexpr DefinitionHeader(DefinitionType definition_type, const std::string_view name, SourceLocation location)
-    :DefinitionHeader(definition_type, name, &Hole, location) {} 
+    :DefinitionHeader(definition_type, name, &Unknown, location) {} 
 
     // Just a bit of a cheat to smoothly create external builtins
     consteval DefinitionHeader(std::string_view name, const Type* type)

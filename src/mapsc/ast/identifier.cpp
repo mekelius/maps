@@ -9,7 +9,7 @@ Expression* create_identifier(AST_Store& store, Scope* scope, const std::string&
     const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
-        {ExpressionType::identifier, value, &Hole, location});
+        {ExpressionType::identifier, value, &Unknown, location});
     return expression;
 }
 
@@ -17,7 +17,7 @@ Expression* create_operator_identifier(AST_Store& store, Scope* scope,
     const std::string& value, const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
-        {ExpressionType::operator_identifier, value, &Hole, location});
+        {ExpressionType::operator_identifier, value, &Unknown, location});
     return expression;
 }
 
@@ -25,7 +25,7 @@ Expression* create_type_identifier(AST_Store& store, const std::string& value,
     const SourceLocation& location) {
     
     Expression* expression = store.allocate_expression(
-        {ExpressionType::type_identifier, value, &Hole, location});
+        {ExpressionType::type_identifier, value, &Unknown, location});
     return expression;
 }
 

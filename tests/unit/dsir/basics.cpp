@@ -51,7 +51,7 @@ TEST_CASE("Identifier into reference") {
     auto [success, top_level, definitions, _] = eval_parse_dsir(state, source);
 
     CHECK(top_level);
-    CHECK(*(*top_level)->get_type() == Hole);
+    CHECK(*(*top_level)->get_type() == Unknown);
 
     auto body = std::get<const Expression*>((*top_level)->const_body());
     CHECK(body->expression_type == ExpressionType::reference);

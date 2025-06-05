@@ -147,12 +147,23 @@ bool cast_from_NumberLiteral(const Type* target_type, Expression& expression) {
     }
 
     if (*target_type == Int) {
-        if (!std::holds_alternative<std::string>(expression.value))
+        if (!std::holds_alternative<std::string>(expression.value)) {
+            Log::compiler_error(expression.location) <<
+                "Tried to cast NumberLiteral " << expression << 
+                " to Int, but it did not hold a NumberLiteral value (string)" << Endl;
+
+            Log::compiler_error(expression.location) << "Instead held " << 
+                log_representation(expression.value) << " of index " << expression.value.index() << Endl;
+            assert(false && "Numberliteral didn't hold a string");            
             return false;
+        }
 
         maps_Int result;
-        if (!CT_to_Int_String(expression.string_value().data(), &result))
+        if (!CT_to_Int_String(expression.string_value().data(), &result)) {
+            Log::debug(expression.location) 
+                << expression << " is not an integral numberliteral" << Endl;
             return false;
+        }
 
         cast_value<maps_Int>(expression, &Int, result);
         return true;
