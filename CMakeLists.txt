@@ -95,6 +95,8 @@ add_library(types_and_ast OBJECT
     src/mapsc/ast/test_helpers/test_definition.cpp
 
     src/mapsc/compilation_state.cpp # what to do about this?
+    src/mapsc/procedures/inline.cpp
+    src/mapsc/procedures/update_type.cpp
     src/mapsc/procedures/create_call.cpp # should be moved into ast
 )
 
@@ -130,7 +132,6 @@ add_test(NAME types_and_ast_unit_tests COMMAND types_and_ast_unit_tests)
 # -------------------- MAPSC PROCEDURES --------------------
 
 add_library(procedures OBJECT
-    src/mapsc/procedures/inline.cpp
     src/mapsc/procedures/coerce_type.cpp
     src/mapsc/procedures/simplify.cpp
     src/mapsc/procedures/concretize.cpp

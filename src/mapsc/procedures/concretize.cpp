@@ -28,6 +28,7 @@ namespace Maps {
 
 using Log = LogInContext<LogContext::concretize>;
 
+
 namespace {
 
 optional<const Type*> deduce_return_type(TypeStore& types, 
@@ -188,12 +189,19 @@ bool concretize_value(Expression& value) {
 
 } // namespace
 
+
 bool concretize(CompilationState& state, DefinitionBody& definition) {
     return std::visit(overloaded{
-        [definition, &state](Expression* expression) {
+        [&definition, &state](Expression* expression) {
             Log::debug_extra(definition.location()) << 
                 "Concretizing definition body of " << definition << Endl;
-            return concretize(state, *expression);
+            if (!concretize(state, *expression)) {
+                Log::error(definition.location()) << "Concretizing definition body failed" << Endl;
+                return false;
+            }
+
+            definition.set_type(expression->type);
+            return true;
         },
         [&definition, &state](Statement* statement) {
             Log::debug_extra(definition.location()) << 

@@ -25,10 +25,10 @@ constexpr ConcreteType Boolean { Boolean_ID, "Boolean", &cast_from_Boolean };
 constexpr ConcreteType Float { Float_ID, "Float", &cast_from_Float };
 constexpr ConcreteType String { String_ID, "String", &cast_from_String };
 constexpr CT_Type Untyped{ "Untyped", &not_castable, &not_concretizable, true };
-constexpr CT_Type Unknown{ "Unknown", &not_castable, &not_concretizable };
-constexpr CT_Type UnknownLayer2{ "UnknownLayer2", &not_castable, &not_concretizable };
-constexpr CT_Type UnknownPending{ "UnknownPending", &not_castable, &not_concretizable };
-constexpr CT_Type UnknownDeferred{ "UnknownDeferred", &not_castable, &not_concretizable };
+constexpr CT_Type Unknown{ "Unknown", &not_castable, &not_concretizable, false, true};
+constexpr CT_Type UnknownLayer2{ "UnknownLayer2", &not_castable, &not_concretizable, false, true };
+constexpr CT_Type UnknownPending{ "UnknownPending", &not_castable, &not_concretizable, false, true };
+constexpr CT_Type UnknownDeferred{ "UnknownDeferred", &not_castable, &not_concretizable, false, true };
 constexpr CT_Type NumberLiteral{ "NumberLiteral", &cast_from_NumberLiteral, &concretize_NumberLiteral };
 constexpr CT_Type TestingType{ "TestingType", &not_castable, &not_concretizable };
 constexpr CT_Type NotImplemented{ "NotImplemented", &not_castable, &not_concretizable };
@@ -46,7 +46,6 @@ constexpr std::array<const Type*, CT_TYPES_COUNT> BUILTIN_TYPES {
     &Untyped, &Unknown, &UnknownLayer2, &UnknownPending, &UnknownDeferred,
     &NumberLiteral, &TestingType, &NotImplemented, &ErrorType,
     &IO_Int, &IO_Boolean, &IO_Float, &IO_String, &IO_Void,
-
     &MutString
 };
 

@@ -8,24 +8,21 @@ namespace Maps {
 class AST_Store;
 class DefinitionHeader;
 
-std::optional<Expression*> create_call(CompilationState& state, 
-    const DefinitionHeader* callee, std::vector<Expression*>&& args, const SourceLocation& location);
+std::optional<Expression*> create_call(CompilationState& state, const DefinitionHeader* callee, 
+    std::vector<Expression*>&& args, SourceLocation location);
 
 std::optional<Expression*> create_call(CompilationState& state, 
-    DefinitionBody* callee, std::vector<Expression*>&& args, const SourceLocation& location);
+    DefinitionBody* callee, std::vector<Expression*>&& args, SourceLocation location);
 
 std::optional<Expression*> create_partial_binop_call(CompilationState& state, 
-    const Operator* callee, Expression* lhs, Expression* rhs, const SourceLocation& location);
+    const Operator* callee, Expression* lhs, Expression* rhs, SourceLocation location);
 
 // not implemented
 std::optional<Expression*> create_partial_binop_call_both(CompilationState& state,
-    const Operator* lhs, Expression* lambda, const Operator* rhs, const SourceLocation& location);
+    const Operator* lhs, Expression* lambda, const Operator* rhs, SourceLocation location);
 
-Expression* create_partially_applied_minus(AST_Store& store, 
-    Expression* rhs, const SourceLocation& location);
-
-Expression* create_missing_argument(AST_Store& store, 
-    const Type* type, const SourceLocation& location);
+Expression* create_partially_applied_minus(AST_Store& store, Expression* rhs, SourceLocation location);
+Expression* create_missing_argument(AST_Store& store, const Type* type, SourceLocation location);
 
 // For example partial binop call, currently a no-op
 void convert_to_partial_call(Expression& expression);

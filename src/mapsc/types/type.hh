@@ -26,6 +26,7 @@ public:
     virtual std::string_view function_signature() const = 0;
     virtual bool is_voidish() const = 0;
     
+    virtual constexpr bool is_unknown() const { return false; };
     virtual std::string function_signature_string() const { return std::string{function_signature()}; };
     std::string name_string() const { return std::string{name()}; }
     bool is_impure() const { return !is_pure(); }
@@ -77,15 +78,18 @@ public:
 class CT_Type: public Type {
 public:
     constexpr CT_Type(std::string_view name, CastFunction* const cast_function, 
-        ConcretizeFunction* const concretize_function, bool is_voidish = false)
+        ConcretizeFunction* const concretize_function, bool is_voidish = false, 
+        bool is_unknown = false)
     :name_(name), 
      cast_function_(cast_function), 
      concretize_function_(concretize_function),
-     is_voidish_(is_voidish) {}
+     is_voidish_(is_voidish),
+     is_unknown_(is_unknown) {}
 
     virtual std::string_view name() const { return name_; }
     virtual std::string_view function_signature() const { return name_; }
     virtual bool is_voidish() const { return is_voidish_; }
+    virtual constexpr bool is_unknown() const { return is_unknown_; }
 
     virtual bool cast_to_(const Type* type, Expression& expression) const {
         return (*cast_function_)(type, expression);
@@ -103,6 +107,7 @@ public:
     CastFunction* cast_function_;
     ConcretizeFunction* concretize_function_;
     bool is_voidish_ = false;
+    bool is_unknown_ = false;
 };
 
 class ConcreteType: public Type {

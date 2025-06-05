@@ -23,6 +23,7 @@
 ## Logging and feedback
 
 - :t doesn't show function types
+- statement types aren't printed with --types
 
 ## Memory
 

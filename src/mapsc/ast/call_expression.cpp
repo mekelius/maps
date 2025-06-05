@@ -21,16 +21,13 @@ Expression* Expression::partially_applied_minus_arg_value() const {
     // return std::get<>(value);
 }
 
-Expression* create_missing_argument(AST_Store& store, const Type* type, 
-    const SourceLocation& location) {
-    
-    return store.allocate_expression({ExpressionType::missing_arg, std::monostate{}, type, 
-        location});
+Expression* create_missing_argument(AST_Store& store, const Type* type, SourceLocation location) {
+    return store.allocate_expression({ExpressionType::missing_arg, 
+        std::monostate{}, type, std::move(location)});
 }
 
-optional<Expression*> create_call(CompilationState& state, 
-    const DefinitionHeader* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
-
+optional<Expression*> create_call(CompilationState& state, const DefinitionHeader* callee, 
+std::vector<Expression*>&& args, SourceLocation location) {
     for (auto arg: args)
         assert(is_allowed_as_arg(*arg) && "invalid arg passed to Expression::call");
 
@@ -44,8 +41,8 @@ optional<Expression*> create_call(CompilationState& state,
     }
 
     if (!callee_type->is_function() && args.empty())
-        return store.allocate_expression(
-            {ExpressionType::call, CallExpressionValue{callee, args}, callee_type, location});
+        return store.allocate_expression({ExpressionType::call, 
+            CallExpressionValue{callee, args}, callee_type, std::move(location)});
 
     auto [types_ok, is_partial, work_to_be_done, return_type] = 
         check_and_coerce_args(state, callee, args, location);
@@ -60,26 +57,22 @@ optional<Expression*> create_call(CompilationState& state,
     }
 
     if (!is_partial)
-        return store.allocate_expression(
-            {ExpressionType::call, CallExpressionValue{callee, args}, return_type, location});
+        return store.allocate_expression({ExpressionType::call, 
+            CallExpressionValue{callee, args}, return_type, std::move(location)});
 
     // TODO: deal with declared types
 
-    return store.allocate_expression(
-        {ExpressionType::partial_call, CallExpressionValue{callee, args}, 
-            return_type, location});
+    return store.allocate_expression({ExpressionType::partial_call, 
+        CallExpressionValue{callee, args}, return_type, std::move(location)});
 }
 
-std::optional<Expression*> create_call(CompilationState& state, 
-    DefinitionBody* callee, std::vector<Expression*>&& args, const SourceLocation& location) {
-
-    return create_call(state, callee->header_, std::move(args), location);
+std::optional<Expression*> create_call(CompilationState& state, DefinitionBody* callee, 
+std::vector<Expression*>&& args, SourceLocation location) {
+    return create_call(state, callee->header_, std::move(args), std::move(location));
 }
 
-
-optional<Expression*> create_partial_binop_call(CompilationState& state, 
-    const Operator* op, Expression* lhs, Expression* rhs, const SourceLocation& location) {
-
+optional<Expression*> create_partial_binop_call(CompilationState& state, const Operator* op, 
+Expression* lhs, Expression* rhs, SourceLocation location) {
     auto& store = *state.ast_store_;
     auto callee_type = op->get_type();
     
@@ -103,8 +96,7 @@ optional<Expression*> create_partial_binop_call(CompilationState& state,
 
         return store.allocate_expression(
             {ExpressionType::partial_binop_call_left, 
-                CallExpressionValue{op, {lhs, rhs}}, partial_return_type, 
-                location});
+                CallExpressionValue{op, {lhs, rhs}}, partial_return_type, std::move(location)});
     }
     
     assert(rhs->expression_type == ExpressionType::missing_arg && 
@@ -117,13 +109,11 @@ optional<Expression*> create_partial_binop_call(CompilationState& state,
         return_type, std::array{rhs->type}, callee_f_type->is_pure());
     return store.allocate_expression(
             {ExpressionType::partial_binop_call_right, 
-                CallExpressionValue{op, {lhs, rhs}}, partial_return_type, 
-                location});
+                CallExpressionValue{op, {lhs, rhs}}, partial_return_type, std::move(location)});
 }
 
 static std::optional<Expression*> partial_binop_call_both(CompilationState& state,
-    const Operator* lhs, Expression* lambda, const Operator* rhs, const SourceLocation& location) {
-
+const Operator* lhs, Expression* lambda, const Operator* rhs, SourceLocation location) {
     assert(false && "not implemented");
 }
 
@@ -206,8 +196,7 @@ void convert_nullary_reference_to_call(Expression& expression) {
 }
 
 bool convert_partially_applied_minus_to_arg(CompilationState& state, Expression& expression,
-    const Type* param_type) {
-
+const Type* param_type) {
     assert(expression.expression_type == ExpressionType::partially_applied_minus && 
         "convert_partially_applied_minus_to_arg called with not a partially applied minus");
 
@@ -218,16 +207,14 @@ bool convert_partially_applied_minus_to_arg(CompilationState& state, Expression&
     return true;
 }
 
-
 void convert_to_partial_call(Expression& expression) {
     expression.expression_type = ExpressionType::partial_call;
 }
 
 Expression* create_partially_applied_minus(AST_Store& store, Expression* rhs, 
-    const SourceLocation& location) {
-
+SourceLocation location) {
     return store.allocate_expression(
-        {ExpressionType::partially_applied_minus, rhs, &Int, location});
+        {ExpressionType::partially_applied_minus, rhs, &Int, std::move(location)});
 }
 
 } // namespace Maps
