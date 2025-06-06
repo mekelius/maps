@@ -45,9 +45,6 @@ void DefinitionBody::set_type(const Type* type) {
         [](Undefined) {},
         [&type](Expression* expression) { expression->type = type; },
         [&type](Statement* statement) { statement->type = type; },
-        [](BuiltinValue value) {
-            assert(false && "trying to set type on a builtin");
-        }
     }, value_);
 }
 

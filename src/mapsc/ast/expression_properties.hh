@@ -16,6 +16,8 @@ bool is_castable_expression(const Expression&);
 bool is_allowed_in_type_declaration(const Expression&);
 bool is_constant_value(const Expression&);
 bool is_allowed_as_arg(const Expression&);
+bool is_binop_left(const Expression&);
+bool is_binop_right(const Expression&);
 
 } // namespace Maps
 

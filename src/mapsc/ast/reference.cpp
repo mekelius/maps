@@ -3,6 +3,7 @@
 #include "mapsc/ast/ast_store.hh"
 #include "mapsc/ast/definition.hh"
 #include "mapsc/ast/definition_body.hh"
+#include "mapsc/ast/call_expression.hh"
 #include "mapsc/procedures/evaluate.hh"
 
 namespace Maps {
@@ -162,11 +163,57 @@ bool convert_by_value_substitution(Expression& expression) {
     return true;
 }
 
-Operator::Precedence get_operator_precedence(const Expression& operator_ref) {
-    assert(operator_ref.expression_type == ExpressionType::binary_operator_reference && 
-        "get_operator_precedence called with not a binary operator reference");
+Operator::Precedence get_operator_precedence(const Expression& operator_ref, bool from_left) {
+    using Log = LogNoContext;
 
-    return dynamic_cast<const Operator*>(operator_ref.operator_reference_value())->precedence();
+    switch (operator_ref.expression_type) {
+        case ExpressionType::binary_operator_reference:
+            return dynamic_cast<const Operator*>(operator_ref.operator_reference_value())->precedence();
+
+        case ExpressionType::partial_binop_call_left: {
+            if (!from_left) {
+                Log::compiler_error(operator_ref.location) << 
+                    "get_operator_precedence called from wrong side on " << operator_ref << Endl;
+                assert(false && "get_operator_precedence called from wrong side");
+                break;
+            }
+
+            auto [callee, args] = operator_ref.call_value();
+            assert(callee->is_operator() && "encountered partial binop call left with not an operator as callee");
+            auto op = dynamic_cast<const Operator*>(callee);
+            assert(op);
+
+            return op->precedence();
+        }
+        case ExpressionType::partial_binop_call_right:{
+            if (from_left) {
+                Log::compiler_error(operator_ref.location) << 
+                    "get_operator_precedence called from wrong side on " << operator_ref << Endl;
+                assert(false && "get_operator_precedence called from wrong side");
+                break;
+            }
+
+            auto [callee, args] = operator_ref.call_value();
+            assert(callee->is_operator() && 
+                "encountered partial binop call left with not an operator as callee");
+            auto op = dynamic_cast<const Operator*>(callee);
+            assert(op);
+
+            return op->precedence();
+        }
+        case ExpressionType::partial_binop_call_both:
+            assert(false && "not implemented");
+            break;
+
+        case ExpressionType::partially_applied_minus:
+            assert(false && 
+                "Partially applied minus should have been converted to partial binop call first");
+            break;  
+
+        default:
+            assert(false && "get_operator_precedence called with not a binary operator reference");
+            break;
+    }
 }
 
 } // namespace Maps

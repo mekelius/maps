@@ -5,6 +5,7 @@
 #include <string>
 
 #include "mapsc/ast/scope.hh"
+#include "mapsc/ast/operator.hh"
 
 namespace Maps {
 
@@ -35,6 +36,9 @@ std::optional<Expression*> create_type_operator_reference(AST_Store& store,
 void convert_to_reference(Expression& expression, const DefinitionHeader* callee);
 void convert_to_operator_reference(Expression& expression, const Operator* callee);
 [[nodiscard]] bool convert_by_value_substitution(Expression& expression);
+
+// Accepts operator ref and the various partially applied binary operators
+Operator::Precedence get_operator_precedence(const Expression& operator_ref, bool from_left = true);
 
 } // namespace Maps
 

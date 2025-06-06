@@ -185,11 +185,12 @@ struct Expression {
     Scope* termed_context() const;
 
     CallExpressionValue& call_value();
+    const CallExpressionValue& call_value() const;
     const DefinitionHeader* reference_value() const;
     const Type* type_reference_value() const;
     const Operator* operator_reference_value() const;
     std::optional<KnownValue> known_value_value() const;
-    Expression* partially_applied_minus_arg_value() const;
+    Expression* partially_applied_minus_value() const;
 
     // LambdaExpressionValue& lambda_value();
     // const LambdaExpressionValue& lambda_value() const;
@@ -223,8 +224,6 @@ struct Expression {
     std::optional<const Type*> declared_type = std::nullopt;
     SourceLocation location;
 };
-
-Operator::Precedence get_operator_precedence(const Expression& operator_ref);
 
 } // namespace Maps
 

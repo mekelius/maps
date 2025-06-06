@@ -172,5 +172,26 @@ bool is_partial_call(const Expression& expression) {
     }
 }
 
+bool is_binop_left(const Expression& expression) {
+switch (expression.expression_type) {
+        case ExpressionType::binary_operator_reference:
+        case ExpressionType::partial_binop_call_both:
+        case ExpressionType::partial_binop_call_left:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool is_binop_right(const Expression& expression) {
+    switch (expression.expression_type) {
+        case ExpressionType::binary_operator_reference:
+        case ExpressionType::partial_binop_call_both:
+        case ExpressionType::partial_binop_call_right:
+            return true;
+        default:
+            return false;
+    }
+}
 
 } // namespace Maps

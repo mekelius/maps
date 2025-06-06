@@ -16,7 +16,11 @@ CallExpressionValue& Expression::call_value() {
     return std::get<CallExpressionValue>(value);
 }
 
-Expression* Expression::partially_applied_minus_arg_value() const {
+const CallExpressionValue& Expression::call_value() const {
+    return std::get<CallExpressionValue>(value);
+}
+
+Expression* Expression::partially_applied_minus_value() const {
     return nullptr; // !!!
     // return std::get<>(value);
 }
@@ -44,7 +48,7 @@ std::vector<Expression*>&& args, SourceLocation location) {
         return store.allocate_expression({ExpressionType::call, 
             CallExpressionValue{callee, args}, callee_type, std::move(location)});
 
-    auto [types_ok, is_partial, work_to_be_done, return_type] = 
+    auto [types_ok, is_partial, no_unparsed_args, return_type] = 
         check_and_coerce_args(state, callee, args, location);
 
     assert(args.size() == callee_type->arity() && 
@@ -117,14 +121,14 @@ const Operator* lhs, Expression* lambda, const Operator* rhs, SourceLocation loc
     assert(false && "not implemented");
 }
 
-
-bool convert_to_partial_binop_minus_call_left(CompilationState& state, Expression& expression) {
+bool convert_to_partial_binop_call_left(CompilationState& state, Expression& expression) {
     if (expression.expression_type != ExpressionType::partially_applied_minus) {
         assert(false && 
            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus");
 
         Log::compiler_error(expression.location) <<
-            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus" << Endl;
+            "Expression::convert_to_partial_binop_call_left called on a not partially applied minus" 
+            << Endl;
 
         expression.expression_type = ExpressionType::compiler_error;
         return false;
@@ -137,7 +141,7 @@ bool convert_to_partial_binop_minus_call_left(CompilationState& state, Expressio
     std::vector<Expression*> args{
         create_missing_argument(*state.ast_store_, &Int, expression.location), rhs};
 
-    auto [types_ok, is_partial, work_to_be_done, return_type] = 
+    auto [types_ok, is_partial, no_unparsed_args, return_type] = 
         check_and_coerce_args(state, &binary_minus_Int, args, expression.location);
 
     if (!types_ok)
@@ -158,7 +162,8 @@ bool convert_to_unary_minus_call(CompilationState& state, Expression& expression
            "Expression::convert_to_unary_minus_call called on a not partially applied minus");
 
         Log::compiler_error(expression.location) <<
-            "Expression::convert_to_unary_minus_call called on a not partially applied minus" << Endl;
+            "Expression::convert_to_unary_minus_call called on a not partially applied minus" 
+            << Endl;
 
         expression.expression_type = ExpressionType::compiler_error;
         return false;
@@ -167,7 +172,7 @@ bool convert_to_unary_minus_call(CompilationState& state, Expression& expression
     auto arg = std::get<Expression*>(expression.value);
     std::vector<Expression*> args{arg};
 
-    auto [types_ok, is_partial, work_to_be_done, return_type] = 
+    auto [types_ok, is_partial, no_unparsed_args, return_type] = 
         check_and_coerce_args(state, &unary_minus_Int, args, expression.location);
 
     assert(!is_partial);
@@ -185,7 +190,8 @@ bool convert_to_unary_minus_call(CompilationState& state, Expression& expression
 void convert_nullary_reference_to_call(Expression& expression) {
     assert(expression.expression_type == ExpressionType::reference && 
         "convert_nullary_reference_to_call called with not a ref");
-    assert(expression.type->arity() == 0 && "convert_nullary_reference_to_call called with not a nullary ref");
+    assert(expression.type->arity() == 0 && 
+        "convert_nullary_reference_to_call called with not a nullary ref");
 
     expression.expression_type = ExpressionType::call;
     auto callee = expression.reference_value();
@@ -213,8 +219,30 @@ void convert_to_partial_call(Expression& expression) {
 
 Expression* create_partially_applied_minus(AST_Store& store, Expression* rhs, 
 SourceLocation location) {
-    return store.allocate_expression(
-        {ExpressionType::partially_applied_minus, rhs, &Int, std::move(location)});
+    return store.allocate_expression({ExpressionType::partially_applied_minus, 
+        rhs, &Int, std::move(location)});
+}
+
+[[nodiscard]] optional<Expression*> complete_partial_binop_call_left(CompilationState& state, 
+Expression& partial_binop_call, Expression& arg) {
+    assert(is_partial_call(partial_binop_call) && "invalid call to complete partial binop call");
+    assert(is_binop_left(partial_binop_call) && "invalid call to complete partial binop call");
+
+    auto& [callee, args] = partial_binop_call.call_value();
+
+    args.at(0) = &arg;
+
+    auto [types_ok, is_partial, no_unparsed_args, return_type] = 
+        check_and_coerce_args(state, callee, args, arg.location);
+
+    assert(types_ok);
+    assert(!is_partial);
+    assert(no_unparsed_args);
+    assert(*args.at(0) == arg);
+    
+    partial_binop_call.expression_type = ExpressionType::call;
+
+    return &partial_binop_call;
 }
 
 } // namespace Maps

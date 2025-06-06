@@ -87,9 +87,11 @@ private:
     void partial_binop_call_standoff_state();
     void post_binary_operator_state();
     void compare_precedence_state();
+    void compare_precedence_to_partial_binop_call_left_state();
 
     // reductions
     void reduce_binop_call();
+    void reduce_partial_binop_call_left();
     void reduce_minus_sign_to_unary_minus_call();
     void reduce_to_partial_binop_call_left();
     void reduce_to_partial_binop_call_right();

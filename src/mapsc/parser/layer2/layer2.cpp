@@ -112,8 +112,11 @@ Expression* TermedExpressionParser::current_term() const {
 }
 
 Operator::Precedence TermedExpressionParser::peek_precedence() const {
-    assert(peek()->expression_type == ExpressionType::binary_operator_reference && 
-        "TermedExpressionParser::peek_precedence called with not a binary operator on top of the stack");
+    assert((peek()->expression_type == ExpressionType::binary_operator_reference ||
+            peek()->expression_type == ExpressionType::partial_binop_call_left   ||
+            peek()->expression_type == ExpressionType::partial_binop_call_both   ||
+            peek()->expression_type == ExpressionType::partially_applied_minus ) && 
+    "TermedExpressionParser::peek_precedence called with not a binary operator on top of the stack");
 
     return get_operator_precedence(*peek());
 }
@@ -593,7 +596,7 @@ void TermedExpressionParser::value_state() {
             return fail();
 
         case ExpressionType::partially_applied_minus:
-            if (!convert_to_partial_binop_minus_call_left(*compilation_state_, *peek())) {
+            if (!convert_to_partial_binop_call_left(*compilation_state_, *peek())) {
                 Log::error(current_term()->location) << "Converting to partial binop minus failed" << Endl;
                 return fail();
             }
@@ -896,7 +899,6 @@ void TermedExpressionParser::partially_applied_minus_state() {
     return call_state();
 }
 
-
 // Basically we just unwrap it
 void TermedExpressionParser::partial_binop_call_right_state() {
     if (at_expression_end())
@@ -1092,11 +1094,25 @@ void TermedExpressionParser::compare_precedence_state() {
     }
 
     switch (peek()->expression_type) {
+        case ExpressionType::layer2_expression:
+            handle_termed_sub_expression(peek());
+            return compare_precedence_state();
+
         case ExpressionType::partially_applied_minus:
-            convert_to_partial_call(*peek());
-        case ExpressionType::binary_operator_reference:
+            if (!convert_to_partial_binop_call_left(*compilation_state_, *peek())) {
+                Log::error(peek()->location) << 
+                    "Converting minus to partial binop call failed" << Endl;
+                return fail();
+            }
+
+            // intentional fall-through
         case ExpressionType::partial_binop_call_left:
+            return compare_precedence_to_partial_binop_call_left_state();
+
         case ExpressionType::partial_binop_call_both:
+            assert(false && "not implemented");
+
+        case ExpressionType::binary_operator_reference:
             break;
 
         case ExpressionType::minus_sign:
@@ -1166,6 +1182,34 @@ that the caller put on the precedence stack");
     }
 }
 
+void TermedExpressionParser::compare_precedence_to_partial_binop_call_left_state() {
+    Log::debug_extra(current_term()->location) << 
+        "Compare precedence to partial binop call left state" << Endl;
+
+    if (at_expression_end()) {
+        assert(false && "compare_precedence_to_partial_binop... called incorrectly");
+        return fail();
+    }
+
+    auto next_precedence = peek_precedence();
+    auto prev_precedence = precedence_stack_.back();
+
+    if (next_precedence < prev_precedence) {
+        reduce_binop_call();
+        if (has_failed())
+            return;
+
+        shift();
+        precedence_stack_.pop_back();
+        return reduce_partial_binop_call_left();
+    }
+
+    shift();
+    reduce_partial_binop_call_left();
+    precedence_stack_.pop_back();
+    return reduce_binop_call();
+}
+
 // Pops 3 values from the parse stack, reduces them into a binop apply expression and pushes it on top
 void TermedExpressionParser::reduce_binop_call() {
     Log::debug_extra(current_term()->location) << "Reducing binop call" << Endl;
@@ -1202,8 +1246,29 @@ where operator didn't hold a reference to a definition");
         return fail(); 
     }
 
-    (*reduced)->value = CallExpressionValue{std::get<const DefinitionHeader*>(operator_->value), 
-        std::vector<Expression*>{lhs, rhs}};
+    parse_stack_.push_back(*reduced);
+}
+
+void TermedExpressionParser::reduce_partial_binop_call_left() {
+    Log::debug_extra(current_term()->location) << "Reducing partial binop call left" << Endl;
+
+    Expression* call = *pop_term();
+    Expression* arg = *pop_term();
+
+    assert(is_partial_call(*call));
+    assert(is_binop_left(*call));
+
+    if (!ensure_proper_argument_expression_type(arg, 
+        *dynamic_cast<const FunctionType*>(call->type)->param_type(0))) {
+        Log::error(arg->location) << "Invalid arg for binary expression" << Endl;
+        return fail(); 
+    }
+
+    auto reduced = complete_partial_binop_call_left(*compilation_state_, *call, *arg);
+    if (!reduced) {
+        Log::error(call->location) << "Reducing partial binop call failed" << Endl;
+        return fail();
+    }
 
     parse_stack_.push_back(*reduced);
 }
@@ -1409,7 +1474,6 @@ void TermedExpressionParser::substitute_known_value_reference(Expression* known_
         return fail();
     }
 }
-
 
 bool TermedExpressionParser::is_acceptable_next_arg(const DefinitionHeader* callee, 
     const std::vector<Expression*>& args/*, Expression* next_arg*/) {
